@@ -1,0 +1,9 @@
+[submodule "seeft-api"]
+	path = seeft-api
+	url = git@github.com:NUTFes/seeft-api.git
+[submodule "seeft-mobile"]
+	path = seeft-mobile
+	url = git@github.com:NUTFes/seeft-mobile.git
+[submodule "CreFT"]
+	path = CreFT
+	url = git@github.com:NUTFes/CreFT.git
