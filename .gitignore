@@ -1,0 +1,23 @@
+# FIles and directories created by pub.
+.dart_tool/
+.packages
+
+pubspec.lock
+build/
+
+# Conventional directory for build outpu.
+build/
+
+# env
+*.env
+*.envrc
+
+# mac
+.DS_Store
+
+# db
+mariadb/
+
+sql/
+
+test/
