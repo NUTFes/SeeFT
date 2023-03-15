@@ -7,7 +7,7 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/drivers/server"
 	"github.com/NUTFes/SeeFT/api/lib/externals/controller"
 	"github.com/NUTFes/SeeFT/api/lib/externals/repository"
-	"github.com/NUTFes/SeeFT/api/lib/externals/repository/external"
+	"github.com/NUTFes/SeeFT/api/lib/externals/repository/abstract"
 	"github.com/NUTFes/SeeFT/api/lib/internals/usecase"
 	"github.com/NUTFes/SeeFT/api/lib/router"
 )

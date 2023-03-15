@@ -14,7 +14,7 @@ run:
 	docker compose run --rm ${RUN}
 
 .PHONY: run-api
-rum-api:
+run-api:
 	docker compose up -d db
 	sleep 4
 	docker compose up api
@@ -34,6 +34,10 @@ migrate:
 .PHONY: tidy
 tidy:
 	docker compose run --rm api go mod tidy
+
+.PHONY: go-init
+go-init:
+	docker compose run --rm api go mod init github.com/NUTFes/SeeFT/api
 
 .PHONY: get
 get:
