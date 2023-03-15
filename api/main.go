@@ -1,14 +1,16 @@
 package main
 
 import (
-	"github.com/NUTFes/seeft/seeft-api/api/lib/external/server"
-	- "github.com/NUTFes/seeft/seeft-api/mysql"
+	"github.com/NUTFes/SeeFT/api/lib/internals/di"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 
 func main() {
-	db.Init()
-	server.Init()
+	client := di.InitializeServer()
+	defer client.CloseDB()
+	// db.Init()
+	// server.Init()
 }
 
 // func main() async {

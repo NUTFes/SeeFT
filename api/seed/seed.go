@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/NUTFes/seeft/db"
-	"github.com/NUTFes/seeft/entity"
+	"github.com/NUTFes/SeeFT/mysql/db"
+	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
 )
 
 /*

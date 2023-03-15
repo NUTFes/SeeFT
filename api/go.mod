@@ -1,4 +1,4 @@
-module github.com/NUTFes/seeft-api
+module github.com/NUTFes/SeeFT
 
 go 1.19
 

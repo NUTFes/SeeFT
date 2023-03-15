@@ -21,3 +21,6 @@ mariadb/
 sql/
 
 test/
+
+api/tmp
+api/lib/interface
