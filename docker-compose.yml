@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  db:
+    container_name: SeeFT-DB
+    image: mysql:8.0
+    volumes:
+      - ./mysql/db:/docker-entrypoint-initdb.d # 初期データ
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_DATABASE: seeft
+      MYSQL_ROOT_PASSWORD: pwd
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: pwd
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 3306:3306
+    restart: always
+
+  api:
+    container_name: SeeFT-API
+    build: ./api
+    volumes:
+      - ./api:/app
+    command: "./start.sh"
+    ports:
+      - "3000:3000"
+    restart: always
+    privileged: true
+    stdin_open: true
+    tty: true
+    depends_on:
+      db: 
+        condition: service_started
