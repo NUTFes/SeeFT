@@ -2,7 +2,7 @@ package server
 
 import (
 	_ "github.com/NUTFes/SeeFT/api/docs"
-	"github.com/NUTFes/SeeFT/api/router"
+	"github.com/NUTFes/SeeFT/api/lib/router"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"

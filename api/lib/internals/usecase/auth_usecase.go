@@ -4,7 +4,7 @@ import (
 	"context"
 
 	rep "github.com/NUTFes/SeeFT/api/externals/repository"
-	"github.com/NUTFes/SeeFT/api/internals/domain"
+	//"github.com/NUTFes/SeeFT/api/internals/entitiy"
 	"github.com/pkg/errors"
 )
 

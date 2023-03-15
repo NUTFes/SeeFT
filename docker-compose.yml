@@ -8,9 +8,9 @@ services:
       - ./mysql/db:/docker-entrypoint-initdb.d # 初期データ
       - ./my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
-      MYSQL_DATABASE: seeft
+      MYSQL_DATABASE: seeft_db
       MYSQL_ROOT_PASSWORD: pwd
-      MYSQL_USER: mysql
+      MYSQL_USER: seeft
       MYSQL_PASSWORD: pwd
       TZ: 'Asia/Tokyo'
     ports:
@@ -22,11 +22,10 @@ services:
     build: ./api
     volumes:
       - ./api:/app
+    #シェルスクリプトを実行するコマンド
     command: "./start.sh"
     ports:
       - "3000:3000"
-    restart: always
-    privileged: true
     stdin_open: true
     tty: true
     depends_on:

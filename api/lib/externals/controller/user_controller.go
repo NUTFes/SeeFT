@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/NUTFes/SeeFT/service"
 	"github.com/gin-gonic/gin"
 )
 
