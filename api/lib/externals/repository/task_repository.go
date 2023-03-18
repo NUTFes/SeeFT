@@ -1,5 +1,54 @@
 package repository
 
+import (
+	"context"
+	"database/sql"
+	"fmt"
+
+	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
+	"github.com/NUTFes/SeeFT/api/lib/externals/repository/abstract"
+	"github.com/pkg/errors"
+)
+
+type taskRepository struct {
+	client db.Client
+	crud   abstract.Crud
+}
+
+type TaskRepository interface {
+	All(context.Context) (*sql.Rows, error)
+	Find(context.Context, string) (*sql.Row, error)
+	Shift(context.Context, string) (*sql.Rows, error)
+}
+
+func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
+	return &taskRepository{c, ac}
+}
+
+// 全件取得
+func (b *taskRepository) All(c context.Context) (*sql.Rows, error) {
+	query := "SELECT * FROM task"
+	return b.crud.Read(c, query)
+}
+
+// 1件取得
+func (b *taskRepository) Find(c context.Context, id string) (*sql.Row, error) {
+	query := "SELECT * FROM task WHERE id =" + id
+	return b.crud.ReadByID(c, query)
+}
+
+// 特定のシフト取得
+func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error) {
+	query := "SELECT * FROM task WHERE name =" + name
+	rows, err := b.client.DB().QueryContext(c, query)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot connect SQL")
+	}
+	fmt.Printf("\x1b[36m%s\n", query)
+	return rows, nil
+}
+
+
 // import '../../usecase/repository/task_repository.dart';
 // import '../../entity/entity.dart';
 // import './external/database.dart';

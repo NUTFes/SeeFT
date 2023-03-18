@@ -16,7 +16,7 @@ up-mobile:
 .PHONY: up-api
 up-api:
 	docker compose up -d db
-	sleep 4
+	sleep 10
 	docker compose up api
 
 .PHONY: build

@@ -8,7 +8,8 @@ import (
 type router struct {
 	healthcheckController     controller.HealthcheckController
 	bureauController          controller.BureauController
-	shiftController 		  controller.ShiftController
+	shiftController 		  		controller.ShiftController
+	taskController			  		controller.TaskController
 }
 
 type Router interface {
@@ -19,11 +20,13 @@ func NewRouter(
 	healthController controller.HealthcheckController,
 	bureauController controller.BureauController,
 	shiftContoller controller.ShiftController,
+	taskController controller.TaskController,
 ) Router {
 	return router{
 		healthController,
 		bureauController,
 		shiftContoller,
+		taskController,
 	}
 }
 
@@ -40,4 +43,9 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/shifts/:id", r.shiftController.ShowShift)
 	e.GET("/shifts/user/:user_id", r.shiftController.ShowShiftsByUser)
 	e.GET("/shifts/user/:user_id/date/:date/weather/:weather", r.shiftController.ShowShiftsByUserAndDateAndWeather)
+
+	// taskのRoute
+	e.GET("/tasks", r.taskController.IndexTask)
+	e.GET("/tasks/:id", r.taskController.ShowTask)
+	e.GET("/tasks/shift/:shift", r.taskController.ShowTasksByShift)
 }

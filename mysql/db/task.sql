@@ -12,3 +12,5 @@ CREATE TABLE task (
     updated_at datetime not null default current_timestamp on update current_timestamp,
     PRIMARY KEY (id)
 );
+
+INSERT into task (name, url, palce, president, tel, color) values ("机運び", "1", "教室", "佐藤", "080", "red");
