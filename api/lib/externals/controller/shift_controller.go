@@ -1,3 +1,65 @@
+package controller
+
+import (
+	"net/http"
+
+	"github.com/NUTFes/SeeFT/api/lib/internals/usecase"
+	"github.com/labstack/echo/v4"
+)
+
+type shiftController struct {
+	u usecase.ShiftUseCase
+}
+
+type ShiftController interface {
+	IndexShift(echo.Context) error
+	ShowShift(echo.Context) error
+	ShowShiftsByUser(echo.Context) error
+	ShowShiftsByUserAndDateAndWeather(echo.Context) error
+}
+
+func NewShiftController(u usecase.ShiftUseCase) ShiftController {
+	return &shiftController{u}
+}
+
+func (b *shiftController) IndexShift(c echo.Context) error {
+	shifts, err := b.u.GetShifts(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shifts)
+}
+
+func (b *shiftController) ShowShift(c echo.Context) error {
+	id := c.Param("id")
+	shift, err := b.u.GetShiftByID(c.Request().Context(), id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shift)
+}
+
+func (b *shiftController) ShowShiftsByUser(c echo.Context) error {
+	id := c.Param("user_id")
+	shifts, err := b.u.GetShiftsByUser(c.Request().Context(), id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shifts)
+}
+
+func (b *shiftController) ShowShiftsByUserAndDateAndWeather(c echo.Context) error {
+	id := c.Param("user_id")
+	date := c.Param("date")
+	weather := c.Param("weather")
+	shifts, err := b.u.GetShiftsByUserAndDateAndWeather(c.Request().Context(), id, date, weather)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shifts)
+}
+
+
 // import 'dart:convert';
 // import 'package:shelf/shelf.dart';
 

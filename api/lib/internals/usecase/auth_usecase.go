@@ -1,12 +1,12 @@
 package usecase
 
-import (
-	"context"
+// import (
+// 	"context"
 
-	rep "github.com/NUTFes/SeeFT/api/externals/repository"
-	//"github.com/NUTFes/SeeFT/api/internals/entitiy"
-	"github.com/pkg/errors"
-)
+// 	rep "github.com/NUTFes/SeeFT/api/lib/externals/repository"
+// 	//"github.com/NUTFes/SeeFT/api/internals/entitiy"
+// 	"github.com/pkg/errors"
+// )
 
 // import '../entity/entity.dart';
 // import './repository/repository.dart';

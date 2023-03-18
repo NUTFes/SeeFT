@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "nutfes-seeft-db",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "mysql-database",
+            "database": "seeft_db",
+            "username": "seeft",
+            "password": "password"
+        }
+    ]
+}

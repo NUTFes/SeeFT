@@ -1,4 +1,4 @@
-use seeft-db;
+use seeft_db;
 
 CREATE TABLE weather (
     id int(10) unsigned not null auto_increment,

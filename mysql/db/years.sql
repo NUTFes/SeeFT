@@ -1,4 +1,4 @@
-use seeft-db;
+use seeft_db;
 
 CREATE TABLE years (
     id int(10) unsigned not null auto_increment,
@@ -6,7 +6,7 @@ CREATE TABLE years (
     created_at datetime not null default current_timestamp,
     updated_at datetime not null default current_timestamp on update current_timestamp,
     PRIMARY KEY (id)
-)
+);
 
 INSERT into years (year) values (2022);
 INSERT into years (year) values (2023);

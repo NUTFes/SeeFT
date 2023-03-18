@@ -24,18 +24,22 @@ func InitializeServer() db.Client {
 	// ↓
 	// Repository
 	bureauRepository := repository.NewBureauRepository(client, crud)
+	shiftRepository := repository.NewShiftRepository(client, crud)
 
 	// UseCase
 	bureauUseCase := usecase.NewBureauUseCase(bureauRepository)
+	shiftUseCase := usecase.NewShiftUseCase(shiftRepository)
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
 	bureauController := controller.NewBureauController(bureauUseCase)
+	shiftContoller := controller.NewShiftController(shiftUseCase)
 
 	// router
 	router := router.NewRouter(
 		healthcheckController,
 		bureauController,
+		shiftContoller,
 	)
 
 	// Server

@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	rep "github.com/NUTFes/SeeFT/api/externals/repository"
-	"github.com/NUTFes/SeeFT/api/internals/entity"
+	rep "github.com/NUTFes/SeeFT/api/lib/externals/repository"
+	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
 	"github.com/pkg/errors"
 )
 
@@ -14,6 +14,7 @@ type bureauUseCase struct {
 
 type BureauUseCase interface {
   GetBureaus(context.Context) ([]entity.Bureau, error)
+  GetBureauByID(context.Context, string) (entity.Bureau, error) 
 }
 
 func NewBureauUseCase(rep rep.BureauRepository) BureauUseCase {
@@ -47,6 +48,21 @@ func (a *bureauUseCase) GetBureaus(c context.Context) ([]entity.Bureau, error) {
 		bureaues = append(bureaues, bureau)
 	}
 	return bureaues, nil
+}
+
+func (b *bureauUseCase) GetBureauByID(c context.Context, id string) (entity.Bureau, error) {
+	var bureau entity.Bureau
+	row, err := b.rep.Find(c, id)
+	err = row.Scan(
+		&bureau.ID,
+		&bureau.Name,
+		&bureau.CreatedAt,
+		&bureau.UpdatedAt,
+	)
+	if err != nil {
+		return bureau, err
+	}
+	return bureau, nil
 }
 
 

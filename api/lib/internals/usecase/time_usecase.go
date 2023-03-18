@@ -1,3 +1,5 @@
+package usecase
+
 // import '../entity/entity.dart';
 // import './repository/repository.dart';
 

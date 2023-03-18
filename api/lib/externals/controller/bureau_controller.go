@@ -14,9 +14,6 @@ type bureauController struct {
 type BureauController interface {
 	IndexBureau(echo.Context) error
 	ShowBureau(echo.Context) error
-	CreateBureau(echo.Context) error
-	UpdateBureau(echo.Context) error
-	DestroyBureau(echo.Context) error
 }
 
 func NewBureauController(u usecase.BureauUseCase) BureauController {
@@ -40,36 +37,6 @@ func (b *bureauController) ShowBureau(c echo.Context) error {
 	return c.JSON(http.StatusOK, bureau)
 }
 
-func (b *bureauController) CreateBureau(c echo.Context) error {
-	name := c.QueryParam("name")
-
-	latastBureau, err := b.u.CreateBureau(c.Request().Context(), name)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, latastBureau)
-}
-
-func (b *bureauController) UpdateBureau(c echo.Context) error {
-	id := c.Param("id")
-	name := c.QueryParam("name")
-
-	updatedBureau, err := b.u.UpdateBureau(c.Request().Context(), id, name)
-
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, updatedBureau)
-}
-
-func (b *bureauController) DestroyBureau(c echo.Context) error {
-	id := c.Param("id")
-	err := b.u.DestroyBureau(c.Request().Context(), id)
-	if err != nil {
-		return err
-	}
-	return c.String(http.StatusOK, "Destroy Bureau")
-}
 
 // import 'dart:convert';
 // import 'package:shelf/shelf.dart';
