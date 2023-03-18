@@ -5,6 +5,20 @@ GET = none
 up:
 	docker compose up
 
+.PHONY: up-db
+up-db:
+	docker compose up db
+
+.PHONY: up-mobile
+up-mobile:
+	docker compose up mobile
+
+.PHONY: up-api
+up-api:
+	docker compose up -d db
+	sleep 4
+	docker compose up api
+
 .PHONY: build
 build:
 	docker compose build
@@ -12,12 +26,6 @@ build:
 .PHONY: run
 run:
 	docker compose run --rm ${RUN}
-
-.PHONY: run-api
-run-api:
-	docker compose up -d db
-	sleep 4
-	docker compose up api
 
 .PHONY: down
 down:
