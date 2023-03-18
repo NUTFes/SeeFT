@@ -8,10 +8,6 @@ build/
 # Conventional directory for build outpu.
 build/
 
-# env
-*.env
-*.envrc
-
 # mac
 .DS_Store
 

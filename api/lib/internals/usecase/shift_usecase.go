@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	rep "github.com/NUTFes/SeeFT/api/externals/repository"
-	"github.com/NUTFes/SeeFT/api/internals/entity"
+	rep "github.com/NUTFes/SeeFT/api/lib/externals/repository"
+	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
 	"github.com/pkg/errors"
 )
 
@@ -13,21 +13,22 @@ type shiftUseCase struct {
 }
 
 type ShiftUseCase interface {
-  getShiftsByUser(context.Context, string) ([]entity.Shift, error)
-  getShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
+  GetShifts(context.Context) ([]entity.Shift, error)
+  GetShiftByID(context.Context, string) (entity.Shift, error)
+  GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
+  GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
 }
 
-func NewBureauUseCase(rep rep.BureauRepository) BureauUseCase {
-  return &bureauUseCase{rep}
+func NewShiftUseCase(rep rep.ShiftRepository) ShiftUseCase {
+  return &shiftUseCase{rep}
 }
 
-func (a *shiftUseCase) getShiftsByUser(c context.Context, id string) ([]entity.Shift, error) {
-
+func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
   shift := entity.Shift{}
   var shifts []entity.Shift
 
   // クエリー実行
-	rows, err := a.rep.Filter(c.UserID == id)
+	rows, err := a.rep.All(c)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +40,9 @@ func (a *shiftUseCase) getShiftsByUser(c context.Context, id string) ([]entity.S
 			&shift.UserID,
       &shift.Date,
       &shift.Time,
-      &shift.WorkID,
-      &shift.Weather,
-      &shift.Attendance,
+    	&shift.WorkID,
+  		&shift.Weather,
+  		&shift.Attendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -50,18 +51,38 @@ func (a *shiftUseCase) getShiftsByUser(c context.Context, id string) ([]entity.S
 			return nil, errors.Wrapf(err, "cannot connect SQL")
 		}
 
-		shifts = append(shifts, bureau)
+		shifts = append(shifts, shift)
 	}
 	return shifts, nil
 }
 
-func (a *shiftUseCase) getShiftsByUserAndDateAndWeather(c context.Context, id string, date string, weather string) ([]entity.Shift, error) {
+func (b *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift, error) {
+	var shift entity.Shift
+	row, err := b.rep.Find(c, id)
+	err = row.Scan(
+		&shift.ID,
+		&shift.UserID,
+    &shift.Date,
+    &shift.Time,
+  	&shift.WorkID,
+  	&shift.Weather,
+  	&shift.Attendance,
+		&shift.CreatedAt,
+		&shift.UpdatedAt,
+	)
+	if err != nil {
+		return shift, err
+	}
+	return shift, nil
+}
+
+func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.Shift, error) {
 
   shift := entity.Shift{}
   var shifts []entity.Shift
 
   // クエリー実行
-	rows, err := a.rep.Filter(c.UserID == id &&  c.date == date && c.weather == weather)
+	rows, err := a.rep.User(c, id)
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +92,11 @@ func (a *shiftUseCase) getShiftsByUserAndDateAndWeather(c context.Context, id st
 		err := rows.Scan(
 			&shift.ID,
 			&shift.UserID,
-      &shift.Date,
-      &shift.Time,
-      &shift.WorkID,
-      &shift.Weather,
-      &shift.Attendance,
+      		&shift.Date,
+      		&shift.Time,
+      		&shift.WorkID,
+      		&shift.Weather,
+      		&shift.Attendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -84,7 +105,41 @@ func (a *shiftUseCase) getShiftsByUserAndDateAndWeather(c context.Context, id st
 			return nil, errors.Wrapf(err, "cannot connect SQL")
 		}
 
-		shifts = append(shifts, bureau)
+		shifts = append(shifts, shift)
+	}
+	return shifts, nil
+}
+
+func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id string, date string, weather string) ([]entity.Shift, error) {
+
+  shift := entity.Shift{}
+  var shifts []entity.Shift
+
+  // クエリー実行
+	rows, err := a.rep.UserAndDateAndWeather(c, id, date, weather)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(
+			&shift.ID,
+			&shift.UserID,
+      		&shift.Date,
+      		&shift.Time,
+      		&shift.WorkID,
+      		&shift.Weather,
+     		 &shift.Attendance,
+			&shift.CreatedAt,
+			&shift.UpdatedAt,
+		)
+
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot connect SQL")
+		}
+
+		shifts = append(shifts, shift)
 	}
 	return shifts, nil
 }

@@ -1,3 +1,101 @@
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+
+	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
+	"github.com/NUTFes/SeeFT/api/lib/externals/repository/abstract"
+	"github.com/pkg/errors"
+)
+
+type shiftRepository struct {
+	client db.Client
+	crud   abstract.Crud
+}
+
+type ShiftRepository interface {
+	All(context.Context) (*sql.Rows, error)
+	Find(context.Context, string) (*sql.Row, error)
+	User(context.Context, string) (*sql.Rows, error)
+	UserAndDateAndWeather(context.Context, string, string, string) (*sql.Rows, error)
+	Create(context.Context, string) error
+	Update(context.Context, string, string) error
+	Destroy(context.Context, string) error
+	FindLatestRecord(context.Context) (*sql.Row, error)
+}
+
+func NewShiftRepository(c db.Client, ac abstract.Crud) ShiftRepository {
+	return &shiftRepository{c, ac}
+}
+
+// 全件取得
+func (b *shiftRepository) All(c context.Context) (*sql.Rows, error) {
+	query := "SELECT * FROM shift"
+	return b.crud.Read(c, query)
+}
+
+// 1件取得
+func (b *shiftRepository) Find(c context.Context, id string) (*sql.Row, error) {
+	query := "SELECT * FROM shift WHERE id =" + id
+	return b.crud.ReadByID(c, query)
+}
+
+// 特定のユーザ取得
+func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) {
+	query := "SELECT * FROM shift WHERE user_id =" + id
+	rows, err := b.client.DB().QueryContext(c, query)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot connect SQL")
+	}
+	fmt.Printf("\x1b[36m%s\n", query)
+	return rows, nil
+}
+
+// 特定のユーザと日時取得
+func (b *shiftRepository) UserAndDateAndWeather(c context.Context, id string, date string, weather string) (*sql.Rows, error) {
+	query := "SELECT * FROM shift WHERE user_id =" + id + " AND date =" + date + " AND weather =" + weather 
+	rows, err := b.client.DB().QueryContext(c, query)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot connect SQL")
+	}
+	fmt.Printf("\x1b[36m%s\n", query)
+	return rows, nil
+}
+
+// 作成
+func (b *shiftRepository) Create(c context.Context, name string) error {
+	query := "INSERT INTO shift (name) VALUES ('" + name + "')"
+	return b.crud.UpdateDB(c, query)
+}
+
+// 編集
+func (b *shiftRepository) Update(c context.Context, id string, name string) error {
+	query := "UPDATE shift SET name = '" + name + "' WHERE id = " + id
+	return b.crud.UpdateDB(c, query)
+}
+
+// 削除
+func (b *shiftRepository) Destroy(c context.Context, id string) error {
+	query := "DELETE FROM shift WHERE id =" + id
+	return b.crud.UpdateDB(c, query)
+}
+
+// 最新のbureauを取得する
+func (b *shiftRepository) FindLatestRecord(c context.Context) (*sql.Row, error) {
+	query := `
+		SELECT
+			*
+		FROM
+			shift
+		ORDER BY
+			id
+		DESC LIMIT 1
+	`
+	return b.crud.ReadByID(c, query)
+}
+
 // import '../../usecase/repository/shift_repository.dart';
 // import '../../entity/entity.dart';
 // import './external/database.dart';

@@ -11,6 +11,8 @@
 
 // type TaskController struct{}
 
+package controller
+
 // func (controller TaskController) TaskDetail(c *gin.Context) {
 // 	userID, _ := strconv.Atoi(c.Param("userID"))
 // 	day := c.Param("day")

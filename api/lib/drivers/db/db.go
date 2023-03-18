@@ -27,6 +27,7 @@ func ConnectMySQL() (client, error) {
 	dbHost := os.Getenv("NUTMEG_DB_HOST")
 	dbPort := os.Getenv("NUTMEG_DB_PORT")
 	dbName := os.Getenv("NUTMEG_DB_NAME")
+	
 	// MySQLに接続する
 	// データベース接続部分
 	// dbconf := "seeft:password@tcp(nutfes-seeft-db:3306)/seeft_db?charset=utf8mb4&parseTime=true"
