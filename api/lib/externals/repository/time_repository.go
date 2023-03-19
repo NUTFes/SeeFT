@@ -24,13 +24,13 @@ func NewTimeRepository(c db.Client, ac abstract.Crud) TimeRepository {
 
 // 全件取得
 func (b *timeRepository) All(c context.Context) (*sql.Rows, error) {
-	query := "SELECT * FROM time"
+	query := "SELECT * FROM times"
 	return b.crud.Read(c, query)
 }
 
 // 1件取得
 func (b *timeRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT * FROM time WHERE id =" + id
+	query := "SELECT * FROM times WHERE id =" + id
 	return b.crud.ReadByID(c, query)
 }
 

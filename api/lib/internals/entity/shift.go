@@ -1,15 +1,18 @@
 package entity
 
-import "time"
+import (
+	"time"
+)
 
 type Shift struct {
 	ID		   int    		`json:"id"`
-	UserID     uint    		`json:"userID"`
-	Date       string 		`json:"date"`
-	Time       string 		`json:"time"`
-	WorkID     uint    		`json:"workID"`
-	Weather    string 		`json:"weather"`
-	Attendance bool   		`json:"attendance"`
+	TaskID     int    		`json:"taskID"`
+	UserID     int    		`json:"userID"`
+	YearID	   int   		`json:"yearID"`
+	DateID     int		 	`json:"dateID"`
+	TimeID     int		 	`json:"timeID"`
+	WeatherID  int	 		`json:"weatherID"`
+	IsAttendance bool   	`json:"isAttendance"`
 	CreatedAt  time.Time	`json:"createdAt"`
 	UpdatedAt  time.Time	`json:"updatedAt"`
 }

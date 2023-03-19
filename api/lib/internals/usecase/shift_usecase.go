@@ -37,12 +37,13 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 	for rows.Next() {
 		err := rows.Scan(
 			&shift.ID,
+			&shift.TaskID,
 			&shift.UserID,
-      &shift.Date,
-      &shift.Time,
-    	&shift.WorkID,
-  		&shift.Weather,
-  		&shift.Attendance,
+			&shift.YearID,
+	  	&shift.DateID,
+	  	&shift.TimeID,
+  		&shift.WeatherID,
+  		&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -61,12 +62,13 @@ func (b *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 	row, err := b.rep.Find(c, id)
 	err = row.Scan(
 		&shift.ID,
+		&shift.TaskID,
 		&shift.UserID,
-    &shift.Date,
-    &shift.Time,
-  	&shift.WorkID,
-  	&shift.Weather,
-  	&shift.Attendance,
+		&shift.YearID,
+	 	&shift.DateID,
+		&shift.TimeID,
+  	&shift.WeatherID,
+  	&shift.IsAttendance,
 		&shift.CreatedAt,
 		&shift.UpdatedAt,
 	)
@@ -91,12 +93,13 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 	for rows.Next() {
 		err := rows.Scan(
 			&shift.ID,
+			&shift.TaskID,
 			&shift.UserID,
-      		&shift.Date,
-      		&shift.Time,
-      		&shift.WorkID,
-      		&shift.Weather,
-      		&shift.Attendance,
+			&shift.YearID,
+	  	&shift.DateID,
+	  	&shift.TimeID,
+  		&shift.WeatherID,
+  		&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -125,12 +128,13 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 	for rows.Next() {
 		err := rows.Scan(
 			&shift.ID,
+			&shift.TaskID,
 			&shift.UserID,
-      		&shift.Date,
-      		&shift.Time,
-      		&shift.WorkID,
-      		&shift.Weather,
-     		 &shift.Attendance,
+			&shift.YearID,
+	  	&shift.DateID,
+	  	&shift.TimeID,
+  		&shift.WeatherID,
+  		&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)

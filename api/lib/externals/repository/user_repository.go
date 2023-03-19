@@ -16,8 +16,8 @@ type userRepository struct {
 type UserRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
-	Create(context.Context, string, string, string) error
-	Update(context.Context, string, string, string, string) error
+	Create(context.Context, string, string, string, string) error
+	Update(context.Context, string, string, string, string, string) error
 	Delete(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 }
@@ -39,22 +39,23 @@ func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
 }
 
 // 作成
-func (ur *userRepository) Create(c context.Context, name string, bureauID string, roleID string) error {
+func (ur *userRepository) Create(c context.Context, name string, gradeID string, bureauID string, roleID string) error {
 	query := `
 		INSERT INTO
-			users (name, bureau_id, role_id)
-		VALUES ('` + name + "', " + bureauID + ", " + roleID + ")"
+			users (name, grade_id, bureau_id, role_id)
+		VALUES ('` + name + "', " + gradeID + ", " + bureauID + ", " + roleID + ")"
 	return ur.crud.UpdateDB(c, query)
 }
 
 // 編集
-func (ur *userRepository) Update(c context.Context, id string, name string, bureauID string, roleID string) error {
+func (ur *userRepository) Update(c context.Context, id string, name string, gradeID string, bureauID string, roleID string) error {
 	query := `
 		UPDATE
 			users
 		SET
 			name = '` + name +
-		"', bureau_id = " + bureauID +
+		"', grade_id = " + gradeID +
+		", bureau_id = " + bureauID +
 		", role_id = " + roleID +
 		" WHERE id = " + id
 	return ur.crud.UpdateDB(c, query)
