@@ -48,7 +48,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/shifts", r.shiftController.IndexShift)
 	e.GET("/shifts/:id", r.shiftController.ShowShift)
 	e.GET("/shifts/users/:user_id", r.shiftController.ShowShiftsByUser)
-	e.GET("/shifts/users/:user_id/date/:date/weather/:weather", r.shiftController.ShowShiftsByUserAndDateAndWeather)
+	e.GET("/shifts/users/:user_id/dates/:date/weathers/:weather", r.shiftController.ShowShiftsByUserAndDateAndWeather)
 
 	// taskのRoute
 	e.GET("/tasks", r.taskController.IndexTask)
@@ -62,7 +62,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	// users
 	e.GET("/users", r.userController.IndexUser)
 	e.GET("/users/:id", r.userController.ShowUser)
-	e.POST("/users", r.userController.CreateUser)
-	e.PUT("/users/:id", r.userController.UpdateUser)
+	e.POST("/users/:name/:mail/:grade_id/:department_id/:bureau_id/:role_id", r.userController.CreateUser)
+	e.PUT("/users/:id/:name/:mail/:grade_id/:department_id/:bureau_id/:role_id", r.userController.UpdateUser)
 	e.DELETE("/users/:id", r.userController.DeleteUser)
 }

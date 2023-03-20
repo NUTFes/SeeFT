@@ -55,6 +55,13 @@ get:
 vendor:
 	docker compose run --rm api go mod vendor
 
+.PHONY: seed
+seed:
+	docker compose run --rm api go mod tidy
+	docker compose up -d db
+	sleep 10
+	docker compose run --rm api go run /app/seeds/seeds.go
+
 # .PHONY: seed
 
 # seed:

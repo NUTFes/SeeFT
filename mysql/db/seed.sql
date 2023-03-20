@@ -4,7 +4,8 @@ INSERT INTO weathers
   (`weather`)
 VALUES
   ('晴れ'),
-  ('雨');
+  ('雨'),
+  ('none');
 
 INSERT INTO times
   (`time`)
@@ -40,7 +41,9 @@ VALUES
   ('20:00'),
   ('20:30'),
   ('21:00'),
-  ('21:30');
+  ('21:30'),
+  ('22:00'),
+  ('22:30');
   
 INSERT INTO grades
   (`grade`)
@@ -84,9 +87,9 @@ VALUES
   (42, 2023);
 
 INSERT INTO users
-  (`name`, `grade_id`, `bureau_id`, `role_id`)
+  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`)
 VALUES
-  ('Admin', 1, 1, 1);
+  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1);
 
 INSERT INTO permissions
   (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
@@ -100,6 +103,17 @@ VALUES
     ('admin'),
     ('SeeFT Director'),
     ('SeeFT Staff');
+
+INSERT INTO 
+  departments (name) 
+VALUES 
+  ('未所属'),
+  ('機械工学分野/機械創造工学課程・機械創造工学専攻'),
+  ('電気電子情報工学分野/電気電子情報工学課程/電気電子情報工学専攻'),
+  ('情報・経営システム工学分野/情報・経営システム工学課程/情報・経営システム工学専攻'),
+  ('物質生物工学分野/物質材料工学課程/生物機能工学課程/物質材料工学専攻/生物機能工学専攻'),
+  ('環境社会基盤工学分野/環境社会基盤工学課程/環境社会基盤工学専攻'),
+  ('量子・原子力統合工学分野/原子力システム安全工学専攻');
 
 -- 以下テスト用のデータなので本番環境で起こらないようにする
 INSERT INTO tasks

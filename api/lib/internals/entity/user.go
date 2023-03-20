@@ -1,15 +1,19 @@
 package entity
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
-	ID        int    	`json:"id"`
-	Name      string 	`json:"name"`
-	GradeID   int		`json:"gradeID"`
-	BureauID  int       `json:"bureauID"`	
-	RoleID    int       `json:"roleID"`
-	CreatedAt time.Time	`json:"createdAt"`
-	UpdatedAt time.Time	`json:"updatedAt"`
+	ID        		int    	`json:"id"`
+	Name      		string 	`json:"name"`
+	Mail	  		string	`json:"mail"`
+	GradeID   		int		`json:"gradeID"`
+	DepartmentID 	int 	`json:"departmentID"`
+	BureauID  		int     `json:"bureauID"`	
+	RoleID    		int     `json:"roleID"`
+	CreatedAt 		time.Time	`json:"createdAt"`
+	UpdatedAt 		time.Time	`json:"updatedAt"`
 }
 
 // class User {

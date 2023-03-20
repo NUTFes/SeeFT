@@ -7,6 +7,7 @@ import (
   "os"
 )
 
+
 type gormClient struct {
 	db *gorm.DB
 }
@@ -27,11 +28,12 @@ func ConnectMySQLFromGorm() (GormClient, error) {
 	dbName := os.Getenv("NUTMEG_DB_NAME")
 	dns := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true"
 	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{})
+
 	if err != nil {
-		fmt.Println("[Failed] Not Connect to MySQL")
+		fmt.Println("[Failed] Not Connect to MySQL form Grom")
 		return nil, err
 	} else {
-		fmt.Println("[Success] Connect to MySQL")
+		fmt.Println("[Success] Connect to MySQL form Grom")
 		return gormClient{db}, nil
 	}
 }

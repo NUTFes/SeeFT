@@ -9,8 +9,6 @@ import (
 func main() {
 	client := di.InitializeServer()
 	defer client.CloseDB()
-	// db.Init()
-	// server.Init()
 }
 
 // func main() async {
