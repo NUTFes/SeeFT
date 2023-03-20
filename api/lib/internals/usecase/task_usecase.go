@@ -1,85 +1,112 @@
 package usecase
 
-// import (
-//   "context"
+import (
+  "context"
 
-// 	rep "github.com/NUTFes/SeeFT/api/lib/externals/repository"
-// 	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
-// 	"github.com/pkg/errors"
-// )
+	rep "github.com/NUTFes/SeeFT/api/lib/externals/repository"
+	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
+	"github.com/pkg/errors"
+)
 
-// type taskUseCase struct {
-//   rep rep.ShiftRepository
-// }
+type taskUseCase struct {
+  rep rep.TaskRepository
+}
 
-// type TaskUseCase interface {
-//   getTasks(context.Context) ([]entity.Task, error)
-//   getTaskByShift(context.Context, string) ([]entity.Task, error)
-// }
+type TaskUseCase interface {
+  GetTasks(context.Context) ([]entity.Task, error)
+  GetTaskByID(context.Context, string) (entity.Task, error)
+  GetTasksByShift(context.Context, string) ([]entity.Task, error)
+}
 
-// func NewTaskUseCase(rep rep.TaskRepository) TaskUseCase {
-//   return &taskUseCase{rep}
-// }
+func NewTaskUseCase(rep rep.TaskRepository) TaskUseCase {
+  return &taskUseCase{rep}
+}
 
-// func (a *taskUseCase) getTasks(c context.Context) ([]entity.Task, error) {
-//   task := entity.Task{}
-//   var tasks []entity.Task
+func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
+  task := entity.Task{}
+  var tasks []entity.Task
 
-//   rows, err := b.rep.All(c)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
+  rows, err := b.rep.All(c)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-//   for rows.Next() {
-// 		err := rows.Scan(
-// 			&task.ID,
-// 			&task.Name,
-// 			&task.Url,
-// 			&task.Place,
-//       &task.President,
-//       &task.Tel,
-//       &task.Color
-// 			&task.CreatedAt,
-// 			&task.UpdatedAt,
-// 		)
-// 		if err != nil {
-// 			return nil, errors.Wrapf(err, "cannot connect SQL")
-// 		}
-// 		tasks = append(tasks, task)
-// 	}
-// 	return tasks, nil
-// }
+  for rows.Next() {
+		err := rows.Scan(
+			&task.ID,
+			&task.Name,
+			&task.Place,
+			&task.Url,
+      &task.Superviser,
+      &task.Notes,
+      &task.YearID,
+			&task.Color,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot connect SQL")
+		}
+    
+		tasks = append(tasks, task)
+	}
+  
+	return tasks, nil
+}
 
-// func (a *taskUseCase) getTaskByShift(c context.Context, shift string) ([]entity.Task, error) {
-//   task := entity.Task{}
-//   var tasks []entity.Task
+func (b *taskUseCase) GetTaskByID(c context.Context, id string) (entity.Task, error) {
+  var task entity.Task
+  row, err := b.rep.Find(c, id)
+	err = row.Scan(
+		&task.ID,
+		&task.Name,
+		&task.Place,
+		&task.Url,
+    &task.Superviser,
+    &task.Notes,
+    &task.YearID,
+		&task.Color,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+	)
+	if err != nil {
+		return task, err
+	}
+		
+	return task, nil
+}
 
-//   rows, err := b.rep.Find(c, shift)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
+func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity.Task, error) {
+  task := entity.Task{}
+  var tasks []entity.Task
 
-//   for rows.Next() {
-// 		err := rows.Scan(
-// 			&task.ID,
-// 			&task.Name,
-// 			&task.Url,
-// 			&task.Place,
-//       &task.President,
-//       &task.Tel,
-//       &task.Color
-// 			&task.CreatedAt,
-// 			&task.UpdatedAt,
-// 		)
-// 		if err != nil {
-// 			return nil, errors.Wrapf(err, "cannot connect SQL")
-// 		}
-// 		tasks = append(tasks, task)
-// 	}
-// 	return tasks, nil
-// }
+  rows, err := b.rep.Shift(c, shift)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+  for rows.Next() {
+		err := rows.Scan(
+			&task.ID,
+			&task.Name,
+			&task.Place,
+			&task.Url,
+      &task.Superviser,
+      &task.Notes,
+      &task.YearID,
+			&task.Color,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot connect SQL")
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
+}
 
 // import '../entity/entity.dart';
 // import './repository/repository.dart';

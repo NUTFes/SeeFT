@@ -1,8 +1,8 @@
 use seeft_db;
 
-CREATE TABLE weather (
-    id int(10) unsigned not null auto_increment,
-    weather varchar(255) not null,
+CREATE TABLE years (
+    id int(10) unsigned unique not null,
+    year int(10) unsigned unique not null,
     created_at datetime not null default current_timestamp,
     updated_at datetime not null default current_timestamp on update current_timestamp,
     PRIMARY KEY (id)

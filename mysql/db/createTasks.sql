@@ -1,15 +1,16 @@
 use seeft_db;
 
-CREATE TABLE task_detail (
+CREATE TABLE tasks (
     id int(10) unsigned not null auto_increment,
-    task varchar(255) not null,
-    palce varchar(255) not null,
-    url varchar(255),
+    name varchar(255) not null,
+    place varchar(255) not null,
+    url varchar(255) not null,
     superviser varchar(255) not null,
+    color varchar(255) not null default "fffafa",
     notes varchar(255),
-    yaer_id int(10) not null,
-    users varchar(255) not null,
+    year_id int(10) unsigned not null,
     created_at datetime not null default current_timestamp,
     updated_at datetime not null default current_timestamp on update current_timestamp,
     PRIMARY KEY (id)
 );
+

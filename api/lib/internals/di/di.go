@@ -25,21 +25,33 @@ func InitializeServer() db.Client {
 	// Repository
 	bureauRepository := repository.NewBureauRepository(client, crud)
 	shiftRepository := repository.NewShiftRepository(client, crud)
+	taskRepository := repository.NewTaskRepository(client, crud)
+	timeRepository := repository.NewTimeRepository(client, crud)
+	userRepository := repository.NewUserRepository(client, crud)
 
 	// UseCase
 	bureauUseCase := usecase.NewBureauUseCase(bureauRepository)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepository)
+	taskUseCase := usecase.NewTaskUseCase(taskRepository)
+	timeUsecase := usecase.NewTimeUseCase(timeRepository)
+	userUseCase := usecase.NewUserUseCase(userRepository)
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
 	bureauController := controller.NewBureauController(bureauUseCase)
 	shiftContoller := controller.NewShiftController(shiftUseCase)
+	taskController := controller.NewTaskController(taskUseCase)
+	timeController := controller.NewTimeController(timeUsecase)
+	userController := controller.NewUserController(userUseCase)
 
 	// router
 	router := router.NewRouter(
 		healthcheckController,
 		bureauController,
 		shiftContoller,
+		taskController,
+		timeController,
+		userController,
 	)
 
 	// Server

@@ -16,7 +16,7 @@ up-mobile:
 .PHONY: up-api
 up-api:
 	docker compose up -d db
-	sleep 4
+	sleep 10
 	docker compose up api
 
 .PHONY: build
@@ -54,6 +54,13 @@ get:
 .PHONY: vendor
 vendor:
 	docker compose run --rm api go mod vendor
+
+.PHONY: seed
+seed:
+	docker compose run --rm api go mod tidy
+	docker compose up -d db
+	sleep 10
+	docker compose run --rm api go run /app/seeds/seeds.go
 
 # .PHONY: seed
 

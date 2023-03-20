@@ -7,10 +7,11 @@ import (
 type Task struct {
 	ID        int    	`json:"id"`
 	Name      string 	`json:"name"`
-	Url       string 	`json:"url"`
-	Place     string	`json:"palce"`	
-	President string	`json:"president"`
-	Tel       string	`json:"tel"`
+	Place     string	`json:"palce"`
+	Url       string 	`json:"url"`	
+	Superviser string	`json:"superviser"`
+	Notes     string	`json:"notes"`
+	YearID	  int		`json:"yearID"`
 	Color     string	`json:"color"`
 	CreatedAt time.Time	`json:"createdAt"`
 	UpdatedAt time.Time	`json:"updatetedAt"`

@@ -37,6 +37,7 @@ func (a *bureauUseCase) GetBureaus(c context.Context) ([]entity.Bureau, error) {
 		err := rows.Scan(
 			&bureau.ID,
 			&bureau.Name,
+			&bureau.Color,
 			&bureau.CreatedAt,
 			&bureau.UpdatedAt,
 		)
@@ -56,6 +57,7 @@ func (b *bureauUseCase) GetBureauByID(c context.Context, id string) (entity.Bure
 	err = row.Scan(
 		&bureau.ID,
 		&bureau.Name,
+		&bureau.Color,
 		&bureau.CreatedAt,
 		&bureau.UpdatedAt,
 	)
