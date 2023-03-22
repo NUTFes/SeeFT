@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id int(10) unsigned not null auto_increment,
   name varchar(255) not null,
   mail varchar(255) not null unique,

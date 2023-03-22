@@ -62,8 +62,8 @@ func (b *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 	row, err := b.rep.Find(c, id)
 	err = row.Scan(
 		&shift.ID,
-		&shift.TaskID,
 		&shift.UserID,
+		&shift.TaskID,
 		&shift.YearID,
 	 	&shift.DateID,
 		&shift.TimeID,
@@ -93,8 +93,8 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 	for rows.Next() {
 		err := rows.Scan(
 			&shift.ID,
-			&shift.TaskID,
 			&shift.UserID,
+			&shift.TaskID,
 			&shift.YearID,
 	  	&shift.DateID,
 	  	&shift.TimeID,
@@ -128,8 +128,8 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 	for rows.Next() {
 		err := rows.Scan(
 			&shift.ID,
-			&shift.TaskID,
 			&shift.UserID,
+			&shift.TaskID,
 			&shift.YearID,
 	  	&shift.DateID,
 	  	&shift.TimeID,

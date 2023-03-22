@@ -32,19 +32,19 @@ func NewShiftRepository(c db.Client, ac abstract.Crud) ShiftRepository {
 
 // 全件取得
 func (b *shiftRepository) All(c context.Context) (*sql.Rows, error) {
-	query := "SELECT * FROM shift"
+	query := "SELECT * FROM shifts"
 	return b.crud.Read(c, query)
 }
 
 // 1件取得
 func (b *shiftRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT * FROM shift WHERE id =" + id
+	query := "SELECT * FROM shifts WHERE id =" + id
 	return b.crud.ReadByID(c, query)
 }
 
 // 特定のユーザ取得
 func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) {
-	query := "SELECT * FROM shift WHERE user_id =" + id
+	query := "SELECT * FROM shifts WHERE user_id =" + id
 	rows, err := b.client.DB().QueryContext(c, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
@@ -55,7 +55,7 @@ func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) 
 
 // 特定のユーザと日時取得
 func (b *shiftRepository) UserAndDateAndWeather(c context.Context, id string, date string, weather string) (*sql.Rows, error) {
-	query := "SELECT * FROM shift WHERE user_id =" + id + " AND date =" + date + " AND weather =" + weather 
+	query := "SELECT * FROM shifts WHERE user_id =" + id + " AND date =" + date + " AND weather =" + weather 
 	rows, err := b.client.DB().QueryContext(c, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")

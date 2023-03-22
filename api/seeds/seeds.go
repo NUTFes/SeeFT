@@ -92,7 +92,7 @@ func taskInput() error {
 
 	// fmt.Println(record)
 
-	for i := 0; i < len(record); i++ {
+	for i := 1; i < len(record); i++ {
 		task := Task{Name: record[i][0], Place: record[i][1], URL:record[i][2] ,Superviser: record[i][3], Color: record[i][4], Notes: record[i][5], YearID: yearID}
 		// fmt.Println(task)
 		result := tx.DB().Create(&task)
@@ -139,9 +139,9 @@ func shiftInput() error {
 		var dateID int
 		if strings.Contains(v, "pre") {
 			dateID = 1
-		} else if strings.Contains(v, "current1") {
+		} else if strings.Contains(v, "current_1") {
 			dateID = 2
-		} else if strings.Contains(v, "current2") {
+		} else if strings.Contains(v, "current_2") {
 			dateID = 3
 		} else {
 			dateID = 4

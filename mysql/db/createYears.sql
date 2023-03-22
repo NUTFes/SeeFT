@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE years (
+CREATE TABLE IF NOT EXISTS years (
     id int(10) unsigned unique not null,
     year int(10) unsigned unique not null,
     created_at datetime not null default current_timestamp,

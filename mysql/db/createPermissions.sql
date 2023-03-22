@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE permissions (
+CREATE TABLE IF NOT EXISTS permissions (
     user_id int(10) unsigned,
     allow_shift boolean not null default false,
     allow_task boolean not null default false,

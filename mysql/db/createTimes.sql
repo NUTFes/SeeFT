@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE times (
+CREATE TABLE IF NOT EXISTS times (
     id int(10) unsigned not null auto_increment,
     time varchar(255) not null,
     created_at datetime not null default current_timestamp,

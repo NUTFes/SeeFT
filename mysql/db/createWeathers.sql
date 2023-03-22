@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE weathers (
+CREATE TABLE IF NOT EXISTS weathers (
   id int(10) unsigned not null auto_increment,
   weather varchar(255) not null,
   created_at datetime not null default current_timestamp,

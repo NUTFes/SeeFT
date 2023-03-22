@@ -39,9 +39,9 @@ func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
 			&task.Place,
 			&task.Url,
       &task.Superviser,
+	  &task.Color,
       &task.Notes,
       &task.YearID,
-			&task.Color,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 		)
@@ -64,9 +64,9 @@ func (b *taskUseCase) GetTaskByID(c context.Context, id string) (entity.Task, er
 		&task.Place,
 		&task.Url,
     &task.Superviser,
+	&task.Color,
     &task.Notes,
     &task.YearID,
-		&task.Color,
 		&task.CreatedAt,
 		&task.UpdatedAt,
 	)
@@ -94,9 +94,9 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 			&task.Place,
 			&task.Url,
       &task.Superviser,
+	  &task.Color,
       &task.Notes,
       &task.YearID,
-			&task.Color,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 		)

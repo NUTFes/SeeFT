@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id int(10) unsigned not null auto_increment,
     name varchar(255) not null,
     created_at datetime not null default current_timestamp,
