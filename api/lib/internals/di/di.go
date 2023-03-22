@@ -23,6 +23,7 @@ func InitializeServer() db.Client {
 
 	// ↓
 	// Repository
+	sessionRepository := repository.NewSessionRepository(client)
 	bureauRepository := repository.NewBureauRepository(client, crud)
 	shiftRepository := repository.NewShiftRepository(client, crud)
 	taskRepository := repository.NewTaskRepository(client, crud)
@@ -30,6 +31,7 @@ func InitializeServer() db.Client {
 	userRepository := repository.NewUserRepository(client, crud)
 
 	// UseCase
+	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
 	bureauUseCase := usecase.NewBureauUseCase(bureauRepository)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepository)
 	taskUseCase := usecase.NewTaskUseCase(taskRepository)
@@ -38,6 +40,7 @@ func InitializeServer() db.Client {
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
+	mailAuthController := controller.NewMailAuthController(mailAuthUseCase)
 	bureauController := controller.NewBureauController(bureauUseCase)
 	shiftContoller := controller.NewShiftController(shiftUseCase)
 	taskController := controller.NewTaskController(taskUseCase)
@@ -47,6 +50,7 @@ func InitializeServer() db.Client {
 	// router
 	router := router.NewRouter(
 		healthcheckController,
+		mailAuthController,
 		bureauController,
 		shiftContoller,
 		taskController,

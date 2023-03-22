@@ -7,6 +7,7 @@ import (
 
 type router struct {
 	healthcheckController     controller.HealthcheckController
+	mailAuthController		  controller.MailAuthController
 	bureauController          controller.BureauController
 	shiftController 		  		controller.ShiftController
 	taskController			  		controller.TaskController
@@ -20,6 +21,7 @@ type Router interface {
 
 func NewRouter(
 	healthController controller.HealthcheckController,
+	mailAuthController controller.MailAuthController,
 	bureauController controller.BureauController,
 	shiftContoller controller.ShiftController,
 	taskController controller.TaskController,
@@ -28,6 +30,7 @@ func NewRouter(
 ) Router {
 	return router{
 		healthController,
+		mailAuthController,
 		bureauController,
 		shiftContoller,
 		taskController,
@@ -39,6 +42,9 @@ func NewRouter(
 func (r router) ProvideRouter(e *echo.Echo) {
 	// Healthcheck
 	e.GET("/", r.healthcheckController.IndexHealthcheck)
+
+	// mail auth
+	e.POST("/mail_auth/signin", r.mailAuthController.SignIn)
 
 	// bureauのRoute
 	e.GET("/bureaus", r.bureauController.IndexBureau)

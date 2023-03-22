@@ -16,6 +16,10 @@ type User struct {
 	UpdatedAt 		time.Time	`json:"updatedAt"`
 }
 
+type Token struct {
+	AccessToken string `json:"accessToken"`
+}
+
 // class User {
 //   final int id;
 //   final String name;

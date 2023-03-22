@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
 	"github.com/NUTFes/SeeFT/api/lib/externals/repository/abstract"
@@ -16,6 +17,7 @@ type userRepository struct {
 type UserRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
+	FindByMail(context.Context, string) (*sql.Row)
 	Create(context.Context, string, string, string, string, string, string) error
 	Update(context.Context, string, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
@@ -37,6 +39,15 @@ func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
 	query := "SELECT * FROM users WHERE id = " + id
 	return ur.crud.ReadByID(c, query)
 }
+
+// メールから取得
+func (ur *userRepository) FindByMail(c context.Context, mail string) (*sql.Row) {
+	query := "SELECT * FROM users WHERE mail = " + mail
+	row := ur.client.DB().QueryRowContext(c, query)
+	fmt.Printf("\x1b[36m%s\n", query)
+	return row
+}
+
 
 // 作成
 func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string) error {
