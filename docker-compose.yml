@@ -37,14 +37,19 @@ services:
     depends_on:
       db: 
         condition: service_started
-
+  
   mobile:
     container_name: nutfes-seeft-mobile
-    build: ./mobile
+    build: ./seeft-mobile
     volumes:
-      - ./mobile:/app
+      - ./seeft-mobile:/app
     ports:
       - 3000:3000
+    restart: always
     stdin_open: true
     tty: true
+    depends_on:
+      api: 
+        condition: service_started
+
 

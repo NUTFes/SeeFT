@@ -3,7 +3,7 @@ GET = none
 
 .PHONY: up
 up:
-	docker compose up
+	docker compose up 
 
 .PHONY: up-db
 up-db:

@@ -44,7 +44,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/", r.healthcheckController.IndexHealthcheck)
 
 	// mail auth
-	e.POST("/mail_auth/signin", r.mailAuthController.SignIn)
+	e.GET("/mail_auth/signin/:email", r.mailAuthController.SignIn)
 
 	// bureauのRoute
 	e.GET("/bureaus", r.bureauController.IndexBureau)

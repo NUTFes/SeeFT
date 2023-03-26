@@ -62,7 +62,7 @@ class Api {
 
 // Example
   Future getMyShift(id) async {
-    String url = constant.apiUrl + 'shift/' + id;
+    String url = constant.apiUrl + '/shifts/' + id;
     try {
       return await get(url);
     } catch (err) {
@@ -74,7 +74,8 @@ class Api {
 
   // 準備日晴れシフト
   Future getMyShiftPreparationDaySunny(id) async {
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -87,7 +88,8 @@ class Api {
   // 準備日雨シフト
   Future getMyShiftPreparationDayRainy(id) async {
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/2';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -100,7 +102,8 @@ class Api {
   // 当日1日目晴れシフト
   Future getMyShiftCurrentFirstDaySunny(id) async {
     // 一旦準備日のseedデータを使用
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
     //String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
@@ -115,7 +118,8 @@ class Api {
   Future getMyShiftCurrentFirstDayRainy(id) async {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/2';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -128,7 +132,8 @@ class Api {
   // 当日2日目晴れシフト
   Future getMyShiftCurrentSecondDaySunny(id) async {
     // 一旦準備日のseedデータを使用
-     String url = constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
     //String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
@@ -143,7 +148,8 @@ class Api {
   Future getMyShiftCurrentSecondDayRainy(id) async {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/2';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -157,7 +163,8 @@ class Api {
   Future getMyShiftCleanupDay(id) async {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/4/weathers/1';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -169,7 +176,7 @@ class Api {
 
   // マニュアル一覧
   Future getAllManual() async {
-    String url = constant.apiUrl + 'tasks';
+    String url = constant.apiUrl + '/tasks';
     try {
       return await get(url);
     } catch (err) {
@@ -181,7 +188,7 @@ class Api {
 
   // POST Sign In (リダイレクションエラーが返ってくるため不使用)
   Future postSignIn(request) async {
-    var url = Uri.parse(constant.apiUrl + 'auth');
+    var url = Uri.parse(constant.apiUrl + '/auth');
     var response = await http.post(url,
         body: {'mail': 'y.kugue.nutfes@gmail.com', 'password': 'gidaifes'});
 
@@ -196,8 +203,9 @@ class Api {
 
   // Get Sign In
   Future signIn(mail) async {
+    var url = constant.apiUrl + "/mail_auth/signin/" + mail;
+    logger.i(url);
     try {
-      var url = constant.apiUrl + "auth/signin/" + mail;
       return await api.get(url);
     } catch (e) {
       logger.e('failed got.');
