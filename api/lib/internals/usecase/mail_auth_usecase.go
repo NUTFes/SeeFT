@@ -10,25 +10,20 @@ import (
 	// "github.com/pkg/errors"
 )
 
-type LoginUser struct {
-	userID int
-	mail string
-}
-
 type mailAuthUseCase struct {
 	userRep rep.UserRepository
 	sessionRep  rep.SessionRepository
 }
 
 type MailAuthUseCase interface {
-	SignIn(context.Context, string) (LoginUser, error)
+	SignIn(context.Context, string) (entity.LoginUser, error)
 }
 
 func NewAuthUseCase(userRep rep.UserRepository, sessionRep rep.SessionRepository) MailAuthUseCase {
 	return &mailAuthUseCase{userRep: userRep, sessionRep: sessionRep}
 }
 
-func (u *mailAuthUseCase) SignIn(c context.Context, email string) (LoginUser, error) {
+func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginUser, error) {
 	var user = entity.User{}
 	// var token entity.Token
 	// メールアドレスの存在確認
@@ -46,7 +41,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, email string) (LoginUser, er
 	)
 	// パスワードがあっているか確認
 	// err = bcrypt.CompareHashAndPassword([]byte(mailAuth.Password), []byte(password))
-	loginUser := LoginUser{userID: user.ID, mail: user.Mail}
+	loginUser := entity.LoginUser{UserID: user.ID, Mail: user.Mail}
 	if err != nil {
 		return loginUser, err
 	}

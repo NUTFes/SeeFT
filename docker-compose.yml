@@ -40,9 +40,9 @@ services:
   
   mobile:
     container_name: nutfes-seeft-mobile
-    build: ./seeft-mobile
+    build: ./mobile
     volumes:
-      - ./seeft-mobile:/app
+      - ./mobile:/app
     ports:
       - 3000:3000
     restart: always

@@ -22,10 +22,9 @@ func NewMailAuthController(u usecase.MailAuthUseCase) MailAuthController {
 // sign in
 func (auth *mailAuthController) SignIn(c echo.Context) error {
 	email := c.QueryParam("email")
-	token, err := auth.u.SignIn(c.Request().Context(), email)
+	user, err := auth.u.SignIn(c.Request().Context(), email)
 	if err != nil {
 		return err
 	}
-	c.JSON(http.StatusOK, token)
-	return nil
+	return c.JSON(http.StatusOK, user)
 }

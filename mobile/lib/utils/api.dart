@@ -203,7 +203,7 @@ class Api {
 
   // Get Sign In
   Future signIn(mail) async {
-    var url = constant.apiUrl + "/mail_auth/signin/" + mail;
+    var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
     logger.i(url);
     try {
       return await api.get(url);

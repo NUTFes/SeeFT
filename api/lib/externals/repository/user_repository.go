@@ -42,7 +42,7 @@ func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
 
 // メールから取得
 func (ur *userRepository) FindByMail(c context.Context, mail string) (*sql.Row) {
-	query := "SELECT * FROM users WHERE mail = " + mail
+	query := "SELECT * FROM users WHERE mail = '" + mail + "'"
 	row := ur.client.DB().QueryRowContext(c, query)
 	fmt.Printf("\x1b[36m%s\n", query)
 	return row
