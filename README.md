@@ -1,23 +1,14 @@
 # SeeFT
 
-## Build
+## Installation
 ``` fish
 make build
-```
-
-## 初期データの追加
-``` fish
 make seed
 ```
 
 ## APIの起動
 ``` fish
-make up-db
-```
-
-## データベースのみ起動
-``` fish
-make up-db
+make up-api
 ```
 
 ## mobileの起動
@@ -33,6 +24,16 @@ docker compose down -v
 ```
 
 ## Note
+### 初期データの追加
+``` fish
+make seed
+```
+
+### データベースのみ起動
+``` fish
+make up-db
+```
+
 ### Develop
 git submodule update --init
 
