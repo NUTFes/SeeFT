@@ -1,12 +1,17 @@
 package router
 
 import (
-	"github.com/NUTFes/SeeFT/api/lib/externals/controller"
+	"net/http"
+
+	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	// "github.com/labstack/echo"
 )
 
 type router struct {
 	healthcheckController     controller.HealthcheckController
+	mailAuthController		  controller.MailAuthController
 	bureauController          controller.BureauController
 	shiftController 		  		controller.ShiftController
 	taskController			  		controller.TaskController
@@ -20,6 +25,7 @@ type Router interface {
 
 func NewRouter(
 	healthController controller.HealthcheckController,
+	mailAuthController controller.MailAuthController,
 	bureauController controller.BureauController,
 	shiftContoller controller.ShiftController,
 	taskController controller.TaskController,
@@ -28,6 +34,7 @@ func NewRouter(
 ) Router {
 	return router{
 		healthController,
+		mailAuthController,
 		bureauController,
 		shiftContoller,
 		taskController,
@@ -37,8 +44,18 @@ func NewRouter(
 }
 
 func (r router) ProvideRouter(e *echo.Echo) {
+	
+	e.Use(middleware.Logger())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+	}))
+
 	// Healthcheck
 	e.GET("/", r.healthcheckController.IndexHealthcheck)
+
+	// mail auth
+	e.GET("/mail_auth/signin", r.mailAuthController.SignIn)
 
 	// bureauのRoute
 	e.GET("/bureaus", r.bureauController.IndexBureau)

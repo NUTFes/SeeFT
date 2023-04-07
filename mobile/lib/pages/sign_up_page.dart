@@ -98,7 +98,7 @@ class _SignUpPageState extends State<SignUpPage> {
             contentAge(size),
             contentGender(size),
             contentStore(size),
-            RaisedButton(
+            ElevatedButton(
               onPressed: _submission,
               child: Text('登録'),
             )

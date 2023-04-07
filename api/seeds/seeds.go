@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
-	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
+	"github.com/NUTFes/SeeFT/api/lib/externals/db"
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 )
 
 /*
@@ -92,7 +92,7 @@ func taskInput() error {
 
 	// fmt.Println(record)
 
-	for i := 0; i < len(record); i++ {
+	for i := 1; i < len(record); i++ {
 		task := Task{Name: record[i][0], Place: record[i][1], URL:record[i][2] ,Superviser: record[i][3], Color: record[i][4], Notes: record[i][5], YearID: yearID}
 		// fmt.Println(task)
 		result := tx.DB().Create(&task)
@@ -139,9 +139,9 @@ func shiftInput() error {
 		var dateID int
 		if strings.Contains(v, "pre") {
 			dateID = 1
-		} else if strings.Contains(v, "current1") {
+		} else if strings.Contains(v, "current_1") {
 			dateID = 2
-		} else if strings.Contains(v, "current2") {
+		} else if strings.Contains(v, "current_2") {
 			dateID = 3
 		} else {
 			dateID = 4
@@ -162,18 +162,19 @@ func shiftInput() error {
 		// 39thのシフトと変更点があるので修正必須
 		// 学年と局の情報が追加されます。
 		for i := 2; i < len(record[0]); i++ {
+			var user entity.User
+
+			name := strings.ReplaceAll(record[3][i], " ", "")
+			name = strings.ReplaceAll(name, "　", "")
+			fmt.Println(name)
+
+			if err := tx.DB().Table("users").Where("name = ?", name).First(&user).Error; err != nil {
+				fmt.Println(err)
+				i++
+				break
+			}
+
 			for j := 4; j < len(record); j++ {
-				var user entity.User
-
-				name := strings.ReplaceAll(record[3][i], " ", "")
-				name = strings.ReplaceAll(name, "　", "")
-				// fmt.Println(name)
-
-				if err := tx.DB().Table("users").Where("name = ?", name).First(&user).Error; err != nil {
-					fmt.Println(err)
-					i++
-					break
-				}
 
 				var task entity.Task
 				if err := tx.DB().Table("tasks").Where("name = ?", record[j][i]).First(&task).Error; 
@@ -185,7 +186,7 @@ func shiftInput() error {
 				err != nil {
 				}
 
-				shift := Shift{task.ID, user.ID,  yearID, dateID, time.ID, weatherID}
+				shift := Shift{TaskID:task.ID, UserID:user.ID,  YearID:yearID, DateID:dateID, TimeID:time.ID, WeatherID:weatherID}
 				// fmt.Println(shift)
 				result := tx.DB().Create(&shift)
 				if result.Error != nil {

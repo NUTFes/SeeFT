@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE departments (
+CREATE TABLE IF NOT EXISTS departments (
   id int(10) unsigned not null auto_increment,
   name varchar(255),
   created_at datetime not null default current_timestamp,

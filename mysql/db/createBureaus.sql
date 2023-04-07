@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE bureaus (
+CREATE TABLE IF NOT EXISTS bureaus (
     id int(10) unsigned not null auto_increment,
     name varchar(255) not null,
     color varchar(255) not null default "fffafa",

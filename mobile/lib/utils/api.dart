@@ -42,14 +42,17 @@ class Api {
 
   Future get(url) async {
     // debug
+    // localhostだとエラー起こるため
     // bool trustSelfSigned = true;
     // HttpClient httpClient = new HttpClient()
     //   ..badCertificateCallback =
     //       ((X509Certificate cert, String host, int port) => trustSelfSigned);
     // IOClient ioClient = new IOClient(httpClient);
+
     final uri = Uri.parse(url);
+    logger.i(uri);
     final response = await http.get(uri);
-    // final response = await ioClient.get(url);
+    // final response = await ioClient.get(uri);
 
     if (response.statusCode == 200) {
       logger.d('success get');
@@ -62,7 +65,7 @@ class Api {
 
 // Example
   Future getMyShift(id) async {
-    String url = constant.apiUrl + 'shift/' + id;
+    String url = constant.apiUrl + '/shifts/' + id;
     try {
       return await get(url);
     } catch (err) {
@@ -74,7 +77,8 @@ class Api {
 
   // 準備日晴れシフト
   Future getMyShiftPreparationDaySunny(id) async {
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -87,7 +91,8 @@ class Api {
   // 準備日雨シフト
   Future getMyShiftPreparationDayRainy(id) async {
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/2';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -100,7 +105,8 @@ class Api {
   // 当日1日目晴れシフト
   Future getMyShiftCurrentFirstDaySunny(id) async {
     // 一旦準備日のseedデータを使用
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
     //String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
@@ -115,7 +121,8 @@ class Api {
   Future getMyShiftCurrentFirstDayRainy(id) async {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/2';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -128,7 +135,8 @@ class Api {
   // 当日2日目晴れシフト
   Future getMyShiftCurrentSecondDaySunny(id) async {
     // 一旦準備日のseedデータを使用
-     String url = constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
     //String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
@@ -143,7 +151,8 @@ class Api {
   Future getMyShiftCurrentSecondDayRainy(id) async {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/2';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -157,7 +166,8 @@ class Api {
   Future getMyShiftCleanupDay(id) async {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/4/weathers/1';
-    String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+    String url =
+        constant.apiUrl + '/shifts/users/' + id + '/dates/4/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -169,7 +179,7 @@ class Api {
 
   // マニュアル一覧
   Future getAllManual() async {
-    String url = constant.apiUrl + 'tasks';
+    String url = constant.apiUrl + '/tasks';
     try {
       return await get(url);
     } catch (err) {
@@ -181,7 +191,7 @@ class Api {
 
   // POST Sign In (リダイレクションエラーが返ってくるため不使用)
   Future postSignIn(request) async {
-    var url = Uri.parse(constant.apiUrl + 'auth');
+    var url = Uri.parse(constant.apiUrl + '/auth');
     var response = await http.post(url,
         body: {'mail': 'y.kugue.nutfes@gmail.com', 'password': 'gidaifes'});
 
@@ -196,9 +206,12 @@ class Api {
 
   // Get Sign In
   Future signIn(mail) async {
+    //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
+    String url = constant.apiUrl + '/mail_auth/signin?email=' + mail;
+    logger.i(url);
+    print(url);
     try {
-      var url = constant.apiUrl + "auth/signin/" + mail;
-      return await api.get(url);
+      return await get(url);
     } catch (e) {
       logger.e('failed got.');
       throw Exception('Failed GET in Api.signIn()');

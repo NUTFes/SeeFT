@@ -13,6 +13,7 @@ class _SignInPageState extends State<SignInPage> {
   _signIn() async {
     try {
       var res = await api.signIn(mail);
+      print(res);
       var resId = res["id"];
       await store.setUserID(resId);
 
@@ -23,7 +24,9 @@ class _SignInPageState extends State<SignInPage> {
       });
       Navigator.pushNamedAndRemoveUntil(
 //        context, '/wait_page', (Route<dynamic> route) => false);
-          context, '/my_shift_page', (Route<dynamic> route) => false);
+          context,
+          '/my_shift_page',
+          (Route<dynamic> route) => false);
     } catch (e) {
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

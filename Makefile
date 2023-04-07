@@ -3,15 +3,11 @@ GET = none
 
 .PHONY: up
 up:
-	docker compose up
+	docker compose up 
 
 .PHONY: up-db
 up-db:
 	docker compose up db
-
-.PHONY: up-mobile
-up-mobile:
-	docker compose up mobile
 
 .PHONY: up-api
 up-api:

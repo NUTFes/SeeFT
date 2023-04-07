@@ -38,13 +38,4 @@ services:
       db: 
         condition: service_started
 
-  mobile:
-    container_name: nutfes-seeft-mobile
-    build: ./mobile
-    volumes:
-      - ./mobile:/app
-    ports:
-      - 3000:3000
-    stdin_open: true
-    tty: true
 

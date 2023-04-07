@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE grades (
+CREATE TABLE IF NOT EXISTS grades (
     id int(10) unsigned not null auto_increment,
     grade varchar(255) not null,
     created_at datetime not null default current_timestamp,

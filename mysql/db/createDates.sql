@@ -1,6 +1,6 @@
 use seeft_db;
 
-CREATE TABLE dates (
+CREATE TABLE IF NOT EXISTS dates (
     id int(10) unsigned not null auto_increment,
     date varchar(255) not null ,
     created_at datetime not null default current_timestamp,

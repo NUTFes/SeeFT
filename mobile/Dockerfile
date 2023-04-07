@@ -7,4 +7,4 @@ RUN flutter build web
 FROM python:3 AS production
 COPY --from=build /app/build/web /app
 WORKDIR /app
-CMD ["python", "-m", "http.server", "3000"]
+CMD ["python", "-m", "http.server", "45029"]
