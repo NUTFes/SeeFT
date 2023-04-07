@@ -40,7 +40,7 @@ type Shift struct {
 }
 
 type Task struct {
-	Name      	string
+	Task      	string
 	Place     	string
 	URL       	string
 	Superviser 	string
@@ -93,7 +93,10 @@ func taskInput() error {
 	// fmt.Println(record)
 
 	for i := 1; i < len(record); i++ {
-		task := Task{Name: record[i][0], Place: record[i][1], URL:record[i][2] ,Superviser: record[i][3], Color: record[i][4], Notes: record[i][5], YearID: yearID}
+		// taskname := strings.ReplaceAll(record[i][0], " ", "")
+		// taskname = strings.ReplaceAll(taskname, "　", "")
+
+		task := Task{Task: record[i][0], Place: record[i][1], URL:record[i][2] ,Superviser: record[i][3], Color: record[i][4], Notes: record[i][5], YearID: yearID}
 		// fmt.Println(task)
 		result := tx.DB().Create(&task)
 		if result.Error != nil {
@@ -177,7 +180,7 @@ func shiftInput() error {
 			for j := 4; j < len(record); j++ {
 
 				var task entity.Task
-				if err := tx.DB().Table("tasks").Where("name = ?", record[j][i]).First(&task).Error; 
+				if err := tx.DB().Table("tasks").Where("task = ?", record[j][i]).First(&task).Error; 
 				err != nil {
 				}
 
@@ -316,11 +319,13 @@ func userInput() error {
 				roleID = 1
 		}
 
-		user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID}
-		result := tx.DB().Create(&user)
-		if result.Error != nil {
-			fmt.Println(user)
-			return fmt.Errorf("create db: %w", result.Error)
+		if(gradeID != 0){
+			user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID}
+			result := tx.DB().Create(&user)
+			if result.Error != nil {
+				fmt.Println(user)
+				return fmt.Errorf("create db: %w", result.Error)
+			}
 		}
 	}
 

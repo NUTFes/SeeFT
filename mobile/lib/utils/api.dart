@@ -92,7 +92,7 @@ class Api {
   Future getMyShiftPreparationDayRainy(id) async {
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/2';
     try {
       return await get(url);
     } catch (err) {
@@ -122,7 +122,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
+        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/2';
     try {
       return await get(url);
     } catch (err) {
@@ -152,7 +152,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
+        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/2';
     try {
       return await get(url);
     } catch (err) {
@@ -209,7 +209,7 @@ class Api {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
     String url = constant.apiUrl + '/mail_auth/signin?email=' + mail;
     logger.i(url);
-    print(url);
+    // print(url);
     try {
       return await get(url);
     } catch (e) {

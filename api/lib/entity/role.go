@@ -6,7 +6,7 @@ import (
 
 type Role struct {
 	ID        int        `json:"id"`
-	Name      string    `json:"name"`
+	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }

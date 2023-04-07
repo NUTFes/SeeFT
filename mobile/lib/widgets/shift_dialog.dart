@@ -36,11 +36,11 @@ openShiftDialog(
   // var resPresident = res["superviser"];
   // var resPresidentTel = res["TEL"];
 
-  var resName = task["name"];
-  var resURL = task["url"];
-  var resUsers = user["notes"];
-  var resPlace = task["place"];
-  var resPresident = task["superviser"];
+  var resName = task["task"].toString();
+  var resURL = task["url"].toString();
+  var resUsers = user["notes"].toString();
+  var resPlace = task["place"].toString();
+  var resPresident = task["superviser"].toString();
 
   showDialog(
     context: context,

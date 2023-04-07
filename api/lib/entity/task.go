@@ -6,7 +6,7 @@ import (
 
 type Task struct {
 	ID        int    	`json:"id"`
-	Name      string 	`json:"name"`
+	Task      string 	`json:"task"`
 	Place     string	`json:"palce"`
 	Url       string 	`json:"url"`	
 	Superviser string	`json:"superviser"`

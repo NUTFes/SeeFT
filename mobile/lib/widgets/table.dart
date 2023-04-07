@@ -70,22 +70,22 @@ class ShiftTable {
                       child: InkWell(
                         splashColor: Colors.orangeAccent,
                         onTap: () async {
-                          if (shifts[index]["task"]["name"] != "") {
-                            logger.i(shifts[index]["task"]["name"]);
+                          if (shifts[index]["task"]["task"] != "") {
+                            logger.i(shifts[index]["task"]["task"]);
                             await openShiftDialog(
                                 context,
-                                shifts[index]["id"],
-                                shifts[index]["user"]["id"],
-                                shifts[index]["date"]["id"],
-                                shifts[index]["weather"]["id"],
-                                shifts[index]["time"]["id"]);
+                                shifts[index]["task"],
+                                shifts[index]["user"],
+                                shifts[index]["date"],
+                                shifts[index]["weather"],
+                                shifts[index]["time"]);
                           }
                         },
                         //child: Center(child: new Text(shifts[index]["Work"].toString())),
                         child: Container(
                           child: Center(
                               child: new Text(
-                                  shifts[index]["task"]["name"].toString())),
+                                  shifts[index]["task"]["task"].toString())),
                         ),
                       ),
                     ),

@@ -82,6 +82,7 @@ class _ManualListPageState extends State<ManualListPage> {
       ),
     );
   }
+
   Future getData() async {
     try {
       var res = await api.getAllManual();

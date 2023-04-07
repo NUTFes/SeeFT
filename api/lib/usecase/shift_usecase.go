@@ -66,7 +66,7 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 		row, err := a.taskRep.Find(c, TaskID)
 		err = row.Scan(
 			&shift.Task.ID,
-			&shift.Task.Name,
+			&shift.Task.Task,
 			&shift.Task.Place,
 			&shift.Task.Url,
 			&shift.Task.Superviser,
@@ -150,7 +150,7 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 	row, err = a.taskRep.Find(c, TaskID)
 	err = row.Scan(
 		&shift.Task.ID,
-		&shift.Task.Name,
+		&shift.Task.Task,
 		&shift.Task.Place,
 		&shift.Task.Url,
 		&shift.Task.Superviser,
@@ -241,7 +241,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 		row, err := a.taskRep.Find(c, TaskID)
 		err = row.Scan(
 			&shift.Task.ID,
-			&shift.Task.Name,
+			&shift.Task.Task,
 			&shift.Task.Place,
 			&shift.Task.Url,
 			&shift.Task.Superviser,
@@ -336,7 +336,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 		row, err := a.taskRep.Find(c, TaskID)
 		err = row.Scan(
 			&shift.Task.ID,
-			&shift.Task.Name,
+			&shift.Task.Task,
 			&shift.Task.Place,
 			&shift.Task.Url,
 			&shift.Task.Superviser,
