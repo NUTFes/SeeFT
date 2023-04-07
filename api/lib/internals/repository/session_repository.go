@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
+	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"fmt"
 )
 

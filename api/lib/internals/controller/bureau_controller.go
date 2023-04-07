@@ -3,7 +3,7 @@ package controller
 import (
 	"net/http"
 
-	"github.com/NUTFes/SeeFT/api/lib/internals/usecase"
+	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 )
 

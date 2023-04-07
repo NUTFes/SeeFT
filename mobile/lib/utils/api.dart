@@ -42,14 +42,17 @@ class Api {
 
   Future get(url) async {
     // debug
+    // localhostだとエラー起こるため
     // bool trustSelfSigned = true;
     // HttpClient httpClient = new HttpClient()
     //   ..badCertificateCallback =
     //       ((X509Certificate cert, String host, int port) => trustSelfSigned);
     // IOClient ioClient = new IOClient(httpClient);
+
     final uri = Uri.parse(url);
+    logger.i(uri);
     final response = await http.get(uri);
-    // final response = await ioClient.get(url);
+    // final response = await ioClient.get(uri);
 
     if (response.statusCode == 200) {
       logger.d('success get');
@@ -119,7 +122,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -149,7 +152,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -164,7 +167,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/4/weathers/1';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+        constant.apiUrl + '/shifts/users/' + id + '/dates/4/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -203,10 +206,12 @@ class Api {
 
   // Get Sign In
   Future signIn(mail) async {
-    var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
+    //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
+    String url = constant.apiUrl + '/mail_auth/signin?email=' + mail;
     logger.i(url);
+    print(url);
     try {
-      return await api.get(url);
+      return await get(url);
     } catch (e) {
       logger.e('failed got.');
       throw Exception('Failed GET in Api.signIn()');

@@ -4,6 +4,7 @@ final ShiftTable table = ShiftTable();
 
 class ShiftTable {
   Widget shiftTable(var shifts, context) {
+    // print(shifts);
     return Table(
         border: TableBorder.all(color: Colors.black26),
         columnWidths: const <int, TableColumnWidth>{
@@ -46,7 +47,7 @@ class ShiftTable {
                   TableCell(
                       child: Container(
                     alignment: Alignment.center,
-                    child: new Text(shifts[index]["time"]["time"].toString()),
+                    child: new Text(shifts[index]["time"]["time"]),
                   )),
                   TableCell(
                       /*
@@ -69,8 +70,8 @@ class ShiftTable {
                       child: InkWell(
                         splashColor: Colors.orangeAccent,
                         onTap: () async {
-                          if (shifts[index]["task"]["task"] != "") {
-                            logger.i(shifts[index]["task"]["task"]);
+                          if (shifts[index]["task"]["name"] != "") {
+                            logger.i(shifts[index]["task"]["name"]);
                             await openShiftDialog(
                                 context,
                                 shifts[index]["id"],
@@ -83,8 +84,8 @@ class ShiftTable {
                         //child: Center(child: new Text(shifts[index]["Work"].toString())),
                         child: Container(
                           child: Center(
-                              child:
-                                  new Text(shifts[index]["task"]["task"].toString())),
+                              child: new Text(
+                                  shifts[index]["task"]["name"].toString())),
                         ),
                       ),
                     ),

@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
-	"github.com/NUTFes/SeeFT/api/lib/externals/repository/abstract"
+	"github.com/NUTFes/SeeFT/api/lib/externals/db"
+	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
 	"github.com/pkg/errors"
 )
 
@@ -38,13 +38,13 @@ func (b *shiftRepository) All(c context.Context) (*sql.Rows, error) {
 
 // 1件取得
 func (b *shiftRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT * FROM shifts WHERE id =" + id
+	query := "SELECT * FROM shifts WHERE id = " + id
 	return b.crud.ReadByID(c, query)
 }
 
 // 特定のユーザ取得
 func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) {
-	query := "SELECT * FROM shifts WHERE user_id =" + id
+	query := "SELECT * FROM shifts WHERE user_id = " + id
 	rows, err := b.client.DB().QueryContext(c, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
@@ -55,7 +55,7 @@ func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) 
 
 // 特定のユーザと日時取得
 func (b *shiftRepository) UserAndDateAndWeather(c context.Context, id string, date string, weather string) (*sql.Rows, error) {
-	query := "SELECT * FROM shifts WHERE user_id =" + id + " AND date =" + date + " AND weather =" + weather 
+	query := "SELECT * FROM shifts WHERE user_id =" + id + " AND date_id =" + date + " AND weather_id =" + weather 
 	rows, err := b.client.DB().QueryContext(c, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
@@ -66,19 +66,19 @@ func (b *shiftRepository) UserAndDateAndWeather(c context.Context, id string, da
 
 // 作成
 func (b *shiftRepository) Create(c context.Context, name string) error {
-	query := "INSERT INTO shift (name) VALUES ('" + name + "')"
+	query := "INSERT INTO shifts (name) VALUES ('" + name + "')"
 	return b.crud.UpdateDB(c, query)
 }
 
 // 編集
 func (b *shiftRepository) Update(c context.Context, id string, name string) error {
-	query := "UPDATE shift SET name = '" + name + "' WHERE id = " + id
+	query := "UPDATE shifts SET name = '" + name + "' WHERE id = " + id
 	return b.crud.UpdateDB(c, query)
 }
 
 // 削除
 func (b *shiftRepository) Destroy(c context.Context, id string) error {
-	query := "DELETE FROM shift WHERE id =" + id
+	query := "DELETE FROM shifts WHERE id =" + id
 	return b.crud.UpdateDB(c, query)
 }
 

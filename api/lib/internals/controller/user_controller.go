@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/NUTFes/SeeFT/api/lib/internals/usecase"
+	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

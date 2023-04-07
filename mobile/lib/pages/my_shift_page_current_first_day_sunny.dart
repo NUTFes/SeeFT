@@ -58,6 +58,7 @@ Future getData() async {
   try {
     var userID = await store.getUserID();
     var res = await api.getMyShiftCurrentFirstDaySunny(userID.toString());
+    // print(res);
     return res;
   } catch (err) {
     logger.e('don`t response. error message: $err');

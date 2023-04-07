@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/NUTFes/SeeFT/api/lib/internals/di"
+	"github.com/NUTFes/SeeFT/api/lib/di"
 	_ "github.com/go-sql-driver/mysql"
 )
 

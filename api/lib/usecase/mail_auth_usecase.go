@@ -5,8 +5,8 @@ import (
 	// "crypto/rand"
 	// "strconv"
 
-	rep "github.com/NUTFes/SeeFT/api/lib/externals/repository"
-	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
+	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 	// "github.com/pkg/errors"
 )
 
@@ -41,7 +41,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginU
 	)
 	// パスワードがあっているか確認
 	// err = bcrypt.CompareHashAndPassword([]byte(mailAuth.Password), []byte(password))
-	loginUser := entity.LoginUser{UserID: user.ID, Mail: user.Mail}
+	loginUser := entity.LoginUser{ID: user.ID, Mail: user.Mail}
 	if err != nil {
 		return loginUser, err
 	}

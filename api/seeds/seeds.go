@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
-	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
+	"github.com/NUTFes/SeeFT/api/lib/externals/db"
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 )
 
 /*
@@ -162,18 +162,19 @@ func shiftInput() error {
 		// 39thのシフトと変更点があるので修正必須
 		// 学年と局の情報が追加されます。
 		for i := 2; i < len(record[0]); i++ {
+			var user entity.User
+
+			name := strings.ReplaceAll(record[3][i], " ", "")
+			name = strings.ReplaceAll(name, "　", "")
+			fmt.Println(name)
+
+			if err := tx.DB().Table("users").Where("name = ?", name).First(&user).Error; err != nil {
+				fmt.Println(err)
+				i++
+				break
+			}
+
 			for j := 4; j < len(record); j++ {
-				var user entity.User
-
-				name := strings.ReplaceAll(record[3][i], " ", "")
-				name = strings.ReplaceAll(name, "　", "")
-				// fmt.Println(name)
-
-				if err := tx.DB().Table("users").Where("name = ?", name).First(&user).Error; err != nil {
-					fmt.Println(err)
-					i++
-					break
-				}
 
 				var task entity.Task
 				if err := tx.DB().Table("tasks").Where("name = ?", record[j][i]).First(&task).Error; 
@@ -185,7 +186,7 @@ func shiftInput() error {
 				err != nil {
 				}
 
-				shift := Shift{task.ID, user.ID,  yearID, dateID, time.ID, weatherID}
+				shift := Shift{TaskID:task.ID, UserID:user.ID,  YearID:yearID, DateID:dateID, TimeID:time.ID, WeatherID:weatherID}
 				// fmt.Println(shift)
 				result := tx.DB().Create(&shift)
 				if result.Error != nil {

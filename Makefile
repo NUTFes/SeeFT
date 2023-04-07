@@ -9,10 +9,6 @@ up:
 up-db:
 	docker compose up db
 
-.PHONY: up-mobile
-up-mobile:
-	docker compose up mobile
-
 .PHONY: up-api
 up-api:
 	docker compose up -d db

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
+	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/pkg/errors"
 )
 

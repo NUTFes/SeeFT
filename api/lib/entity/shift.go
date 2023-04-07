@@ -5,16 +5,16 @@ import (
 )
 
 type Shift struct {
-	ID		   int    		`json:"id"`
-	TaskID     int    		`json:"taskID"`
-	UserID     int    		`json:"userID"`
-	YearID	   int   		`json:"yearID"`
-	DateID     int		 	`json:"dateID"`
-	TimeID     int		 	`json:"timeID"`
-	WeatherID  int	 		`json:"weatherID"`
+	ID		   	int    		`json:"id"`
+	Task		Task  		`json:"task"`
+	User     	User  		`json:"user"`
+	Year	   	Year  		`json:"year"`
+	Date     	Date		`json:"date"`
+	Time     	Time		`json:"time"`
+	Weather  	Weather		`json:"weather"`
 	IsAttendance bool   	`json:"isAttendance"`
-	CreatedAt  time.Time	`json:"createdAt"`
-	UpdatedAt  time.Time	`json:"updatedAt"`
+	CreatedAt  	time.Time	`json:"createdAt"`
+	UpdatedAt  	time.Time	`json:"updatedAt"`
 }
 
 // class Shift {

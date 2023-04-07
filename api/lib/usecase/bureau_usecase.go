@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	rep "github.com/NUTFes/SeeFT/api/lib/externals/repository"
-	"github.com/NUTFes/SeeFT/api/lib/internals/entity"
+	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/pkg/errors"
 )
 

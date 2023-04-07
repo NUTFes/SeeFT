@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/NUTFes/SeeFT/api/lib/drivers/db"
-	"github.com/NUTFes/SeeFT/api/lib/externals/repository/abstract"
+	"github.com/NUTFes/SeeFT/api/lib/externals/db"
+	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
 )
 
 type bureauRepository struct {

@@ -20,15 +20,28 @@ _launchURL(url) async {
 }
 
 openShiftDialog(
-    BuildContext context, workId, userId, date, weather, time) async {
-  var res = await getShiftDetail(workId, userId, date, weather, time);
-  logger.i(res);
-  var resName = res["task"];
-  var resURL = res["url"];
-  var resUsers = res["users"];
-  var resPlace = res["place"];
-  var resPresident = res["superviser"];
-  var resPresidentTel = res["TEL"];
+    // BuildContext context, workId, userId, date, weather, time) async {
+    BuildContext context,
+    task,
+    user,
+    date,
+    weather,
+    time) async {
+  // var res = await getShiftDetail(workId, userId, date, weather, time);
+  // logger.i(res);
+  // var resName = res["task"];
+  // var resURL = res["url"];
+  // var resUsers = res["users"];
+  // var resPlace = res["place"];
+  // var resPresident = res["superviser"];
+  // var resPresidentTel = res["TEL"];
+
+  var resName = task["name"];
+  var resURL = task["url"];
+  var resUsers = user["notes"];
+  var resPlace = task["place"];
+  var resPresident = task["superviser"];
+
   showDialog(
     context: context,
     builder: (context) {

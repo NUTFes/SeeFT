@@ -1,8 +1,12 @@
 package router
 
 import (
-	"github.com/NUTFes/SeeFT/api/lib/externals/controller"
+	"net/http"
+
+	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	// "github.com/labstack/echo"
 )
 
 type router struct {
@@ -40,6 +44,13 @@ func NewRouter(
 }
 
 func (r router) ProvideRouter(e *echo.Echo) {
+	
+	e.Use(middleware.Logger())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+	}))
+
 	// Healthcheck
 	e.GET("/", r.healthcheckController.IndexHealthcheck)
 
