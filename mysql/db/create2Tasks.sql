@@ -2,7 +2,7 @@ use seeft_db;
 
 CREATE TABLE IF NOT EXISTS tasks (
     id int(10) unsigned not null auto_increment,
-    name varchar(255) not null,
+    task varchar(255) not null,
     place varchar(255) not null,
     url varchar(255) not null,
     superviser varchar(255) not null,
@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     year_id int(10) unsigned not null,
     created_at datetime not null default current_timestamp,
     updated_at datetime not null default current_timestamp on update current_timestamp,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (year_id) REFERENCES years (id) ON UPDATE CASCADE
 );
 

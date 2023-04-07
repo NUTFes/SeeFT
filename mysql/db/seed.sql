@@ -68,7 +68,7 @@ VALUES
   ('片付け日');
 
 INSERT INTO bureaus
-  (`name`)
+  (`bureau`)
 VALUES
   ('委員長'),
   ('副委員長'),
@@ -86,26 +86,16 @@ VALUES
   (41, 2022),
   (42, 2023);
 
-INSERT INTO users
-  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`)
-VALUES
-  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1);
-
-INSERT INTO permissions
-  (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
-VALUES
-  (1, True, True, True, True);
-
 INSERT INTO roles 
-    (name) 
+    (role) 
 VALUES
     ('user'),
     ('admin'),
     ('SeeFT Director'),
     ('SeeFT Staff');
 
-INSERT INTO 
-  departments (name) 
+INSERT INTO departments 
+  (department) 
 VALUES 
   ('未所属'),
   ('機械工学分野/機械創造工学課程・機械創造工学専攻'),
@@ -116,8 +106,18 @@ VALUES
   ('量子・原子力統合工学分野/原子力システム安全工学専攻');
 
 -- 以下テスト用のデータなので本番環境で起こらないようにする
+INSERT INTO users
+  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`)
+VALUES
+  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1);
+
+INSERT INTO permissions
+  (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
+VALUES
+  (1, True, True, True, True);
+
 INSERT INTO tasks
-  (`name`, `place`, `url`, `superviser`, `notes`, `year_id`)
+  (`task`, `place`, `url`, `superviser`, `notes`, `year_id`)
 VALUES
   ('テスト1', '24', 'https://example.com', 'Admin', 'a', 42),
   ('テスト2', '体育館', 'https://example.com', 'Admin', 'b', 42),

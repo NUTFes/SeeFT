@@ -5,8 +5,8 @@ import (
 )
 
 type Department struct {
-	ID        int        `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        	int       `json:"id"`
+	Department 	string    `json:"department"`
+	CreatedAt 	time.Time `json:"createdAt"`
+	UpdatedAt 	time.Time `json:"updatedAt"`
 }

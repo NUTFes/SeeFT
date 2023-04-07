@@ -35,13 +35,13 @@ func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
   for rows.Next() {
 		err := rows.Scan(
 			&task.ID,
-			&task.Name,
+			&task.Task,
 			&task.Place,
 			&task.Url,
-      &task.Superviser,
-	  &task.Color,
-      &task.Notes,
-      &task.YearID,
+      		&task.Superviser,
+	  		&task.Color,
+      		&task.Notes,
+      		&task.YearID,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 		)
@@ -60,13 +60,13 @@ func (b *taskUseCase) GetTaskByID(c context.Context, id string) (entity.Task, er
   row, err := b.rep.Find(c, id)
 	err = row.Scan(
 		&task.ID,
-		&task.Name,
+		&task.Task,
 		&task.Place,
 		&task.Url,
-    &task.Superviser,
-	&task.Color,
-    &task.Notes,
-    &task.YearID,
+    	&task.Superviser,
+		&task.Color,
+    	&task.Notes,
+    	&task.YearID,
 		&task.CreatedAt,
 		&task.UpdatedAt,
 	)
@@ -90,13 +90,13 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
   for rows.Next() {
 		err := rows.Scan(
 			&task.ID,
-			&task.Name,
+			&task.Task,
 			&task.Place,
 			&task.Url,
-      &task.Superviser,
-	  &task.Color,
-      &task.Notes,
-      &task.YearID,
+      		&task.Superviser,
+	  		&task.Color,
+      		&task.Notes,
+      		&task.YearID,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 		)

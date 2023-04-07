@@ -6,7 +6,7 @@ import (
 
 type Bureau struct {
 	ID			int 		`json:"id"`
-	Name		string		`json:"name"`
+	Bureau		string		`json:"bureau"`
 	Color  		string		`json:"color"`
 	CreatedAt	time.Time	`json:"createdAt"`
 	UpdatedAt	time.Time	`json:"updatedAt"`
