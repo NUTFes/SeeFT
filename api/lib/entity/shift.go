@@ -17,6 +17,15 @@ type Shift struct {
 	UpdatedAt  	time.Time	`json:"updatedAt"`
 }
 
+type ShiftUsers struct {
+	Task		Task  		`json:"task"`
+	Users     	[]User  	`json:"users"`
+	Year	   	Year  		`json:"year"`
+	Date     	Date		`json:"date"`
+	Time     	Time		`json:"time"`
+	Weather  	Weather		`json:"weather"`
+}
+
 // class Shift {
 //   int id;
 //   User user;

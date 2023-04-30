@@ -1,11 +1,8 @@
 package router
 
 import (
-	"net/http"
-
 	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	// "github.com/labstack/echo"
 )
 
@@ -44,18 +41,12 @@ func NewRouter(
 }
 
 func (r router) ProvideRouter(e *echo.Echo) {
-	
-	e.Use(middleware.Logger())
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
-	}))
 
 	// Healthcheck
 	e.GET("/", r.healthcheckController.IndexHealthcheck)
 
 	// mail auth
-	e.GET("/mail_auth/signin", r.mailAuthController.SignIn)
+	e.POST("/mail_auth/signin", r.mailAuthController.SignIn)
 
 	// bureauのRoute
 	e.GET("/bureaus", r.bureauController.IndexBureau)
@@ -65,6 +56,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/shifts", r.shiftController.IndexShift)
 	e.GET("/shifts/:id", r.shiftController.ShowShift)
 	e.GET("/shifts/users/:user_id", r.shiftController.ShowShiftsByUser)
+	e.GET("/shifts/tasks/:task_id/years/:year_id/dates/:date_id/times/:time_id/weathers/:weather_id", r.shiftController.ShowUsersByShift)
 	e.GET("/shifts/users/:user_id/dates/:date/weathers/:weather", r.shiftController.ShowShiftsByUserAndDateAndWeather)
 
 	// taskのRoute

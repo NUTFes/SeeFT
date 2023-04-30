@@ -65,7 +65,7 @@ class Api {
 
 // Example
   Future getMyShift(id) async {
-    String url = constant.apiUrl + '/shifts/' + id;
+    String url = constant.apiUrl + '/shifts/users/' + id;
     try {
       return await get(url);
     } catch (err) {
@@ -177,6 +177,28 @@ class Api {
     }
   }
 
+  // シフトのユーザ取得
+  Future getUsersByShift(task, year, date, time, weather) async {
+    String url = constant.apiUrl +
+        '/shifts/tasks/' +
+        task +
+        '/years/' +
+        year +
+        '/dates/' +
+        date +
+        '/times/' +
+        time +
+        '/weathers/' +
+        weather;
+    try {
+      return await get(url);
+    } catch (err) {
+      logger.e(err);
+      // calling api.get みたいに呼び出し元参照できるようにしたい
+      throw err;
+    }
+  }
+
   // マニュアル一覧
   Future getAllManual() async {
     String url = constant.apiUrl + '/tasks';
@@ -208,10 +230,12 @@ class Api {
   Future signIn(mail) async {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
     String url = constant.apiUrl + '/mail_auth/signin?email=' + mail;
+    // String url = constant.apiUrl + '/mail_auth/signin';
+    var body = {'email': mail};
     logger.i(url);
     // print(url);
     try {
-      return await get(url);
+      return await post(url, body);
     } catch (e) {
       logger.e('failed got.');
       throw Exception('Failed GET in Api.signIn()');

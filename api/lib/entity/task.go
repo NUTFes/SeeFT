@@ -7,7 +7,7 @@ import (
 type Task struct {
 	ID        int    	`json:"id"`
 	Task      string 	`json:"task"`
-	Place     string	`json:"palce"`
+	Place     string	`json:"place"`
 	Url       string 	`json:"url"`	
 	Superviser string	`json:"superviser"`
 	Color     string	`json:"color"`

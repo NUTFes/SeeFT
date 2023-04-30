@@ -23,6 +23,7 @@ type ShiftUseCase interface {
   GetShiftByID(context.Context, string) (entity.Shift, error)
   GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
   GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
+  GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error) 
 }
 
 func NewShiftUseCase(
@@ -400,6 +401,80 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 		shifts = append(shifts, shift)
 	}
 	return shifts, nil
+}
+
+func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year string, date string, time string, weather string) (entity.ShiftUsers, error) {
+
+  	users := entity.User{}
+  	var shiftUsers entity.ShiftUsers
+
+  // クエリー実行
+	rows, err := a.rep.Users(c, task, year, date, time, weather)
+	if err != nil {
+		return shiftUsers, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(
+			&UserID,
+		)
+
+		row, err := a.userRep.Find(c, UserID)
+		err = row.Scan(
+			&users.ID,
+			&users.Name,
+			&users.Mail,
+			&users.GradeID,
+			&users.DepartmentID,
+			&users.BureauID,
+			&users.RoleID,
+			&users.CreatedAt,
+			&users.UpdatedAt,
+		)
+
+		if err != nil {
+			return shiftUsers, errors.Wrapf(err, "cannot connect SQL")
+		}
+
+		shiftUsers.Users = append(shiftUsers.Users, users)
+	}
+
+	row, err := a.yearRep.Find(c, year)
+	err = row.Scan(
+		&shiftUsers.Year.ID,
+		&shiftUsers.Year.Year,
+		&shiftUsers.Year.CreatedAt,
+		&shiftUsers.Year.UpdatedAt,
+	)
+
+	row, err = a.dateRep.Find(c, date)
+	err = row.Scan(
+		&shiftUsers.Date.ID,
+		&shiftUsers.Date.Date,
+		&shiftUsers.Date.CreatedAt,
+		&shiftUsers.Date.UpdatedAt,
+	)
+	row, err = a.timeRep.Find(c, time)
+	err = row.Scan(
+		&shiftUsers.Time.ID,
+		&shiftUsers.Time.Time,
+		&shiftUsers.Time.CreatedAt,
+		&shiftUsers.Time.UpdatedAt,
+	)
+	row, err = a.weatherRep.Find(c, weather)
+	err = row.Scan(
+		&shiftUsers.Weather.ID,
+		&shiftUsers.Weather.Weather,
+		&shiftUsers.Weather.CreatedAt,
+		&shiftUsers.Weather.UpdatedAt,
+	)
+
+	if err != nil {
+		return shiftUsers, errors.Wrapf(err, "cannot connect SQL")
+	}
+
+	return shiftUsers, nil
 }
 
 // import '../entity/entity.dart';

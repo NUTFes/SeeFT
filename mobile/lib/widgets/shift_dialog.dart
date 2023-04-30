@@ -24,9 +24,10 @@ openShiftDialog(
     BuildContext context,
     task,
     user,
+    year,
     date,
-    weather,
-    time) async {
+    time,
+    weather) async {
   // var res = await getShiftDetail(workId, userId, date, weather, time);
   // logger.i(res);
   // var resName = res["task"];
@@ -36,11 +37,18 @@ openShiftDialog(
   // var resPresident = res["superviser"];
   // var resPresidentTel = res["TEL"];
 
+  var res = await api.getUsersByShift(
+      task["id"], year["id"], date["id"], time["id"], weather["id"]);
   var resName = task["task"].toString();
   var resURL = task["url"].toString();
-  var resUsers = user["notes"].toString();
   var resPlace = task["place"].toString();
   var resPresident = task["superviser"].toString();
+  var resUsersNumber = res["users"].length;
+  List<String> resUsersList = <String>[];
+  for (var index = 0; index < resUsersNumber; index++) {
+    resUsersList.add(res["users"][index]["name"].toString());
+  }
+  var resUsers = resUsersList.join(",");
 
   showDialog(
     context: context,
