@@ -19,6 +19,7 @@ type ShiftRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	User(context.Context, string) (*sql.Rows, error)
+	Users(context.Context, string, string, string, string, string) (*sql.Rows, error)
 	UserAndDateAndWeather(context.Context, string, string, string) (*sql.Rows, error)
 	Create(context.Context, string) error
 	Update(context.Context, string, string) error
@@ -45,6 +46,17 @@ func (b *shiftRepository) Find(c context.Context, id string) (*sql.Row, error) {
 // 特定のユーザ取得
 func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) {
 	query := "SELECT * FROM shifts WHERE user_id = " + id
+	rows, err := b.client.DB().QueryContext(c, query)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot connect SQL")
+	}
+	fmt.Printf("\x1b[36m%s\n", query)
+	return rows, nil
+}
+
+// 特定のタスクのユーザ取得
+func (b *shiftRepository) Users(c context.Context, task string, year string, date string, time string, weather string) (*sql.Rows, error) {
+	query := "SELECT user_id FROM shifts WHERE task_id = " + task + " AND year_id = " + year + " AND date_id = " + date + " AND time_id = " + time + " AND weather_id = " + weather
 	rows, err := b.client.DB().QueryContext(c, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")

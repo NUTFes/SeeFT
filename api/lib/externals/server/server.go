@@ -28,7 +28,7 @@ func RunServer(router router.Router) {
 
 	// CORS対策
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000", "127.0.0.1:3000", "http://localhost:3001", "127.0.0.1:3001", "https://seeft.nutfes.net"}, // ドメイン
+		AllowOrigins: []string{"http://localhost:3000", "127.0.0.1:3000", "http://localhost:3001", "127.0.0.1:3001", "http://localhost:45029", "127.0.0.1:45029", "https://seeft.nutfes.net"}, // ドメイン
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
 	}))
 

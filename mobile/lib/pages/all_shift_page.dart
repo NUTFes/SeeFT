@@ -95,12 +95,12 @@ Widget _table(var shifts) {
                 TableCell(
                     child: Container(
                   alignment: Alignment.center,
-                  child: new Text(shift["Time"].toString()),
+                  child: new Text(shift["time"].toString()),
                 )),
                 TableCell(
                     child: Container(
                   alignment: Alignment.center,
-                  child: new Text(shift["Work"].toString()),
+                  child: new Text(shift["task"].toString()),
                   // margin: EdgeInsets.only(bottom: 10.0),
                   height: 25,
                 ))

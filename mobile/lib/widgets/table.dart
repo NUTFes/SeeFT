@@ -76,9 +76,10 @@ class ShiftTable {
                                 context,
                                 shifts[index]["task"],
                                 shifts[index]["user"],
+                                shifts[index]["year"],
                                 shifts[index]["date"],
-                                shifts[index]["weather"],
-                                shifts[index]["time"]);
+                                shifts[index]["time"],
+                                shifts[index]["weather"]);
                           }
                         },
                         //child: Center(child: new Text(shifts[index]["Work"].toString())),
