@@ -211,6 +211,17 @@ class Api {
     }
   }
 
+  // ユーザ一覧
+  Future getUsers() async {
+    String url = constant.apiUrl + '/users';
+    try {
+      return await get(url);
+    } catch (err) {
+      logger.e(err);
+      throw err;
+    }
+  }
+
   // POST Sign In (リダイレクションエラーが返ってくるため不使用)
   Future postSignIn(request) async {
     var url = Uri.parse(constant.apiUrl + '/auth');

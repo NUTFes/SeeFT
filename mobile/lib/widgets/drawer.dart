@@ -33,6 +33,14 @@ class ApplicationDrawer {
           },
         ),
         ListTile(
+          title: Text("ユーザ一覧"),
+          leading: Icon(Icons.supervised_user_circle),
+          onTap: () => {
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/users_page', (Route<dynamic> route) => false)
+          },
+        ),
+        ListTile(
           title: Text("タイムスケジュール"),
           leading: Icon(Icons.schedule),
           onTap: () => {

@@ -8,6 +8,7 @@ import 'package:seeft_mobile/pages/manual_list_page.dart';
 import 'package:seeft_mobile/pages/schedule_page.dart';
 import 'package:seeft_mobile/pages/contact_page.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
+import 'package:seeft_mobile/pages/users_page.dart';
 
 class FirstJumpSelector extends StatefulWidget {
   @override
@@ -81,6 +82,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
             '/schedule_page': (context) => SchedulePage(),
             '/contact_page': (context) => ContactPage(),
             '/wait_page': (context) => WaitPage(),
+            '/users_page': (context) => UsersPage(),
           },
         );
 
