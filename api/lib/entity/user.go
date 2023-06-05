@@ -18,6 +18,7 @@ type User struct {
 
 type LoginUser struct {
 	ID 		int 	`json:"id"`
+	RoleID	int 	`json:"roleID"`
 	Mail 	string 	`json:"mail"`
 }
 

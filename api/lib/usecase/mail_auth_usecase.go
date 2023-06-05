@@ -41,7 +41,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginU
 	)
 	// パスワードがあっているか確認
 	// err = bcrypt.CompareHashAndPassword([]byte(mailAuth.Password), []byte(password))
-	loginUser := entity.LoginUser{ID: user.ID, Mail: user.Mail}
+	loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
 	if err != nil {
 		return loginUser, err
 	}
