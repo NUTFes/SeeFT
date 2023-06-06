@@ -12,7 +12,7 @@ class UsersPage extends StatefulWidget {
 
 class _UsersPageState extends State<UsersPage> {
   int usersLength = 0;
-  int isSelectedValue = 3;
+  int isSelectedValue = 1;
   List<String> bureauNameList = [];
   List<String> bureauIdList = [];
 
@@ -23,7 +23,7 @@ class _UsersPageState extends State<UsersPage> {
     var bureauId;
     getBureauData().then((value) async {
       bureauId = await value;
-      for (int i = 0; i < 8; i++) {
+      for (int i = 0; i < bureauId.toString().length; i++) {
         bureauNameList.add(bureauId[i]["bureau"].toString());
         bureauIdList.add(bureauId[i]["id"].toString());
       }
