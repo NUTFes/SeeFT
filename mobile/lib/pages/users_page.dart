@@ -12,10 +12,22 @@ class UsersPage extends StatefulWidget {
 
 class _UsersPageState extends State<UsersPage> {
   int usersLength = 0;
+  int isSelectedValue = 1;
+  List<String> bureauNameList = [];
+  List<String> bureauIdList = [];
 
   @override
   void initState() {
     super.initState();
+
+    var bureauId;
+    getBureauData().then((value) async {
+      bureauId = await value;
+      for (int i = 0; i < bureauId.toString().length; i++) {
+        bureauNameList.add(bureauId[i]["bureau"].toString());
+        bureauIdList.add(bureauId[i]["id"].toString());
+      }
+    });
   }
 
   @override
@@ -37,18 +49,40 @@ class _UsersPageState extends State<UsersPage> {
           if (!snapshot.hasData) {
             const Center(child: CircularProgressIndicator());
           }
-          var userList = snapshot.data;
+          var userList = snapshot.data as List<dynamic>?;
+          if (userList == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
           return Container(
             padding: const EdgeInsets.all(40.0),
             child: Column(
               children: <Widget>[
+                DropdownButton(
+                  items: bureauNameList.asMap().entries.map((bureau) {
+                    int index = bureau.key;
+                    return DropdownMenuItem(
+                      value: index + 1,
+                      child: Text(bureau.value),
+                    );
+                  }).toList(),
+                  value: isSelectedValue,
+                  onChanged: (value) {
+                    setState(() {
+                      isSelectedValue = value as int;
+                    });
+                  },
+                ),
                 Flexible(
                   child: ListView.builder(
                     itemCount: usersLength,
                     itemBuilder: (BuildContext context, int index) {
-                      return Container(
-                          height: 40,
-                          child: _manualItem(snapshot.data, index, context));
+                      if (userList[index]["bureauID"] == isSelectedValue) {
+                        return Container(
+                            height: 40,
+                            child: _manualItem(snapshot.data, index, context));
+                      } else {
+                        return SizedBox.shrink();
+                      }
                     },
                   ),
                 ),
@@ -73,6 +107,16 @@ class _UsersPageState extends State<UsersPage> {
         onTap: () async {},
       ),
     );
+  }
+
+  Future getBureauData() async {
+    try {
+      var res = await api.getBureausId();
+      usersLength = res.length;
+      return res;
+    } catch (err) {
+      logger.e('don`t response. error message: $err');
+    }
   }
 
   Future getData() async {

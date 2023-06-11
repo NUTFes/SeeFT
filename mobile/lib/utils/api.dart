@@ -211,6 +211,18 @@ class Api {
     }
   }
 
+  // 局情報
+  Future getBureausId() async {
+    String url = constant.apiUrl + '/bureaus';
+    try {
+      return await get(url);
+    } catch (err) {
+      logger.e(err);
+      // calling api.get みたいに呼び出し元参照できるようにしたい
+      throw err;
+    }
+  }
+
   // ユーザ一覧
   Future getUsers() async {
     String url = constant.apiUrl + '/users';
