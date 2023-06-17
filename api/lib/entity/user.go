@@ -12,7 +12,7 @@ type User struct {
 	DepartmentID 	int 	`json:"departmentID"`
 	BureauID  		int     `json:"bureauID"`
 	RoleID    		int     `json:"roleID"`
-	Tel				string	`json:"telNumber"`
+	Tel				string	`json:"tel"`
 	CreatedAt 		time.Time	`json:"createdAt"`
 	UpdatedAt 		time.Time	`json:"updatedAt"`
 }
