@@ -36,6 +36,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginU
 		&user.DepartmentID,
 		&user.BureauID,
 		&user.RoleID,
+		&user.Tel,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
