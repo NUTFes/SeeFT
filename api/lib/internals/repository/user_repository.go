@@ -18,8 +18,8 @@ type UserRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	FindByMail(context.Context, string) (*sql.Row)
-	Create(context.Context, string, string, string, string, string, string) error
-	Update(context.Context, string, string, string, string, string, string, string) error
+	Create(context.Context, string, string, string, string, string, string, string) error
+	Update(context.Context, string, string, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 }
@@ -50,16 +50,16 @@ func (ur *userRepository) FindByMail(c context.Context, mail string) (*sql.Row) 
 
 
 // 作成
-func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string) error {
+func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, tel string) error {
 	query := `
 		INSERT INTO
-			users (name, mail, grade_id, department_id, bureau_id, role_id)
-		VALUES ('` + name + "', " + mail + ", " + gradeID + ", " + departmentID + "," +  bureauID + ", " + roleID + ")"
+			users (name, mail, grade_id, department_id, bureau_id, role_id, tel)
+		VALUES ('` + name + "', " + mail + ", " + gradeID + ", " + departmentID + "," +  bureauID + ", " + roleID + ", " + tel + ")"
 	return ur.crud.UpdateDB(c, query)
 }
 
 // 編集
-func (ur *userRepository) Update(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string) error {
+func (ur *userRepository) Update(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, tel string) error {
 	query := `
 		UPDATE
 			users
@@ -70,6 +70,7 @@ func (ur *userRepository) Update(c context.Context, id string, name string, mail
 		", departmentid = " + departmentID +
 		", bureau_id = " + bureauID +
 		", role_id = " + roleID +
+		", tel = " + tel +
 		" WHERE id = " + id
 	return ur.crud.UpdateDB(c, query)
 }

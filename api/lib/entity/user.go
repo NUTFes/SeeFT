@@ -10,8 +10,9 @@ type User struct {
 	Mail	  		string	`json:"mail"`
 	GradeID   		int		`json:"gradeID"`
 	DepartmentID 	int 	`json:"departmentID"`
-	BureauID  		int     `json:"bureauID"`	
+	BureauID  		int     `json:"bureauID"`
 	RoleID    		int     `json:"roleID"`
+	Tel				string	`json:"tel"`
 	CreatedAt 		time.Time	`json:"createdAt"`
 	UpdatedAt 		time.Time	`json:"updatedAt"`
 }

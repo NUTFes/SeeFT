@@ -28,6 +28,7 @@ type User struct {
 	DepartmentID	int
 	BureauID		int
 	RoleID			int
+	Tel				string
 }
 
 type Shift struct {
@@ -239,6 +240,9 @@ func userInput() error {
 		mail := strings.ReplaceAll(record[8], " ", "")
 		mail = strings.ReplaceAll(mail, "　", "")
 
+		tel := strings.ReplaceAll(record[9], " ", "")
+		tel =strings.ReplaceAll(tel, "　", "")
+
 		grade := strings.ReplaceAll(record[3], " ", "")
 		grade = strings.ReplaceAll(grade, "　", "")
 		switch grade {
@@ -320,7 +324,7 @@ func userInput() error {
 		}
 
 		if(gradeID != 0){
-			user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID}
+			user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID, Tel: tel}
 			result := tx.DB().Create(&user)
 			if result.Error != nil {
 				fmt.Println(user)

@@ -15,8 +15,8 @@ type userUseCase struct {
 type UserUseCase interface {
   GetUsers(context.Context) ([]entity.User, error)
   GetUserByID(context.Context, string) (entity.User, error)
-  CreateUser(context.Context, string, string, string, string, string, string) (entity.User, error)
-  UpdateUser(context.Context, string, string, string, string, string, string, string) (entity.User, error)
+  CreateUser(context.Context, string, string, string, string, string, string, string) (entity.User, error)
+  UpdateUser(context.Context, string, string, string, string, string, string, string, string) (entity.User, error)
   DeleteUser(context.Context, string) error
 }
 
@@ -44,6 +44,7 @@ func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
 			&user.DepartmentID,
 			&user.BureauID,
 			&user.RoleID,
+			&user.Tel,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		)
@@ -69,6 +70,7 @@ func (u *userUseCase) GetUserByID(c context.Context, id string) (entity.User, er
 		&user.DepartmentID,
 		&user.BureauID,
 		&user.RoleID,
+		&user.Tel,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -80,9 +82,9 @@ func (u *userUseCase) GetUserByID(c context.Context, id string) (entity.User, er
 	return user, nil
 }
 
-func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string) (entity.User, error) {
+func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, tel string) (entity.User, error) {
 	latastUser := entity.User{}
-	err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID)
+	err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, tel)
 	row, err := u.userRep.FindNewRecord(c)
 	err = row.Scan(
 		&latastUser.ID,
@@ -92,6 +94,7 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 		&latastUser.DepartmentID,
 		&latastUser.BureauID,
 		&latastUser.RoleID,
+		&latastUser.Tel,
 		&latastUser.CreatedAt,
 		&latastUser.UpdatedAt,
 	)
@@ -101,9 +104,9 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 	return latastUser, err
 }
 
-func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string) (entity.User, error) {
+func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, tel string) (entity.User, error) {
 	updatedUser := entity.User{}
-	u.userRep.Update(c, id, name, mail, gradeID, departmentID, bureauID, roleID)
+	u.userRep.Update(c, id, name, mail, gradeID, departmentID, bureauID, roleID, tel)
 	row, err := u.userRep.Find(c, id)
 	err = row.Scan(
 		&updatedUser.ID,
@@ -113,6 +116,7 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 		&updatedUser.DepartmentID,
 		&updatedUser.BureauID,
 		&updatedUser.RoleID,
+		&updatedUser.Tel,
 		&updatedUser.CreatedAt,
 		&updatedUser.UpdatedAt,
 	)

@@ -87,6 +87,7 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 			&shift.User.DepartmentID,
 			&shift.User.BureauID,
 			&shift.User.RoleID,
+			&shift.User.Tel,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
 		)
@@ -171,6 +172,7 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 		&shift.User.DepartmentID,
 		&shift.User.BureauID,
 		&shift.User.RoleID,
+		&shift.User.Tel,
 		&shift.User.CreatedAt,
 		&shift.User.UpdatedAt,
 	)
@@ -262,6 +264,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 			&shift.User.DepartmentID,
 			&shift.User.BureauID,
 			&shift.User.RoleID,
+			&shift.User.Tel,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
 		)
@@ -357,6 +360,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&shift.User.DepartmentID,
 			&shift.User.BureauID,
 			&shift.User.RoleID,
+			&shift.User.Tel,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
 		)
@@ -429,6 +433,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 			&users.DepartmentID,
 			&users.BureauID,
 			&users.RoleID,
+			&users.Tel,
 			&users.CreatedAt,
 			&users.UpdatedAt,
 		)
