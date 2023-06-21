@@ -38,4 +38,15 @@ services:
       db: 
         condition: service_started
 
+  admin:
+    build: ./admin
+    container_name: "nutfes-seeft-admin"
+    volumes:
+      - ./admin:/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "8000:8000"
+    stdin_open: true
+    tty: true
+
 
