@@ -1,0 +1,65 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+        "standard-with-typescript",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "prettier",
+        "plugin:storybook/recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "project": [
+            "./tsconfig.json"
+        ]
+    },
+    "ignorePatterns": [
+        ".eslintrc.json"
+    ],
+    "plugins": [
+        "react", "unused-imports", "import", "@typescript-eslint"
+    ],
+    "settings": {
+        "import/resolver": {
+          "node": {
+            "extensions": [
+              ".ts",
+              ".tsx"
+            ]
+        },
+        "typescript": {}
+        }
+    },
+    "rules": {
+        "no-use-before-define": "off",
+        "@typescript-eslint/no-use-before-define": "off",
+        "import/prefer-default-export": "off",
+        "import/extensions": [
+        "error",
+        {
+            "ts": "never",
+            "tsx": "never"
+        }
+        ],
+        "react/jsx-filename-extension": [
+            "error",
+            {
+                "extensions": [
+                ".tsx"
+                ]
+            }
+        ],
+        "react/react-in-jsx-scope": "off",
+        "no-void": [
+            "error",
+            {
+                "allowAsStatement": true
+            }
+        ]
+    }
+}
