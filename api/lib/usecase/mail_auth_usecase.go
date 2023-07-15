@@ -23,11 +23,11 @@ func NewAuthUseCase(userRep rep.UserRepository, sessionRep rep.SessionRepository
 	return &mailAuthUseCase{userRep: userRep, sessionRep: sessionRep}
 }
 
-func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginUser, error) {
+func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string) (entity.LoginUser, error) {
 	var user = entity.User{}
 	// var token entity.Token
 	// メールアドレスの存在確認
-	row := u.userRep.FindByMail(c, email)
+	row := u.userRep.FindByMail(c, studentNumber)
 	err := row.Scan(
 		&user.ID,
 		&user.Name,
@@ -36,6 +36,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginU
 		&user.DepartmentID,
 		&user.BureauID,
 		&user.RoleID,
+		&user.StudentNumber,
 		&user.Tel,
 		&user.CreatedAt,
 		&user.UpdatedAt,
