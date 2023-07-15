@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   department_id int(10) unsigned not null,
   bureau_id int(10) unsigned not null,
   role_id int(10) unsigned not null,
+  student_number int(10) unsigned not null,
   tel varchar(15) not null unique,
   created_at datetime not null default current_timestamp,
   updated_at datetime not null default current_timestamp on update current_timestamp,
