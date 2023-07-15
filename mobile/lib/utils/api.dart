@@ -254,14 +254,20 @@ class Api {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
     String url = constant.apiUrl + '/mail_auth/signin/' + studentNumber;
     // String url = constant.apiUrl + '/mail_auth/signin';
-    var body = {'student_number': studentNumber};
-    logger.i(url);
-    // print(url);
+    // var body = {'student_number': studentNumber};
+    // logger.i(url);
+    // // print(url);
+    // try {
+    //   return await post(url, body);
+    // } catch (e) {
+    //   logger.e('failed got.');
+    //   throw Exception('Failed GET in Api.signIn()');
+    // }
     try {
-      return await post(url, body);
-    } catch (e) {
-      logger.e('failed got.');
-      throw Exception('Failed GET in Api.signIn()');
+      return await get(url);
+    } catch (err) {
+      logger.e(err);
+      throw err;
     }
   }
 

@@ -433,7 +433,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 			&users.DepartmentID,
 			&users.BureauID,
 			&users.RoleID,
-			&user.StudentNumber,
+			&users.StudentNumber,
 			&users.Tel,
 			&users.CreatedAt,
 			&users.UpdatedAt,

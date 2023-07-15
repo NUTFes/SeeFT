@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"strconv"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
@@ -28,6 +29,7 @@ type User struct {
 	DepartmentID	int
 	BureauID		int
 	RoleID			int
+	StudentNumber	int
 	Tel				string
 }
 
@@ -214,6 +216,7 @@ func userInput() error {
 	var departmentID int
 	var bureauID int
 	var roleID int
+	var studentNumber int
 	var user User
 
 	db.ConnectMySQL()
@@ -240,8 +243,9 @@ func userInput() error {
 		mail := strings.ReplaceAll(record[8], " ", "")
 		mail = strings.ReplaceAll(mail, "　", "")
 
-		studentNumber := strings.ReplaceAll(record[6], " ", "")
-		studentNumber = strings.ReplaceAll(studentNumber, "　", "")
+		Number := strings.ReplaceAll(record[6], " ", "")
+		Number = strings.ReplaceAll(Number, "　", "")
+		studentNumber, _ = strconv.Atoi(Number)
 
 		tel := strings.ReplaceAll(record[9], " ", "")
 		tel =strings.ReplaceAll(tel, "　", "")
