@@ -40,9 +40,9 @@ func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
 	return ur.crud.ReadByID(c, query)
 }
 
-// メールから取得
-func (ur *userRepository) FindByMail(c context.Context, mail string) (*sql.Row) {
-	query := "SELECT * FROM users WHERE mail = '" + mail + "'"
+// 学籍番号から取得
+func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber string) (*sql.Row) {
+	query := "SELECT * FROM users WHERE student_number = " + studentNumber 
 	row := ur.client.DB().QueryRowContext(c, query)
 	fmt.Printf("\x1b[36m%s\n", query)
 	return row

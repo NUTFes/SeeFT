@@ -27,7 +27,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string) (entit
 	var user = entity.User{}
 	// var token entity.Token
 	// メールアドレスの存在確認
-	row := u.userRep.FindByMail(c, studentNumber)
+	row := u.userRep.FindByStudentNumber(c, studentNumber)
 	err := row.Scan(
 		&user.ID,
 		&user.Name,
