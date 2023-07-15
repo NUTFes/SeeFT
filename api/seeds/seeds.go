@@ -240,6 +240,9 @@ func userInput() error {
 		mail := strings.ReplaceAll(record[8], " ", "")
 		mail = strings.ReplaceAll(mail, "　", "")
 
+		studentNumber := strings.ReplaceAll(record[6], " ", "")
+		studentNumber = strings.ReplaceAll(studentNumber, "　", "")
+
 		tel := strings.ReplaceAll(record[9], " ", "")
 		tel =strings.ReplaceAll(tel, "　", "")
 
@@ -324,7 +327,7 @@ func userInput() error {
 		}
 
 		if(gradeID != 0){
-			user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID, Tel: tel}
+			user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID, StudentNumber: studentNumber, Tel: tel}
 			result := tx.DB().Create(&user)
 			if result.Error != nil {
 				fmt.Println(user)
