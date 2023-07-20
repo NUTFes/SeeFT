@@ -1,3 +1,5 @@
+// import 'dart:ffi';
+
 import 'package:seeft_mobile/configs/importer.dart';
 
 class SignInPage extends StatefulWidget {
@@ -7,12 +9,12 @@ class SignInPage extends StatefulWidget {
 
 /// 利用者登録のページ
 class _SignInPageState extends State<SignInPage> {
-  String mail = '';
+  String studentNumber = '';
   String infoText = '';
 
   _signIn() async {
     try {
-      var res = await api.signIn(mail);
+      var res = await api.signIn(studentNumber);
       var resId = res["id"];
       await store.setUserID(resId);
 
@@ -62,11 +64,11 @@ class _SignInPageState extends State<SignInPage> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                               ),
-                              labelText: 'メールアドレス',
+                              labelText: '学籍番号',
                             ),
                             onChanged: (String value) {
                               setState(() {
-                                mail = value;
+                                studentNumber = value;
                               });
                             },
                           ),
