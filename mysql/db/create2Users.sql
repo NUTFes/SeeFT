@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   role_id int(10) unsigned not null,
   student_number int(10) unsigned not null,
   tel varchar(15) not null unique,
+  passward varchar(255) not null,
   created_at datetime not null default current_timestamp,
   updated_at datetime not null default current_timestamp on update current_timestamp,
   PRIMARY KEY (id),

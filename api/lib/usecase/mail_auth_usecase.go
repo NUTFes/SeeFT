@@ -16,14 +16,14 @@ type mailAuthUseCase struct {
 }
 
 type MailAuthUseCase interface {
-	SignIn(context.Context, string) (entity.LoginUser, error)
+	SignIn(context.Context, string, string) (entity.LoginUser, error)
 }
 
 func NewAuthUseCase(userRep rep.UserRepository, sessionRep rep.SessionRepository) MailAuthUseCase {
 	return &mailAuthUseCase{userRep: userRep, sessionRep: sessionRep}
 }
 
-func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string) (entity.LoginUser, error) {
+func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passward string) (entity.LoginUser, error) {
 	var user = entity.User{}
 	// var token entity.Token
 	// メールアドレスの存在確認
@@ -38,12 +38,17 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string) (entit
 		&user.RoleID,
 		&user.StudentNumber,
 		&user.Tel,
+		&user.Passward,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 	// パスワードがあっているか確認
 	// err = bcrypt.CompareHashAndPassword([]byte(mailAuth.Password), []byte(password))
-	loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
+
+	if (user.Passward == password){
+		loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
+	}
+	
 	if err != nil {
 		return loginUser, err
 	}

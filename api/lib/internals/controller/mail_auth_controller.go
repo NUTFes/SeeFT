@@ -23,9 +23,10 @@ func NewMailAuthController(u usecase.MailAuthUseCase) MailAuthController {
 
 // sign in
 func (auth *mailAuthController) SignIn(c echo.Context) error {
-	// studentNumber := c.QueryParam("student_number")
-	studentNumber := c.Param("student_number")
-	user, err := auth.u.SignIn(c.Request().Context(), studentNumber)
+	studentNumber := c.QueryParam("student_number")
+	passward := c.QueryParam("passward")
+	// studentNumber := c.Param("student_number")
+	user, err := auth.u.SignIn(c.Request().Context(), studentNumber, passward)
 	if (err != nil) {
 		return err
 	}
