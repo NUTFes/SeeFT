@@ -250,25 +250,43 @@ class Api {
   }
 
   // Get Sign In
-  Future signIn(studentNumber) async {
+  Future signIn(studentNumber, passward) async {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
-    String url = constant.apiUrl + '/mail_auth/signin/' + studentNumber;
+    String url = constant.apiUrl +
+        '/mail_auth/signin?' +
+        studentNumber +
+        '&passward=' +
+        passward;
     // String url = constant.apiUrl + '/mail_auth/signin';
     // var body = {'student_number': studentNumber};
     // logger.i(url);
     // // print(url);
     // try {
-    //   return await post(url, body);
+    //   return await post(url);
     // } catch (e) {
     //   logger.e('failed got.');
     //   throw Exception('Failed GET in Api.signIn()');
     // }
+    final uri = Uri.parse(url);
     try {
-      return await get(url);
-    } catch (err) {
-      logger.e(err);
-      throw err;
+      return await http.post(
+        uri,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+      );
+    } catch (e) {
+      logger.e('failed got.');
+      throw Exception('Failed GET in Api.signIn()');
     }
+
+    // try {
+    //   return await get(url);
+    // } catch (err) {
+    //   logger.e(err);
+    //   throw err;
+    // }
   }
 
   // Get Shift Detail

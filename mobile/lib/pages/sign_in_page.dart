@@ -10,11 +10,12 @@ class SignInPage extends StatefulWidget {
 /// 利用者登録のページ
 class _SignInPageState extends State<SignInPage> {
   String studentNumber = '';
+  String passward = '';
   String infoText = '';
 
   _signIn() async {
     try {
-      var res = await api.signIn(studentNumber);
+      var res = await api.signIn(studentNumber, passward);
       var resId = res["id"];
       await store.setUserID(resId);
 
@@ -69,6 +70,19 @@ class _SignInPageState extends State<SignInPage> {
                             onChanged: (String value) {
                               setState(() {
                                 studentNumber = value;
+                              });
+                            },
+                          ),
+                          TextField(
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              labelText: 'パスワード',
+                            ),
+                            onChanged: (String value) {
+                              setState(() {
+                                passward = value;
                               });
                             },
                           ),
