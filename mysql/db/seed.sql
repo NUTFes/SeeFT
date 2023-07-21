@@ -107,7 +107,7 @@ VALUES
 
 -- 以下テスト用のデータなので本番環境で起こらないようにする
 INSERT INTO users
-  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `passward`)
+  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)
 VALUES
   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000', "gidaifes");
 
