@@ -9,6 +9,7 @@ class SignInPage extends StatefulWidget {
 
 /// 利用者登録のページ
 class _SignInPageState extends State<SignInPage> {
+  bool _isObscure = true;
   String studentNumber = '';
   String passward = '';
   String infoText = '';
@@ -75,12 +76,24 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                           const SizedBox(height: 25.0),
                           TextField(
+                            obscureText: _isObscure,
                             decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              labelText: 'パスワード',
-                            ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                labelText: 'パスワード',
+                                suffixIcon: IconButton(
+                                  // 文字の表示・非表示でアイコンを変える
+                                  icon: Icon(_isObscure
+                                      ? Icons.visibility_off
+                                      : Icons.visibility),
+                                  // アイコンがタップされたら現在と反対の状態をセットする
+                                  onPressed: () {
+                                    setState(() {
+                                      _isObscure = !_isObscure;
+                                    });
+                                  },
+                                )),
                             onChanged: (String value) {
                               setState(() {
                                 passward = value;
