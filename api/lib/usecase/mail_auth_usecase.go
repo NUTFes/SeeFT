@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	// "crypto/rand"
 	// "strconv"
 
@@ -43,15 +44,23 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwa
 		&user.UpdatedAt,
 	)
 	// パスワードがあっているか確認
-	// err = bcrypt.CompareHashAndPassword([]byte(mailAuth.Password), []byte(password))
+	// err = bcrypt.CompareHashAndPassword([]byte(mailAuth.Password), []byte(passward))
+	fmt.Println(passward)
 
-	if (user.Passward == password){
-		loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
-	}
-	
+	loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
+
 	if err != nil {
 		return loginUser, err
 	}
+
+	if (user.Passward == passward){
+		fmt.Println("test")
+		return loginUser, nil
+	}
+
+	fmt.Println("test2")
+	return loginUser, err
+	
 	// // トークン発行
 	// accessToken, err := _makeRandomStr(10)
 
@@ -62,7 +71,6 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwa
 	// }
 	// token.AccessToken = accessToken
 
-	return loginUser, nil
 }
 
 // アクセストークンを生成

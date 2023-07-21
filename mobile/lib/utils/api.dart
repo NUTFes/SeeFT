@@ -253,7 +253,7 @@ class Api {
   Future signIn(studentNumber, passward) async {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
     String url = constant.apiUrl +
-        '/mail_auth/signin?' +
+        '/mail_auth/signin?student_number=' +
         studentNumber +
         '&passward=' +
         passward;
@@ -269,13 +269,14 @@ class Api {
     // }
     final uri = Uri.parse(url);
     try {
-      return await http.post(
+      final response = await http.post(
         uri,
         headers: {
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "application/json",
         },
       );
+      return json.decode(response.body);
     } catch (e) {
       logger.e('failed got.');
       throw Exception('Failed GET in Api.signIn()');

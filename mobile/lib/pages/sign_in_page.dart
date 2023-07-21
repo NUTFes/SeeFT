@@ -73,6 +73,7 @@ class _SignInPageState extends State<SignInPage> {
                               });
                             },
                           ),
+                          const SizedBox(height: 25.0),
                           TextField(
                             decoration: InputDecoration(
                               border: OutlineInputBorder(
