@@ -7,32 +7,46 @@ final store = PermanentStore.getInstance();
 class PermanentStore {
   static PermanentStore _instance = PermanentStore();
 
+  // static Future<PermanentStore> getInstance() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   return _instance;
+  // }
   static getInstance() {
     return _instance;
   }
 
-  void setUserID(resId) async {
+  Future<void> setUserID(resId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userID', resId);
   }
 
-  getUserID() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userID = prefs.getInt('userID') ?? 0;
-    logger.d('load parmeanent store: $userID');
-    return userID;
+  Future<int> getUserID() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final userID = prefs.getInt('userID') ?? 0;
+      logger.d('load parmeanent store: $userID');
+      return userID;
+    } catch (e) {
+      print('Error while fetching SharedPreferences: $e');
+      return 0;
+    }
   }
 
-  isUserID() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userID = prefs.getInt('userID');
-    var isUserID = true;
-    if (userID == null) {
-       isUserID = false;
-    } else if (userID == 0) {
-       isUserID = false;
+  Future<bool> isUserID() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      var userID = prefs.getInt('userID');
+      var isUserID = true;
+      if (userID == null) {
+        isUserID = false;
+      } else if (userID == 0) {
+        isUserID = false;
+      }
+      logger.d('load isUserID parmeanent store: $isUserID');
+      return isUserID;
+    } catch (e) {
+      print('Error while fetching SharedPreferences: $e');
+      return false;
     }
-    logger.d('load isUserID parmeanent store: $isUserID');
-    return isUserID;
   }
 }

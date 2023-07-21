@@ -23,8 +23,8 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
   }
 
   Future<bool> getPrefRead() async {
-    final _isUserID = await store.isUserID();
-    final _userID = await store.getUserID();
+    final _isUserID = store.isUserID();
+    final _userID = store.getUserID();
     logger.w(_userID);
     logger.w(_isUserID);
     return _isUserID;
