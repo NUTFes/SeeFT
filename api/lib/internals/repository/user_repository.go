@@ -50,16 +50,16 @@ func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber s
 
 
 // 作成
-func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, passward string) error {
+func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string) error {
 	query := `
 		INSERT INTO
-			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, passward)
-		VALUES ('` + name + "', " + mail + ", " + gradeID + ", " + departmentID + "," +  bureauID + ", " + roleID + ", " + studentNumber + ", " + tel +  ", " + passward +")"
+			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, password)
+		VALUES ('` + name + "', " + mail + ", " + gradeID + ", " + departmentID + "," +  bureauID + ", " + roleID + ", " + studentNumber + ", " + tel +  ", " + password +")"
 	return ur.crud.UpdateDB(c, query)
 }
 
 // 編集
-func (ur *userRepository) Update(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, passward string) error {
+func (ur *userRepository) Update(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string) error {
 	query := `
 		UPDATE
 			users
@@ -72,7 +72,7 @@ func (ur *userRepository) Update(c context.Context, id string, name string, mail
 		", role_id = " + roleID +
 		", student_number = " + studentNumber +
 		", tel = " + tel +
-		", passward = " + passward +
+		", password = " + password +
 		" WHERE id = " + id
 	return ur.crud.UpdateDB(c, query)
 }

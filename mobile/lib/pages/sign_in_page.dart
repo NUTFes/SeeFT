@@ -11,29 +11,40 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   bool _isObscure = true;
   String studentNumber = '';
-  String passward = '';
+  String password = '';
   String infoText = '';
 
   _signIn() async {
     try {
-      var res = await api.signIn(studentNumber, passward);
+      var res = await api.signIn(studentNumber, password);
       var resId = res["id"];
-      await store.setUserID(resId);
 
-      // userIdをstoreにset出来てるか確認
-      var userID = await store.getUserID();
-      setState(() {
-        infoText = "Your ID : ${userID}";
-      });
-      Navigator.pushNamedAndRemoveUntil(
+      if (resId != null) {
+        await store.setUserID(resId);
+
+        // userIdをstoreにset出来てるか確認
+        var userID = await store.getUserID();
+        setState(() {
+          infoText = "Your ID : ${userID}";
+        });
+        Navigator.pushNamedAndRemoveUntil(
 //        context, '/wait_page', (Route<dynamic> route) => false);
-          context,
-          '/my_shift_page',
-          (Route<dynamic> route) => false);
+            context,
+            '/my_shift_page',
+            (Route<dynamic> route) => false);
+      } else {
+        setState(() {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('メールアドレスもしくはパスワードが違います'),
+            backgroundColor: Colors.redAccent,
+          ));
+        });
+      }
     } catch (e) {
+      print(e);
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('メールアドレスが違います'),
+          content: Text('メールアドレスもしくはパスワードが違います'),
           backgroundColor: Colors.redAccent,
         ));
       });
@@ -96,7 +107,7 @@ class _SignInPageState extends State<SignInPage> {
                                 )),
                             onChanged: (String value) {
                               setState(() {
-                                passward = value;
+                                password = value;
                               });
                             },
                           ),

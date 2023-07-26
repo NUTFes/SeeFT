@@ -250,13 +250,13 @@ class Api {
   }
 
   // Get Sign In
-  Future signIn(studentNumber, passward) async {
+  Future signIn(studentNumber, password) async {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
     String url = constant.apiUrl +
         '/mail_auth/signin?student_number=' +
         studentNumber +
-        '&passward=' +
-        passward;
+        '&password=' +
+        password;
     // String url = constant.apiUrl + '/mail_auth/signin';
     // var body = {'student_number': studentNumber};
     // logger.i(url);

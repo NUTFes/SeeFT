@@ -12,7 +12,7 @@ up-db:
 .PHONY: up-api
 up-api:
 	docker compose up -d db
-	sleep 10
+	sleep 15
 	docker compose up api
 
 .PHONY: build
