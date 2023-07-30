@@ -40,52 +40,79 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
         // var hasData = snapshot;
         logger.i('===============================');
         logger.i(snapshot.connectionState);
+        var app;
+        if (snapshot.hasData) {
+          var isUserID = snapshot.data;
+          logger.i(snapshot.connectionState);
+          var homeWidget;
+          if (isUserID!) {
+            // logger.i('select SignInPage.');
+            // homeWidget = '/my_shift_page';
+            logger.i('select WaitPage.');
+            homeWidget = '/my_shift_page';
+          } else {
+            logger.i('select MainPage.');
+            homeWidget = '/signin';
+          }
 
-        var isUserID = snapshot.data;
-        logger.i(snapshot.connectionState);
-        var homeWidget;
-        if (isUserID!) {
-          // logger.i('select SignInPage.');
-          // homeWidget = '/my_shift_page';
-          logger.i('select WaitPage.');
-          homeWidget = '/my_shift_page';
-        } else {
-          logger.i('select MainPage.');
-          homeWidget = '/signin';
-        }
-
-        var app = new MaterialApp(
-          title: constant.appName,
-          theme: ThemeData(
-            textTheme:
-                GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
-            primarySwatch: Colors.teal,
-            secondaryHeaderColor: Colors.teal,
-            focusColor: Colors.teal,
-            backgroundColor: Colors.white,
-            cardColor: Colors.white,
-            dialogBackgroundColor: Colors.white,
-            pageTransitionsTheme: const PageTransitionsTheme(
-              builders: <TargetPlatform, PageTransitionsBuilder>{
-                TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-                TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
-              },
+          app = new MaterialApp(
+            title: constant.appName,
+            theme: ThemeData(
+              textTheme:
+                  GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
+              primarySwatch: Colors.teal,
+              secondaryHeaderColor: Colors.teal,
+              focusColor: Colors.teal,
+              backgroundColor: Colors.white,
+              cardColor: Colors.white,
+              dialogBackgroundColor: Colors.white,
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: <TargetPlatform, PageTransitionsBuilder>{
+                  TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
+                },
+              ),
             ),
-          ),
-          //home: homeWidget,
-          initialRoute: homeWidget,
-          routes: {
-            '/signin': (context) => SignInPage(),
-            '/my_shift_page': (context) => MyShiftPage(),
-            '/all_shift_page': (context) => AllShiftPage(),
-            '/manual_list_page': (context) => ManualListPage(),
-            '/schedule_page': (context) => SchedulePage(),
-            '/contact_page': (context) => ContactPage(),
-            '/wait_page': (context) => WaitPage(),
-            '/users_page': (context) => UsersPage(),
-          },
-        );
-
+            //home: homeWidget,
+            initialRoute: homeWidget,
+            routes: {
+              '/signin': (context) => SignInPage(),
+              '/my_shift_page': (context) => MyShiftPage(),
+              '/all_shift_page': (context) => AllShiftPage(),
+              '/manual_list_page': (context) => ManualListPage(),
+              '/schedule_page': (context) => SchedulePage(),
+              '/contact_page': (context) => ContactPage(),
+              '/wait_page': (context) => WaitPage(),
+              '/users_page': (context) => UsersPage(),
+            },
+          );
+        } else if (snapshot.hasError) {
+          app = new MaterialApp(
+            title: constant.appName,
+            theme: ThemeData(
+              textTheme:
+                  GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
+              primarySwatch: Colors.teal,
+              secondaryHeaderColor: Colors.teal,
+              focusColor: Colors.teal,
+              backgroundColor: Colors.white,
+              cardColor: Colors.white,
+              dialogBackgroundColor: Colors.white,
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: <TargetPlatform, PageTransitionsBuilder>{
+                  TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
+                },
+              ),
+            ),
+            home: Scaffold(
+              appBar: AppBar(
+                title: const Text('Error Message'),
+              ),
+              body: Column(children: [Text(snapshot.error.toString())]),
+            ),
+          );
+        }
         return app;
       },
     );

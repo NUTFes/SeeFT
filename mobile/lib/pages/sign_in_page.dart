@@ -18,12 +18,11 @@ class _SignInPageState extends State<SignInPage> {
     try {
       var res = await api.signIn(studentNumber, password);
       var resId = res["id"];
-
       if (resId != null) {
-        await store.setUserID(resId);
-
+        await store.setUserID(int.parse(resId));
         // userIdをstoreにset出来てるか確認
         var userID = await store.getUserID();
+        print(userID);
         setState(() {
           infoText = "Your ID : ${userID}";
         });
@@ -41,7 +40,6 @@ class _SignInPageState extends State<SignInPage> {
         });
       }
     } catch (e) {
-      print(e);
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('メールアドレスもしくはパスワードが違います'),
