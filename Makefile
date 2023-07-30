@@ -12,7 +12,7 @@ up-db:
 .PHONY: up-api
 up-api:
 	docker compose up -d db
-	sleep 15
+	sleep 10
 	docker compose up api
 
 .PHONY: build
@@ -50,6 +50,10 @@ get:
 .PHONY: vendor
 vendor:
 	docker compose run --rm api go mod vendor
+
+.PHONY: storybook
+storybook:
+	docker compose run -p 6006:6006 --rm admin sh -c "npm run storybook"
 
 .PHONY: seed
 seed:
