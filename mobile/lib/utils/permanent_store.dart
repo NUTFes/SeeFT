@@ -12,12 +12,14 @@ class PermanentStore {
   }
 
   Future<void> setUserID(resId) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setInt('userID', resId);
-    } catch (e) {
-      print('Error while fetching SharedPreferences(setUserID): $e');
-    }
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('userID', resId);
+    // try {
+    //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+    //   await prefs.setInt('userID', resId);
+    // } catch (e) {
+    //   print('Error while fetching SharedPreferences(setUserID): $e');
+    // }
   }
 
   Future<int> getUserID() async {

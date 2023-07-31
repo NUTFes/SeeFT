@@ -40,6 +40,7 @@ class _SignInPageState extends State<SignInPage> {
         });
       }
     } catch (e) {
+      print(e);
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('メールアドレスもしくはパスワードが違います'),
