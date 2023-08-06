@@ -19,7 +19,7 @@ class _SignInPageState extends State<SignInPage> {
       var res = await api.signIn(studentNumber, password);
       var resId = res["id"];
       if (resId != null) {
-        await store.setUserID(int.parse(resId));
+        await store.setUserID(resId);
         // userIdをstoreにset出来てるか確認
         var userID = await store.getUserID();
         print(userID);
