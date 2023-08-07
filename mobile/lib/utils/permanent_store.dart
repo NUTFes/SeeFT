@@ -14,19 +14,18 @@ class PermanentStore {
   Future<void> setUserID(resId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userID', resId);
-    // try {
-    //   final SharedPreferences prefs = await SharedPreferences.getInstance();
-    //   await prefs.setInt('userID', resId);
-    // } catch (e) {
-    //   print('Error while fetching SharedPreferences(setUserID): $e');
-    // }
   }
 
   Future<int> getUserID() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userID = prefs.getInt('userID') ?? 0;
-    logger.d('load parmeanent store: $userID');
-    return userID;
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final userID = prefs.getInt('userID') ?? 0;
+      logger.d('load parmeanent store: $userID');
+      return userID;
+    } catch (e) {
+      print('Error while fetching SharedPreferences(getUserID): $e');
+      return 0;
+    }
   }
 
   Future<bool> isUserID() async {
