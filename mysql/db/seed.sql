@@ -107,9 +107,9 @@ VALUES
 
 -- 以下テスト用のデータなので本番環境で起こらないようにする
 INSERT INTO users
-  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`)
+  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)
 VALUES
-  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000');
+  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000', "gidaifes");
 
 INSERT INTO permissions
   (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"strconv"
 
+	"golang.org/x/crypto/bcrypt"
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
 )
@@ -31,6 +32,7 @@ type User struct {
 	RoleID			int
 	StudentNumber	int
 	Tel				string
+	Password		string
 }
 
 type Shift struct {
@@ -247,6 +249,10 @@ func userInput() error {
 		Number = strings.ReplaceAll(Number, "　", "")
 		studentNumber, _ = strconv.Atoi(Number)
 
+		password := strings.ReplaceAll(record[10], " ", "")
+		password = strings.ReplaceAll(password, "　", "")
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+
 		tel := strings.ReplaceAll(record[9], " ", "")
 		tel =strings.ReplaceAll(tel, "　", "")
 
@@ -331,7 +337,7 @@ func userInput() error {
 		}
 
 		if(gradeID != 0){
-			user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID, StudentNumber: studentNumber, Tel: tel}
+			user = User{Name: name, Mail: mail, GradeID: gradeID, DepartmentID: departmentID, BureauID: bureauID, RoleID: roleID, StudentNumber: studentNumber, Tel: tel, Password: string(hashed)}
 			result := tx.DB().Create(&user)
 			if result.Error != nil {
 				fmt.Println(user)

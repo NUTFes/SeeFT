@@ -51,6 +51,10 @@ get:
 vendor:
 	docker compose run --rm api go mod vendor
 
+.PHONY: storybook
+storybook:
+	docker compose run -p 6006:6006 --rm admin sh -c "npm run storybook"
+
 .PHONY: seed
 seed:
 	docker compose run --rm api go mod tidy
