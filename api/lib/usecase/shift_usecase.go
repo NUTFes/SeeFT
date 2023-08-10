@@ -361,6 +361,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&shift.User.BureauID,
 			&shift.User.RoleID,
 			&shift.User.Tel,
+			&shift.User.Password,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
 		)
@@ -435,6 +436,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 			&users.RoleID,
 			&users.StudentNumber,
 			&users.Tel,
+			&users.Password,
 			&users.CreatedAt,
 			&users.UpdatedAt,
 		)
