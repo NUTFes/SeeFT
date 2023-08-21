@@ -23,6 +23,18 @@ class PermanentStore {
     return userID;
   }
 
+  Future<void> setRoleID(resId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('roleID', resId);
+  }
+
+  Future<int> getRoleID() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final roleID = prefs.getInt('roleID') ?? 0;
+    logger.d('load parmeanent store: $roleID');
+    return roleID;
+  }
+
   Future<bool> isUserID() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var userID = prefs.getInt('userID') ?? 0;
