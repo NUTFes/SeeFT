@@ -41,28 +41,13 @@ class _ContactPageState extends State<ContactPage> {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  "副委員長　小林諒大",
+                  "委員長　一ノ瀬",
                   textAlign: TextAlign.center,
                 ),
                 TextButton(
                   onPressed: _openPhoneApp,
                   child: Text(
-                    "080-9703-4992\n",
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Text(
-                  "副委員長が通話中でつながらなかった場合は以下にご連絡ください\n",
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  "委員長　中井温人",
-                  textAlign: TextAlign.center,
-                ),
-                TextButton(
-                  onPressed: _openPhoneAppNakai,
-                  child: Text(
-                    "080-8918-4164\n",
+                    "070-4389-9374\n",
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -73,7 +58,7 @@ class _ContactPageState extends State<ContactPage> {
                   ),
                 ),
                 Text(
-                  "SeeFTの使用方法やバグなどの\nお問い合わせは以下へお願い致します。\n",
+                  "SeeFTの使用方などの\nお問い合わせは以下へお願い致します。\n",
                   textAlign: TextAlign.center,
                 ),
                 Text(
@@ -83,9 +68,13 @@ class _ContactPageState extends State<ContactPage> {
                 TextButton(
                   onPressed: _openMailApp,
                   child: Text(
-                    "r.fujisaki.nutfes@gmail.com\n",
+                    "22.t.harata.nutfes@gmail.com\n",
                     textAlign: TextAlign.center,
                   ),
+                ),
+                Text(
+                  "また、SeeFTの意見やバグなどは\nSlackの意見箱へお願い致します。\n",
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -95,14 +84,7 @@ class _ContactPageState extends State<ContactPage> {
 }
 
 void _openPhoneApp() {
-  const tel = '08097034992';
-  _launchURL(
-    'tel:' + tel,
-  );
-}
-
-void _openPhoneAppNakai() {
-  const tel = '08089184164';
+  const tel = '07043899374';
   _launchURL(
     'tel:' + tel,
   );
@@ -111,7 +93,7 @@ void _openPhoneAppNakai() {
 _openMailApp() async {
   final title = Uri.encodeComponent('タイトル');
   final body = Uri.encodeComponent('本文');
-  const mailAddress = 'r.fujisaki.nutfes@gmail.com';
+  const mailAddress = '22.t.harata.nutfes@gmail.com';
 
   return _launchURL(
     'mailto:$mailAddress?subject=$title&body=$body',
