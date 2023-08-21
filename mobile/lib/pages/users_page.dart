@@ -132,6 +132,7 @@ class _UsersPageState extends State<UsersPage> {
   }
 
   Future userInfoModal(users, index) async {
+    var roleID = await store.getRoleID();
     var value = await showDialog(
       context: context,
       builder: (BuildContext context) => new AlertDialog(
@@ -150,11 +151,25 @@ class _UsersPageState extends State<UsersPage> {
               title: Text("メールアドレス"),
               subtitle: Text(users[index]["mail"]),
             ),
-            ListTile(
-              leading: Icon(Icons.phone),
-              title: Text("緊急連絡先"),
-              subtitle: Text(users[index]["tel"]),
-            )
+            roleID == 2
+                ? ListTile(
+                    leading: Icon(Icons.phone),
+                    title: Text("緊急連絡先"),
+                    subtitle: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.only(left: 0),
+                        alignment: Alignment.centerLeft,
+                      ),
+                      onPressed: () => _openPhoneApp("0" + users[index]["tel"]),
+                      child: Text("0" + users[index]["tel"],
+                          textAlign: TextAlign.left),
+                    ),
+                  )
+                : ListTile(
+                    leading: Icon(Icons.phone),
+                    title: Text("緊急連絡先"),
+                    subtitle: Text("権限がありません"),
+                  )
           ]),
         ),
         actions: <Widget>[
@@ -166,5 +181,20 @@ class _UsersPageState extends State<UsersPage> {
       ),
     );
     return value;
+  }
+}
+
+void _openPhoneApp(String tel_number) {
+  _launchURL(
+    'tel:' + tel_number,
+  );
+}
+
+Future<void> _launchURL(String url) async {
+  if (await canLaunch(url)) {
+    await launch(url);
+  } else {
+    final Error error = ArgumentError('Could not launch $url');
+    throw error;
   }
 }
