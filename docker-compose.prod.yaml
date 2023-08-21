@@ -1,0 +1,27 @@
+version: "3"
+services:
+  cloudflare:
+    image: "cloudflare/cloudflared:latest"
+    container_name: "nutfes-seeft-web"
+    volumes: ["./web/prod:/home/nonroot/.cloudflared"]
+    command: tunnel run
+
+  mobile:
+    build: "./mobile"
+    container_name: "nutfes-seeft-mobile"
+    volumes: ["./mobile:/app"]
+    command: "flutter run"
+    ports: ["45029:45029"]
+    environment:
+      NEXT_PUBLIC_APP_ENV: "production"
+    depends_on: ["api"]
+
+  api:
+    build:
+      context: ./api
+      dockerfile: prod.Dockerfile
+    container_name: "nutfes-seeft-api"
+    volumes: ["./api:/app"]
+    command: "go run main.go"
+    env_file: ["./seeft.env"]
+    ports: ["1234:1234"]

@@ -106,26 +106,26 @@ VALUES
   ('量子・原子力統合工学分野/原子力システム安全工学専攻');
 
 -- 以下テスト用のデータなので本番環境で起こらないようにする
-INSERT INTO users
-  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)
-VALUES
-  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000', "gidaifes");
+-- INSERT INTO users
+--   (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)
+-- VALUES
+--   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000', "gidaifes");
 
-INSERT INTO permissions
-  (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
-VALUES
-  (1, True, True, True, True);
+-- INSERT INTO permissions
+--   (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
+-- VALUES
+--   (1, True, True, True, True);
 
-INSERT INTO tasks
-  (`task`, `place`, `url`, `superviser`, `notes`, `year_id`)
-VALUES
-  ('テスト1', '24', 'https://example.com', 'Admin', 'a', 42),
-  ('テスト2', '体育館', 'https://example.com', 'Admin', 'b', 42),
-  ('テスト3', 'D講', 'https://nutfes.net', 'Admin', 'c', 42);
+-- INSERT INTO tasks
+--   (`task`, `place`, `url`, `superviser`, `notes`, `year_id`)
+-- VALUES
+--   ('テスト1', '24', 'https://example.com', 'Admin', 'a', 42),
+--   ('テスト2', '体育館', 'https://example.com', 'Admin', 'b', 42),
+--   ('テスト3', 'D講', 'https://nutfes.net', 'Admin', 'c', 42);
 
-INSERT INTO shifts
-  (user_id, task_id, year_id, date_id, time_id, weather_id)
-VALUES
-  (1, 1, 41, 1, 1, 1),
-  (1, 1, 41, 1, 2, 1),
-  (1, 1, 41, 1, 3, 1);
+-- INSERT INTO shifts
+--   (user_id, task_id, year_id, date_id, time_id, weather_id)
+-- VALUES
+--   (1, 1, 41, 1, 1, 1),
+--   (1, 1, 41, 1, 2, 1),
+--   (1, 1, 41, 1, 3, 1);
