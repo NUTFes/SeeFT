@@ -178,7 +178,8 @@ class Api {
   }
 
   // シフトのユーザ取得
-  Future getUsersByShift(task, year, date, time, weather) async {
+  Future getUsersByShift(String task, String year, String date, String time,
+      String weather) async {
     String url = constant.apiUrl +
         '/shifts/tasks/' +
         task +

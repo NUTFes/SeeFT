@@ -38,7 +38,11 @@ openShiftDialog(
   // var resPresidentTel = res["TEL"];
 
   var res = await api.getUsersByShift(
-      task["id"], year["id"], date["id"], time["id"], weather["id"]);
+      task["id"].toString(),
+      year["id"].toString(),
+      date["id"].toString(),
+      time["id"].toString(),
+      weather["id"].toString());
   var resName = task["task"].toString();
   var resURL = task["url"].toString();
   var resPlace = task["place"].toString();
