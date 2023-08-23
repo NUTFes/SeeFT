@@ -30,7 +30,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   path_provider: ^2.0.3
   logger: ^1.1.0
-  shared_preferences: ^2.0.7
+  shared_preferences: ^2.2.0
   http: ^0.13.3
   flutter_local_notifications: ^9.0.0
   google_fonts: ^4.0.0

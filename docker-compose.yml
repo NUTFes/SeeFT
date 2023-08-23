@@ -38,4 +38,26 @@ services:
       db: 
         condition: service_started
 
+  mobile:
+    container_name: nutfes-seeft-mobile
+    build: ./mobile
+    restart: always
+    volumes:
+      - ./mobile:/app
+    environment:
+      MYSQL_DATABASE: seeft_db
+      MYSQL_HOST: nutfes-seeft-db
+      MYSQL_USER: seeft
+      MYSQL_PASSWORD: password
+    #シェルスクリプトを実行するコマンド
+    command: "python3 ./python/server.py"
+    ports:
+      - "45029:45029"
+    stdin_open: true
+    tty: true
+    depends_on:
+      api: 
+        condition: service_started
+    
+
 
