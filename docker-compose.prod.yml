@@ -23,5 +23,5 @@ services:
     container_name: "nutfes-seeft-api"
     volumes: ["./api:/app"]
     command: "go run main.go"
-    env_file: ["./seeft.env"]
+    env_file: ["./api/env/seeft.env"]
     ports: ["1234:1234"]
