@@ -28,7 +28,7 @@ func ConnectMySQLFromGorm() (GormClient, error) {
 	dbHost := os.Getenv("NUTMEG_DB_HOST")
 	dbPort := os.Getenv("NUTMEG_DB_PORT")
 	dbName := os.Getenv("NUTMEG_DB_NAME")
-	dns := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName 
+	dns := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=disable"
 	fmt.Println(dns)
 	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{})
 
