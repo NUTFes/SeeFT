@@ -31,8 +31,11 @@ func ConnectMySQL() (client, error) {
 	// MySQLに接続する
 	// データベース接続部分
 	// dbconf := "seeft:password@tcp(nutfes-seeft-db:3306)/seeft_db?charset=utf8mb4&parseTime=true"
-	dbconf := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true"
-	db, err := sql.Open("mysql", dbconf)
+	// dbconf := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true"
+	// db, err := sql.Open("mysql", dbconf)
+
+	dns := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName 
+	db, err := sql.Open("postgres", dns);
 
 	if err != nil {
 		return client{}, err

@@ -10,7 +10,7 @@ services:
     build: "./mobile"
     container_name: "nutfes-seeft-mobile"
     volumes: ["./mobile:/app"]
-    command: "flutter run"
+    command: "python3 ./python/server.py"
     ports: ["45029:45029"]
     environment:
       NEXT_PUBLIC_APP_ENV: "production"
