@@ -1,14 +1,12 @@
-use seeft_db;
-
 INSERT INTO weathers
-  (`weather`)
+  (weather)
 VALUES
   ('晴れ'),
   ('雨'),
   ('none');
 
 INSERT INTO times
-  (`time`)
+  (time)
 VALUES
   ('6:00'),
   ('6:30'),
@@ -46,7 +44,7 @@ VALUES
   ('22:30');
   
 INSERT INTO grades
-  (`grade`)
+  (grade)
 VALUES
   ('B1'),
   ('B2'),
@@ -60,7 +58,7 @@ VALUES
   ('OB');
 
 INSERT INTO dates
-  (`date`)
+  (date)
 VALUES
   ('準備日'),
   ('1日目'),
@@ -68,7 +66,7 @@ VALUES
   ('片付け日');
 
 INSERT INTO bureaus
-  (`bureau`)
+  (bureau)
 VALUES
   ('委員長'),
   ('副委員長'),
@@ -80,7 +78,7 @@ VALUES
   ('情報局');
 
 INSERT INTO years
-  (id, `year`)
+  (id, year)
 VALUES
   (40, 2021),
   (41, 2022),
