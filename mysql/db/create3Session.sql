@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS session (
 
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_dates_timestamp') THEN
-        CREATE TRIGGER update_dates_timestamp
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_session_timestamp') THEN
+        CREATE TRIGGER update_session_timestamp
         BEFORE UPDATE ON session
         FOR EACH ROW
         EXECUTE FUNCTION update_updated_at_column();
