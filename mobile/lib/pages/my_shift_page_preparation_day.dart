@@ -21,7 +21,7 @@ class _MyShiftPageState extends State<MyShiftPagePreparationDay>
     with SingleTickerProviderStateMixin {
   final List<TabInfo> _tabs = [
     TabInfo("晴れ", MyShiftPagePreparationDaySunny()),
-    TabInfo("雨", MyShiftPagePreparationDayRainy()),
+    // TabInfo("雨", MyShiftPagePreparationDayRainy()),
   ];
   late TabController _tabController;
 
