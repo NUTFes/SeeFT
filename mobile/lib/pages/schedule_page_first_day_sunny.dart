@@ -65,13 +65,37 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                           ),
                           TableCell(
                             child: Container(
-                              child: Text("A講義室"),
+                              child: Text("武道場"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("福利棟前"),
                               alignment: Alignment.center,
                             ),
                           ),
                           TableCell(
                             child: Container(
                               child: Text("D講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("A講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("講義棟 201"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("マルチメディア"),
                               alignment: Alignment.center,
                             ),
                           ),
@@ -86,10 +110,26 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Container(
+                              child: Text("開会式"),
+                              alignment: Alignment.center,
+                              color: Colors.lightGreen,
+                            ),
+                            Container(
+                              child: Text("悠久太鼓愛好会\n鶴亀会"),
+                              alignment: Alignment.center,
+                              color: Colors.lightGreen,
+                            ),
+                          ],
+                        ),
+                      ),
+                      TableCell(
                         child: Container(
-                          child: Text("悠久太鼓愛好会\n鶴亀会"),
+                          child: Text(""),
                           alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
