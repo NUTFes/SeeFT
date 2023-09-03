@@ -115,7 +115,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Container(
                               child: Text("開会式"),
@@ -192,7 +192,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Container(
                               child: Text("愛好会鶴亀会"),
@@ -209,7 +209,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Container(
                               child: Text(""),
@@ -357,7 +357,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Container(
                               child: Text(""),
@@ -374,7 +374,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Container(
                               child: Text(""),
@@ -454,6 +454,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -973,7 +974,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Container(
                               child: Text(""),
@@ -1183,7 +1184,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
                             Container(
                               child: Text(""),
