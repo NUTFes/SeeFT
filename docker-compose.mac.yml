@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  db:
+    container_name: nutfes-seeft-db
+    image: mysql:8.0
+    volumes:
+      - ./mysql/db:/docker-entrypoint-initdb.d # 初期データ
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_DATABASE: seeft_db
+      MYSQL_USER: seeft
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 3306:3306
+    restart: always
+
+  api:
+    container_name: nutfes-seeft-api
+    build: ./api
+    restart: always
+    volumes:
+      - ./api:/app
+    env_file: ["./api/env/dev.env"]
+    #シェルスクリプトを実行するコマンド
+    command: "./start.sh"
+    ports:
+      - "1234:1234"
+    stdin_open: true
+    tty: true
+    depends_on:
+      db: 
+        condition: service_started
+

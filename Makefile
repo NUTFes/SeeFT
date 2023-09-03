@@ -1,9 +1,11 @@
-RUN = api ls
-GET = none
-
 .PHONY: up
 up:
 	docker compose up 
+
+.PHONY: mac up
+mac-up:
+	docker compose -f docker-compose.mac.yml up 
+
 
 .PHONY: up-db
 up-db:
@@ -19,9 +21,9 @@ up-api:
 build:
 	docker compose build
 
-.PHONY: run
-run:
-	docker compose run --rm ${RUN}
+.PHONY: mac build
+mac-build:
+	docker compose -f docker-compose.mac.yml build
 
 .PHONY: down
 down:
@@ -31,9 +33,6 @@ down:
 exec:
 	docker compose exec api bash
 
-.PHONY: migrate
-migrate:
-	docker compose run --rm api go run migrations/migrate.go up
 
 .PHONY: tidy
 tidy:
@@ -43,9 +42,6 @@ tidy:
 go-init:
 	docker compose run --rm api go mod init github.com/NUTFes/SeeFT/api
 
-.PHONY: get
-get:
-	docker compose run --rm api go get -u ${GET}
 
 .PHONY: vendor
 vendor:
@@ -68,6 +64,13 @@ prod-seed:
 	docker compose -f docker-compose.prod.yml up -d db
 	sleep 15
 	docker compose -f docker-compose.prod.yml run --rm api go run /app/seeds/seeds.go
+
+.PHONY: mac seed
+mac-seed:
+	docker compose -f docker-compose.mac.yml run --rm api go mod tidy
+	docker compose -f docker-compose.mac.yml up -d db
+	sleep 15
+	docker compose -f docker-compose.mac.yml run --rm api go run /app/seeds/seeds.go
 
 # .PHONY: seed
 
