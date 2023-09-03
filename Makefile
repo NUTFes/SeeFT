@@ -62,6 +62,13 @@ seed:
 	sleep 15
 	docker compose run --rm api go run /app/seeds/seeds.go
 
+.PHONY: prod seed
+prod-seed:
+	docker compose -f docker-compose.prod.yml run --rm api go mod tidy
+	docker compose -f docker-compose.prod.yml up -d db
+	sleep 15
+	docker compose -f docker-compose.prod.yml run --rm api go run /app/seeds/seeds.go
+
 # .PHONY: seed
 
 # seed:

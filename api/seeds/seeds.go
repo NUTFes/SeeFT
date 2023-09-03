@@ -74,6 +74,7 @@ func main() {
 }
 
 func taskInput() error {
+	// filename := "./seeds/41th_task.csv"
 	filename := "./seeds/42nd_task.csv"
 	yearID := 42
 
@@ -98,10 +99,34 @@ func taskInput() error {
 	// fmt.Println(record)
 
 	for i := 1; i < len(record); i++ {
-		// taskname := strings.ReplaceAll(record[i][0], " ", "")
-		// taskname = strings.ReplaceAll(taskname, "　", "")
+		taskname := strings.ReplaceAll(record[i][0], " ", "")
+		taskname = strings.ReplaceAll(taskname, "　", "")
+		taskname = strings.ReplaceAll(taskname, "\n", "")
 
-		task := Task{Task: record[i][0], Place: record[i][1], URL:record[i][2] ,Superviser: `なし`, Color: record[i][3], Notes: record[i][4], YearID: yearID}
+		color := ""
+		if(record[i][3] == "") {
+			color = "fffafa"
+		} else {
+			color = record[i][3]
+			color = strings.ReplaceAll(color, "#", "")
+		}
+
+		place := ""
+		if(record[i][1] == "") {
+			place = "未定"
+		} else {
+			place = record[i][1]
+		}
+
+		url := ""
+		if(record[i][2] == "") {
+			url = "null"
+		} else {
+			url = record[i][2]
+		}
+
+		// task := Task{Task: taskname, Place: record[i][1], URL:record[i][2] ,Superviser: `なし`, Color: record[i][4], Notes: record[i][5], YearID: yearID}
+		 task := Task{Task: taskname, Place: place, URL:url ,Superviser: `なし`, Color: color, Notes: record[i][4], YearID: yearID}
 		// fmt.Println(task)
 		result := tx.DB().Create(&task)
 		if result.Error != nil {
@@ -126,6 +151,7 @@ func shiftInput() error {
 	*/
 	yearID := 42
 	filename := []string{
+		// "./seeds/41th_current_1_sunny.csv",
 		"./seeds/42nd_preparation_sunny.csv",
 		"./seeds/42nd_current_1_sunny.csv",
 		"./seeds/42nd_current_2_sunny.csv",
@@ -187,7 +213,11 @@ func shiftInput() error {
 			for j := 5; j < len(record); j++ {
 
 				var task entity.Task
-				if err := tx.DB().Table("tasks").Where("task = ?", record[j][i]).First(&task).Error; 
+				taskname := strings.ReplaceAll(record[j][i], " ", "")
+				taskname = strings.ReplaceAll(taskname, "　", "")
+				taskname = strings.ReplaceAll(taskname, "\n", "")
+
+				if err := tx.DB().Table("tasks").Where("task = ?", taskname).First(&task).Error; 
 				err != nil {
 				}
 
@@ -285,7 +315,7 @@ func userInput() error {
 				gradeID = 0
 		}
 
-		department := strings.ReplaceAll(record[7], " ", "")
+		department := strings.ReplaceAll(record[5], " ", "")
 		department = strings.ReplaceAll(department, "　", "")
 		switch department {
 			case `未所属`:
@@ -302,7 +332,7 @@ func userInput() error {
 				departmentID = 6
 			case `原子力`:
 				departmentID = 7
-			case `技術科学イノベーション`
+			case `技術科学イノベーション`:
 				departmentID = 8
 			default:
 				departmentID = 0
@@ -334,7 +364,7 @@ func userInput() error {
 		role := strings.ReplaceAll(record[1], " ", "")
 		role = strings.ReplaceAll(role, "　", "")
 		switch role {
-			case `局長` | `局長補佐`:
+			case `局長`, `局長補佐`, `委員長`, `副委員長`:
 				roleID = 2
 			default:
 				roleID = 1

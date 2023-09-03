@@ -43,6 +43,8 @@ class _SchedulePageSecondDaySunnyState
                     4: FlexColumnWidth(15),
                     5: FlexColumnWidth(15),
                     6: FlexColumnWidth(15),
+                    7: FlexColumnWidth(15),
+                    8: FlexColumnWidth(15),
                   },
                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                   children: [
@@ -74,13 +76,25 @@ class _SchedulePageSecondDaySunnyState
                           ),
                           TableCell(
                             child: Container(
-                              child: Text("A講義室"),
+                              child: Text("福利棟前"),
                               alignment: Alignment.center,
                             ),
                           ),
                           TableCell(
                             child: Container(
                               child: Text("D講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("A講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("講義棟 201"),
                               alignment: Alignment.center,
                             ),
                           ),

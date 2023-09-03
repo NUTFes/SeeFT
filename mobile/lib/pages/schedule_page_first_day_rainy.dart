@@ -39,6 +39,11 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                     1: FlexColumnWidth(15),
                     2: FlexColumnWidth(15),
                     3: FlexColumnWidth(15),
+                    4: FlexColumnWidth(15),
+                    5: FlexColumnWidth(15),
+                    6: FlexColumnWidth(15),
+                    7: FlexColumnWidth(15),
+                    8: FlexColumnWidth(15),
                   },
                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                   children: [
@@ -52,7 +57,31 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                           )),
                           TableCell(
                             child: Container(
+                              child: Text("メインステージ"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
                               child: Text("体育館"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("武道場"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("福利棟前"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("D講義室"),
                               alignment: Alignment.center,
                             ),
                           ),
@@ -64,7 +93,13 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                           ),
                           TableCell(
                             child: Container(
-                              child: Text("D講義室"),
+                              child: Text("講義棟 201"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("マルチメディア"),
                               alignment: Alignment.center,
                             ),
                           ),

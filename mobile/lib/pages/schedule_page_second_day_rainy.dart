@@ -6,10 +6,12 @@ import 'package:http/http.dart' as http;
 
 class SchedulePageSecondDayRainy extends StatefulWidget {
   @override
-  _SchedulePageSecondDayRainyState createState() => _SchedulePageSecondDayRainyState();
+  _SchedulePageSecondDayRainyState createState() =>
+      _SchedulePageSecondDayRainyState();
 }
 
-class _SchedulePageSecondDayRainyState extends State<SchedulePageSecondDayRainy> {
+class _SchedulePageSecondDayRainyState
+    extends State<SchedulePageSecondDayRainy> {
 // notification関連をinitStateに書き出さなきゃいけないので書いてたけどutilとかに書いてもいいかもね
 
 //  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -33,13 +35,16 @@ class _SchedulePageSecondDayRainyState extends State<SchedulePageSecondDayRainy>
               Container(
                 child: Table(
                   border: TableBorder.all(color: Colors.black),
-                  columnWidths: const<int, TableColumnWidth>{
-                    0: FlexColumnWidth(5),
-                    1: FlexColumnWidth(10),
-                    2: FlexColumnWidth(10),
-                    3: FlexColumnWidth(10),
-                    4: FlexColumnWidth(10),
-                    5: FlexColumnWidth(10),
+                  columnWidths: const <int, TableColumnWidth>{
+                    0: FlexColumnWidth(10),
+                    1: FlexColumnWidth(15),
+                    2: FlexColumnWidth(15),
+                    3: FlexColumnWidth(15),
+                    4: FlexColumnWidth(15),
+                    5: FlexColumnWidth(15),
+                    6: FlexColumnWidth(15),
+                    7: FlexColumnWidth(15),
+                    8: FlexColumnWidth(15),
                   },
                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                   children: [
@@ -48,9 +53,15 @@ class _SchedulePageSecondDayRainyState extends State<SchedulePageSecondDayRainy>
                         children: [
                           TableCell(
                               child: Container(
-                                child: Text("日時"),
-                                alignment: Alignment.center,
-                              )),
+                            child: Text("日時"),
+                            alignment: Alignment.center,
+                          )),
+                          TableCell(
+                            child: Container(
+                              child: Text("メインステージ"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
                           TableCell(
                             child: Container(
                               child: Text("体育館"),
@@ -65,13 +76,25 @@ class _SchedulePageSecondDayRainyState extends State<SchedulePageSecondDayRainy>
                           ),
                           TableCell(
                             child: Container(
-                              child: Text("A講義室"),
+                              child: Text("福利棟前"),
                               alignment: Alignment.center,
                             ),
                           ),
                           TableCell(
                             child: Container(
                               child: Text("D講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("A講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("講義棟 201"),
                               alignment: Alignment.center,
                             ),
                           ),
@@ -87,9 +110,9 @@ class _SchedulePageSecondDayRainyState extends State<SchedulePageSecondDayRainy>
                     TableRow(children: [
                       TableCell(
                           child: Container(
-                            child: Text("10:00~\n10:30"),
-                            alignment: Alignment.center,
-                          )),
+                        child: Text("10:00~\n10:30"),
+                        alignment: Alignment.center,
+                      )),
                       TableCell(
                         child: Container(
                           child: Text("Mongolian\nstudent"),
@@ -132,9 +155,9 @@ class _SchedulePageSecondDayRainyState extends State<SchedulePageSecondDayRainy>
                     TableRow(children: [
                       TableCell(
                           child: Container(
-                            child: Text("10:30~\n11:00"),
-                            alignment: Alignment.center,
-                          )),
+                        child: Text("10:30~\n11:00"),
+                        alignment: Alignment.center,
+                      )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
@@ -977,4 +1000,3 @@ class _SchedulePageSecondDayRainyState extends State<SchedulePageSecondDayRainy>
     );
   }
 }
-
