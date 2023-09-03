@@ -3,18 +3,17 @@ version: "3.8"
 services:
   db:
     container_name: nutfes-seeft-db
-    image: mysql:8.0
+    image: postgres
     volumes:
-      - ./mysql/db:/docker-entrypoint-initdb.d # 初期データ
+      - ./mysql/db:/docker-entrypoint-initdb.d/ # 初期データ
       - ./my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
-      MYSQL_DATABASE: seeft_db
-      MYSQL_USER: seeft
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: root
+      POSTGRES_DB: seeft_db
+      POSTGRES_USER: seeft
+      POSTGRES_PASSWORD: password
       TZ: 'Asia/Tokyo'
     ports:
-      - 3306:3306
+      - 5432:5432
     restart: always
 
   api:
