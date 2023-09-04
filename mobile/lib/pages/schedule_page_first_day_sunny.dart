@@ -117,16 +117,22 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Text("開会式"),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("開会式"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
                             ),
-                            Container(
-                              child: Text("悠久太鼓"),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
-                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("悠久太鼓"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            )
                           ],
                         ),
                       ),
@@ -194,14 +200,20 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Text("愛好会鶴亀会"),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("愛好会鶴亀会"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
                             ),
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
                             ),
                           ],
                         ),
@@ -211,14 +223,20 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
                             ),
-                            Container(
-                              child: Text("技大祭ショーケース"),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("技大祭ショーケース"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
                             ),
                           ],
                         ),
@@ -359,14 +377,20 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
                             ),
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
                             ),
                           ],
                         ),
@@ -376,14 +400,20 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
                             ),
-                            Container(
-                              child: Text("ポップスコンサート"),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("ポップスコンサート"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
                             ),
                           ],
                         ),
@@ -976,14 +1006,20 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
                             ),
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
                             ),
                           ],
                         ),
@@ -1186,14 +1222,20 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
-                              color: Colors.lightGreen,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
                             ),
-                            Container(
-                              child: Text(""),
-                              alignment: Alignment.center,
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
                             ),
                           ],
                         ),
