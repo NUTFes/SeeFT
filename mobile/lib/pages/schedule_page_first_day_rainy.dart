@@ -114,6 +114,13 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
@@ -128,9 +135,8 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                             Expanded(
                               flex: 5,
                               child: Container(
-                                child: Text("悠久太鼓"),
+                                child: Text(""),
                                 alignment: Alignment.center,
-                                color: Colors.lightGreen,
                               ),
                             )
                           ],
@@ -138,16 +144,25 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       ),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("つるかめ会"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       TableCell(
@@ -197,25 +212,9 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Expanded(
-                              flex: 5,
-                              child: Container(
-                                child: Text("愛好会鶴亀会"),
-                                alignment: Alignment.center,
-                                color: Colors.lightGreen,
-                              ),
-                            ),
-                            Expanded(
-                              flex: 5,
-                              child: Container(
-                                child: Text(""),
-                                alignment: Alignment.center,
-                              ),
-                            ),
-                          ],
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -243,9 +242,25 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       ),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       TableCell(
@@ -536,45 +551,45 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
                           child: Text("大声コンテスト"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -606,7 +621,6 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -643,6 +657,7 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -937,16 +952,16 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("ヒーローショー"),
+                          child: Text(""),
                           alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text(""),
+                          child: Text("ヒーローショー"),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -1003,6 +1018,13 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
@@ -1022,13 +1044,6 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -1086,23 +1101,23 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
                           child: Text("クイズ大会"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -1155,21 +1170,21 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
                           color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -1219,6 +1234,20 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                       )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
@@ -1238,20 +1267,6 @@ class _SchedulePageFirstDayRainyState extends State<SchedulePageFirstDayRainy> {
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(

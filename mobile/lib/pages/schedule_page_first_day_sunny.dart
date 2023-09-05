@@ -128,7 +128,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                             Expanded(
                               flex: 5,
                               child: Container(
-                                child: Text("悠久太鼓"),
+                                child: Text("つるかめ会"),
                                 alignment: Alignment.center,
                                 color: Colors.lightGreen,
                               ),
@@ -203,7 +203,7 @@ class _SchedulePageFirstDaySunnyState extends State<SchedulePageFirstDaySunny> {
                             Expanded(
                               flex: 5,
                               child: Container(
-                                child: Text("愛好会鶴亀会"),
+                                child: Text(""),
                                 alignment: Alignment.center,
                                 color: Colors.lightGreen,
                               ),
