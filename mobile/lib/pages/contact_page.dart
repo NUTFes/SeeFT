@@ -41,7 +41,7 @@ class _ContactPageState extends State<ContactPage> {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  "委員長　一之瀬拓実",
+                  "委員長　市之瀬拓実",
                   textAlign: TextAlign.center,
                 ),
                 TextButton(

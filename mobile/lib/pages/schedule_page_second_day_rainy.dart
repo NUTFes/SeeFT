@@ -779,6 +779,7 @@ class _SchedulePageSecondDayRainyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -786,7 +787,6 @@ class _SchedulePageSecondDayRainyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(

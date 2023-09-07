@@ -16,14 +16,14 @@ class ApplicationDrawer {
                 context, '/my_shift_page', (Route<dynamic> route) => false)
           },
         ),
-        ListTile(
-          title: Text("全体シフト"),
-          leading: Icon(Icons.dynamic_feed),
-          // onTap: () => {
-          //   Navigator.pushNamedAndRemoveUntil(
-          //       context, '/all_shift_page', (Route<dynamic> route) => false)
-          // },
-        ),
+        // ListTile(
+        //   title: Text("全体シフト"),
+        //   leading: Icon(Icons.dynamic_feed),
+        //   // onTap: () => {
+        //   //   Navigator.pushNamedAndRemoveUntil(
+        //   //       context, '/all_shift_page', (Route<dynamic> route) => false)
+        //   // },
+        // ),
         ListTile(
           title: Text("マニュアル一覧"),
           leading: Icon(Icons.list_alt),

@@ -61,8 +61,7 @@ seed:
 .PHONY: prod seed
 prod-seed:
 	docker compose -f docker-compose.prod.yml run --rm api go mod tidy
-	docker compose -f docker-compose.prod.yml up -d db
-	sleep 15
+	sleep 10
 	docker compose -f docker-compose.prod.yml run --rm api go run /app/seeds/seeds.go
 
 .PHONY: mac seed
