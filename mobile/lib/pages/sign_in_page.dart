@@ -35,7 +35,7 @@ class _SignInPageState extends State<SignInPage> {
       } else {
         setState(() {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('メールアドレスもしくはパスワードが違います'),
+            content: Text('学籍番号もしくはパスワードが違います'),
             backgroundColor: Colors.redAccent,
           ));
         });
@@ -43,7 +43,7 @@ class _SignInPageState extends State<SignInPage> {
     } catch (e) {
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('メールアドレスもしくはパスワードが違います'),
+          content: Text('学籍番号もしくはパスワードが違います'),
           backgroundColor: Colors.redAccent,
         ));
       });
