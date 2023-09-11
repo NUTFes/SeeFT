@@ -6,6 +6,10 @@ up:
 mac-up:
 	docker compose -f docker-compose.mac.yml up 
 
+.PHONY: prod up
+prod-up:
+	docker compose -f docker-compose.prod.yml up -d
+
 
 .PHONY: up-db
 up-db:
@@ -24,6 +28,10 @@ build:
 .PHONY: mac build
 mac-build:
 	docker compose -f docker-compose.mac.yml build
+
+.PHONY: prod build
+prod-build:
+	docker compose -f docker-compose.prod.yml build
 
 .PHONY: down
 down:
