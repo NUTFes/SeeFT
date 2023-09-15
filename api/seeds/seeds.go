@@ -204,7 +204,7 @@ func shiftInput() error {
 
 			name := strings.ReplaceAll(record[4][i], " ", "")
 			name = strings.ReplaceAll(name, "　", "")
-			fmt.Println(name)
+			// fmt.Println(name)
 
 			if err := tx.DB().Table("users").Where("name = ?", name).First(&user).Error; err != nil {
 				fmt.Println(err)
@@ -232,7 +232,7 @@ func shiftInput() error {
 				// fmt.Println(shift)
 				result := tx.DB().Create(&shift)
 				if result.Error != nil {
-					fmt.Println(shift)
+					// fmt.Println(shift)
 					//				return fmt.Errorf("create db: %w", result.Error)
 				}
 			}
