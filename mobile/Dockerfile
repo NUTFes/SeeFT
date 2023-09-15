@@ -31,7 +31,7 @@ WORKDIR /home/flutteruser/seeft_mobile
 
 # Flutterの依存関係を取得し、アプリをビルドします。
 RUN flutter doctor
-RUN flutter clean
+# RUN flutter clean
 RUN flutter pub get
 RUN flutter pub upgrade
 # webや他のプラットフォームに対してビルドする場合、適切なコマンドを使用してください。
