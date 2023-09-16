@@ -55,10 +55,10 @@ type Task struct {
 }
 
 func main() {
-	// if err := userInput(); err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println("OK. Finish user input.")
+	if err := userInput(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("OK. Finish user input.")
 
 	if err := taskInput(); err != nil {
 		log.Fatal(err)
