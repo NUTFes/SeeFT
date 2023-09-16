@@ -25,6 +25,20 @@ class ApplicationDrawer {
         //   // },
         // ),
         ListTile(
+          title: Text("全体シフト"),
+          leading: Icon(Icons.dynamic_feed),
+          onTap: () async {
+            var url =
+                "https://docs.google.com/spreadsheets/d/1fd4v6UF3V08OTQXKnGk9wxvjTRp1lLxBZzdBM2Uf2v4#gid=1709999697";
+            if (await canLaunch(url)) {
+              await launch(url);
+            } else {
+              final Error error = ArgumentError('Could not launch $url');
+              throw error;
+            }
+          },
+        ),
+        ListTile(
           title: Text("マニュアル一覧"),
           leading: Icon(Icons.list_alt),
           onTap: () => {
