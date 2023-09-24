@@ -51,14 +51,13 @@ services:
     
 
   admin:
-    build: ./admin
     container_name: "nutfes-seeft-admin"
+    build: ./admin
     volumes:
       - ./admin:/app
     command: sh -c "npm install && npm run dev"
     ports:
       - "3000:3000"
-      - "6006:6006"
     stdin_open: true
     tty: true
     depends_on: [api]
