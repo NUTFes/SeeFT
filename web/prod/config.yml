@@ -1,0 +1,10 @@
+tunnel: 46a8a4d5-c45f-4a1c-ad4f-7c90155dd986
+credentials-file: /home/nonroot/.cloudflared/46a8a4d5-c45f-4a1c-ad4f-7c90155dd986.json
+protocol: http2
+
+ingress:
+  - hostname: seeft.nutfes.net
+    service: http://mobile:45029
+  - hostname: seeft-api.nutfes.net
+    service: http://api:1234
+  - service: http_status:404

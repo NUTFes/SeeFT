@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  db:
+    container_name: nutfes-seeft-db
+    image: postgres
+    volumes:
+      - ./mysql/db:/docker-entrypoint-initdb.d/ # 初期データ
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      POSTGRES_DB: seeft_db
+      POSTGRES_USER: seeft
+      POSTGRES_PASSWORD: password
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 5432:5432
+    restart: always
+
+  api:
+    container_name: nutfes-seeft-api
+    build: ./api
+    restart: always
+    volumes:
+      - ./api:/app
+    env_file: ["./api/env/dev.env"]
+    #シェルスクリプトを実行するコマンド
+    command: "./start.sh"
+    ports:
+      - "1234:1234"
+    stdin_open: true
+    tty: true
+    depends_on:
+      db: 
+        condition: service_started
+

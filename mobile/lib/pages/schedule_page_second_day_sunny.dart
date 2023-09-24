@@ -43,6 +43,8 @@ class _SchedulePageSecondDaySunnyState
                     4: FlexColumnWidth(15),
                     5: FlexColumnWidth(15),
                     6: FlexColumnWidth(15),
+                    7: FlexColumnWidth(15),
+                    8: FlexColumnWidth(15),
                   },
                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                   children: [
@@ -74,13 +76,25 @@ class _SchedulePageSecondDaySunnyState
                           ),
                           TableCell(
                             child: Container(
-                              child: Text("A講義室"),
+                              child: Text("福利棟前"),
                               alignment: Alignment.center,
                             ),
                           ),
                           TableCell(
                             child: Container(
                               child: Text("D講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("A講義室"),
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                          TableCell(
+                            child: Container(
+                              child: Text("講義棟 201"),
                               alignment: Alignment.center,
                             ),
                           ),
@@ -102,13 +116,7 @@ class _SchedulePageSecondDaySunnyState
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        child: Container(
-                          child: Text("Mongolian\nstudent"),
+                          child: Text("ヒーローショー"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
                         ),
@@ -130,9 +138,30 @@ class _SchedulePageSecondDaySunnyState
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("Popular Music Club"),
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("技大祭ライブ"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -152,9 +181,19 @@ class _SchedulePageSecondDaySunnyState
                         alignment: Alignment.center,
                       )),
                       TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text(""),
+                          child: Text("Vysan"),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("ポップスコンサート"),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -176,12 +215,20 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
                           child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("共通テスト"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
                         ),
@@ -198,32 +245,121 @@ class _SchedulePageSecondDaySunnyState
                     // 4行目
                     TableRow(children: [
                       TableCell(
+                          child: Container(
+                        child: Text("11:00~\n11:30"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("11:00~\n11:15"),
+                          child: Text(""),
                           alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("VYSAN"),
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("ボーカロイドライブ"),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
                         ),
                       ),
+                    ]),
+
+                    // 5行目
+                    TableRow(children: [
                       TableCell(
                         child: Container(
-                          child: Text(""),
+                          child: Text("11:30~\n12:00"),
                           alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("Sri Lankan Song"),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
@@ -233,6 +369,237 @@ class _SchedulePageSecondDaySunnyState
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
                           child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    ]),
+
+                    // 6行目
+                    TableRow(children: [
+                      TableCell(
+                          child: Container(
+                        child: Text("12:00~\n12:30"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    ]),
+
+                    // 7行目
+                    TableRow(children: [
+                      TableCell(
+                          child: Container(
+                        child: Text("12:30~\n13:00"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("技大祭ショーケース"),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    ]),
+
+                    // 8行目
+                    TableRow(children: [
+                      TableCell(
+                          child: Container(
+                        child: Text("13:00~\n13:30"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("実戦空手道部"),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text("気配斬り"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
                         ),
@@ -247,184 +614,13 @@ class _SchedulePageSecondDaySunnyState
                       ),
                     ]),
 
-                    // 5行目
-                    TableRow(children: [
-                      TableCell(
-                        child: Container(
-                          child: Text("11:30~\n12:00"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                    ]),
-
-                    // 7行目
-                    TableRow(children: [
-                      TableCell(
-                        child: Container(
-                          child: Text("12:00~\n12:30"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text("Street Style"),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                    ]),
-
-                    // 8行目
-                    TableRow(children: [
-                      TableCell(
-                        child: Container(
-                          child: Text("12:30~\n13:00"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                    ]),
-
                     // 9行目
                     TableRow(children: [
                       TableCell(
-                        child: Container(
-                          child: Text("13:00~\n13:15"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
+                          child: Container(
+                        child: Text("13:30~\n14:00"),
+                        alignment: Alignment.center,
+                      )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
@@ -459,6 +655,30 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                     ]),
@@ -466,11 +686,10 @@ class _SchedulePageSecondDaySunnyState
                     // 10行目
                     TableRow(children: [
                       TableCell(
-                        child: Container(
-                          child: Text("13:15~\n13:30"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
+                          child: Container(
+                        child: Text("14:00~\n14:30"),
+                        alignment: Alignment.center,
+                      )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
@@ -481,14 +700,7 @@ class _SchedulePageSecondDaySunnyState
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text("実践空手道部"),
+                          child: Text("カラオケ企画"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
                         ),
@@ -513,6 +725,29 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                     ]),
@@ -520,9 +755,46 @@ class _SchedulePageSecondDaySunnyState
                     // 11行目
                     TableRow(children: [
                       TableCell(
+                          child: Container(
+                        child: Text("14:30~\n15:00"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("13:30~\n14:00"),
+                          child: Text(""),
                           alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -545,29 +817,6 @@ class _SchedulePageSecondDaySunnyState
                           child: Text(""),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text("NUT\nソフトウェア"),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
                         ),
                       ),
                     ]),
@@ -575,9 +824,23 @@ class _SchedulePageSecondDaySunnyState
                     // 12行目
                     TableRow(children: [
                       TableCell(
+                          child: Container(
+                        child: Text("15:00~\n15:30"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("14:00~\n14:15"),
+                          child: Text(""),
                           alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -605,7 +868,7 @@ class _SchedulePageSecondDaySunnyState
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text(""),
+                          child: Text("題名のない\n合唱団"),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
                         ),
@@ -615,7 +878,6 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -623,6 +885,7 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                     ]),
@@ -630,16 +893,38 @@ class _SchedulePageSecondDaySunnyState
                     // 13行目
                     TableRow(children: [
                       TableCell(
-                        child: Container(
-                          child: Text("14:15~\n14:30"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
+                          child: Container(
+                        child: Text("15:30~\n16:00"),
+                        alignment: Alignment.center,
+                      )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text(""),
+                                alignment: Alignment.center,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       TableCell(
@@ -669,7 +954,6 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -677,6 +961,14 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                     ]),
@@ -684,15 +976,42 @@ class _SchedulePageSecondDaySunnyState
                     // 14行目
                     TableRow(children: [
                       TableCell(
+                          child: Container(
+                        child: Text("16:00~\n16:30"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("14:30~\n15:00"),
+                          child: Text(""),
                           alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("カラオケ大会"),
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
                         ),
@@ -709,22 +1028,6 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -739,8 +1042,35 @@ class _SchedulePageSecondDaySunnyState
                     // 15行目
                     TableRow(children: [
                       TableCell(
+                          child: Container(
+                        child: Text("16:30~\n17:00"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("15:00~\n15:30"),
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
                           alignment: Alignment.center,
                         ),
                       ),
@@ -764,21 +1094,6 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -793,16 +1108,16 @@ class _SchedulePageSecondDaySunnyState
                     // 16行目
                     TableRow(children: [
                       TableCell(
-                        child: Container(
-                          child: Text("15:30~\n16:00"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
+                          child: Container(
+                        child: Text("17:00~\n17:30"),
+                        alignment: Alignment.center,
+                      )),
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text(""),
+                          child: Text("ビンゴ大会"),
                           alignment: Alignment.center,
+                          color: Colors.lightGreen,
                         ),
                       ),
                       TableCell(
@@ -832,151 +1147,6 @@ class _SchedulePageSecondDaySunnyState
                           child: Text(""),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                    ]),
-
-                    // 17行目
-                    TableRow(children: [
-                      TableCell(
-                        child: Container(
-                          child: Text("16:00~\n16:30"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                    ]),
-
-                    // 16行目
-                    TableRow(children: [
-                      TableCell(
-                        child: Container(
-                          child: Text("16:30~\n17:00"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                    ]),
-
-                    // 15行目
-                    TableRow(children: [
-                      TableCell(
-                        child: Container(
-                          child: Text("17:00~\n17:30"),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text("学生番号抽選会"),
-                          alignment: Alignment.center,
-                          color: Colors.lightGreen,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.fill,
-                        child: Container(
-                          child: Text(""),
-                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -1005,8 +1175,36 @@ class _SchedulePageSecondDaySunnyState
                     // 17行目
                     TableRow(children: [
                       TableCell(
+                          child: Container(
+                        child: Text("17:30~\n18:00"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("17:30~\n18:00"),
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
                           alignment: Alignment.center,
                         ),
                       ),
@@ -1016,6 +1214,58 @@ class _SchedulePageSecondDaySunnyState
                           child: Text(""),
                           alignment: Alignment.center,
                           color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    ]),
+
+                    // 18行目
+                    TableRow(children: [
+                      TableCell(
+                          child: Container(
+                        child: Text("18:00~\n18:30"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(
@@ -1054,11 +1304,42 @@ class _SchedulePageSecondDaySunnyState
                         ),
                       ),
                     ]),
-                    // 17行目
+
+                    // 19行目
                     TableRow(children: [
                       TableCell(
+                          child: Container(
+                        child: Text("18:30~\n19:00"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("模擬店GP"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: Container(
+                                child: Text("閉会式"),
+                                alignment: Alignment.center,
+                                color: Colors.lightGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Container(
-                          child: Text("18:00~\n18:30"),
+                          child: Text(""),
                           alignment: Alignment.center,
                         ),
                       ),
@@ -1067,7 +1348,136 @@ class _SchedulePageSecondDaySunnyState
                         child: Container(
                           child: Text(""),
                           alignment: Alignment.center,
-                          color: Colors.lightGreen,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    ]),
+
+                    // 20行目
+                    TableRow(children: [
+                      TableCell(
+                          child: Container(
+                        child: Text("19:00~\n19:30"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                    ]),
+
+                    // 21行目
+                    TableRow(children: [
+                      TableCell(
+                          child: Container(
+                        child: Text("19:30~\n20:00"),
+                        alignment: Alignment.center,
+                      )),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Container(
+                          child: Text(""),
+                          alignment: Alignment.center,
                         ),
                       ),
                       TableCell(

@@ -21,5 +21,4 @@ RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Airをインストール
 RUN go install github.com/cosmtrek/air@latest
-# RUN go get -u github.com/cosmtrek/air && go build -o /go/bin/air github.com/cosmtrek/air
 CMD ["air", "-c", ".air.toml"]

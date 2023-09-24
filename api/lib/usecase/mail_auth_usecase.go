@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"context"
+	// "fmt"
 	// "crypto/rand"
 	// "strconv"
 
 	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
+	"golang.org/x/crypto/bcrypt"
 	// "github.com/pkg/errors"
 )
 
@@ -16,18 +18,18 @@ type mailAuthUseCase struct {
 }
 
 type MailAuthUseCase interface {
-	SignIn(context.Context, string) (entity.LoginUser, error)
+	SignIn(context.Context, string, string) (entity.LoginUser, error)
 }
 
 func NewAuthUseCase(userRep rep.UserRepository, sessionRep rep.SessionRepository) MailAuthUseCase {
 	return &mailAuthUseCase{userRep: userRep, sessionRep: sessionRep}
 }
 
-func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginUser, error) {
+func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, password string) (entity.LoginUser, error) {
 	var user = entity.User{}
-	// var token entity.Token
+	
 	// メールアドレスの存在確認
-	row := u.userRep.FindByMail(c, email)
+	row := u.userRep.FindByStudentNumber(c, studentNumber)
 	err := row.Scan(
 		&user.ID,
 		&user.Name,
@@ -36,16 +38,23 @@ func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginU
 		&user.DepartmentID,
 		&user.BureauID,
 		&user.RoleID,
+		&user.StudentNumber,
 		&user.Tel,
+		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 	// パスワードがあっているか確認
-	// err = bcrypt.CompareHashAndPassword([]byte(mailAuth.Password), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+
 	loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
+
 	if err != nil {
 		return loginUser, err
 	}
+
+	return loginUser, nil
+	
 	// // トークン発行
 	// accessToken, err := _makeRandomStr(10)
 
@@ -56,7 +65,6 @@ func (u *mailAuthUseCase) SignIn(c context.Context, email string) (entity.LoginU
 	// }
 	// token.AccessToken = accessToken
 
-	return loginUser, nil
 }
 
 // アクセストークンを生成

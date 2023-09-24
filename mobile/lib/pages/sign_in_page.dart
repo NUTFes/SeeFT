@@ -1,3 +1,5 @@
+// import 'dart:ffi';
+
 import 'package:seeft_mobile/configs/importer.dart';
 
 class SignInPage extends StatefulWidget {
@@ -7,29 +9,41 @@ class SignInPage extends StatefulWidget {
 
 /// 利用者登録のページ
 class _SignInPageState extends State<SignInPage> {
-  String mail = '';
+  bool _isObscure = true;
+  String studentNumber = '';
+  String password = '';
   String infoText = '';
 
   _signIn() async {
     try {
-      var res = await api.signIn(mail);
+      var res = await api.signIn(studentNumber, password);
       var resId = res["id"];
-      await store.setUserID(resId);
-
-      // userIdをstoreにset出来てるか確認
-      var userID = await store.getUserID();
-      setState(() {
-        infoText = "Your ID : ${userID}";
-      });
-      Navigator.pushNamedAndRemoveUntil(
+      var resRoleId = res["roleID"];
+      if (resId != null) {
+        await store.setUserID(resId);
+        await store.setRoleID(resRoleId);
+        // userIdをstoreにset出来てるか確認
+        var userID = await store.getUserID();
+        setState(() {
+          infoText = "Your ID : ${userID}";
+        });
+        Navigator.pushNamedAndRemoveUntil(
 //        context, '/wait_page', (Route<dynamic> route) => false);
-          context,
-          '/my_shift_page',
-          (Route<dynamic> route) => false);
+            context,
+            '/my_shift_page',
+            (Route<dynamic> route) => false);
+      } else {
+        setState(() {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('学籍番号もしくはパスワードが違います'),
+            backgroundColor: Colors.redAccent,
+          ));
+        });
+      }
     } catch (e) {
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('メールアドレスが違います'),
+          content: Text('学籍番号もしくはパスワードが違います'),
           backgroundColor: Colors.redAccent,
         ));
       });
@@ -62,11 +76,37 @@ class _SignInPageState extends State<SignInPage> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                               ),
-                              labelText: 'メールアドレス',
+                              labelText: '学籍番号',
                             ),
                             onChanged: (String value) {
                               setState(() {
-                                mail = value;
+                                studentNumber = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 25.0),
+                          TextField(
+                            obscureText: _isObscure,
+                            decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                labelText: 'パスワード',
+                                suffixIcon: IconButton(
+                                  // 文字の表示・非表示でアイコンを変える
+                                  icon: Icon(_isObscure
+                                      ? Icons.visibility_off
+                                      : Icons.visibility),
+                                  // アイコンがタップされたら現在と反対の状態をセットする
+                                  onPressed: () {
+                                    setState(() {
+                                      _isObscure = !_isObscure;
+                                    });
+                                  },
+                                )),
+                            onChanged: (String value) {
+                              setState(() {
+                                password = value;
                               });
                             },
                           ),

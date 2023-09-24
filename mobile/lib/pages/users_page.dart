@@ -104,7 +104,9 @@ class _UsersPageState extends State<UsersPage> {
           users[index]["name"].toString(),
           style: TextStyle(color: Colors.black, fontSize: 14.0),
         ),
-        onTap: () async {},
+        onTap: () async {
+          userInfoModal(users, index);
+        },
       ),
     );
   }
@@ -127,5 +129,72 @@ class _UsersPageState extends State<UsersPage> {
     } catch (err) {
       logger.e('don`t response. error message: $err');
     }
+  }
+
+  Future userInfoModal(users, index) async {
+    var roleID = await store.getRoleID();
+    var value = await showDialog(
+      context: context,
+      builder: (BuildContext context) => new AlertDialog(
+        title: new Text('ユーザ情報'),
+        content: new Container(
+          height: 200,
+          width: 300,
+          child: ListView(children: <Widget>[
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text("名前"),
+              subtitle: Text(users[index]["name"]),
+            ),
+            ListTile(
+              leading: Icon(Icons.email),
+              title: Text("メールアドレス"),
+              subtitle: Text(users[index]["mail"]),
+            ),
+            roleID == 2
+                ? ListTile(
+                    leading: Icon(Icons.phone),
+                    title: Text("緊急連絡先"),
+                    subtitle: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.only(left: 0),
+                        alignment: Alignment.centerLeft,
+                      ),
+                      onPressed: () => _openPhoneApp(users[index]["tel"]),
+                      child:
+                          Text(users[index]["tel"], textAlign: TextAlign.left),
+                    ),
+                  )
+                : ListTile(
+                    leading: Icon(Icons.phone),
+                    title: Text("緊急連絡先"),
+                    subtitle: Text("権限がありません"),
+                  )
+          ]),
+        ),
+        actions: <Widget>[
+          new SimpleDialogOption(
+            child: new Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
+    );
+    return value;
+  }
+}
+
+void _openPhoneApp(String tel_number) {
+  _launchURL(
+    'tel:' + tel_number,
+  );
+}
+
+Future<void> _launchURL(String url) async {
+  if (await canLaunch(url)) {
+    await launch(url);
+  } else {
+    final Error error = ArgumentError('Could not launch $url');
+    throw error;
   }
 }

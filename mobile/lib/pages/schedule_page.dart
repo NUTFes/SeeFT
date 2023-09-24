@@ -19,12 +19,13 @@ class TabInfo {
   TabInfo(this.label, this.widget);
 }
 
-class _SchedulePageState extends State<SchedulePage>   with SingleTickerProviderStateMixin {
+class _SchedulePageState extends State<SchedulePage>
+    with SingleTickerProviderStateMixin {
   final List<TabInfo> _tabs = [
-    TabInfo("9/10 晴天時", SchedulePageFirstDaySunny()),
-    TabInfo("9/10 雨天時", SchedulePageFirstDayRainy()),
-    TabInfo("9/11 晴天時", SchedulePageSecondDaySunny()),
-    TabInfo("9/11 雨天時", SchedulePageSecondDayRainy()),
+    TabInfo("9/16 晴天時", SchedulePageFirstDaySunny()),
+    TabInfo("9/16 雨天時", SchedulePageFirstDayRainy()),
+    TabInfo("9/17 晴天時", SchedulePageSecondDaySunny()),
+    TabInfo("9/17 雨天時", SchedulePageSecondDayRainy()),
   ];
   late TabController _tabController;
 

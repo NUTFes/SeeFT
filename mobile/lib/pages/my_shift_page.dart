@@ -32,7 +32,8 @@ class _MyShiftPageState extends State<MyShiftPage>
     TabInfo("準備日", MyShiftPagePreparationDay()),
     TabInfo("当日 1日目", MyShiftPageCurrentFirstDay()),
     TabInfo("当日 2日目", MyShiftPageCurrentSecondDay()),
-    TabInfo("片付け日", CleanUpDayTimeSchedule()),
+    // TabInfo("片付け日", CleanUpDayTimeSchedule()),
+    TabInfo("片付け日", WaitPage()),
   ];
   late TabController _tabController;
 // notification関連をinitStateに書き出さなきゃいけないので書いてたけどutilとかに書いてもいいかもね

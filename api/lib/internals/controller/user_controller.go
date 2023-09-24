@@ -49,8 +49,10 @@ func (u *userController) CreateUser(c echo.Context) error {
 	departmentID := c.QueryParam("department_id")
 	bureauID := c.QueryParam("bureau_id")
 	roleID := c.QueryParam("role_id")
+	studentNumber := c.QueryParam("student_number")
 	tel := c.QueryParam("tel")
-	latastUser, err := u.u.CreateUser(c.Request().Context(), name, mail, gradeID, departmentID, bureauID, roleID, tel)
+	password := c.QueryParam("password")
+	latastUser, err := u.u.CreateUser(c.Request().Context(), name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
 	if err != nil {
 		return err
 	}
@@ -66,8 +68,10 @@ func (u *userController) UpdateUser(c echo.Context) error {
 	departmentID := c.QueryParam("department_id")
 	bureauID := c.QueryParam("bureau_id")
 	roleID := c.QueryParam("role_id")
+	studentNumber := c.QueryParam("student_number")
 	tel := c.QueryParam("tel")
-	updatedUser, err := u.u.UpdateUser(c.Request().Context(), id, name, mail, gradeID, departmentID, bureauID, roleID, tel)
+	password := c.QueryParam("password")
+	updatedUser, err := u.u.UpdateUser(c.Request().Context(), id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
 	if err != nil {
 		return err
 	}

@@ -178,7 +178,8 @@ class Api {
   }
 
   // シフトのユーザ取得
-  Future getUsersByShift(task, year, date, time, weather) async {
+  Future getUsersByShift(String task, String year, String date, String time,
+      String weather) async {
     String url = constant.apiUrl +
         '/shifts/tasks/' +
         task +
@@ -250,19 +251,44 @@ class Api {
   }
 
   // Get Sign In
-  Future signIn(mail) async {
+  Future signIn(studentNumber, password) async {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
-    String url = constant.apiUrl + '/mail_auth/signin?email=' + mail;
+    String url = constant.apiUrl +
+        '/mail_auth/signin?student_number=' +
+        studentNumber +
+        '&password=' +
+        password;
     // String url = constant.apiUrl + '/mail_auth/signin';
-    var body = {'email': mail};
-    logger.i(url);
-    // print(url);
+    // var body = {'student_number': studentNumber};
+    // logger.i(url);
+    // // print(url);
+    // try {
+    //   return await post(url);
+    // } catch (e) {
+    //   logger.e('failed got.');
+    //   throw Exception('Failed GET in Api.signIn()');
+    // }
+    final uri = Uri.parse(url);
     try {
-      return await post(url, body);
+      final response = await http.post(
+        uri,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+      );
+      return json.decode(response.body);
     } catch (e) {
       logger.e('failed got.');
       throw Exception('Failed GET in Api.signIn()');
     }
+
+    // try {
+    //   return await get(url);
+    // } catch (err) {
+    //   logger.e(err);
+    //   throw err;
+    // }
   }
 
   // Get Shift Detail
