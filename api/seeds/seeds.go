@@ -55,10 +55,10 @@ type Task struct {
 }
 
 func main() {
-	// if err := userInput(); err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println("OK. Finish user input.")
+	if err := userInput(); err != nil {
+	 	log.Fatal(err)
+    }
+	fmt.Println("OK. Finish user input.")
 
 	if err := taskInput(); err != nil {
 		log.Fatal(err)
@@ -153,10 +153,10 @@ func shiftInput() error {
 	filename := []string{
 		// "./seeds/41th_current_1_sunny.csv",
 		"./seeds/42nd_preparation_sunny.csv",
-		"./seeds/42nd_current_1_sunny.csv",
+		/*"./seeds/42nd_current_1_sunny.csv",
 		"./seeds/42nd_current_1_rainy.csv",
 		"./seeds/42nd_current_2_sunny.csv",
-		"./seeds/42nd_current_2_rainy.csv",
+		"./seeds/42nd_current_2_rainy.csv",*/
 	}
 	for _, v := range filename {
 
