@@ -2,7 +2,9 @@ package db
 
 import (
   "fmt"
-  "gorm.io/driver/mysql"
+  // "database/sql"
+  // "gorm.io/driver/mysql"
+  "gorm.io/driver/postgres"
   "gorm.io/gorm"
   "os"
 )
@@ -26,14 +28,15 @@ func ConnectMySQLFromGorm() (GormClient, error) {
 	dbHost := os.Getenv("NUTMEG_DB_HOST")
 	dbPort := os.Getenv("NUTMEG_DB_PORT")
 	dbName := os.Getenv("NUTMEG_DB_NAME")
-	dns := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true"
-	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{})
+	dns := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=disable"
+	fmt.Println(dns)
+	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{})
 
 	if err != nil {
-		fmt.Println("[Failed] Not Connect to MySQL form Grom")
+		fmt.Println("[Failed] Not Connect to PostgreSQL form Grom")
 		return nil, err
 	} else {
-		fmt.Println("[Success] Connect to MySQL form Grom")
+		fmt.Println("[Success] Connect to PostgreSQL form Grom")
 		return gormClient{db}, nil
 	}
 }

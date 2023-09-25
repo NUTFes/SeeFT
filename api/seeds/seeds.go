@@ -55,10 +55,10 @@ type Task struct {
 }
 
 func main() {
-	if err := userInput(); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("OK. Finish user input.")
+	// if err := userInput(); err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("OK. Finish user input.")
 
 	if err := taskInput(); err != nil {
 		log.Fatal(err)
@@ -74,7 +74,8 @@ func main() {
 }
 
 func taskInput() error {
-	filename := "./seeds/41th_task.csv"
+	// filename := "./seeds/41th_task.csv"
+	filename := "./seeds/42nd_task.csv"
 	yearID := 42
 
 	f, err := os.Open(filename)
@@ -98,10 +99,34 @@ func taskInput() error {
 	// fmt.Println(record)
 
 	for i := 1; i < len(record); i++ {
-		// taskname := strings.ReplaceAll(record[i][0], " ", "")
-		// taskname = strings.ReplaceAll(taskname, "　", "")
+		taskname := strings.ReplaceAll(record[i][0], " ", "")
+		taskname = strings.ReplaceAll(taskname, "　", "")
+		taskname = strings.ReplaceAll(taskname, "\n", "")
 
-		task := Task{Task: record[i][0], Place: record[i][1], URL:record[i][2] ,Superviser: record[i][3], Color: record[i][4], Notes: record[i][5], YearID: yearID}
+		color := ""
+		if(record[i][3] == "") {
+			color = "fffafa"
+		} else {
+			color = record[i][3]
+			color = strings.ReplaceAll(color, "#", "")
+		}
+
+		place := ""
+		if(record[i][1] == "") {
+			place = "未定"
+		} else {
+			place = record[i][1]
+		}
+
+		url := ""
+		if(record[i][2] == "") {
+			url = "null"
+		} else {
+			url = record[i][2]
+		}
+
+		// task := Task{Task: taskname, Place: record[i][1], URL:record[i][2] ,Superviser: `なし`, Color: record[i][4], Notes: record[i][5], YearID: yearID}
+		 task := Task{Task: taskname, Place: place, URL:url ,Superviser: `なし`, Color: color, Notes: record[i][4], YearID: yearID}
 		// fmt.Println(task)
 		result := tx.DB().Create(&task)
 		if result.Error != nil {
@@ -126,7 +151,12 @@ func shiftInput() error {
 	*/
 	yearID := 42
 	filename := []string{
-		"./seeds/41th_current_1_sunny.csv",
+		// "./seeds/41th_current_1_sunny.csv",
+		"./seeds/42nd_preparation_sunny.csv",
+		"./seeds/42nd_current_1_sunny.csv",
+		"./seeds/42nd_current_1_rainy.csv",
+		"./seeds/42nd_current_2_sunny.csv",
+		"./seeds/42nd_current_2_rainy.csv",
 	}
 	for _, v := range filename {
 
@@ -172,9 +202,9 @@ func shiftInput() error {
 		for i := 2; i < len(record[0]); i++ {
 			var user entity.User
 
-			name := strings.ReplaceAll(record[3][i], " ", "")
+			name := strings.ReplaceAll(record[4][i], " ", "")
 			name = strings.ReplaceAll(name, "　", "")
-			fmt.Println(name)
+			// fmt.Println(name)
 
 			if err := tx.DB().Table("users").Where("name = ?", name).First(&user).Error; err != nil {
 				fmt.Println(err)
@@ -182,10 +212,14 @@ func shiftInput() error {
 				break
 			}
 
-			for j := 4; j < len(record); j++ {
+			for j := 5; j < len(record); j++ {
 
 				var task entity.Task
-				if err := tx.DB().Table("tasks").Where("task = ?", record[j][i]).First(&task).Error; 
+				taskname := strings.ReplaceAll(record[j][i], " ", "")
+				taskname = strings.ReplaceAll(taskname, "　", "")
+				taskname = strings.ReplaceAll(taskname, "\n", "")
+
+				if err := tx.DB().Table("tasks").Where("task = ?", taskname).First(&task).Error; 
 				err != nil {
 				}
 
@@ -198,7 +232,7 @@ func shiftInput() error {
 				// fmt.Println(shift)
 				result := tx.DB().Create(&shift)
 				if result.Error != nil {
-					fmt.Println(shift)
+					// fmt.Println(shift)
 					//				return fmt.Errorf("create db: %w", result.Error)
 				}
 			}
@@ -209,7 +243,7 @@ func shiftInput() error {
 }
 
 func userInput() error {
-	f, err := os.Open("./seeds/user.csv")
+	f, err := os.Open("./seeds/42nd_user.csv")
 	if err != nil {
 		return fmt.Errorf("cannot open csv: %w", err)
 	}
@@ -239,24 +273,24 @@ func userInput() error {
 
 		}
 
-		name := strings.ReplaceAll(record[4], " ", "")
+		name := strings.ReplaceAll(record[2], " ", "")
 		name = strings.ReplaceAll(name, "　", "")
 
-		mail := strings.ReplaceAll(record[8], " ", "")
+		mail := strings.ReplaceAll(record[7], " ", "")
 		mail = strings.ReplaceAll(mail, "　", "")
 
 		Number := strings.ReplaceAll(record[6], " ", "")
 		Number = strings.ReplaceAll(Number, "　", "")
 		studentNumber, _ = strconv.Atoi(Number)
 
-		password := strings.ReplaceAll(record[10], " ", "")
+		password := strings.ReplaceAll(record[9], " ", "")
 		password = strings.ReplaceAll(password, "　", "")
 		hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
 
-		tel := strings.ReplaceAll(record[9], " ", "")
+		tel := strings.ReplaceAll(record[8], " ", "")
 		tel =strings.ReplaceAll(tel, "　", "")
 
-		grade := strings.ReplaceAll(record[3], " ", "")
+		grade := strings.ReplaceAll(record[4], " ", "")
 		grade = strings.ReplaceAll(grade, "　", "")
 		switch grade {
 			case `B1`:
@@ -283,7 +317,7 @@ func userInput() error {
 				gradeID = 0
 		}
 
-		department := strings.ReplaceAll(record[7], " ", "")
+		department := strings.ReplaceAll(record[5], " ", "")
 		department = strings.ReplaceAll(department, "　", "")
 		switch department {
 			case `未所属`:
@@ -300,11 +334,13 @@ func userInput() error {
 				departmentID = 6
 			case `原子力`:
 				departmentID = 7
+			case `技術科学イノベーション`:
+				departmentID = 8
 			default:
 				departmentID = 0
 		}
 
-		bureau := strings.ReplaceAll(record[1], " ", "")
+		bureau := strings.ReplaceAll(record[0], " ", "")
 		bureau = strings.ReplaceAll(bureau, "　", "")
 		switch bureau {
 			case `委員長`:
@@ -327,10 +363,10 @@ func userInput() error {
 				bureauID = 0
 		}
 
-		role := strings.ReplaceAll(record[2], " ", "")
+		role := strings.ReplaceAll(record[1], " ", "")
 		role = strings.ReplaceAll(role, "　", "")
 		switch role {
-			case `局長`:
+			case `局長`, `局長補佐`, `委員長`, `副委員長`:
 				roleID = 2
 			default:
 				roleID = 1

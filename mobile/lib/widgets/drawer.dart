@@ -16,13 +16,27 @@ class ApplicationDrawer {
                 context, '/my_shift_page', (Route<dynamic> route) => false)
           },
         ),
+        // ListTile(
+        //   title: Text("全体シフト"),
+        //   leading: Icon(Icons.dynamic_feed),
+        //   // onTap: () => {
+        //   //   Navigator.pushNamedAndRemoveUntil(
+        //   //       context, '/all_shift_page', (Route<dynamic> route) => false)
+        //   // },
+        // ),
         ListTile(
           title: Text("全体シフト"),
           leading: Icon(Icons.dynamic_feed),
-          // onTap: () => {
-          //   Navigator.pushNamedAndRemoveUntil(
-          //       context, '/all_shift_page', (Route<dynamic> route) => false)
-          // },
+          onTap: () async {
+            var url =
+                "https://docs.google.com/spreadsheets/d/1fd4v6UF3V08OTQXKnGk9wxvjTRp1lLxBZzdBM2Uf2v4#gid=1709999697";
+            if (await canLaunch(url)) {
+              await launch(url);
+            } else {
+              final Error error = ArgumentError('Could not launch $url');
+              throw error;
+            }
+          },
         ),
         ListTile(
           title: Text("マニュアル一覧"),
@@ -69,7 +83,7 @@ class ApplicationDrawer {
           leading: Icon(Icons.help),
           onTap: () async {
             var url =
-                "https://docs.google.com/document/d/1siErvaPQnut7R0wklAmuPY5drDDkl19iXZ7KgpH1TMw/edit?usp=sharing";
+                "https://docs.google.com/document/d/1zCiz6rcrQuAXdVNg15MWCun2c2Babz0umPJxfJLD-Wg";
             if (await canLaunch(url)) {
               await launch(url);
             } else {

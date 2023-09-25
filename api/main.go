@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/NUTFes/SeeFT/api/lib/di"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 

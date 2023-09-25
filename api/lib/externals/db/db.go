@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
 	"os"
 )
@@ -31,20 +31,24 @@ func ConnectMySQL() (client, error) {
 	// MySQLに接続する
 	// データベース接続部分
 	// dbconf := "seeft:password@tcp(nutfes-seeft-db:3306)/seeft_db?charset=utf8mb4&parseTime=true"
-	dbconf := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true"
-	db, err := sql.Open("mysql", dbconf)
+	// dbconf := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true"
+	// db, err := sql.Open("mysql", dbconf)
+
+	dns := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=disable"
+	db, err := sql.Open("postgres", dns);
 
 	if err != nil {
 		return client{}, err
 	}
-
+	
 	err = db.Ping()
 
 	if err != nil {
-		fmt.Println("[Failed] Not Connect to MySQL") // 失敗
+		fmt.Println(err)
+		fmt.Println("[Failed] Not Connect to PostgreSQL") // 失敗
 		return client{}, err
 	} else {
-		fmt.Println("[Success] Connect to MySQL") // 成功
+		fmt.Println("[Success] Connect to PostgreSQL") // 成功
 		return client{db}, nil
 	}
 }

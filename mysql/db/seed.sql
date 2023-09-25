@@ -1,14 +1,12 @@
-use seeft_db;
-
 INSERT INTO weathers
-  (`weather`)
+  (weather)
 VALUES
   ('晴れ'),
   ('雨'),
   ('none');
 
 INSERT INTO times
-  (`time`)
+  (time)
 VALUES
   ('6:00'),
   ('6:30'),
@@ -46,7 +44,7 @@ VALUES
   ('22:30');
   
 INSERT INTO grades
-  (`grade`)
+  (grade)
 VALUES
   ('B1'),
   ('B2'),
@@ -60,7 +58,7 @@ VALUES
   ('OB');
 
 INSERT INTO dates
-  (`date`)
+  (date)
 VALUES
   ('準備日'),
   ('1日目'),
@@ -68,7 +66,7 @@ VALUES
   ('片付け日');
 
 INSERT INTO bureaus
-  (`bureau`)
+  (bureau)
 VALUES
   ('委員長'),
   ('副委員長'),
@@ -80,7 +78,7 @@ VALUES
   ('情報局');
 
 INSERT INTO years
-  (id, `year`)
+  (id, year)
 VALUES
   (40, 2021),
   (41, 2022),
@@ -103,29 +101,30 @@ VALUES
   ('情報・経営システム工学分野/情報・経営システム工学課程/情報・経営システム工学専攻'),
   ('物質生物工学分野/物質材料工学課程/生物機能工学課程/物質材料工学専攻/生物機能工学専攻'),
   ('環境社会基盤工学分野/環境社会基盤工学課程/環境社会基盤工学専攻'),
-  ('量子・原子力統合工学分野/原子力システム安全工学専攻');
+  ('量子・原子力統合工学分野/原子力システム安全工学専攻'),
+  ('技術科学イノベーション');
 
 -- 以下テスト用のデータなので本番環境で起こらないようにする
-INSERT INTO users
-  (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)
-VALUES
-  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000', "gidaifes");
+-- INSERT INTO users
+--   (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)
+-- VALUES
+--   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000', "gidaifes");
 
-INSERT INTO permissions
-  (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
-VALUES
-  (1, True, True, True, True);
+-- INSERT INTO permissions
+--   (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
+-- VALUES
+--   (1, True, True, True, True);
 
-INSERT INTO tasks
-  (`task`, `place`, `url`, `superviser`, `notes`, `year_id`)
-VALUES
-  ('テスト1', '24', 'https://example.com', 'Admin', 'a', 42),
-  ('テスト2', '体育館', 'https://example.com', 'Admin', 'b', 42),
-  ('テスト3', 'D講', 'https://nutfes.net', 'Admin', 'c', 42);
+-- INSERT INTO tasks
+--   (`task`, `place`, `url`, `superviser`, `notes`, `year_id`)
+-- VALUES
+--   ('テスト1', '24', 'https://example.com', 'Admin', 'a', 42),
+--   ('テスト2', '体育館', 'https://example.com', 'Admin', 'b', 42),
+--   ('テスト3', 'D講', 'https://nutfes.net', 'Admin', 'c', 42);
 
-INSERT INTO shifts
-  (user_id, task_id, year_id, date_id, time_id, weather_id)
-VALUES
-  (1, 1, 41, 1, 1, 1),
-  (1, 1, 41, 1, 2, 1),
-  (1, 1, 41, 1, 3, 1);
+-- INSERT INTO shifts
+--   (user_id, task_id, year_id, date_id, time_id, weather_id)
+-- VALUES
+--   (1, 1, 41, 1, 1, 1),
+--   (1, 1, 41, 1, 2, 1),
+--   (1, 1, 41, 1, 3, 1);

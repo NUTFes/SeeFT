@@ -160,9 +160,9 @@ class _UsersPageState extends State<UsersPage> {
                         padding: EdgeInsets.only(left: 0),
                         alignment: Alignment.centerLeft,
                       ),
-                      onPressed: () => _openPhoneApp("0" + users[index]["tel"]),
-                      child: Text("0" + users[index]["tel"],
-                          textAlign: TextAlign.left),
+                      onPressed: () => _openPhoneApp(users[index]["tel"]),
+                      child:
+                          Text(users[index]["tel"], textAlign: TextAlign.left),
                     ),
                   )
                 : ListTile(
