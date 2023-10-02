@@ -20,5 +20,5 @@ sql/
 api/tmp
 api/lib/interface
 
-api/env/
-web/prod/
+api/env/*
+web/prod/*
