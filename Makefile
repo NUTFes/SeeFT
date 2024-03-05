@@ -21,6 +21,14 @@ up-api:
 	sleep 15
 	docker compose up api
 
+.PHONY: up-admin
+up-admin:
+	docker compose up -d db
+	sleep 15
+	docker compose up -d api
+	docker compose up admin
+
+
 .PHONY: build
 build:
 	docker compose build

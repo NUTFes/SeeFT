@@ -16,7 +16,8 @@ mariadb/
 
 sql/
 
-
+api/seeds
+!api/seeds/seeds.go
 api/tmp
 api/lib/interface
 
