@@ -10,6 +10,7 @@
       "@pages/*": ["src/pages//*"],
       "@type/*": ["src/type/*"],
       "@constants/*": ["src/constants/*"],
+      "@styles/*": ["src/styles/*"],
       "@/*": ["src/*"]
     }
   }
