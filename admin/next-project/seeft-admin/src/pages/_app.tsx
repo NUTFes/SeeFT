@@ -10,7 +10,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <RecoilRoot>
       <Head>
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href='/icon.ico' />
       </Head>
       <MainLayout>
         <Component {...pageProps} />
