@@ -2,8 +2,6 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { RecoilRoot } from 'recoil';
 
-import MainLayout from '@components/layout/MainLayout';
-
 import 'tailwindcss/tailwind.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
@@ -12,9 +10,9 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <link rel='icon' href='/icon.ico' />
       </Head>
-      <MainLayout>
+      <div>
         <Component {...pageProps} />
-      </MainLayout>
+      </div>
     </RecoilRoot>
   );
 }

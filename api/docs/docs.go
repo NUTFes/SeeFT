@@ -17,19 +17,27 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/users": {
-            
+            "get": {
+                tags: ["user"],
+                "description": "usersの一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "usersの一覧の取得",
+                    }
+                }
+            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "2.0.0",
+	Host:             "localhost:1234",
+	BasePath:         "/",
+	Schemes:          []string{"http"},
+	Title:            "NUTFes SeeFT API",
+	Description:      "SeeFT API ドキュメント",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NEXT_PUBLIC_APP_ENV === 'production';
 
 module.exports = {
   webpack: (config, { isServer }) => {
@@ -11,4 +12,8 @@ module.exports = {
     }
     return config;
   },
+  env: {
+    SSR_API_URI: isProd ? 'https://seeft-api.nutfes.net' : 'http://nutfes-seeft-api:1234',
+    CSR_API_URI: isProd ? 'https://seeft-api.nutfes.net' : 'http://localhost:1234'
+  }
 };

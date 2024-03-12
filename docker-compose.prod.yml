@@ -25,3 +25,18 @@ services:
     command: "go run main.go"
     env_file: ["./api/env/seeft.env"]
     ports: ["1234:1234"]
+
+  admin:
+    container_name: "nutfes-seeft-admin"
+    build: ./admin
+    volumes:
+      - ./admin:/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_APP_ENV: "production"
+    stdin_open: true
+    tty: true
+    depends_on: [api]
+
