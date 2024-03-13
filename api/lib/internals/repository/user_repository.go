@@ -54,7 +54,7 @@ func (ur *userRepository) Create(c context.Context, name string, mail string, gr
 	query := `
 		INSERT INTO
 			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, password)
-		VALUES ('` + name + "', " + mail + ", " + gradeID + ", " + departmentID + "," +  bureauID + ", " + roleID + ", " + studentNumber + ", " + tel +  ", " + password +")"
+		VALUES ('` + name + "', '" + mail + "', " + gradeID + ", " + departmentID + ", " +  bureauID + ", " + roleID + ", " + studentNumber + ", '" + tel +  "', '" + password +"')"
 	return ur.crud.UpdateDB(c, query)
 }
 

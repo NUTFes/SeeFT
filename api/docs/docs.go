@@ -25,6 +25,82 @@ const docTemplate = `{
                         "description": "usersの一覧の取得",
                     }
                 }
+            },
+        },
+        "/users/{grade_id}/{department_id}/{bureau_id}/{role_id}": {
+            "post": {
+                tags: ["user"],
+                "description": "userをcreate",
+                "responses": {
+                    "200": {
+                        "description": "createしたuserのnameが返ってくる",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "name",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "mail",
+                        "in": "query",
+                        "description": "mail",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "student_number",
+                        "in": "query",
+                        "description": "student_number",
+                        "type": "integer",
+                        "required": true,
+                    },
+                    {
+                        "name": "grade_id",
+                        "in": "path",
+                        "description": "grade_id",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "bureau_id",
+                        "in": "path",
+                        "description": "bureau_id",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "path",
+                        "description": "department_id",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "role_id",
+                        "in": "path",
+                        "description": "role_id",
+                        "type": "integer",
+                        "required": true,
+                    },
+                    {
+                        "name": "tel",
+                        "in": "query",
+                        "description": "tel",
+                        "type": "string",
+                        "required": true,
+                    },
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "description": "password",
+                        "type": "string",
+                        "required": true,
+                    }
+                ]
             }
         }
     }
