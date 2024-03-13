@@ -113,18 +113,62 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/bureaus": {
+            "get": {
+                tags: ["bureau"],
+                "description": "bureausの一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "bureausの一覧を取得",
+                    }
+                }
+            }
+        },
+        "/shifts": {
+            "get": {
+                tags: ["shift"],
+                "description": "shiftsの一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "shiftsの一覧を取得",
+                    }
+                }
+            }
+        },
+        "/tasks": {
+            "get": {
+                tags: ["task"],
+                "description": "tasksの一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "tasksの一覧を取得",
+                    }
+                }
+            }
+        },
+        "/times": {
+            "get": {
+                tags: ["time"],
+                "description": "timesの一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "timesの一覧を取得",
+                    }
+                }
+            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.0.0",
-	Host:             "localhost:1234",
-	BasePath:         "/",
-	Schemes:          []string{"http"},
-	Title:            "NUTFes SeeFT API",
-	Description:      "SeeFT API ドキュメント",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
+	Schemes:          []string{},
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }
