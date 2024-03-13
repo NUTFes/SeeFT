@@ -33,7 +33,7 @@ const docTemplate = `{
                 "description": "userをcreate",
                 "responses": {
                     "200": {
-                        "description": "createしたuserのnameが返ってくる",
+                        "description": "createしたuserが返ってくる",
                     }
                 },
                 "parameters": [
@@ -101,6 +101,17 @@ const docTemplate = `{
                         "required": true,
                     }
                 ]
+            }
+        },
+        "/grades": {
+            "get": {
+                tags: ["grade"],
+                "description": "gradesの一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "gradesの一覧の取得",
+                    }
+                }
             }
         }
     }
