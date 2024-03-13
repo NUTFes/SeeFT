@@ -10,6 +10,7 @@ type router struct {
 	healthcheckController     controller.HealthcheckController
 	mailAuthController		  controller.MailAuthController
 	bureauController          controller.BureauController
+	gradeController						controller.GradeController
 	shiftController 		  		controller.ShiftController
 	taskController			  		controller.TaskController
 	timeController			  		controller.TimeController
@@ -24,6 +25,7 @@ func NewRouter(
 	healthController controller.HealthcheckController,
 	mailAuthController controller.MailAuthController,
 	bureauController controller.BureauController,
+	gradeController controller.GradeController,
 	shiftContoller controller.ShiftController,
 	taskController controller.TaskController,
 	timeController controller.TimeController,
@@ -33,6 +35,7 @@ func NewRouter(
 		healthController,
 		mailAuthController,
 		bureauController,
+		gradeController,
 		shiftContoller,
 		taskController,
 		timeController,
@@ -53,6 +56,10 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/bureaus", r.bureauController.IndexBureau)
 	e.GET("/bureaus/:id", r.bureauController.ShowBureau)
 
+	// gradeのRoute
+	e.GET("/grades", r.gradeController.IndexGrade)
+	e.GET("/grades/:id", r.gradeController.ShowGrade)
+
 	// shiftのRoute
 	e.GET("/shifts", r.shiftController.IndexShift)
 	e.GET("/shifts/:id", r.shiftController.ShowShift)
@@ -72,7 +79,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	// users
 	e.GET("/users", r.userController.IndexUser)
 	e.GET("/users/:id", r.userController.ShowUser)
-	e.POST("/users/:name/:mail/:grade_id/:department_id/:bureau_id/:role_id", r.userController.CreateUser)
+	e.POST("/users/:grade_id/:department_id/:bureau_id/:role_id", r.userController.CreateUser)
 	e.PUT("/users/:id/:name/:mail/:grade_id/:department_id/:bureau_id/:role_id", r.userController.UpdateUser)
 	e.DELETE("/users/:id", r.userController.DeleteUser)
 }

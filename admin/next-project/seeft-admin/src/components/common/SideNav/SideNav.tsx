@@ -11,7 +11,7 @@ const NavItem = (props: NavItemProps) => {
   if (props.currentPath === props.href) {
     className = 'flex items-center w-full space-x-2 bg-surface-1 px-2 py-2';
   } else {
-    className = 'flex items-center w-full space-x-2 bg-surface-2 px-2 py-2 hover:bg-surface-1/[0.5]';
+    className = 'flex items-center w-full space-x-2 bg-surface-2 px-2 py-2 hover:bg-surface-1/[0.4]';
   }
 
   if (props.isShow && !props.isParent) {

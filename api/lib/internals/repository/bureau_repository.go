@@ -40,13 +40,13 @@ func (b *bureauRepository) Find(c context.Context, id string) (*sql.Row, error) 
 
 // 作成
 func (b *bureauRepository) Create(c context.Context, name string) error {
-	query := "INSERT INTO bureaus (name) VALUES ('" + name + "')"
+	query := "INSERT INTO bureaus (bureau) VALUES ('" + name + "')"
 	return b.crud.UpdateDB(c, query)
 }
 
 // 編集
 func (b *bureauRepository) Update(c context.Context, id string, name string) error {
-	query := "UPDATE bureaus SET name = '" + name + "' WHERE id = " + id
+	query := "UPDATE bureaus SET bureau = '" + name + "' WHERE id = " + id
 	return b.crud.UpdateDB(c, query)
 }
 
