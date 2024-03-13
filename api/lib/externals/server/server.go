@@ -1,7 +1,7 @@
 package server
 
 import (
-	//_ "github.com/NUTFes/SeeFT/api/docs"
+	_ "github.com/NUTFes/SeeFT/api/docs"
 	"github.com/NUTFes/SeeFT/api/lib/router"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
