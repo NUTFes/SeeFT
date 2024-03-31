@@ -6,6 +6,8 @@ import (
 
 type Date struct {
 	ID			int 		`json:"id"`
+	YearID	int			`json:"yearID"`
+	Name		string	`json:"name"`
 	Date		string		`json:"date"`
 	CreatedAt	time.Time	`json:"createdAt"`
 	UpdatedAt	time.Time	`json:"updatedAt"`
