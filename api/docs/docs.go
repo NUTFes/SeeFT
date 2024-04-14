@@ -114,6 +114,17 @@ const docTemplate = `{
                 }
             }
         },
+        "/departments": {
+            "get": {
+                tags: ["department"],
+                "description": "departmentsの一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "departmentsの一覧を取得",
+                    }
+                }
+            }
+        }
         "/bureaus": {
             "get": {
                 tags: ["bureau"],

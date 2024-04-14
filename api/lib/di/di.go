@@ -26,6 +26,7 @@ func InitializeServer() db.Client {
 	sessionRepository := repository.NewSessionRepository(client)
 	bureauRepository := repository.NewBureauRepository(client, crud)
 	gradeRepository := repository.NewGradeRepository(client, crud)
+	departmentRepository := repository.NewDepartmentRepository(client, crud)
 	shiftRepository := repository.NewShiftRepository(client, crud)
 	taskRepository := repository.NewTaskRepository(client, crud)
 	timeRepository := repository.NewTimeRepository(client, crud)
@@ -38,6 +39,7 @@ func InitializeServer() db.Client {
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
 	bureauUseCase := usecase.NewBureauUseCase(bureauRepository)
 	gradeUseCase := usecase.NewGradeUseCase(gradeRepository)
+	department := usecase.NewDepartmentRepository(departmentRepository)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository)
 	taskUseCase := usecase.NewTaskUseCase(taskRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
@@ -48,6 +50,7 @@ func InitializeServer() db.Client {
 	mailAuthController := controller.NewMailAuthController(mailAuthUseCase)
 	bureauController := controller.NewBureauController(bureauUseCase)
 	gradeController := controller.NewGradeController(gradeUseCase)
+	departmentController := controller.NewDepartmentController(departmentUseCase)
 	shiftContoller := controller.NewShiftController(shiftUseCase)
 	taskController := controller.NewTaskController(taskUseCase)
 	timeController := controller.NewTimeController(timeUsecase)
@@ -59,6 +62,7 @@ func InitializeServer() db.Client {
 		mailAuthController,
 		bureauController,
 		gradeController,
+		departmentController,
 		shiftContoller,
 		taskController,
 		timeController,
