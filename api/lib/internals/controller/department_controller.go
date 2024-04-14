@@ -8,15 +8,15 @@ import (
 )
 
 type departmentController struct {
-	u usecase.DepartmentUsecase
+	u usecase.DepartmentUseCase
 }
 
 type DepartmentController interface {
-	IndexDepartment(echo.context) error
-	ShowDepartment(echo.context) error
+	IndexDepartment(echo.Context) error
+	ShowDepartment(echo.Context) error
 }
 
-func NewDepartmentController(u usecase.DepartmentUseCase) DepartmentContoller {
+func NewDepartmentController(u usecase.DepartmentUseCase) DepartmentController {
 	return &departmentController{u}
 }
 

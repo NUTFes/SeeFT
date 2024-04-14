@@ -124,7 +124,7 @@ const docTemplate = `{
                     }
                 }
             }
-        }
+        },
         "/bureaus": {
             "get": {
                 tags: ["bureau"],

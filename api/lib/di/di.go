@@ -39,7 +39,7 @@ func InitializeServer() db.Client {
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
 	bureauUseCase := usecase.NewBureauUseCase(bureauRepository)
 	gradeUseCase := usecase.NewGradeUseCase(gradeRepository)
-	department := usecase.NewDepartmentRepository(departmentRepository)
+	departmentUseCase := usecase.NewDepartmentUseCase(departmentRepository)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository)
 	taskUseCase := usecase.NewTaskUseCase(taskRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)

@@ -10,7 +10,7 @@ import (
 
 type departmentRepository struct {
 	client db.Client
-	crud   abstruct.Crud
+	crud   abstract.Crud
 }
 
 type DepartmentRepository interface {
