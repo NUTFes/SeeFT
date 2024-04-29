@@ -59,11 +59,10 @@ export default function Uesrs(props: Props) {
     }
 
   const addUserInformation = async (data: User) => {
-    const addFundInformationUrl = process.env.CSR_API_URI + '/users';
-    await post(addFundInformationUrl, data);
+    const addUserInformationUrl = process.env.CSR_API_URI + '/users';
+    await post(addUserInformationUrl, data);
     router.push('/users');
   };
-
 
   return (
     <MainLayout>

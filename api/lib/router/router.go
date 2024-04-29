@@ -88,5 +88,5 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/users/:id", r.userController.ShowUser)
 	e.POST("/users", r.userController.CreateUser)
 	e.PUT("/users/:id/:name/:mail/:grade_id/:department_id/:bureau_id/:role_id", r.userController.UpdateUser)
-	e.DELETE("/users/:id", r.userController.DeleteUser)
+	e.DELETE("/users", r.userController.DeleteUser)
 }

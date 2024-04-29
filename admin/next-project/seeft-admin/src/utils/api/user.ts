@@ -62,3 +62,17 @@ export const put = async (url: string, data: User) => {
   });
   return await res.json();
 };
+
+export const destroy = async (url: string, data: User) => {
+  const id = data.id
+  const destroyUrl = url + '?id=' + id;
+  const res = await fetch(destroyUrl, {
+    method: 'DELETE',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return await res;
+};

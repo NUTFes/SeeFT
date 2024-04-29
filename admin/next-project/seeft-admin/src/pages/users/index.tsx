@@ -6,6 +6,7 @@ import { User, Grade, Department, Bureau } from "@type/common";
 import MainLayout from '@components/layout/MainLayout';
 import { MdEdit, MdDeleteForever } from "react-icons/md";
 import Button from '@components/common/Button';
+import { destroy } from '@api/user';
 
 interface Props {
   users: User[];
@@ -41,6 +42,12 @@ export default function Uesrs(props: Props) {
   const addUserPageRouter = () => {
     router.push('users/add-user');
   }
+
+  const destroyUserInformation = async (data: User) => {
+    const destroyUserInformationUrl = process.env.CSR_API_URI + '/users';
+    await destroy(destroyUserInformationUrl, data);
+    router.reload();
+  };
 
   return (
     <MainLayout>
@@ -86,7 +93,7 @@ export default function Uesrs(props: Props) {
                 <tr key={user.id}>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
@@ -95,7 +102,7 @@ export default function Uesrs(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
@@ -104,7 +111,7 @@ export default function Uesrs(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
@@ -113,7 +120,7 @@ export default function Uesrs(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
@@ -122,7 +129,7 @@ export default function Uesrs(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
@@ -131,7 +138,7 @@ export default function Uesrs(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
@@ -140,7 +147,7 @@ export default function Uesrs(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2 rounded-full hover:bg-accent-1',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
@@ -154,12 +161,13 @@ export default function Uesrs(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-3',
+                      'px-1 py-2 rounded-full hover:bg-accent-1',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
-                    <div className='flex justify-items-center gap-4'>
+                    <div className='flex justify-items-center gap-4'
+                      onClick={() => { destroyUserInformation(user); }}>
                       <MdDeleteForever />
                       <p className='text-center text-sm text-emphasis'>
                         削除

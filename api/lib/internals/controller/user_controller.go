@@ -83,7 +83,7 @@ func (u *userController) UpdateUser(c echo.Context) error {
 
 // Destroy
 func (u *userController) DeleteUser(c echo.Context) error {
-	id := c.Param("id")
+	id := c.QueryParam("id")
 	err := u.u.DeleteUser(c.Request().Context(), id)
 	if err != nil {
 		return err
