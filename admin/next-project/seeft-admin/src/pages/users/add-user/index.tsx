@@ -8,6 +8,10 @@ import { MdEdit, MdDeleteForever } from "react-icons/md";
 import Button from '@components/common/Button';
 import Input from '@components/common/Input';
 import Select from '@components/common/Select';
+import React, { useState } from 'react';
+
+import { post } from '@api/user';
+import { useRouter } from 'next/router';
 
 interface Props {
   grades: Grade[];
@@ -34,6 +38,32 @@ export const getServerSideProps = async () => {
 
 export default function Uesrs(props: Props) {
   const { grades, departments, bureaus } = props;
+  const router = useRouter();
+
+  const [formData, setFormData] = useState<User>({
+    id: 0,
+    name: '',
+    mail: '',
+    gradeID: 1,
+    departmentID: 1,
+    bureauID: 1,
+    roleID: 1,
+    studentNumber: 0,
+    tel: '',
+    password: '',
+  });
+
+  const handler = (input: string) =>
+    (e: React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>) => {
+      setFormData({ ...formData, [input]: e.target.value });
+    }
+
+  const addUserInformation = async (data: User) => {
+    const addFundInformationUrl = process.env.CSR_API_URI + '/users';
+    await post(addFundInformationUrl, data);
+    router.push('/users');
+  };
+
 
   return (
     <MainLayout>
@@ -42,62 +72,83 @@ export default function Uesrs(props: Props) {
           <div className='mx-auto w-fit text-xl text-emphasis mb-8'>
             ユーザー登録
           </div>
-          <div className='mb-10 flex flex-col gap-3'>
-            <div className='my-4 grid grid-cols-4 flex-col items-center justify-items-end gap-5 text-base text-emphasis'>
-              <p>学籍番号</p>
-              <div className='col-span-4 w-full'>
-                <Input className='w-full' />
+          <div className='flex flex-col gap-3'>
+            <div className='my-4 flex flex-col items-center justify-items-end gap-5 text-base text-emphasis'>
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4'>学籍番号</div>
+                <div className='col-span-4 w-full'>
+                  <Input className='w-full' value={formData.studentNumber} onChange={handler('studentNumber')} />
+                </div>
               </div>
-              <p>パスワード</p>
-              <div className='col-span-4 w-full'>
-                <Input className='w-full' />
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4 whitespace-nowrap'>パスワード</div>
+                <input
+                  type='password'
+                  className='rounded-full border border-primary-1 px-4 py-2 col-span-2 w-full'
+                  onChange={handler('Password')}
+                />
               </div>
-              <p>名前</p>
-              <div className='col-span-4 w-full'>
-                <Input className='w-full' />
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4'>名前</div>
+                <div className='col-span-4 w-full'>
+                  <Input className='w-full' value={formData.name} onChange={handler('name')} />
+                </div>
               </div>
-              <p>所属局</p>
-              <div className='col-span-4 w-full'>
-                <Select className='w-full'>
-                  {bureaus.map((data) => (
-                    <option key={data.id} value={data.id}>
-                      {data.bureau}
-                    </option>
-                  ))}
-                </Select>
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4'>所属局</div>
+                <div className='col-span-4 w-full'>
+                  <Select className='w-full' value={formData.bureauID} onChange={handler('bureauID')}>
+                    {bureaus.map((data) => (
+                      <option key={data.id} value={data.id}>
+                        {data.bureau}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
               </div>
-              <p>課程</p>
-              <div className='col-span-4 w-full'>
-                <Select className='w-full'>
-                  {departments.length > 1 ? departments.map((data) => (
-                    <option key={data.id} value={data.id}>
-                      {data.department}
-                    </option>
-                  )) : null}
-                </Select>
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4'>課程</div>
+                <div className='col-span-4 w-full'>
+                  <Select className='w-full' value={formData.departmentID} onChange={handler('departmentID')}>
+                    {departments.length > 1 ? departments.map((data) => (
+                      <option key={data.id} value={data.id}>
+                        {data.department}
+                      </option>
+                    )) : null}
+                  </Select>
+                </div>
               </div>
-              <p>学年</p>
-              <div className='col-span-4 w-full'>
-                <Select className='w-full'>
-                  {grades.map((data) => (
-                    <option key={data.id} value={data.id}>
-                      {data.grade}
-                    </option>
-                  ))}
-                </Select>
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4'>学年</div>
+                <div className='col-span-4 w-full'>
+                  <Select className='w-full' value={formData.gradeID} onChange={handler('gradeID')}>
+                    {grades.map((data) => (
+                      <option key={data.id} value={data.id}>
+                        {data.grade}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
               </div>
-              <p>電話番号</p>
-              <div className='col-span-4 w-full'>
-                <Input className='w-full' />
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4'>電話番号</div>
+                <div className='col-span-4 w-full'>
+                  <Input className='w-full' value={formData.tel} onChange={handler('tel')} />
+                </div>
               </div>
-              <p>メールアドレス</p>
-              <div className='col-span-4 w-full'>
-                <Input className='w-full' />
+              <div className='flex w-full items-center'>
+                <div className='flex w-1/4'>メールアドレス</div>
+                <div className='col-span-4 w-full'>
+                  <Input className='w-full' value={formData.mail} onChange={handler('mail')} />
+                </div>
               </div>
             </div>
           </div>
           <div className='mx-auto w-fit text-emphasis mb-8'>
-            <Button>
+            <Button className='bg-surface-2 hover:bg-surface-1'
+              onClick={() => {
+                addUserInformation(formData);
+              }}>
               登録
             </Button>
           </div>

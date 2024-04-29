@@ -50,7 +50,7 @@ export default function Uesrs(props: Props) {
         </div>
         <div className='items-center'>
           <div className='text-right pr-4'>
-            <Button className='bg-surface-2 border-accent-2 text-right text-emphasis pr-4' onClick={addUserPageRouter}>
+            <Button className='bg-surface-2 border-accent-2 text-right text-emphasis pr-4 hover:bg-surface-1' onClick={addUserPageRouter}>
               ユーザー追加
             </Button>
           </div>
@@ -88,7 +88,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{bureaus.find((bureau: Bureau) => (bureau.id === user.bureauID))?.bureau}</p>
@@ -97,7 +97,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{user.name}</p>
@@ -106,7 +106,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{grades.length - 1 ? grades.find((grade: Grade) => (grade.id === user.gradeID))?.grade : "erorr"}</p>
@@ -115,7 +115,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{departments.length - 1 ? departments.find((department: Department) => (department.id === user.departmentID))?.department : "erorr"}</p>
@@ -124,7 +124,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{user.studentNumber}</p>
@@ -133,7 +133,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{user.tel}</p>
@@ -142,7 +142,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <div className='flex justify-items-center gap-4'>
@@ -156,7 +156,7 @@ export default function Uesrs(props: Props) {
                     className={clsx(
                       'px-1 py-3',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
-                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b py-3',
+                      index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
                     <div className='flex justify-items-center gap-4'>
