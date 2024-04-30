@@ -43,6 +43,10 @@ export default function Uesrs(props: Props) {
     router.push('users/add-user');
   }
 
+  const UserDetailPageRouter = (user: User) => {
+    router.push('users/' + user.id + '/detail-user');
+  }
+
   const destroyUserInformation = async (data: User) => {
     const destroyUserInformationUrl = process.env.CSR_API_URI + '/users';
     await destroy(destroyUserInformationUrl, data);
@@ -152,7 +156,8 @@ export default function Uesrs(props: Props) {
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
-                    <div className='flex justify-items-center gap-4'>
+                    <div className='flex justify-items-center gap-4'
+                      onClick={() => { UserDetailPageRouter(user) }}>
                       <MdEdit />
                       <p className='text-center text-sm text-emphasis'>
                         編集

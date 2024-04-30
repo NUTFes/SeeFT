@@ -41,7 +41,6 @@ export const put = async (url: string, data: User) => {
   const roleID = data.roleID;
   const studentNumber = data.studentNumber;
   const tel = data.tel;
-  const password = data.password;
   const putUrl = url +
     '?name=' + name +
     '&mail=' + mail +
@@ -50,8 +49,7 @@ export const put = async (url: string, data: User) => {
     '&department_id=' + departmentID +
     '&bureau_id=' + bureauID +
     '&role_id=' + roleID +
-    '&tel=' + tel +
-    '&password=' + password;
+    '&tel=' + tel;
   const res = await fetch(putUrl, {
     method: 'PUT',
     mode: 'cors',

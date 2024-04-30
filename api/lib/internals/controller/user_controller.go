@@ -72,9 +72,7 @@ func (u *userController) UpdateUser(c echo.Context) error {
 	roleID := c.QueryParam("role_id")
 	studentNumber := c.QueryParam("student_number")
 	tel := c.QueryParam("tel")
-	password := c.QueryParam("password")
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-	updatedUser, err := u.u.UpdateUser(c.Request().Context(), id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword))
+	updatedUser, err := u.u.UpdateUser(c.Request().Context(), id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel)
 	if err != nil {
 		return err
 	}
