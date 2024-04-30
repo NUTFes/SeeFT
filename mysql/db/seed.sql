@@ -119,14 +119,6 @@ VALUES
   ('D3'),
   ('OB');
 
-INSERT INTO dates
-  (date)
-VALUES
-  ('準備日'),
-  ('1日目'),
-  ('2日目'),
-  ('片付け日');
-
 INSERT INTO bureaus
   (bureau)
 VALUES
@@ -144,7 +136,16 @@ INSERT INTO years
 VALUES
   (40, 2021),
   (41, 2022),
-  (42, 2023);
+  (42, 2023),
+  (43, 2024);
+
+INSERT INTO dates
+  (year_id, name, date)
+VALUES
+  (43, '準備日', '2024/09/13'),
+  (43, '1日目', '2024/09/14'),
+  (43, '2日目', '2024/09/15'),
+  (43, '片付け日', '2024/09/16');
 
 INSERT INTO roles 
     (role) 

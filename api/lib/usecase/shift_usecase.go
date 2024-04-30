@@ -56,10 +56,10 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 			&TaskID,
 			&UserID,
 			&YearID,
-	  		&DateID,
-	  		&TimeID,
-  			&WeatherID,
-  			&shift.IsAttendance,
+	  	&DateID,
+	  	&TimeID,
+  		&WeatherID,
+  		&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -105,6 +105,8 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 		row, err = a.dateRep.Find(c, DateID)
 		err = row.Scan(
 			&shift.Date.ID,
+			&shift.Date.YearID,
+			&shift.Date.Name,
 			&shift.Date.Date,
 			&shift.Date.CreatedAt,
 			&shift.Date.UpdatedAt,
@@ -192,6 +194,8 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 	row, err = a.dateRep.Find(c, DateID)
 	err = row.Scan(
 		&shift.Date.ID,
+		&shift.Date.YearID,
+		&shift.Date.Name,
 		&shift.Date.Date,
 		&shift.Date.CreatedAt,
 		&shift.Date.UpdatedAt,
@@ -286,6 +290,8 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 		row, err = a.dateRep.Find(c, DateID)
 		err = row.Scan(
 			&shift.Date.ID,
+			&shift.Date.YearID,
+			&shift.Date.Name,
 			&shift.Date.Date,
 			&shift.Date.CreatedAt,
 			&shift.Date.UpdatedAt,
@@ -384,6 +390,8 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 		row, err = a.dateRep.Find(c, DateID)
 		err = row.Scan(
 			&shift.Date.ID,
+			&shift.Date.YearID,
+			&shift.Date.Name,
 			&shift.Date.Date,
 			&shift.Date.CreatedAt,
 			&shift.Date.UpdatedAt,
@@ -466,6 +474,8 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	row, err = a.dateRep.Find(c, date)
 	err = row.Scan(
 		&shiftUsers.Date.ID,
+		&shiftUsers.Date.YearID,
+		&shiftUsers.Date.Name,
 		&shiftUsers.Date.Date,
 		&shiftUsers.Date.CreatedAt,
 		&shiftUsers.Date.UpdatedAt,
