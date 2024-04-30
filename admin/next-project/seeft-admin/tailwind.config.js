@@ -8,6 +8,7 @@ module.exports = {
       'base': '1rem',
       'xl': '1.5rem',
       '2xl': `2rem`,
+      '2.25xl': '2.25rem',
       '3xl':  '3rem',
     },
     colors: {
@@ -20,13 +21,20 @@ module.exports = {
       'surface-2': '#EDF5FF',
       'emphasis': '#132941',
       'caution': '#FF4D4D',
+      'transparent': 'transparent',
     },
     extend: {
+      fontFamily: {
+        'sans': ['Noto Sans JP', 'sans-serif'],
+      },
       width: {
         '1/2': '50%',
         '3/4': '75%',
         '9/10': '90%',
         '7/8': '87.5%',
+      },
+      backgroundImage: {
+        'gradient': 'linear-gradient(to bottom, #FFFFFF, #EEEEFF)', 
       },
     },
   },
