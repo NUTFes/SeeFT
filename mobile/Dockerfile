@@ -1,4 +1,5 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
+RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
 # 必要なツールをインストールします。
 RUN apt-get update && apt-get install -y \
@@ -7,14 +8,17 @@ RUN apt-get update && apt-get install -y \
     unzip \
     xz-utils \
     libglu1-mesa \
+    curl \
     python3 \
     python3-pip
 
 # Flutter SDKをダウンロードしてパスに追加します。
-WORKDIR /opt
-RUN wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.10.6-stable.tar.xz
-RUN tar xf flutter_linux_3.10.6-stable.tar.xz
-ENV PATH="$PATH:/opt/flutter/bin"
+ARG FLUTTER_SDK=/flutter
+ENV FLUTTER_VERSION=3.10.6
+RUN git clone https://github.com/flutter/flutter.git $FLUTTER_SDK
+RUN cd $FLUTTER_SDK && git fetch && git checkout $FLUTTER_VERSION
+ENV PATH="${PATH}:$FLUTTER_SDK/bin:$FLUTTER_SDK/bin/cache/dart-sdk/bin"
+RUN chmod -R 777 $FLUTTER_SDK
 
 # 新しいユーザーを作成します。
 RUN useradd -ms /bin/bash flutteruser
@@ -23,6 +27,7 @@ RUN useradd -ms /bin/bash flutteruser
 COPY . /home/flutteruser/seeft_mobile
 RUN chown -R flutteruser:flutteruser /home/flutteruser/seeft_mobile
 RUN chmod -R 777 /home/flutteruser/seeft_mobile
+RUN chown -R flutteruser:flutteruser $FLUTTER_SDK
 
 
 USER flutteruser

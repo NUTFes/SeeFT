@@ -42,7 +42,7 @@ export const getServerSideProps = async (
   };
 };
 
-export default function Uesrs(props: Props) {
+export default function Users(props: Props) {
   const { grades, departments, bureaus, user } = props;
   const router = useRouter();
 
@@ -75,7 +75,7 @@ export default function Uesrs(props: Props) {
       <div className='mx-auto relative md:w-1/2 h-full bg-white-0 p-8'>
         <div className=''>
           <div className='mx-auto w-fit text-xl text-emphasis mb-8'>
-            ユーザー登録
+            ユーザー詳細
           </div>
           <div className='flex flex-col gap-3'>
             <div className='my-4 flex flex-col items-center justify-items-end gap-5 text-base text-emphasis'>

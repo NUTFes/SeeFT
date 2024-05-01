@@ -36,7 +36,7 @@ export const getServerSideProps = async () => {
   };
 };
 
-export default function Uesrs(props: Props) {
+export default function Users(props: Props) {
   const { grades, departments, bureaus } = props;
   const router = useRouter();
 

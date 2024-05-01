@@ -11,6 +11,7 @@ type router struct {
 	mailAuthController		  controller.MailAuthController
 	bureauController          controller.BureauController
 	gradeController						controller.GradeController
+	placeController						controller.PlaceController
 	departmentController      controller.DepartmentController
 	shiftController 		  		controller.ShiftController
 	taskController			  		controller.TaskController
@@ -27,6 +28,7 @@ func NewRouter(
 	mailAuthController controller.MailAuthController,
 	bureauController controller.BureauController,
 	gradeController controller.GradeController,
+	placeController controller.PlaceController,
 	departmentController controller.DepartmentController,
 	shiftContoller controller.ShiftController,
 	taskController controller.TaskController,
@@ -38,6 +40,7 @@ func NewRouter(
 		mailAuthController,
 		bureauController,
 		gradeController,
+		placeController,
 		departmentController,
 		shiftContoller,
 		taskController,
@@ -62,6 +65,13 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	// gradeのRoute
 	e.GET("/grades", r.gradeController.IndexGrade)
 	e.GET("/grades/:id", r.gradeController.ShowGrade)
+
+	// placeのRoute
+	e.GET("/places", r.placeController.IndexPlace)
+	e.GET("/places/:id", r.placeController.ShowPlace)
+	e.POST("/places", r.placeController.CreatePlace)
+	e.PUT("/places/:id", r.placeController.UpdatePlace)
+	e.DELETE("/places", r.placeController.DeletePlace)
 
 	// departmentのRoute
 	e.GET("/departments", r.departmentController.IndexDepartment)
