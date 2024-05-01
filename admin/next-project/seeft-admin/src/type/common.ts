@@ -10,6 +10,7 @@ export interface User {
   roleID: number;
   studentNumber: number,
   tel: string,
+  password: string,
   createdAt?: string;
   updatedAt?: string;
 }

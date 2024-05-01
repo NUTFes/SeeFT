@@ -16,7 +16,7 @@ type UserUseCase interface {
   GetUsers(context.Context) ([]entity.User, error)
   GetUserByID(context.Context, string) (entity.User, error)
   CreateUser(context.Context, string, string, string, string, string, string, string, string, string) (entity.User, error)
-  UpdateUser(context.Context, string, string, string, string, string, string, string, string, string, string) (entity.User, error)
+  UpdateUser(context.Context, string, string, string, string, string, string, string, string, string) (entity.User, error)
   DeleteUser(context.Context, string) error
 }
 
@@ -110,10 +110,31 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 	return latastUser, err
 }
 
-func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string) (entity.User, error) {
+func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string) (entity.User, error) {
 	updatedUser := entity.User{}
-	u.userRep.Update(c, id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
+	var user entity.User
+
 	row, err := u.userRep.Find(c, id)
+	err = row.Scan(
+		&user.ID,
+		&user.Name,
+		&user.Mail,
+		&user.GradeID,
+		&user.DepartmentID,
+		&user.BureauID,
+		&user.RoleID,
+		&user.StudentNumber,
+		&user.Tel,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return user, err
+	}
+
+	u.userRep.Update(c, id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, user.Password)
+	row, err = u.userRep.Find(c, id)
 	err = row.Scan(
 		&updatedUser.ID,
 		&updatedUser.Name,
