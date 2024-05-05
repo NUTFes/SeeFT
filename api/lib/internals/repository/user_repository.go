@@ -65,15 +65,15 @@ func (ur *userRepository) Update(c context.Context, id string, name string, mail
 			users
 		SET
 			name = '` + name +
-		"', mail = " + mail +
-		", grade_id = " + gradeID +
-		", departmentid = " + departmentID +
+		"', mail = '" + mail +
+		"', grade_id = " + gradeID +
+		", department_id = " + departmentID +
 		", bureau_id = " + bureauID +
 		", role_id = " + roleID +
 		", student_number = " + studentNumber +
 		", tel = " + tel +
-		", password = " + password +
-		" WHERE id = " + id
+		", password = '" + password +
+		"' WHERE id = " + id
 	return ur.crud.UpdateDB(c, query)
 }
 

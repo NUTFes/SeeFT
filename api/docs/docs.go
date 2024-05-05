@@ -26,8 +26,6 @@ const docTemplate = `{
                     }
                 }
             },
-        },
-        "/users/{grade_id}/{department_id}/{bureau_id}/{role_id}": {
             "post": {
                 tags: ["user"],
                 "description": "userをcreate",
@@ -60,28 +58,28 @@ const docTemplate = `{
                     },
                     {
                         "name": "grade_id",
-                        "in": "path",
+                        "in": "query",
                         "description": "grade_id",
                         "type": "integer",
                         "required": true
                     },
                     {
                         "name": "bureau_id",
-                        "in": "path",
+                        "in": "query",
                         "description": "bureau_id",
                         "type": "integer",
                         "required": true
                     },
                     {
                         "name": "department_id",
-                        "in": "path",
+                        "in": "query",
                         "description": "department_id",
                         "type": "integer",
                         "required": true
                     },
                     {
                         "name": "role_id",
-                        "in": "path",
+                        "in": "query",
                         "description": "role_id",
                         "type": "integer",
                         "required": true,

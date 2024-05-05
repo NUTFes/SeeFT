@@ -4,6 +4,7 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userController struct {
@@ -46,13 +47,14 @@ func (u *userController) CreateUser(c echo.Context) error {
 	name := c.QueryParam("name")
 	mail := c.QueryParam("mail")
 	studentNumber := c.QueryParam("student_number")
-	gradeID := c.Param("grade_id")
-	departmentID := c.Param("department_id")
-	bureauID := c.Param("bureau_id")
-	roleID := c.Param("role_id")
+	gradeID := c.QueryParam("grade_id")
+	departmentID := c.QueryParam("department_id")
+	bureauID := c.QueryParam("bureau_id")
+	roleID := c.QueryParam("role_id")
 	tel := c.QueryParam("tel")
 	password := c.QueryParam("password")
-	latastUser, err := u.u.CreateUser(c.Request().Context(), name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+	latastUser, err := u.u.CreateUser(c.Request().Context(), name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword))
 	if err != nil {
 		return err
 	}
@@ -70,8 +72,7 @@ func (u *userController) UpdateUser(c echo.Context) error {
 	roleID := c.QueryParam("role_id")
 	studentNumber := c.QueryParam("student_number")
 	tel := c.QueryParam("tel")
-	password := c.QueryParam("password")
-	updatedUser, err := u.u.UpdateUser(c.Request().Context(), id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
+	updatedUser, err := u.u.UpdateUser(c.Request().Context(), id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel)
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,7 @@ func (u *userController) UpdateUser(c echo.Context) error {
 
 // Destroy
 func (u *userController) DeleteUser(c echo.Context) error {
-	id := c.Param("id")
+	id := c.QueryParam("id")
 	err := u.u.DeleteUser(c.Request().Context(), id)
 	if err != nil {
 		return err
