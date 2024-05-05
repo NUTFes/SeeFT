@@ -151,12 +151,12 @@ export default function Users(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-2 rounded-full hover:bg-accent-1',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
-                    <div className='flex justify-items-center gap-4'
+                    <div className='flex justify-items-center gap-4 rounded-full hover:bg-accent-1'
                       onClick={() => { UserDetailPageRouter(user) }}>
                       <MdEdit />
                       <p className='text-center text-sm text-emphasis'>
@@ -166,12 +166,12 @@ export default function Users(props: Props) {
                   </td>
                   <td
                     className={clsx(
-                      'px-1 py-2 rounded-full hover:bg-accent-1',
+                      'px-1 py-2',
                       index === 0 ? 'pb-3 pt-4' : 'py-3',
                       index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                     )}
                   >
-                    <div className='flex justify-items-center gap-4'
+                    <div className='flex justify-items-center gap-4 rounded-full hover:bg-accent-1'
                       onClick={() => { destroyUserInformation(user); }}>
                       <MdDeleteForever />
                       <p className='text-center text-sm text-emphasis'>
