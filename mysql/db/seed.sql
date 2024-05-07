@@ -167,6 +167,11 @@ VALUES
   ('量子・原子力統合工学分野/原子力システム安全工学専攻'),
   ('技術科学イノベーション');
 
+INSERT INTO places
+  (place, remark)
+VALUES
+  ('未定', '本部に指示を聞いてください');
+
 INSERT INTO users
   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
 VALUES

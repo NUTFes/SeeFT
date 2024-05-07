@@ -38,3 +38,12 @@ export interface Bureau {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Place(集合場所)
+export interface Place {
+  id: number;
+  place: string;
+  remark: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
