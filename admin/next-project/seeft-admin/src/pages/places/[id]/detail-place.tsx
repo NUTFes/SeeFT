@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { Place } from "@type/common";
 import Input from '@components/common/Input';
 import { get } from '@api/api_methods';
-import { post } from '@api/place';
+import { put } from '@api/place';
 import InformationPageLayout from '@components/layout/InformationPageLayout';
 
 interface Props {
@@ -40,8 +40,8 @@ export default function Places(props: Props) {
     }
 
   const updatePlaceInformation = async (data: Place) => {
-    const putPlaceInformationUrl = process.env.CSR_API_URI + '/places';
-    await post(putPlaceInformationUrl, data);
+    const putPlaceInformationUrl = process.env.CSR_API_URI + '/places/' + data.id;
+    await put(putPlaceInformationUrl, data);
     router.push('/places');
   };
 
