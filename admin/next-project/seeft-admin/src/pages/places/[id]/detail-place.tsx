@@ -40,8 +40,8 @@ export default function Places(props: Props) {
     }
 
   const updatePlaceInformation = async (data: Place) => {
-    const addPlaceInformationUrl = process.env.CSR_API_URI + '/places';
-    await post(addPlaceInformationUrl, data);
+    const putPlaceInformationUrl = process.env.CSR_API_URI + '/places';
+    await post(putPlaceInformationUrl, data);
     router.push('/places');
   };
 
