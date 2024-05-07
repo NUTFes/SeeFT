@@ -146,7 +146,7 @@ export default function Users(props: Props) {
               onClick={() => {
                 putUserInformation(formData);
               }}>
-              登録
+              編集
             </Button>
           </div>
         </div>

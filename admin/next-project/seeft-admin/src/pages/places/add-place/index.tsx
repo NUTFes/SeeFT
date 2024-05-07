@@ -1,14 +1,10 @@
-import clsx from 'clsx';
-import Head from 'next/head';
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 
 import { Place } from "@type/common";
-import MainLayout from '@components/layout/MainLayout';
-import Button from '@components/common/Button';
 import Input from '@components/common/Input';
-import React, { useState } from 'react';
-
 import { post } from '@api/place';
-import { useRouter } from 'next/router';
+import InformationPageLayout from '@components/layout/InformationPageLayout';
 
 export default function Places() {
   const router = useRouter();
@@ -31,38 +27,19 @@ export default function Places() {
   };
 
   return (
-    <MainLayout>
-      <div className='mx-auto relative md:w-1/2 h-full bg-white-0 p-8'>
-        <div className=''>
-          <div className='mx-auto w-fit text-xl text-emphasis mb-8'>
-            集合場所登録
-          </div>
-          <div className='flex flex-col gap-3'>
-            <div className='my-4 flex flex-col items-center justify-items-end gap-5 text-base text-emphasis'>
-              <div className='flex w-full items-center'>
-                <div className='flex w-1/4'>集合場所</div>
-                <div className='col-span-4 w-full'>
-                  <Input className='w-full' value={formData.place} onChange={handler('place')} />
-                </div>
-              </div>
-              <div className='flex w-full items-center'>
-                <div className='flex w-1/4'>備考</div>
-                <div className='col-span-4 w-full'>
-                  <Input className='w-full' value={formData.remark} onChange={handler('remark')} />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className='mx-auto w-fit text-emphasis mb-8'>
-            <Button className='bg-surface-2 hover:bg-surface-1'
-              onClick={() => {
-                addPlaceInformation(formData);
-              }}>
-              登録
-            </Button>
-          </div>
+    <InformationPageLayout title='集合場所登録' submitText='登録' onClick={() => { addPlaceInformation(formData); }}>
+      <div className='flex w-full items-center'>
+        <div className='flex w-1/4'>集合場所</div>
+        <div className='col-span-4 w-full'>
+          <Input className='w-full' value={formData.place} onChange={handler('place')} />
         </div>
-      </div >
-    </MainLayout >
+      </div>
+      <div className='flex w-full items-center'>
+        <div className='flex w-1/4'>備考</div>
+        <div className='col-span-4 w-full'>
+          <Input className='w-full' value={formData.remark} onChange={handler('remark')} />
+        </div>
+      </div>
+    </InformationPageLayout>
   );
 }
