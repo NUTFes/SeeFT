@@ -1,14 +1,16 @@
 CREATE TABLE IF NOT EXISTS tasks (
     id SERIAL PRIMARY KEY,
     task VARCHAR(255) ,
-    place VARCHAR(255) ,
+    place_id INTEGER NOT NULL,
     url VARCHAR(255) ,
-    superviser VARCHAR(255) ,
+    superviser_id INTEGER,
     color VARCHAR(255) DEFAULT 'fffafa' ,
-    notes VARCHAR(255),
+    remark VARCHAR(255),
     year_id INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (place_id) REFERENCES places (id) ON UPDATE CASCADE,
+    FOREIGN KEY (superviser_id) REFERENCES users (id) ON UPDATE CASCADE,
     FOREIGN KEY (year_id) REFERENCES years (id) ON UPDATE CASCADE
 );
 

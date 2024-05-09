@@ -88,6 +88,9 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/tasks", r.taskController.IndexTask)
 	e.GET("/tasks/:id", r.taskController.ShowTask)
 	e.GET("/tasks/shifts/:shift", r.taskController.ShowTasksByShift)
+	e.POST("/tasks", r.taskController.CreateTask)
+	e.PUT("/tasks/:id", r.taskController.UpdateTask)
+	e.DELETE("/tasks", r.taskController.DeleteTask)
 
 	// timeのRoute
 	e.GET("/times", r.timeController.IndexTime)
