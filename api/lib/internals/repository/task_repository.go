@@ -60,7 +60,7 @@ func (b *taskRepository) Create(c context.Context, name string, placeID string, 
 
 // 編集
 func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, superviserID string, color string, remark string, yearID string) error {
-	query := "UPDATE tasks SET (task, place_id, url, superviser_id, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + superviserID + ", '" + color + "', '" + remark +"', " + yearID + "') WHERE id = " + id
+	query := "UPDATE tasks SET (task, place_id, url, superviser_id, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + superviserID + ", '" + color + "', '" + remark +"', " + yearID + ") WHERE id = " + id
 	return b.crud.UpdateDB(c, query)
 }
 

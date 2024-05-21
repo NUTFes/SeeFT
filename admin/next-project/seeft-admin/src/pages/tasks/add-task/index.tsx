@@ -6,7 +6,6 @@ import { Task, User, Place } from "@type/common";
 import { Input, Select } from '@components/common';
 import { post } from '@api/task';
 import InformationPageLayout from '@components/layout/InformationPageLayout';
-import { url } from 'inspector';
 
 interface Props {
   users: User[];
