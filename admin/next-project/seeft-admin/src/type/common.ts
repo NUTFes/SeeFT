@@ -47,3 +47,17 @@ export interface Place {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Task(仕事内容)
+export interface Task {
+  id: number;
+  task: string;
+  placeID: number;
+  url: string;
+  superviserID: number;
+  color: string;
+  remark: string;
+  yearID: number;
+  createdAt?: string;
+  updatedAt?: string;
+}

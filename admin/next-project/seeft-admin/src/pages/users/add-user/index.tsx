@@ -71,7 +71,7 @@ export default function Users(props: Props) {
         <input
           type='password'
           className='rounded-full border border-primary-1 px-4 py-2 col-span-2 w-full'
-          onChange={handler('Password')}
+          onChange={handler('password')}
         />
       </div>
       <div className='flex w-full items-center'>

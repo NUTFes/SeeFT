@@ -2,7 +2,8 @@ package usecase
 
 import (
 	"context"
-	// "fmt"
+	"fmt"
+	"strings"
 	// "crypto/rand"
 	// "strconv"
 
@@ -45,11 +46,14 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 		&user.UpdatedAt,
 	)
 	// パスワードがあっているか確認
+	password = strings.ReplaceAll(password, " ", "")
+	password = strings.ReplaceAll(password, "　", "")
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
 
 	if err != nil {
+		fmt.Println(err)
 		return loginUser, err
 	}
 
