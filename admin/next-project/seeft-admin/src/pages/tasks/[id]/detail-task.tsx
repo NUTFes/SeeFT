@@ -65,7 +65,7 @@ export default function Users(props: Props) {
   };
 
   return (
-    <InformationPageLayout title='タスク登録' submitText='登録' onClick={() => { updateTaskInformation(formData); }}>
+    <InformationPageLayout title='タスク詳細' submitText='編集' onClick={() => { updateTaskInformation(formData); }}>
       <div className='flex w-full items-center'>
         <div className='flex w-1/4'>タスク名</div>
         <div className='col-span-4 w-full'>
