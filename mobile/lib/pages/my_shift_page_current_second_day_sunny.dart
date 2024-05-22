@@ -30,7 +30,9 @@ class _MyShiftPageState extends State<MyShiftPageCurrentSecondDaySunny> {
           logger.w("message");
         }
         if (!snapshot.hasData) {
-          return Center(child: CircularProgressIndicator());
+          // 待機画面に遷移
+          Navigator.pushNamedAndRemoveUntil(
+            context, '/wait_page', (Route<dynamic> route) => false);
         }
         return Container(
             padding: const EdgeInsets.all(40.0),

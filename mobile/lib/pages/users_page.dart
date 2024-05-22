@@ -47,11 +47,15 @@ class _UsersPageState extends State<UsersPage> {
             logger.w("message");
           }
           if (!snapshot.hasData) {
-            const Center(child: CircularProgressIndicator());
+            // 待機画面に遷移
+            Navigator.pushNamedAndRemoveUntil(
+              context, '/wait_page', (Route<dynamic> route) => false);
           }
           var userList = snapshot.data as List<dynamic>?;
           if (userList == null) {
-            return const Center(child: CircularProgressIndicator());
+            // 待機画面に遷移
+            Navigator.pushNamedAndRemoveUntil(
+              context, '/wait_page', (Route<dynamic> route) => false);
           }
           return Container(
             padding: const EdgeInsets.all(40.0),

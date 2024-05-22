@@ -39,7 +39,9 @@ class _ManualListPageState extends State<ManualListPage> {
             logger.w("message");
           }
           if (!snapshot.hasData) {
-            const Center(child: CircularProgressIndicator());
+            // 待機画面に遷移
+            Navigator.pushNamedAndRemoveUntil(
+              context, '/wait_page', (Route<dynamic> route) => false);
           }
           var manualList = snapshot.data;
           return Container(
