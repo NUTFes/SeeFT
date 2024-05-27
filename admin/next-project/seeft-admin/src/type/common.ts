@@ -77,3 +77,17 @@ export interface Time {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Shift(シフト)
+export interface Shift {
+  id: number;
+  taskID: number;
+  userID: number;
+  yearID: number;
+  dateID: number;
+  timeID: number;
+  weatherID: number;
+  isAttendance: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

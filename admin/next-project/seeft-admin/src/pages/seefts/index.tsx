@@ -2,10 +2,10 @@ import clsx from 'clsx';
 import { useRouter } from 'next/router';
 
 import { get } from '@api/api_methods';
-import { User, Task, Bureau, Time } from "@type/common";
+import { User, Task, Bureau, Time, Shift } from "@type/common";
 import MainLayout from '@components/layout/MainLayout';
 import Button from '@components/common/Button';
-import { destroy } from '@api/user';
+import { post, put, destroy } from '@api/shift';
 import { DeleteButton, EditButton, Select } from '@components/common';
 import ListPageLayout from '@components/layout/ListPageLayout';
 import { TimeItems, TimeScaleItem } from '@constants/timeItem';
@@ -40,12 +40,12 @@ export default function Users(props: Props) {
   const timeList: Time[] = TimeItems.slice((2 * 16), (3 * 16));
 
   const addShiftInformation = async (data: Shift) => {
-    const addUserInformationUrl = process.env.CSR_API_URI + '/shifts';
+    const addUserInformationUrl = process.env.CSR_API_URI + '/shifts-admin';
     await post(addUserInformationUrl, data);
   };
 
   const updateShiftInformation = async (data: Shift) => {
-    const putShiftInformationUrl = process.env.CSR_API_URI + '/shifts/' + data.id;
+    const putShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin/' + data.id;
     await put(putShiftInformationUrl, data);
   };
 
