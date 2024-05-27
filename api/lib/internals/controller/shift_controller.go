@@ -17,12 +17,18 @@ type ShiftController interface {
 	ShowShiftsByUser(echo.Context) error
 	ShowUsersByShift(echo.Context) error
 	ShowShiftsByUserAndDateAndWeather(echo.Context) error
+	IndexShiftAdmin(echo.Context) error
+	ShowShiftAdmin(echo.Context) error
+	CreateShiftAdmin(echo.Context) error
+	UpdateShiftAdmin(echo.Context) error
+	DeleteShiftAdmin(echo.Context) error
 }
 
 func NewShiftController(u usecase.ShiftUseCase) ShiftController {
 	return &shiftController{u}
 }
 
+// スマホ用API
 func (b *shiftController) IndexShift(c echo.Context) error {
 	shifts, err := b.u.GetShifts(c.Request().Context())
 	if err != nil {
@@ -73,6 +79,67 @@ func (b *shiftController) ShowShiftsByUserAndDateAndWeather(c echo.Context) erro
 	return c.JSON(http.StatusOK, shifts)
 }
 
+// Webアプリ用API
+
+func (b *shiftController) IndexShiftAdmin(c echo.Context) error {
+	shifts, err := b.u.GetShiftsAdmin(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shifts)
+}
+
+func (b *shiftController) ShowShiftAdmin(c echo.Context) error {
+	id := c.Param("id")
+	shift, err := b.u.GetShiftAdminByID(c.Request().Context(), id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shift)
+}
+
+// Create
+func (u *shiftController) CreateShiftAdmin(c echo.Context) error {
+	taskID := c.QueryParam("task_id")
+	userID := c.QueryParam("user_id")
+	yearID := c.QueryParam("year_id")
+	dateID := c.QueryParam("date_id")
+	timeID := c.QueryParam("time_id")
+	weatherID := c.QueryParam("weather_id")
+	isAttendance := c.QueryParam("is_attendance")
+	latastShift, err := u.u.CreateShiftAdmin(c.Request().Context(), taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusCreated, latastShift)
+}
+
+// Update
+func (u *shiftController) UpdateShiftAdmin(c echo.Context) error {
+	id := c.Param("id")
+	taskID := c.QueryParam("task_id")
+	userID := c.QueryParam("user_id")
+	yearID := c.QueryParam("year_id")
+	dateID := c.QueryParam("date_id")
+	timeID := c.QueryParam("time_id")
+	weatherID := c.QueryParam("weather_id")
+	isAttendance := c.QueryParam("is_attendance")
+	updatedShift, err := u.u.UpdateShiftAdmin(c.Request().Context(), id, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, updatedShift)
+}
+
+// Destroy
+func (u *shiftController) DeleteShiftAdmin(c echo.Context) error {
+	id := c.QueryParam("id")
+	err := u.u.DeleteShiftAdmin(c.Request().Context(), id)
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "Destroy Shift")
+}
 
 // import 'dart:convert';
 // import 'package:shelf/shelf.dart';

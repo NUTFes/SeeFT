@@ -24,17 +24,22 @@ type ShiftUseCase interface {
   GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
   GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
   GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error) 
+	GetShiftsAdmin(context.Context) ([]entity.ShiftAdmin, error)
+  GetShiftAdminByID(context.Context, string) (entity.ShiftAdmin, error)
+	CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
+	UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
+	DeleteShiftAdmin(context.Context, string) error
 }
 
 func NewShiftUseCase(
 	rep rep.ShiftRepository, 
 	taskRep rep.TaskRepository,
-  	userRep rep.UserRepository,
-  	yearRep rep.YearRepository,
-  	dateRep rep.DateRepository,
-  	timeRep rep.TimeRepository,
-  	weatherRep rep.WeatherRepository) ShiftUseCase {
-  	return &shiftUseCase{rep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep}
+  userRep rep.UserRepository,
+  yearRep rep.YearRepository,
+  dateRep rep.DateRepository,
+  timeRep rep.TimeRepository,
+  weatherRep rep.WeatherRepository) ShiftUseCase {
+  return &shiftUseCase{rep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep}
 }
 
 var TaskID, UserID, YearID, DateID, TimeID, WeatherID string
@@ -500,6 +505,132 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	}
 
 	return shiftUsers, nil
+}
+
+
+// Webアプリ用API
+
+func (a *shiftUseCase) GetShiftsAdmin(c context.Context) ([]entity.ShiftAdmin, error) {
+  shift := entity.ShiftAdmin{}
+  var shifts []entity.ShiftAdmin
+
+  // クエリー実行
+	rows, err := a.rep.All(c)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(
+			&shift.ID,
+			&shift.TaskID,
+			&shift.UserID,
+			&shift.YearID,
+	  	&shift.DateID,
+	  	&shift.TimeID,
+  		&shift.WeatherID,
+  		&shift.IsAttendance,
+			&shift.CreatedAt,
+			&shift.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot connect SQL")
+		}
+
+		shifts = append(shifts, shift)
+	}
+	return shifts, nil
+}
+
+func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.ShiftAdmin, error) {
+	var shift entity.ShiftAdmin
+	row, err := a.rep.Find(c, id)
+	err = row.Scan(
+		&shift.ID,
+		&shift.TaskID,
+		&shift.UserID,
+		&shift.YearID,
+	  &shift.DateID,
+	  &shift.TimeID,
+  	&shift.WeatherID,
+  	&shift.IsAttendance,
+		&shift.CreatedAt,
+		&shift.UpdatedAt,
+	)
+
+	if err != nil {
+		return shift, err
+	}
+	return shift, nil
+}
+
+func (u *shiftUseCase) CreateShiftAdmin(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
+	var latastShift entity.ShiftAdmin
+	err := u.rep.Create(c, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
+	row, err := u.rep.FindLatestRecord(c)
+	err = row.Scan(
+		&latastShift.ID,
+		&latastShift.TaskID,
+		&latastShift.UserID,
+		&latastShift.YearID,
+	  &latastShift.DateID,
+	  &latastShift.TimeID,
+  	&latastShift.WeatherID,
+  	&latastShift.IsAttendance,
+		&latastShift.CreatedAt,
+		&latastShift.UpdatedAt,
+	)
+	if err != nil {
+		return latastShift, err
+	}
+	return latastShift, err
+}
+
+func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
+	updatedShift := entity.ShiftAdmin{}
+	var shift entity.ShiftAdmin
+
+	row, err := u.rep.Find(c, id)
+	err = row.Scan(
+		&shift.ID,
+		&shift.TaskID,
+		&shift.UserID,
+		&shift.YearID,
+	  &shift.DateID,
+	  &shift.TimeID,
+  	&shift.WeatherID,
+  	&shift.IsAttendance,
+		&shift.CreatedAt,
+		&shift.UpdatedAt,
+	)
+	if err != nil {
+		return shift, err
+	}
+
+	u.rep.Update(c, id, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
+	row, err = u.rep.Find(c, id)
+	err = row.Scan(
+		&updatedShift.ID,
+		&updatedShift.TaskID,
+		&updatedShift.UserID,
+		&updatedShift.YearID,
+	  &updatedShift.DateID,
+	  &updatedShift.TimeID,
+  	&updatedShift.WeatherID,
+  	&updatedShift.IsAttendance,
+		&updatedShift.CreatedAt,
+		&updatedShift.UpdatedAt,
+	)
+	if err != nil {
+		return updatedShift, err
+	}
+	return updatedShift, nil
+}
+
+func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
+	err := u.rep.Destroy(c, id)
+	return err
 }
 
 // import '../entity/entity.dart';

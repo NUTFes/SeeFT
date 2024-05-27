@@ -39,6 +39,14 @@ export interface Bureau {
   updatedAt?: string;
 }
 
+// Weather(天気)
+export interface Weather {
+  id: number;
+  weather: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Place(集合場所)
 export interface Place {
   id: number;
@@ -58,6 +66,14 @@ export interface Task {
   color: string;
   remark: string;
   yearID: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Time(時間)
+export interface Time {
+  id: number;
+  time: string;
   createdAt?: string;
   updatedAt?: string;
 }

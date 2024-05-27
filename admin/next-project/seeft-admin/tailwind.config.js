@@ -32,6 +32,7 @@ module.exports = {
         '3/4': '75%',
         '9/10': '90%',
         '7/8': '87.5%',
+        '3/64': '4.6%',
       },
       backgroundImage: {
         'gradient': 'linear-gradient(to bottom, #FFFFFF, #EEEEFF)', 
