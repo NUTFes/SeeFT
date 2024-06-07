@@ -175,7 +175,18 @@ VALUES
 INSERT INTO users
   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
 VALUES
-  ('test','test1@testmail.com','1','1','1','1','12345678','09012345678','123456');
+  ('root','test1@example.com','1','1','1','1','12345678','','shiftroot');
+
+INSERT INTO tasks
+  (task, place_id, url, superviser_id, color, remark, year_id)
+VALUES
+  ('', 1, '', 1, 'ffffff', '', 43),
+  ('NG', 1, '', 1, '949593', '', 43);
+
+-- INSERT INTO users
+--   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
+-- VALUES
+--   ('test','test1@testmail.com','1','1','1','1','12345678','09012345678','123456');
 -- 以下テスト用のデータなので本番環境で起こらないようにする
 -- INSERT INTO users
 --   (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)

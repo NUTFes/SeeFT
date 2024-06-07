@@ -34,6 +34,11 @@ module.exports = {
         '7/8': '87.5%',
         '3/64': '4.6%',
       },
+      maxHeight: {
+        '1/2': '50%',
+        '1/3': '33.3%',
+        '1/4': '25%'
+      },
       backgroundImage: {
         'gradient': 'linear-gradient(to bottom, #FFFFFF, #EEEEFF)', 
       },

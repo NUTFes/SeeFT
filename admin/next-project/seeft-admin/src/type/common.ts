@@ -70,6 +70,24 @@ export interface Task {
   updatedAt?: string;
 }
 
+// Year(開催年度)
+export interface Year {
+  id: number;
+  year: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Date(開催日)
+export interface Date {
+  id: number;
+  yearID: number;
+  name: string;
+  date: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Time(時間)
 export interface Time {
   id: number;

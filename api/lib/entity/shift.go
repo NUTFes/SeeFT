@@ -30,12 +30,12 @@ type ShiftUsers struct {
 // Webアプリ用
 type ShiftAdmin struct {
 	ID		   	int    		`json:"id"`
-	TaskID		Task  		`json:"taskID"`
-	UserID     	User  		`json:"userID"`
-	YearID	   	Year  		`json:"yearID"`
-	DateID     	Date		`json:"dateID"`
-	TimeID     	Time		`json:"timeID"`
-	WeatherID  	Weather		`json:"weatherID"`
+	TaskID		int  		`json:"taskID"`
+	UserID     	int  		`json:"userID"`
+	YearID	   	int  		`json:"yearID"`
+	DateID     	int		`json:"dateID"`
+	TimeID     	int		`json:"timeID"`
+	WeatherID  	int		`json:"weatherID"`
 	IsAttendance bool   	`json:"isAttendance"`
 	CreatedAt  	time.Time	`json:"createdAt"`
 	UpdatedAt  	time.Time	`json:"updatedAt"`

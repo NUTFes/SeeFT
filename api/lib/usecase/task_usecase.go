@@ -50,8 +50,7 @@ func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-    
+		}  
 		tasks = append(tasks, task)
 	}
   

@@ -4,5 +4,6 @@ export { default as SideNav } from './SideNav';
 export { default as Select } from './Select';
 export { default as Input } from './Input';
 export { default as Button } from './Button';
+export { default as ToggleButton } from './ToggleButton';
 export { default as EditButton } from './EditButton';
 export { default as DeleteButton } from './DeleteButton';

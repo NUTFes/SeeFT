@@ -4,6 +4,8 @@ final ShiftTable table = ShiftTable();
 
 class ShiftTable {
   Widget shiftTable(var shifts, context) {
+    var sortedShifts =
+        shifts.sort((i, v) => i["time"]["time"].compareTo(v["time"]["time"]));
     // print(shifts);
     return Table(
         border: TableBorder.all(color: Colors.black26),
@@ -40,14 +42,14 @@ class ShiftTable {
               ),
             )
           ]),
-          for (var index = 0; index < shifts.length; index++)
+          for (var index = 0; index < sortedShifts.length; index++)
             TableRow(
                 decoration: BoxDecoration(color: Colors.white60),
                 children: [
                   TableCell(
                       child: Container(
                     alignment: Alignment.center,
-                    child: new Text(shifts[index]["time"]["time"]),
+                    child: new Text(sortedShifts[index]["time"]["time"]),
                   )),
                   TableCell(
                       /*
@@ -66,27 +68,28 @@ class ShiftTable {
                     //height: 25.0,
                     child: new Material(
                       type: MaterialType.button,
-                      color: HexColor(shifts[index]["task"]["color"]),
+                      color: HexColor(sortedShifts[index]["task"]["color"]),
                       child: InkWell(
                         splashColor: Colors.orangeAccent,
                         onTap: () async {
-                          if (shifts[index]["task"]["task"] != "") {
-                            logger.i(shifts[index]["task"]["task"]);
+                          if (sortedShifts[index]["task"]["task"] != "") {
+                            logger.i(sortedShifts[index]["task"]["task"]);
                             await openShiftDialog(
                                 context,
-                                shifts[index]["task"],
-                                shifts[index]["user"],
-                                shifts[index]["year"],
-                                shifts[index]["date"],
-                                shifts[index]["time"],
-                                shifts[index]["weather"]);
+                                sortedShifts[index]["task"],
+                                sortedShifts[index]["user"],
+                                sortedShifts[index]["year"],
+                                sortedShifts[index]["date"],
+                                sortedShifts[index]["time"],
+                                sortedShifts[index]["weather"]);
                           }
                         },
                         //child: Center(child: new Text(shifts[index]["Work"].toString())),
                         child: Container(
                           child: Center(
-                              child: new Text(
-                                  shifts[index]["task"]["task"].toString())),
+                              child: new Text(sortedShifts[index]["task"]
+                                      ["task"]
+                                  .toString())),
                         ),
                       ),
                     ),
