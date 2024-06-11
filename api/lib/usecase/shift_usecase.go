@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"sort"
 
 	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
@@ -43,6 +44,12 @@ func NewShiftUseCase(
 }
 
 var TaskID, UserID, YearID, DateID, TimeID, WeatherID string
+
+// 時間でソート
+type ByTime []entity.Shift
+func (a ByTime) Len() int           { return len(a) }
+func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTime) Less(i, j int) bool { return a[i].Time.ID < a[j].Time.ID }
 
 func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
   shift := entity.Shift{}
@@ -325,6 +332,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 
 		shifts = append(shifts, shift)
 	}
+	sort.Sort(ByTime(shifts))
 	return shifts, nil
 }
 
@@ -425,6 +433,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 
 		shifts = append(shifts, shift)
 	}
+	sort.Sort(ByTime(shifts))
 	return shifts, nil
 }
 

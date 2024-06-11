@@ -218,7 +218,7 @@ export default function Users(props: Props) {
             <FaChevronRight />
           </div>
         </div>
-        <div className='max-h-64 px-2 pb-2 overflow-y-auto'>
+        <div className='max-h-64 px-2 pb-2 overflow-y-auto select-none'>
           <table className='table-fixed mb-5 w-full border-collapse'>
             <thead className='sticky top-0 z-10'>
               <tr>
