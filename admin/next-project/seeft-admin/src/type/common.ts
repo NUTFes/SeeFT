@@ -3,16 +3,21 @@
 export interface User {
   id: number;
   name: string;
-  mail: string,
-  gradeID: number,
-  departmentID: number,
+  mail: string;
+  gradeID: number;
+  departmentID: number;
   bureauID: number;
   roleID: number;
-  studentNumber: number,
-  tel: string,
-  password: string,
+  studentNumber: number;
+  tel: string;
+  password: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface LoginType {
+  studentNumber: number;
+  password: string;
 }
 
 // Grade(学年)
