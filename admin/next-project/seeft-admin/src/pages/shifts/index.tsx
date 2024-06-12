@@ -1,11 +1,8 @@
 import clsx from 'clsx';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { get } from '@api/api_methods';
 import { User, Task, Bureau, Time, Shift, Weather, Date } from "@type/common";
-import MainLayout from '@components/layout/MainLayout';
-import Button from '@components/common/Button';
 import { post, put, destroy } from '@api/shift';
 import { Select, ToggleButton } from '@components/common';
 import ListPageLayout from '@components/layout/ListPageLayout';
@@ -48,21 +45,17 @@ export default function Users(props: Props) {
   const [shifts, setShifts] = useState(props.shifts);
   const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
-  const [yearID, setYearID] = useState(YearItem[YearItem.length - 1].id);
-  const [dateID, setDateID] = useState(2);
   const [timeScaleID, setTimeScaleID] = useState(3);
-  const [weatherID, setWeatherID] = useState(1);
   const [hasDestoryMode, setHasDestoryMode] = useState(false);
-  const router = useRouter();
 
   const [formData, setFormData] = useState<Shift>({
     id: 0,
     taskID: tasks[0].id,
     userID: 0,
-    yearID: yearID,
-    dateID: dateID,
+    yearID: YearItem[YearItem.length - 1].id,
+    dateID: 2,
     timeID: 0,
-    weatherID: weatherID,
+    weatherID: 1,
     isAttendance: false
   });
 
@@ -99,7 +92,7 @@ export default function Users(props: Props) {
 
   const handler = (input: string) =>
     (e: React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>) => {
-      setFormData({ ...formData, [input]: e.target.value });
+      setFormData({ ...formData, [input]: Number(e.target.value) });
     };
 
   const handleMouseDown = (user: User, time: Time, id: number) => {
@@ -137,16 +130,6 @@ export default function Users(props: Props) {
     }
   };
 
-  const dateHandler = () =>
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setDateID(Number(e.target.value));
-    };
-
-  const weatherHandler = () =>
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setWeatherID(Number(e.target.value));
-    };
-
   const changeTimeScale = (value: number) => {
     if (value === 1) {
       if (timeScaleID === 6) {
@@ -164,8 +147,7 @@ export default function Users(props: Props) {
         setTimeScaleID(timeScaleID - 1);
       }
     }
-  }
-
+  };
 
   const timeList = useMemo(() => {
     return TimeItems.slice(((timeScaleID - 1) * 16), (timeScaleID * 16));
@@ -173,18 +155,18 @@ export default function Users(props: Props) {
 
   useEffect(() => {
     setFilteredShifts(shifts.filter((shift: Shift) => (
-      shift.yearID === yearID
-      && shift.dateID === dateID
-      && shift.weatherID === weatherID
+      shift.yearID === formData['yearID']
+      && shift.dateID === formData['dateID']
+      && shift.weatherID === formData['weatherID']
     )));
-  }, [yearID, dateID, weatherID, shifts]);
+  }, [formData['yearID'], formData['dateID'], formData['weatherID'], shifts]);
 
   return (
     <ListPageLayout title='シフト一覧'>
       <div className='my-3 border border-accent-1'>
         <div className='w-full flex justify-center items-center gap-6 p-1 '>
           <div className='w-1/6'>
-            <Select className="w-full" value={DateItem.find((date: Date) => (date.id === dateID))?.id} onChange={(dateHandler())}>
+            <Select className="w-full" value={formData.dateID} onChange={handler('dateID')}>
               {DateItem.map((data) => (
                 <option key={data.id} value={data.id}>
                   {data.date}
@@ -193,7 +175,7 @@ export default function Users(props: Props) {
             </Select>
           </div>
           <div className='w-1/6'>
-            <Select className="w-full" value={WeatherItem.find((weather: Weather) => (weather.id === weatherID))?.id} onChange={(weatherHandler())}>
+            <Select className="w-full" value={formData.weatherID} onChange={handler('weatherID')}>
               {WeatherItem.map((data) => (
                 <option key={data.id} value={data.id}>
                   {data.weather}
