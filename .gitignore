@@ -16,6 +16,8 @@ mariadb/
 
 sql/
 
+.env
+
 api/seeds
 !api/seeds/seeds.go
 api/tmp

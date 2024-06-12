@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 type userController struct {
@@ -53,7 +54,9 @@ func (u *userController) CreateUser(c echo.Context) error {
 	roleID := c.QueryParam("role_id")
 	tel := c.QueryParam("tel")
 	password := c.QueryParam("password")
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+	password = strings.ReplaceAll(password, " ", "")
+	password = strings.ReplaceAll(password, "　", "")
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	latastUser, err := u.u.CreateUser(c.Request().Context(), name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword))
 	if err != nil {
 		return err

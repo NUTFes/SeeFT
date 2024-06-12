@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// スマホアプリ用
 type Shift struct {
 	ID		   	int    		`json:"id"`
 	Task		Task  		`json:"task"`
@@ -24,6 +25,20 @@ type ShiftUsers struct {
 	Date     	Date		`json:"date"`
 	Time     	Time		`json:"time"`
 	Weather  	Weather		`json:"weather"`
+}
+
+// Webアプリ用
+type ShiftAdmin struct {
+	ID		   	int    		`json:"id"`
+	TaskID		int  		`json:"taskID"`
+	UserID     	int  		`json:"userID"`
+	YearID	   	int  		`json:"yearID"`
+	DateID     	int		`json:"dateID"`
+	TimeID     	int		`json:"timeID"`
+	WeatherID  	int		`json:"weatherID"`
+	IsAttendance bool   	`json:"isAttendance"`
+	CreatedAt  	time.Time	`json:"createdAt"`
+	UpdatedAt  	time.Time	`json:"updatedAt"`
 }
 
 // class Shift {
