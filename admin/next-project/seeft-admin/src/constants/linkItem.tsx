@@ -13,7 +13,7 @@ export const SeeftLinkItems: LinkItemProps[] = [
   {
     name: 'シフト',
     icon: <MdOutlineSchedule />,
-    href: '/seefts'
+    href: '/shifts'
   },
   {
     name: 'ユーザー',

@@ -56,7 +56,7 @@ func (b *placeRepository) Destroy(c context.Context, id string) error {
 	return b.crud.UpdateDB(c, query)
 }
 
-// 最新のgradeを取得する
+// 最新のplaceを取得する
 func (b *placeRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 	query := `
 		SELECT

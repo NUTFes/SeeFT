@@ -16,6 +16,9 @@ type TaskUseCase interface {
   GetTasks(context.Context) ([]entity.Task, error)
   GetTaskByID(context.Context, string) (entity.Task, error)
   GetTasksByShift(context.Context, string) ([]entity.Task, error)
+	CreateTask(context.Context, string, string, string, string, string, string, string) (entity.Task, error)
+  UpdateTask(context.Context, string, string, string, string, string, string, string, string) (entity.Task, error)
+  DeleteTask(context.Context, string) error
 }
 
 func NewTaskUseCase(rep rep.TaskRepository) TaskUseCase {
@@ -36,19 +39,18 @@ func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
 		err := rows.Scan(
 			&task.ID,
 			&task.Task,
-			&task.Place,
+			&task.PlaceID,
 			&task.Url,
-      		&task.Superviser,
-	  		&task.Color,
-      		&task.Notes,
-      		&task.YearID,
+      &task.SuperviserID,
+	  	&task.Color,
+      &task.Remark,
+      &task.YearID,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-    
+		}  
 		tasks = append(tasks, task)
 	}
   
@@ -61,12 +63,12 @@ func (b *taskUseCase) GetTaskByID(c context.Context, id string) (entity.Task, er
 	err = row.Scan(
 		&task.ID,
 		&task.Task,
-		&task.Place,
+		&task.PlaceID,
 		&task.Url,
-    	&task.Superviser,
+    &task.SuperviserID,
 		&task.Color,
-    	&task.Notes,
-    	&task.YearID,
+    &task.Remark,
+    &task.YearID,
 		&task.CreatedAt,
 		&task.UpdatedAt,
 	)
@@ -91,12 +93,12 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 		err := rows.Scan(
 			&task.ID,
 			&task.Task,
-			&task.Place,
+			&task.PlaceID,
 			&task.Url,
-      		&task.Superviser,
-	  		&task.Color,
-      		&task.Notes,
-      		&task.YearID,
+      &task.SuperviserID,
+	  	&task.Color,
+      &task.Remark,
+      &task.YearID,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 		)
@@ -106,6 +108,74 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
+}
+
+func (u *taskUseCase) CreateTask(c context.Context, name string, placeID string, url string, superviserID string, color string, remark string, yearID string) (entity.Task, error) {
+	latasTask := entity.Task{}
+	err := u.rep.Create(c, name, placeID, url, superviserID, color, remark, yearID)
+	row, err := u.rep.FindNewRecord(c)
+	err = row.Scan(
+		&latasTask.ID,
+		&latasTask.Task,
+		&latasTask.PlaceID,
+		&latasTask.Url,
+    &latasTask.SuperviserID,
+		&latasTask.Color,
+    &latasTask.Remark,
+    &latasTask.YearID,
+		&latasTask.CreatedAt,
+		&latasTask.UpdatedAt,
+	)
+	if err != nil {
+		return latasTask, err
+	}
+	return latasTask, err
+}
+
+func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, placeID string, url string, superviserID string, color string, remark string, yearID string) (entity.Task, error) {
+	updatedTask := entity.Task{}
+	var task entity.Task
+
+	row, err := u.rep.Find(c, id)
+	err = row.Scan(
+		&task.ID,
+		&task.Task,
+		&task.PlaceID,
+		&task.Url,
+    &task.SuperviserID,
+		&task.Color,
+    &task.Remark,
+    &task.YearID,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+	)
+	if err != nil {
+		return task, err
+	}
+
+	u.rep.Update(c, id, name, placeID, url, superviserID, color, remark, yearID)
+	row, err = u.rep.Find(c, id)
+	err = row.Scan(
+		&updatedTask.ID,
+		&updatedTask.Task,
+		&updatedTask.PlaceID,
+		&updatedTask.Url,
+    &updatedTask.SuperviserID,
+		&updatedTask.Color,
+    &updatedTask.Remark,
+    &updatedTask.YearID,
+		&updatedTask.CreatedAt,
+		&updatedTask.UpdatedAt,
+	)
+	if err != nil {
+		return updatedTask, err
+	}
+	return updatedTask, nil
+}
+
+func (u *taskUseCase) DeleteTask(c context.Context, id string) error {
+	err := u.rep.Destroy(c, id)
+	return err
 }
 
 // import '../entity/entity.dart';

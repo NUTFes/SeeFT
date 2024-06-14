@@ -15,6 +15,9 @@ type TaskController interface {
 	IndexTask(echo.Context) error
 	ShowTask(echo.Context) error
 	ShowTasksByShift(echo.Context) error
+	CreateTask(echo.Context) error
+	UpdateTask(echo.Context) error
+	DeleteTask(echo.Context) error
 }
 
 func NewTaskController(u usecase.TaskUseCase) TaskController {
@@ -46,6 +49,49 @@ func (b *taskController) ShowTasksByShift(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, tasks)
+}
+
+// Create
+func (u *taskController) CreateTask(c echo.Context) error {
+	task := c.QueryParam("task")
+	placeID := c.QueryParam("place_id")
+	url := c.QueryParam("url")
+	superviserID := c.QueryParam("superviser_id")
+	color := c.QueryParam("color")
+	remark := c.QueryParam("remark")
+	yearID := c.QueryParam("year_id")
+	latastTask, err := u.u.CreateTask(c.Request().Context(), task, placeID, url, superviserID, color, remark, yearID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusCreated, latastTask)
+}
+
+// Update
+func (u *taskController) UpdateTask(c echo.Context) error {
+	id := c.Param("id")
+	task := c.QueryParam("task")
+	placeID := c.QueryParam("place_id")
+	url := c.QueryParam("url")
+	superviserID := c.QueryParam("superviser_id")
+	color := c.QueryParam("color")
+	remark := c.QueryParam("remark")
+	yearID := c.QueryParam("year_id")
+	updatedTask, err := u.u.UpdateTask(c.Request().Context(), id, task, placeID, url, superviserID, color, remark, yearID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, updatedTask)
+}
+
+// Destroy
+func (u *taskController) DeleteTask(c echo.Context) error {
+	id := c.QueryParam("id")
+	err := u.u.DeleteTask(c.Request().Context(), id)
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "Destroy Task")
 }
 
 // type TaskController struct{}

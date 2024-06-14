@@ -71,7 +71,6 @@ class ShiftTable {
                         splashColor: Colors.orangeAccent,
                         onTap: () async {
                           if (shifts[index]["task"]["task"] != "") {
-                            logger.i(shifts[index]["task"]["task"]);
                             await openShiftDialog(
                                 context,
                                 shifts[index]["task"],

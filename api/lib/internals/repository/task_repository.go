@@ -19,6 +19,10 @@ type TaskRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	Shift(context.Context, string) (*sql.Rows, error)
+	Create(context.Context, string, string, string, string, string, string, string) error
+	Update(context.Context, string, string, string, string, string, string, string, string) error
+	Destroy(context.Context, string) error
+	FindNewRecord(context.Context) (*sql.Row, error)
 }
 
 func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
@@ -48,6 +52,37 @@ func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error
 	return rows, nil
 }
 
+// 作成
+func (b *taskRepository) Create(c context.Context, name string, placeID string, url string, superviserID string, color string, remark string, yearID string) error {
+	query := "INSERT INTO tasks (task, place_id, url, superviser_id, color, remark, year_id) VALUES ('" + name + "', " + placeID + ", '" + url + "', " + superviserID + ", '" + color + "', '" + remark +"', " + yearID + ")"
+	return b.crud.UpdateDB(c, query)
+}
+
+// 編集
+func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, superviserID string, color string, remark string, yearID string) error {
+	query := "UPDATE tasks SET (task, place_id, url, superviser_id, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + superviserID + ", '" + color + "', '" + remark +"', " + yearID + ") WHERE id = " + id
+	return b.crud.UpdateDB(c, query)
+}
+
+// 削除
+func (b *taskRepository) Destroy(c context.Context, id string) error {
+	query := "DELETE FROM tasks WHERE id =" + id
+	return b.crud.UpdateDB(c, query)
+}
+
+// 最新のtaskを取得する
+func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
+	query := `
+		SELECT
+			*
+		FROM
+			tasks
+		ORDER BY
+			id
+		DESC LIMIT 1
+	`
+	return b.crud.ReadByID(c, query)
+}
 
 // import '../../usecase/repository/task_repository.dart';
 // import '../../entity/entity.dart';

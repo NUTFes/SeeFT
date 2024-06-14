@@ -21,8 +21,8 @@ type ShiftRepository interface {
 	User(context.Context, string) (*sql.Rows, error)
 	Users(context.Context, string, string, string, string, string) (*sql.Rows, error)
 	UserAndDateAndWeather(context.Context, string, string, string) (*sql.Rows, error)
-	Create(context.Context, string) error
-	Update(context.Context, string, string) error
+	Create(context.Context, string, string, string, string, string, string, string) error
+	Update(context.Context, string, string, string, string, string, string, string, string) error
 	Destroy(context.Context, string) error
 	FindLatestRecord(context.Context) (*sql.Row, error)
 }
@@ -77,14 +77,25 @@ func (b *shiftRepository) UserAndDateAndWeather(c context.Context, id string, da
 }
 
 // 作成
-func (b *shiftRepository) Create(c context.Context, name string) error {
-	query := "INSERT INTO shifts (name) VALUES ('" + name + "')"
+func (b *shiftRepository) Create(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) error {
+	query := "INSERT INTO shifts (task_id, user_id, year_id, date_id, time_id, weather_id, is_attendance) VALUES (" + taskID + ", " +  userID  + ", " + yearID + ", " + dateID + ", " + timeID + ", " + weatherID + ", " + isAttendance + ")"
 	return b.crud.UpdateDB(c, query)
 }
 
 // 編集
-func (b *shiftRepository) Update(c context.Context, id string, name string) error {
-	query := "UPDATE shifts SET name = '" + name + "' WHERE id = " + id
+func (b *shiftRepository) Update(c context.Context, id string, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) error {
+	query := `
+	UPDATE 
+		shifts 
+	SET 
+		task_id = ` + taskID +
+		", user_id = " + userID +
+		", year_id = " + yearID +
+		", date_id = " + dateID +
+		", time_id = " + timeID +
+		", weather_id = "  + weatherID +
+		", is_attendance = " + isAttendance +
+		" WHERE id = " + id
 	return b.crud.UpdateDB(c, query)
 }
 
@@ -100,7 +111,7 @@ func (b *shiftRepository) FindLatestRecord(c context.Context) (*sql.Row, error) 
 		SELECT
 			*
 		FROM
-			shift
+			shifts
 		ORDER BY
 			id
 		DESC LIMIT 1

@@ -2,27 +2,36 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { get } from '@api/api_methods';
-import { User, Grade, Department, Bureau } from "@type/common";
+import { User, Grade, Department, Bureau, Time, Shift, Date, Weather } from "@type/common";
 import { Input, Select } from '@components/common';
 import { post } from '@api/user';
 import InformationPageLayout from '@components/layout/InformationPageLayout';
+import { post as shiftPost } from '@api/shift';
+import { TimeItems, TimeScaleItem } from '@constants/timeItem';
+import { WeatherItem } from '@constants/weatherItem';
+import { YearItem } from '@constants/yearItem';
+import { DateItem } from '@constants/dateItem';
 
 interface Props {
+  users: User[];
   grades: Grade[];
   departments: Department[];
   bureaus: Bureau[];
 }
 
 export const getServerSideProps = async () => {
+  const getUserURL = process.env.SSR_API_URI + '/users';
   const getGradeURL = process.env.SSR_API_URI + '/grades';
   const getDepartmentURL = process.env.SSR_API_URI + '/departments';
   const getBureauURL = process.env.SSR_API_URI + '/bureaus';
+  const userRes = await get(getUserURL);
   const gradeRes = await get(getGradeURL);
   const departmentRes = await get(getDepartmentURL);
   const bureauRes = await get(getBureauURL);
 
   return {
     props: {
+      users: userRes,
       grades: gradeRes,
       departments: departmentRes,
       bureaus: bureauRes,
@@ -31,7 +40,7 @@ export const getServerSideProps = async () => {
 };
 
 export default function Users(props: Props) {
-  const { grades, departments, bureaus } = props;
+  const { users, grades, departments, bureaus } = props;
   const router = useRouter();
 
   const [formData, setFormData] = useState<User>({
@@ -47,6 +56,17 @@ export default function Users(props: Props) {
     password: '',
   });
 
+  const iniiShiftData: Shift = {
+    id: 0,
+    taskID: 1,
+    userID: 0,
+    yearID: YearItem[YearItem.length - 1].id,
+    dateID: 1,
+    timeID: 1,
+    weatherID: 1,
+    isAttendance: false
+  };
+
   const handler = (input: string) =>
     (e: React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>) => {
       setFormData({ ...formData, [input]: e.target.value });
@@ -55,6 +75,20 @@ export default function Users(props: Props) {
   const addUserInformation = async (data: User) => {
     const addUserInformationUrl = process.env.CSR_API_URI + '/users';
     await post(addUserInformationUrl, data);
+
+    const initShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin';
+    iniiShiftData['userID'] = users ? users[users.length - 1].id + 1 : 1;
+    DateItem.map((date: Date) => {
+      iniiShiftData['dateID'] = date.id;
+      TimeItems.map((time: Time) => {
+        iniiShiftData['timeID'] = time.id
+        WeatherItem.map(async (weather: Weather) => {
+          iniiShiftData['weatherID'] = weather.id;
+          await shiftPost(initShiftInformationUrl, iniiShiftData);
+        })
+      })
+    });
+
     router.push('/users');
   };
 
@@ -71,7 +105,7 @@ export default function Users(props: Props) {
         <input
           type='password'
           className='rounded-full border border-primary-1 px-4 py-2 col-span-2 w-full'
-          onChange={handler('Password')}
+          onChange={handler('password')}
         />
       </div>
       <div className='flex w-full items-center'>
