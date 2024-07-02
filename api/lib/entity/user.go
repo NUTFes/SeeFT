@@ -25,10 +25,6 @@ type LoginUser struct {
 	Mail 	string 	`json:"mail"`
 }
 
-type Token struct {
-	AccessToken string `json:"accessToken"`
-}
-
 // class User {
 //   final int id;
 //   final String name;

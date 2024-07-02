@@ -114,3 +114,9 @@ export interface Shift {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// SignIn
+export interface SignIn {
+  studentNumber: string;
+  password: string;
+}

@@ -45,7 +45,7 @@ func InitializeServer() db.Client {
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository)
 	taskUseCase := usecase.NewTaskUseCase(taskRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
-	userUseCase := usecase.NewUserUseCase(userRepository)
+	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()

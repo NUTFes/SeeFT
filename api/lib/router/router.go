@@ -56,6 +56,10 @@ func (r router) ProvideRouter(e *echo.Echo) {
 
 	// mail auth
 	e.POST("/mail_auth/signin", r.mailAuthController.SignIn)
+	e.POST("/mail_auth/web_signin", r.mailAuthController.WebSignIn)
+	e.POST("/mail_auth/web_signup", r.mailAuthController.WebSignUp)
+	e.DELETE("/mail_auth/web_signout", r.mailAuthController.WebSignOut)
+	e.GET("/mail_auth/web_is_signin", r.mailAuthController.WebIsSignIn)
 	// e.GET("/mail_auth/signin/:student_number", r.mailAuthController.SignIn)
 
 	// bureauのRoute
@@ -109,4 +113,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.POST("/users", r.userController.CreateUser)
 	e.PUT("/users/:id", r.userController.UpdateUser)
 	e.DELETE("/users", r.userController.DeleteUser)
+
+	// current_user
+	e.GET("/current_user", r.userController.GetCurrentUser)
 }
