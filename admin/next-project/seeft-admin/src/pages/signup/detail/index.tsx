@@ -194,7 +194,7 @@ const SignupDetail = (props: Props) => {
             value={String(postUserData.studentNumber)}
             onChange={userDataHandler('studentNumber')}
           ></FormInputText>
-          <FormInputDropdown text="所属局">
+          <FormInputDropdown text="所属局" onChange={userDataHandler('bureauID')}>
             {bureaus.map((bureau) => (
               <option key={bureau.id} value={bureau.id}>
                 {bureau.bureau}
