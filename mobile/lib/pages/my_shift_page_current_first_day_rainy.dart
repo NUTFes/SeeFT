@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:seeft_mobile/pages/wait_page.dart';
 
 class MyShiftPageCurrentFirstDayRainy extends StatefulWidget {
   @override
@@ -30,9 +31,8 @@ class _MyShiftPageState extends State<MyShiftPageCurrentFirstDayRainy> {
           logger.w("message");
         }
         if (!snapshot.hasData) {
-          // 待機画面に遷移
-          Navigator.pushNamedAndRemoveUntil(
-            context, '/wait_page', (Route<dynamic> route) => false);
+          // 待機画面を表示
+          return WaitPage();
         }
         return Container(
             padding: const EdgeInsets.all(40.0),
