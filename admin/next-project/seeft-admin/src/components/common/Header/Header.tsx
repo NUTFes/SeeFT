@@ -7,6 +7,7 @@ import { del } from '@api/signOut';
 import { User } from '@type/common';
 import { FaUserCircle, FaAngleDown, FaAngleUp } from "react-icons/fa";
 import { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 
 const Header = (props: HeaderProps) => {
   const [auth, setAuth] = useRecoilState(authAtom);
@@ -50,7 +51,9 @@ const Header = (props: HeaderProps) => {
     <>
       <div className='fixed z-10 flex h-12 w-full flex-row items-center bg-surface-2 border-b-2 border-accent-1 px-2.5'>
         <div className='w-28'>
-          <Image src='/title.svg' alt='logo' width={150} height={40} className='h-fit w-fit' />
+          <Link href='/shifts'>
+            <Image src='/title.svg' alt='logo' width={150} height={40} className='h-fit w-fit cursor-pointer' />
+          </Link>
         </div>
         <div className='ml-auto flex flex-row items-center gap-5 text-lg text-emphasis relative '>
           <div ref={userDivRef} onClick={toggleDropdown} className='flex items-center p-1 gap-2 bg-surface-2 border border-accent-1 rounded-md cursor-pointer whitespace-nowrap hover:bg-surface-1'>
