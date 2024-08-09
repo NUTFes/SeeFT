@@ -17,7 +17,7 @@ export const FormInputDropdown = (props: Props) => {
         name={props.name}
         onChange={props.onChange}
         value={props.value}
-        className="flex-grow h-full bg-transparent border-b border-solid border-accent-1"
+        className="flex-grow w-16 h-full bg-transparent border-b border-solid border-accent-1 truncate"
       >
         {props.children}
       </select>

@@ -53,13 +53,13 @@ const Header = (props: HeaderProps) => {
           <Image src='/title.svg' alt='logo' width={150} height={40} className='h-fit w-fit' />
         </div>
         <div className='ml-auto flex flex-row items-center gap-5 text-lg text-emphasis relative '>
-          <div ref={userDivRef} onClick={toggleDropdown} className='flex items-center p-1 gap-2 bg-surface-2 border border-accent-1 rounded-md cursor-pointer hover:bg-surface-1 '>
+          <div ref={userDivRef} onClick={toggleDropdown} className='flex items-center p-1 gap-2 bg-surface-2 border border-accent-1 rounded-md cursor-pointer whitespace-nowrap hover:bg-surface-1'>
             <FaUserCircle />
             {loadedUserName}
             {isOpen ? <FaAngleDown size={'20px'} /> : <FaAngleUp size={'20px'} />}
           </div>
           {isOpen && (
-            <div className='absolute top-full bg-surface-2 border border-accent-1 p-2 shadow-lg rounded-md hover:bg-surface-1' style={{ width: dropdownWidth }}>
+            <div className='absolute top-full bg-surface-2 border border-accent-1 p-2 shadow-lg rounded-md whitespace-nowrap hover:bg-surface-1' style={{ width: dropdownWidth }}>
               <div onClick={async () => { signOut(); }} className='cursor-pointer'>
                 ログアウト
               </div>

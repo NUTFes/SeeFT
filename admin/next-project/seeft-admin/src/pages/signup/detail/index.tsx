@@ -210,7 +210,7 @@ const SignupDetail = (props: Props) => {
           </FormInputDropdown> */}
           <FormInputDropdown text="課程" onChange={userDataHandler('departmentID')}>
             {departments.map((department) => (
-              <option key={department.id} value={department.id}>
+              <option key={department.id} value={department.id} >
                 {department.department}
               </option>
             ))}
