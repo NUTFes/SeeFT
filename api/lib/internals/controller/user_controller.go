@@ -4,8 +4,6 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"golang.org/x/crypto/bcrypt"
-	"strings"
 )
 
 type userController struct {
@@ -18,6 +16,7 @@ type UserController interface {
 	CreateUser(echo.Context) error
 	UpdateUser(echo.Context) error
 	DeleteUser(echo.Context) error
+	GetCurrentUser(echo.Context) error
 }
 
 func NewUserController(u usecase.UserUseCase) UserController {
@@ -54,10 +53,7 @@ func (u *userController) CreateUser(c echo.Context) error {
 	roleID := c.QueryParam("role_id")
 	tel := c.QueryParam("tel")
 	password := c.QueryParam("password")
-	password = strings.ReplaceAll(password, " ", "")
-	password = strings.ReplaceAll(password, "　", "")
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	latastUser, err := u.u.CreateUser(c.Request().Context(), name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword))
+	latastUser, err := u.u.CreateUser(c.Request().Context(), name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
 	if err != nil {
 		return err
 	}
@@ -92,6 +88,19 @@ func (u *userController) DeleteUser(c echo.Context) error {
 	return c.String(http.StatusOK, "Destroy User")
 }
 
+// ログインユーザーの取得
+func (auth *userController) GetCurrentUser(c echo.Context) error {
+	// headerからトークンを取得する
+	accessToken := c.Request().Header["Access-Token"][0]
+	user, err := auth.u.GetCurrentUser(c.Request().Context(), accessToken)
+	if err != nil {
+		c.JSON(http.StatusNotFound, user)
+		return err
+	} else {
+		c.JSON(http.StatusOK, user)
+		return nil
+	}
+}
 
 // import (
 // 	"fmt"

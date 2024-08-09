@@ -1,15 +1,12 @@
-interface Option {
-    value: number | string;
-    label: string;
-  }
+import React from "react";
 
 interface Props {
   text?: string;
   name?: string;
   type?: string;
-  onChange?: () => void;
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   value?: string;
-  options: Option[];
+  children?: React.ReactNode;
 }
 
 export const FormInputDropdown = (props: Props) => {
@@ -20,13 +17,9 @@ export const FormInputDropdown = (props: Props) => {
         name={props.name}
         onChange={props.onChange}
         value={props.value}
-        className="flex-grow h-full bg-transparent border-b border-solid border-accent-1"
+        className="flex-grow w-16 h-full bg-transparent border-b border-solid border-accent-1 truncate"
       >
-        {props.options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        {props.children}
       </select>
     </div>
   );
