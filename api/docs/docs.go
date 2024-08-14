@@ -154,6 +154,66 @@ const docTemplate = `{
                         "description": "tasksの一覧を取得",
                     }
                 }
+            },
+            "post": {
+                tags: ["task"],
+                "description": "taskをcreate",
+                "responses": {
+                    "200": {
+                        "description": "createしたtaskが返ってくる",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "task",
+                        "in": "query",
+                        "description": "task",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "place_id",
+                        "in": "query",
+                        "description": "place_id",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "url",
+                        "in": "query",
+                        "description": "url",
+                        "type": "string",
+                        "required": true,
+                    },
+                    {
+                        "name": "max_member",
+                        "in": "query",
+                        "description": "max_member",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "color",
+                        "in": "query",
+                        "description": "color",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "remark",
+                        "in": "query",
+                        "description": "remark",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "year_id",
+                        "in": "query",
+                        "description": "year_id",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
             }
         },
         "/times": {

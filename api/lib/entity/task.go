@@ -9,7 +9,7 @@ type Task struct {
 	Task      string 	`json:"task"`
 	PlaceID    int	`json:"placeID"`
 	Url       string 	`json:"url"`	
-	SuperviserID int	`json:"superviserID"`
+	MaxMember int 	`json:"maxMember"`
 	Color     string	`json:"color"`
 	Remark     string	`json:"remark"`
 	YearID	  int		`json:"yearID"`

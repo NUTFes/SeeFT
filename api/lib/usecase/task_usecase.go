@@ -41,7 +41,7 @@ func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
 			&task.Task,
 			&task.PlaceID,
 			&task.Url,
-      &task.SuperviserID,
+	  &task.MaxMember,
 	  	&task.Color,
       &task.Remark,
       &task.YearID,
@@ -65,7 +65,7 @@ func (b *taskUseCase) GetTaskByID(c context.Context, id string) (entity.Task, er
 		&task.Task,
 		&task.PlaceID,
 		&task.Url,
-    &task.SuperviserID,
+	&task.MaxMember,
 		&task.Color,
     &task.Remark,
     &task.YearID,
@@ -95,7 +95,7 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 			&task.Task,
 			&task.PlaceID,
 			&task.Url,
-      &task.SuperviserID,
+	&task.MaxMember,
 	  	&task.Color,
       &task.Remark,
       &task.YearID,
@@ -110,16 +110,16 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 	return tasks, nil
 }
 
-func (u *taskUseCase) CreateTask(c context.Context, name string, placeID string, url string, superviserID string, color string, remark string, yearID string) (entity.Task, error) {
+func (u *taskUseCase) CreateTask(c context.Context, name string, placeID string, url string, maxMember string, color string, remark string, yearID string) (entity.Task, error) {
 	latasTask := entity.Task{}
-	err := u.rep.Create(c, name, placeID, url, superviserID, color, remark, yearID)
+	err := u.rep.Create(c, name, placeID, url, maxMember, color, remark, yearID)
 	row, err := u.rep.FindNewRecord(c)
 	err = row.Scan(
 		&latasTask.ID,
 		&latasTask.Task,
 		&latasTask.PlaceID,
 		&latasTask.Url,
-    &latasTask.SuperviserID,
+	&latasTask.MaxMember,
 		&latasTask.Color,
     &latasTask.Remark,
     &latasTask.YearID,
@@ -132,7 +132,7 @@ func (u *taskUseCase) CreateTask(c context.Context, name string, placeID string,
 	return latasTask, err
 }
 
-func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, placeID string, url string, superviserID string, color string, remark string, yearID string) (entity.Task, error) {
+func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, placeID string, url string, maxMember string, color string, remark string, yearID string) (entity.Task, error) {
 	updatedTask := entity.Task{}
 	var task entity.Task
 
@@ -142,7 +142,7 @@ func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, plac
 		&task.Task,
 		&task.PlaceID,
 		&task.Url,
-    &task.SuperviserID,
+	&task.MaxMember,
 		&task.Color,
     &task.Remark,
     &task.YearID,
@@ -153,14 +153,14 @@ func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, plac
 		return task, err
 	}
 
-	u.rep.Update(c, id, name, placeID, url, superviserID, color, remark, yearID)
+	u.rep.Update(c, id, name, placeID, url, maxMember, color, remark, yearID)
 	row, err = u.rep.Find(c, id)
 	err = row.Scan(
 		&updatedTask.ID,
 		&updatedTask.Task,
 		&updatedTask.PlaceID,
 		&updatedTask.Url,
-    &updatedTask.SuperviserID,
+	&updatedTask.MaxMember,
 		&updatedTask.Color,
     &updatedTask.Remark,
     &updatedTask.YearID,

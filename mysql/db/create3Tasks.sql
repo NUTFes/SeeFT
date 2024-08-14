@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     task VARCHAR(255) ,
     place_id INTEGER NOT NULL,
     url VARCHAR(255) ,
-    superviser_id INTEGER,
+    max_member INTEGER,
     color VARCHAR(255) DEFAULT 'fffafa' ,
     remark VARCHAR(255),
     year_id INTEGER NOT NULL,
