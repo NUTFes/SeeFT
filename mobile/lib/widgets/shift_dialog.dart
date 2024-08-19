@@ -57,7 +57,7 @@ openShiftDialog(
 
   // 1つ前の時間のシフトのメンバー
   var resBeforeUsers = '';
-  if (time["id"] != 0) {
+  if (time["id"] > 1) {
     var beforeRes = await api.getUsersByShift(
         task["id"].toString(),
         year["id"].toString(),
