@@ -4,6 +4,7 @@ import 'package:seeft_mobile/configs/importer.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:seeft_mobile/pages/wait_page.dart';
 
 class ManualListPage extends StatefulWidget {
   @override
@@ -39,7 +40,8 @@ class _ManualListPageState extends State<ManualListPage> {
             logger.w("message");
           }
           if (!snapshot.hasData) {
-            const Center(child: CircularProgressIndicator());
+            // 待機画面を表示
+            return WaitPage();
           }
           var manualList = snapshot.data;
           return Container(

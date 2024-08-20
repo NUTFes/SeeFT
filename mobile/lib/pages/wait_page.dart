@@ -19,18 +19,11 @@ class _WaitPageState extends State<WaitPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(''),
-        actions: <Widget>[],
-        // debug
-      ),
-      drawer: drawer.applicationDrawer(context),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children:[ Text("「シフトが完成するまでお待ちください」",style: TextStyle(fontSize: 40),),],
+          children:[ Text("シフトが完成するまでお待ちください",style: TextStyle(fontSize: 20),),],
         ),
       ),
     );
