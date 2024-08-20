@@ -211,7 +211,7 @@ const docTemplate = `{
                         "in": "query",
                         "description": "remark",
                         "type": "string",
-                        "required": true
+                        "required": false
                     },
                     {
                         "name": "year_id",
