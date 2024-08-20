@@ -13,7 +13,7 @@ type sessionRepository struct {
 }
 
 type SessionRepository interface {
-	Create(context.Context, string, string, string) error
+	Create(context.Context, string, string) error
 	Delete(context.Context, string) error
 	FindSessionByAccessToken(context.Context, string) *sql.Row
 	DeleteByUserID(context.Context, string) error
@@ -24,8 +24,8 @@ func NewSessionRepository(client db.Client) SessionRepository {
 }
 
 // 作成
-func (r *sessionRepository) Create(c context.Context, authID string, userID string, accessToken string) error {
-	query := "insert into session (auth_id, user_id, access_token) values (" + authID + ", " + userID + ", '" + accessToken + "')"
+func (r *sessionRepository) Create(c context.Context, userID string, accessToken string) error {
+	query := "insert into session (user_id, access_token) values (" + userID + ", '" + accessToken + "')"
 	_, err := r.client.DB().ExecContext(c, query)
 	if err != nil {
 		return err

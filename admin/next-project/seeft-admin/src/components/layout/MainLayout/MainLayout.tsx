@@ -1,9 +1,12 @@
 import clsx from 'clsx';
 import Head from 'next/head';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Header } from '@components/common';
 import { SideNav } from '@components/common';
+import { useRouter } from 'next/router';
+import { useRecoilState } from 'recoil';
+import { authAtom } from '@/store/atoms';
 
 
 interface LayoutProps {
@@ -11,6 +14,20 @@ interface LayoutProps {
 }
 
 export default function MainLayout(props: LayoutProps) {
+  const router = useRouter();
+  const [auth] = useRecoilState(authAtom);
+
+  useEffect(() => {
+    if (router.isReady) {
+      if (!auth.isSignIn) {
+        router.push('/');
+        localStorage.clear();
+      } else if (auth.isSignIn === true && router.pathname == '/') {
+        router.push('/shifts');
+      }
+    }
+  }, [router, auth]);
+
   return (
     <>
       <Head>

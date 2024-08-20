@@ -2,14 +2,19 @@ package usecase
 
 import (
   "context"
+	"database/sql"
+	"strings"
+	"strconv"
 
 	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userUseCase struct {
   userRep rep.UserRepository
+	sessionRep rep.SessionRepository
 }
 
 type UserUseCase interface {
@@ -18,10 +23,11 @@ type UserUseCase interface {
   CreateUser(context.Context, string, string, string, string, string, string, string, string, string) (entity.User, error)
   UpdateUser(context.Context, string, string, string, string, string, string, string, string, string) (entity.User, error)
   DeleteUser(context.Context, string) error
+	GetCurrentUser(context.Context, string) (entity.User, error)
 }
 
-func NewUserUseCase(rep rep.UserRepository) UserUseCase {
-  return &userUseCase{rep}
+func NewUserUseCase(userRep rep.UserRepository, sessionRep rep.SessionRepository) UserUseCase {
+  return &userUseCase{userRep: userRep, sessionRep: sessionRep}
 }
 
 func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
@@ -88,7 +94,10 @@ func (u *userUseCase) GetUserByID(c context.Context, id string) (entity.User, er
 
 func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string) (entity.User, error) {
 	latastUser := entity.User{}
-	err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
+	password = strings.ReplaceAll(password, " ", "")
+	password = strings.ReplaceAll(password, "　", "")
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+	err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword))
 	row, err := u.userRep.FindNewRecord(c)
 	err = row.Scan(
 		&latastUser.ID,
@@ -158,6 +167,46 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 func (u *userUseCase) DeleteUser(c context.Context, id string) error {
 	err := u.userRep.Delete(c, id)
 	return err
+}
+
+func (u *userUseCase) GetCurrentUser(c context.Context, accessToken string) (entity.User, error) {
+	var session = entity.Session{}
+	var user = entity.User{}
+	var row *sql.Row
+	var err error
+	// アクセストークンからmail_authを取得
+	row = u.sessionRep.FindSessionByAccessToken(c, accessToken)
+	err = row.Scan(
+		&session.ID,
+		&session.UserID,
+		&session.AccessToken,
+		&session.CreatedAt,
+		&session.UpdatedAt,
+	)
+	if err != nil {
+		return user, err
+	}
+
+	// userIDの該当するuserを取得
+	row, err = u.userRep.Find(c, strconv.Itoa(session.UserID))
+	err = row.Scan(
+		&user.ID,
+		&user.Name,
+		&user.Mail,
+		&user.GradeID,
+		&user.DepartmentID,
+		&user.BureauID,
+		&user.RoleID,
+		&user.StudentNumber,
+		&user.Tel,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
 }
 
 // import '../entity/entity.dart';

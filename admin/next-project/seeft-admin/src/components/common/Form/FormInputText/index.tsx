@@ -1,10 +1,10 @@
 
-interface Props{
-    text?: string;
-    type?: string;
-    placeholder?: string;
-    onChange?: () => void;
-    value?: string;
+interface Props {
+  text?: string;
+  type?: string;
+  placeholder?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  value?: string;
 }
 
 export const FormInputText = (props: Props) => {
@@ -14,7 +14,7 @@ export const FormInputText = (props: Props) => {
       <input
         type={props.type}
         placeholder={props.placeholder}
-        className="flex-grow h-full bg-transparent border-b border-solid border-accent-1"
+        className="flex-grow h-full bg-transparent border-b border-solid border-accent-1 text-emphasis"
         onChange={props.onChange}
         value={props.value}
       />
