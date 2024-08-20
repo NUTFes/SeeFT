@@ -67,7 +67,8 @@ export interface Task {
   task: string;
   placeID: number;
   url: string;
-  superviserID: number;
+  bureauID: number;
+  maxMember: number;
   color: string;
   remark: string;
   yearID: number;
