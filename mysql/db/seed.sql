@@ -180,8 +180,8 @@ VALUES
 INSERT INTO tasks
   (task, place_id, url,  bureau_id, max_member, color, remark, year_id)
 VALUES
-  ('', 1, '', 1, 'ffffff', '', 43),
-  ('NG', 1, '', 1, '949593', '', 43);
+  ('', 1, '', 1, 1, 'ffffff', '', 43),
+  ('NG', 1, '', 1, 1, '949593', '', 43);
 
 -- INSERT INTO users
 --   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
