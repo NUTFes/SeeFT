@@ -56,11 +56,12 @@ func (u *taskController) CreateTask(c echo.Context) error {
 	task := c.QueryParam("task")
 	placeID := c.QueryParam("place_id")
 	url := c.QueryParam("url")
-	superviserID := c.QueryParam("superviser_id")
+	bureauID := c.QueryParam("bureau_id")
+	maxMember := c.QueryParam("max_member")
 	color := c.QueryParam("color")
 	remark := c.QueryParam("remark")
 	yearID := c.QueryParam("year_id")
-	latastTask, err := u.u.CreateTask(c.Request().Context(), task, placeID, url, superviserID, color, remark, yearID)
+	latastTask, err := u.u.CreateTask(c.Request().Context(), task, placeID, url, bureauID, maxMember, color, remark, yearID)
 	if err != nil {
 		return err
 	}
@@ -73,11 +74,12 @@ func (u *taskController) UpdateTask(c echo.Context) error {
 	task := c.QueryParam("task")
 	placeID := c.QueryParam("place_id")
 	url := c.QueryParam("url")
-	superviserID := c.QueryParam("superviser_id")
+	bureauID := c.QueryParam("bureau_id")
+	maxMember := c.QueryParam("max_member")
 	color := c.QueryParam("color")
 	remark := c.QueryParam("remark")
 	yearID := c.QueryParam("year_id")
-	updatedTask, err := u.u.UpdateTask(c.Request().Context(), id, task, placeID, url, superviserID, color, remark, yearID)
+	updatedTask, err := u.u.UpdateTask(c.Request().Context(), id, task, placeID, url, bureauID, maxMember, color, remark, yearID)
 	if err != nil {
 		return err
 	}

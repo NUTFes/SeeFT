@@ -186,6 +186,13 @@ const docTemplate = `{
                         "required": true,
                     },
                     {
+                        "name": "bureau_id",
+                        "in": "query",
+                        "description": "bureau_id",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
                         "name": "max_member",
                         "in": "query",
                         "description": "max_member",

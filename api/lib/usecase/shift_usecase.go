@@ -25,16 +25,16 @@ type ShiftUseCase interface {
   GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
   GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
   GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error) 
-	GetShiftsAdmin(context.Context) ([]entity.ShiftAdmin, error)
+  GetShiftsAdmin(context.Context) ([]entity.ShiftAdmin, error)
   GetShiftAdminByID(context.Context, string) (entity.ShiftAdmin, error)
-	CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
-	UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
-	DeleteShiftAdmin(context.Context, string) error
+  CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
+  UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
+  DeleteShiftAdmin(context.Context, string) error
 }
 
 func NewShiftUseCase(
-	rep rep.ShiftRepository, 
-	taskRep rep.TaskRepository,
+  rep rep.ShiftRepository, 
+  taskRep rep.TaskRepository,
   userRep rep.UserRepository,
   yearRep rep.YearRepository,
   dateRep rep.DateRepository,
@@ -68,10 +68,10 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 			&TaskID,
 			&UserID,
 			&YearID,
-	  	&DateID,
-	  	&TimeID,
-  		&WeatherID,
-  		&shift.IsAttendance,
+			&DateID,
+			&TimeID,
+			&WeatherID,
+			&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -82,6 +82,7 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 			&shift.Task.Task,
 			&shift.Task.PlaceID,
 			&shift.Task.Url,
+			&shift.Task.BureauID,
 			&shift.Task.MaxMember,
 			&shift.Task.Color,
 			&shift.Task.Remark,
@@ -171,6 +172,7 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 		&shift.Task.Task,
 		&shift.Task.PlaceID,
 		&shift.Task.Url,
+		&shift.Task.BureauID,
 		&shift.Task.MaxMember,
 		&shift.Task.Color,
 		&shift.Task.Remark,
@@ -267,6 +269,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 			&shift.Task.Task,
 			&shift.Task.PlaceID,
 			&shift.Task.Url,
+			&shift.Task.BureauID,
 			&shift.Task.MaxMember,
 			&shift.Task.Color,
 			&shift.Task.Remark,
@@ -368,6 +371,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&shift.Task.Task,
 			&shift.Task.PlaceID,
 			&shift.Task.Url,
+			&shift.Task.BureauID,
 			&shift.Task.MaxMember,
 			&shift.Task.Color,
 			&shift.Task.Remark,
@@ -536,10 +540,10 @@ func (a *shiftUseCase) GetShiftsAdmin(c context.Context) ([]entity.ShiftAdmin, e
 			&shift.TaskID,
 			&shift.UserID,
 			&shift.YearID,
-	  	&shift.DateID,
-	  	&shift.TimeID,
-  		&shift.WeatherID,
-  		&shift.IsAttendance,
+			&shift.DateID,
+			&shift.TimeID,
+			&shift.WeatherID,
+			&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -560,10 +564,10 @@ func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.S
 		&shift.TaskID,
 		&shift.UserID,
 		&shift.YearID,
-	  &shift.DateID,
-	  &shift.TimeID,
-  	&shift.WeatherID,
-  	&shift.IsAttendance,
+		&shift.DateID,
+		&shift.TimeID,
+		&shift.WeatherID,
+		&shift.IsAttendance,
 		&shift.CreatedAt,
 		&shift.UpdatedAt,
 	)
@@ -583,10 +587,10 @@ func (u *shiftUseCase) CreateShiftAdmin(c context.Context, taskID string, userID
 		&latastShift.TaskID,
 		&latastShift.UserID,
 		&latastShift.YearID,
-	  &latastShift.DateID,
-	  &latastShift.TimeID,
-  	&latastShift.WeatherID,
-  	&latastShift.IsAttendance,
+		&latastShift.DateID,
+		&latastShift.TimeID,
+		&latastShift.WeatherID,
+		&latastShift.IsAttendance,
 		&latastShift.CreatedAt,
 		&latastShift.UpdatedAt,
 	)
@@ -606,10 +610,10 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 		&shift.TaskID,
 		&shift.UserID,
 		&shift.YearID,
-	  &shift.DateID,
-	  &shift.TimeID,
-  	&shift.WeatherID,
-  	&shift.IsAttendance,
+		&shift.DateID,
+		&shift.TimeID,
+		&shift.WeatherID,
+		&shift.IsAttendance,
 		&shift.CreatedAt,
 		&shift.UpdatedAt,
 	)
@@ -624,10 +628,10 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 		&updatedShift.TaskID,
 		&updatedShift.UserID,
 		&updatedShift.YearID,
-	  &updatedShift.DateID,
-	  &updatedShift.TimeID,
-  	&updatedShift.WeatherID,
-  	&updatedShift.IsAttendance,
+		&updatedShift.DateID,
+		&updatedShift.TimeID,
+		&updatedShift.WeatherID,
+		&updatedShift.IsAttendance,
 		&updatedShift.CreatedAt,
 		&updatedShift.UpdatedAt,
 	)
