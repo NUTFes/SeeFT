@@ -2,28 +2,24 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { get } from '@api/api_methods';
-import { Task, User, Place, Bureau } from "@type/common";
+import { Task, Place, Bureau } from "@type/common";
 import { Input, Select } from '@components/common';
 import { post } from '@api/task';
 import InformationPageLayout from '@components/layout/InformationPageLayout';
 
 interface Props {
-  users: User[];
   places: Place[];
   bureaus: Bureau[];
 }
 
 export const getServerSideProps = async () => {
-  const getUserURL = process.env.SSR_API_URI + '/users';
   const getPlaceURL = process.env.SSR_API_URI + '/places';
   const getBureauURL = process.env.SSR_API_URI + '/bureaus';
-  const userRes = await get(getUserURL);
   const placeRes = await get(getPlaceURL);
   const bureauRes = await get(getBureauURL);
 
   return {
     props: {
-      users: userRes,
       places: placeRes,
       bureaus: bureauRes,
     },
@@ -31,7 +27,7 @@ export const getServerSideProps = async () => {
 };
 
 export default function Users(props: Props) {
-  const { users, places, bureaus } = props;
+  const { places, bureaus } = props;
   const router = useRouter();
 
   const [formData, setFormData] = useState<Task>({
@@ -103,7 +99,7 @@ export default function Users(props: Props) {
       <div className='flex w-full items-center'>
         <div className='flex w-1/4'>最大人数</div>
         <div className='col-span-4 w-full'>
-          <Input className='w-full' value={formData.maxMember} onChange={handler('maxMumber')} />
+          <Input className='w-full' value={formData.maxMember} onChange={handler('maxMember')} />
         </div>
       </div>
       <div className='flex w-full items-center'>

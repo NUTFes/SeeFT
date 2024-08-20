@@ -4,7 +4,8 @@ export const post = async (url: string, data: Task) => {
   const task = data.task;
   const placeID = data.placeID;
   const manual = data.url;
-  const superviserID = data.superviserID;
+  const bureauID = data.bureauID;
+  const maxMember = data.maxMember;
   const color = data.color;
   const remark = data.remark;
   const yearID = data.yearID;
@@ -12,7 +13,8 @@ export const post = async (url: string, data: Task) => {
     '?task=' + task +
     '&place_id=' + placeID +
     '&url=' + manual +
-    '&superviser_id=' + superviserID +
+    '&bureau_id=' + bureauID +
+    '&max_member=' + maxMember +
     '&color=' + color +
     '&remark=' + remark +
     '&year_id=' + yearID;
@@ -32,7 +34,8 @@ export const put = async (url: string, data: Task) => {
   const task = data.task;
   const placeID = data.placeID;
   const manual = data.url;
-  const superviserID = data.superviserID;
+  const bureauID = data.bureauID;
+  const maxMember = data.maxMember;
   const color = data.color;
   const remark = data.remark;
   const yearID = data.yearID;
@@ -40,7 +43,8 @@ export const put = async (url: string, data: Task) => {
     '?task=' + task +
     '&place_id=' + placeID +
     '&url=' + manual +
-    '&superviser_id=' + superviserID +
+    '&bureau_id=' + bureauID +
+    '&max_member=' + maxMember +
     '&color=' + color +
     '&remark=' + remark +
     '&year_id=' + yearID;
