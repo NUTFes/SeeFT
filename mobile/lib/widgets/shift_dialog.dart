@@ -37,6 +37,7 @@ openShiftDialog(
   // var resPresident = res["superviser"];
   // var resPresidentTel = res["TEL"];
 
+  // 現在のシフトのメンバー
   var res = await api.getUsersByShift(
       task["id"].toString(),
       year["id"].toString(),
@@ -53,6 +54,44 @@ openShiftDialog(
     resUsersList.add(res["users"][index]["name"].toString());
   }
   var resUsers = resUsersList.join(",");
+
+  // 1つ前の時間のシフトのメンバー
+  var resBeforeUsers = '';
+  if (time["id"] > 1) {
+    var beforeRes = await api.getUsersByShift(
+        task["id"].toString(),
+        year["id"].toString(),
+        date["id"].toString(),
+        (time["id"] - 1).toString(),
+        weather["id"].toString());
+    List<String> resBeforeUsersList = <String>[];
+    var resBeforeUsersNumber = beforeRes["users"].length;
+    for (var index = 0; index < resBeforeUsersNumber; index++) {
+      resBeforeUsersList.add(beforeRes["users"][index]["name"].toString());
+    }
+    resBeforeUsers = resBeforeUsersList.join(",");
+  } else {
+    resBeforeUsers = 'none';
+  }
+
+  // 1つ後の時間のシフトのメンバー
+  var resAfterUsers = '';
+  if (time["id"] != 96) {
+    var afterRes = await api.getUsersByShift(
+        task["id"].toString(),
+        year["id"].toString(),
+        date["id"].toString(),
+        (time["id"] + 1).toString(),
+        weather["id"].toString());
+    List<String> resAfterUsersList = <String>[];
+    var resAfterUsersNumber = afterRes["users"].length;
+    for (var index = 0; index < resAfterUsersNumber; index++) {
+      resAfterUsersList.add(afterRes["users"][index]["name"].toString());
+    }
+    resAfterUsers = resAfterUsersList.join(",");
+  } else {
+    resAfterUsers = 'none';
+  }
 
   showDialog(
     context: context,
@@ -99,6 +138,16 @@ openShiftDialog(
                     leading: Icon(Icons.group),
                     title: Text("メンバー"),
                     subtitle: Text(resUsers),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.group),
+                    title: Text("前のメンバー"),
+                    subtitle: Text(resBeforeUsers),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.group),
+                    title: Text("次のメンバー"),
+                    subtitle: Text(resAfterUsers),
                   ),
                 ],
               ),

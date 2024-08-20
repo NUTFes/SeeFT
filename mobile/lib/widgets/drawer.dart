@@ -54,14 +54,14 @@ class ApplicationDrawer {
                 context, '/users_page', (Route<dynamic> route) => false)
           },
         ),
-        ListTile(
-          title: Text("タイムスケジュール"),
-          leading: Icon(Icons.schedule),
-          onTap: () => {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/schedule_page', (Route<dynamic> route) => false)
-          },
-        ),
+        // ListTile(
+        //   title: Text("タイムスケジュール"),
+        //   leading: Icon(Icons.schedule),
+        //   onTap: () => {
+        //     Navigator.pushNamedAndRemoveUntil(
+        //         context, '/schedule_page', (Route<dynamic> route) => false)
+        //   },
+        // ),
         ListTile(
           title: Text("本部連絡先"),
           leading: Icon(Icons.contact_phone),
