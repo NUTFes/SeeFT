@@ -178,7 +178,7 @@ VALUES
   ('root','test1@example.com','1','1','1','1','12345678','','shiftroot');
 
 INSERT INTO tasks
-  (task, place_id, url, superviser_id, color, remark, year_id)
+  (task, place_id, url,  bureau_id, max_member, color, remark, year_id)
 VALUES
   ('', 1, '', 1, 'ffffff', '', 43),
   ('NG', 1, '', 1, '949593', '', 43);
