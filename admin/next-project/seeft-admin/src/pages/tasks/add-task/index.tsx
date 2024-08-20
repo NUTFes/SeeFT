@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { get } from '@api/api_methods';
-import { Task, User, Place } from "@type/common";
+import { Task, User, Place, Bureau } from "@type/common";
 import { Input, Select } from '@components/common';
 import { post } from '@api/task';
 import InformationPageLayout from '@components/layout/InformationPageLayout';
@@ -10,24 +10,28 @@ import InformationPageLayout from '@components/layout/InformationPageLayout';
 interface Props {
   users: User[];
   places: Place[];
+  bureaus: Bureau[];
 }
 
 export const getServerSideProps = async () => {
   const getUserURL = process.env.SSR_API_URI + '/users';
   const getPlaceURL = process.env.SSR_API_URI + '/places';
+  const getBureauURL = process.env.SSR_API_URI + '/bureaus';
   const userRes = await get(getUserURL);
   const placeRes = await get(getPlaceURL);
+  const bureauRes = await get(getBureauURL);
 
   return {
     props: {
       users: userRes,
       places: placeRes,
+      bureaus: bureauRes,
     },
   };
 };
 
 export default function Users(props: Props) {
-  const { users, places } = props;
+  const { users, places, bureaus } = props;
   const router = useRouter();
 
   const [formData, setFormData] = useState<Task>({
@@ -35,7 +39,8 @@ export default function Users(props: Props) {
     task: '',
     placeID: 1,
     url: '',
-    superviserID: 1,
+    bureauID: 1,
+    maxMember: 1,
     color: 'fffafa',
     remark: '',
     yearID: 43,
@@ -84,15 +89,21 @@ export default function Users(props: Props) {
         </div>
       </div>
       <div className='flex w-full items-center'>
-        <div className='flex w-1/4'>責任者</div>
+        <div className='flex w-1/4'>担当局</div>
         <div className='col-span-4 w-full'>
-          <Select className='w-full' value={formData.superviserID} onChange={handler('superviserID')}>
-            {users.map((data) => (
+          <Select className='w-full' value={formData.bureauID} onChange={handler('bureauID')}>
+            {bureaus.map((data) => (
               <option key={data.id} value={data.id}>
-                {data.name}
+                {data.bureau}
               </option>
             ))}
           </Select>
+        </div>
+      </div>
+      <div className='flex w-full items-center'>
+        <div className='flex w-1/4'>最大人数</div>
+        <div className='col-span-4 w-full'>
+          <Input className='w-full' value={formData.maxMember} onChange={handler('maxMumber')} />
         </div>
       </div>
       <div className='flex w-full items-center'>

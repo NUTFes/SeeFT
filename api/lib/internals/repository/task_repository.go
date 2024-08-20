@@ -54,13 +54,13 @@ func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error
 
 // 作成
 func (b *taskRepository) Create(c context.Context, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) error {
-	query := "INSERT INTO tasks (task, place_id, url, bureau_id, max_memder, color, remark, year_id) VALUES ('" + name + "', " + placeID + ", '" + url + "', " + bureauID  + "', " + maxMember + ", '" + color + "', '" + remark +"', " + yearID + ")"
+	query := "INSERT INTO tasks (task, place_id, url, bureau_id, max_memder, color, remark, year_id) VALUES ('" + name + "', " + placeID + ", '" + url + "', " + bureauID  + ", " + maxMember + ", '" + color + "', '" + remark +"', " + yearID + ")"
 	return b.crud.UpdateDB(c, query)
 }
 
 // 編集
 func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) error {
-	query := "UPDATE tasks SET (task, place_id, url, bureau_id, max_memder, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + bureauID  + "', " + maxMember + ", '" + color + "', '" + remark +"', " + yearID + ") WHERE id = " + id
+	query := "UPDATE tasks SET (task, place_id, url, bureau_id, max_memder, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + bureauID  + ", " + maxMember + ", '" + color + "', '" + remark +"', " + yearID + ") WHERE id = " + id
 	return b.crud.UpdateDB(c, query)
 }
 
