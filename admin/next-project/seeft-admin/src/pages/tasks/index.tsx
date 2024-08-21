@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useRouter } from 'next/router';
 
 import { get } from '@api/api_methods';
-import { Task, User, Place } from "@type/common";
+import { Task, User, Place, Bureau } from "@type/common";
 import { destroy } from '@api/task';
 import { Button, DeleteButton, EditButton } from '@components/common';
 import ListPageLayout from '@components/layout/ListPageLayout';
@@ -11,27 +11,31 @@ interface Props {
   tasks: Task[];
   users: User[];
   places: Place[];
+  bureaus: Bureau[];
 }
 
 export const getServerSideProps = async () => {
   const getTaskURL = process.env.SSR_API_URI + '/tasks';
   const getUserURL = process.env.SSR_API_URI + '/users';
   const getPlaceURL = process.env.SSR_API_URI + '/places';
+  const getBureauURL = process.env.SSR_API_URI + '/bureaus';
   const taskRes = await get(getTaskURL);
   const userRes = await get(getUserURL);
   const placeRes = await get(getPlaceURL);
+  const bureauRes = await get(getBureauURL);
 
   return {
     props: {
       tasks: taskRes,
       users: userRes,
       places: placeRes,
+      bureaus: bureauRes,
     },
   };
 };
 
 export default function Users(props: Props) {
-  const { tasks, users, places } = props;
+  const { tasks, users, places, bureaus } = props;
   const router = useRouter();
 
   const addTaskPageRouter = () => {
@@ -70,8 +74,11 @@ export default function Users(props: Props) {
               <th className='w-2/12 border border-x-white-0 border-b-accent-1 border-t-white-0 py-3'>
                 <p className='text-center text-sm text-emphasis'>マニュアルURL</p>
               </th>
-              <th className='w-2/12 border border-x-white-0 border-b-accent-1 border-t-white-0 py-3'>
-                <p className='text-center text-sm text-emphasis'>責任者</p>
+              <th className='w-1/12 border border-x-white-0 border-b-accent-1 border-t-white-0 py-3'>
+                <p className='text-center text-sm text-emphasis'>担当局</p>
+              </th>
+              <th className='w-1/12 border border-x-white-0 border-b-accent-1 border-t-white-0 py-3'>
+                <p className='text-center text-sm text-emphasis'>最大人数</p>
               </th>
               <th className='w-1/12 border border-x-white-0 border-b-accent-1 border-t-white-0 py-3'>
                 <p className='text-center text-sm text-emphasis'>カラー</p>
@@ -120,7 +127,16 @@ export default function Users(props: Props) {
                     index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
-                  <p className='text-center text-sm text-emphasis'>{users.length ? users.find((user: User) => (user.id === task.superviserID))?.name : "erorr"}</p>
+                  <p className='text-center text-sm text-emphasis'>{bureaus.length ? bureaus.find((bureau: Bureau) => (bureau.id === task.bureauID))?.bureau : "erorr"}</p>
+                </td>
+                <td
+                  className={clsx(
+                    'px-1 py-2',
+                    index === 0 ? 'pb-3 pt-4' : 'py-3',
+                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                  )}
+                >
+                  <p className='text-center text-sm text-emphasis'>{task.maxMember}</p>
                 </td>
                 <td
                   className={clsx(
