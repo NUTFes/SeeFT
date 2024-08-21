@@ -47,6 +47,8 @@ export default function Users(props: Props) {
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
   const [timeScaleID, setTimeScaleID] = useState(3);
   const [hasDestoryMode, setHasDestoryMode] = useState(false);
+  const [filteredBureau, setFilteredBureau] = useState<number>(0);
+  const [selectedBureau, setSelectedBureau] = useState<number>(0);
 
   const [formData, setFormData] = useState<Shift>({
     id: 0,
@@ -94,6 +96,30 @@ export default function Users(props: Props) {
     (e: React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>) => {
       setFormData({ ...formData, [input]: Number(e.target.value) });
     };
+
+  const bureauHandler = () =>
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedBureau(Number(e.target.value));
+    };
+
+  const filterBureauHandler = () =>
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setFilteredBureau(Number(e.target.value));
+    };
+
+  const filteredTasks = useMemo(() => {
+    return selectedBureau === 0 ? tasks
+      : tasks.filter((task: Task) => (
+        task.bureauID === selectedBureau
+      ));
+  }, [selectedBureau])
+
+  const filteredUsers = useMemo(() => {
+    return filteredBureau === 0 ? users
+      : users.filter((user: User) => (
+        user.bureauID === filteredBureau
+      ))
+  }, [filteredBureau]);
 
   const handleMouseDown = (user: User, time: Time, id: number) => {
     setIsMouseDown(true);
@@ -166,6 +192,16 @@ export default function Users(props: Props) {
       <div className='my-3 border border-accent-1'>
         <div className='w-full flex justify-center items-center gap-6 p-1 '>
           <div className='w-1/6'>
+            <Select className="w-full" value={filteredBureau} onChange={filterBureauHandler()}>
+              <option key={0} value={0}>全局</option>
+              {bureaus.map((data) => (
+                <option key={data.id} value={data.id}>
+                  {data.bureau}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className='w-1/6'>
             <Select className="w-full" value={formData.dateID} onChange={handler('dateID')}>
               {DateItem.map((data) => (
                 <option key={data.id} value={data.id}>
@@ -221,13 +257,13 @@ export default function Users(props: Props) {
               </tr>
             </thead>
             <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
-              {users ? users.map((user: User, index) => (
+              {filteredUsers ? filteredUsers.map((user: User, index) => (
                 <tr key={user.id}>
                   <td
                     className={clsx(
                       'px-1 py-1 bg-surface-2',
                       index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      index === users.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                      index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{bureaus.find((bureau: Bureau) => (bureau.id === user.bureauID))?.bureau}</p>
@@ -236,7 +272,7 @@ export default function Users(props: Props) {
                     className={clsx(
                       'px-1 py-1 bg-surface-2 border-accent-1 ',
                       index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      index === users.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                      index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
                     )}
                   >
                     <p className='text-center text-sm text-emphasis'>{user.name}</p>
@@ -274,20 +310,34 @@ export default function Users(props: Props) {
         </div>
         <div className='pl-4'>
           <div>
-            <p>1. 入力するシフトを選択</p>
+            <p>1. 担当局を選択</p>
             <div className='flex justify-center items-center gap-4 pl-4'>
-              <div className='w-1/3'>シフト検索</div>
-              <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
-                {tasks.map((data) => (
+              <div className='w-1/3'>担当局</div>
+              <Select className='w-full' value={selectedBureau} onChange={bureauHandler()}>
+                <option key={0} value={0}>All</option>
+                {bureaus.map((data) => (
                   <option key={data.id} value={data.id}>
-                    {data.task}
+                    {data.bureau}
                   </option>
                 ))}
               </Select>
             </div>
           </div>
           <div>
-            <p>2. 開始時刻のセルをクリック&ドラッグ</p>
+            <p>2. 入力するシフトを選択</p>
+            <div className='flex justify-center items-center gap-4 pl-4'>
+              <div className='w-1/3'>シフト検索</div>
+              <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
+                {filteredTasks.length > 0 ? filteredTasks.map((data) => (
+                  <option key={data.id} value={data.id}>
+                    {data.task}
+                  </option>
+                )) : <option key={1} value={1}>シフトが見つかりません</option>}
+              </Select>
+            </div>
+          </div>
+          <div>
+            <p>3. 開始時刻のセルをクリック&ドラッグ</p>
           </div>
           <div className='pt-2'>
             <p>* [編集モード]/[削除モード]をクリックで切り替えられます</p>
