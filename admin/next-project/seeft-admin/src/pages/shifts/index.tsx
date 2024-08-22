@@ -115,7 +115,7 @@ export default function Users(props: Props) {
   }, [selectedBureau])
 
   const filteredUsers = useMemo(() => {
-    return filteredBureau === 0 ? users
+    return filteredBureau === 0 ? users.sort((a: User, b: User) => (a.bureauID - b.bureauID))
       : users.filter((user: User) => (
         user.bureauID === filteredBureau
       ))
