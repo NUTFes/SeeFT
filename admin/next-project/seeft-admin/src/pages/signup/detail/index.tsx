@@ -122,7 +122,7 @@ const SignupDetail = (props: Props) => {
     const signUpUrl: string = process.env.CSR_API_URI + '/mail_auth/web_signup';
     // userのpost時のResに登録したデータが返ってこないので以下で用意
     const getRes = await get(userUrl);
-    const userID: number = getRes[getRes.length - 1].id + 1;
+    const userID: number = getRes ? getRes[getRes.length - 1].id + 1 : 1;
     // signIn には登録したuserのIDが必要なので先にUserをpost
     // await post(userUrl, postUserData);
     // signUp

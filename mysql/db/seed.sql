@@ -172,10 +172,10 @@ INSERT INTO places
 VALUES
   ('未定', '本部に指示を聞いてください');
 
-INSERT INTO users
-  (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
-VALUES
-  ('root','test1@example.com','1','1','1','1','12345678','','shiftroot');
+-- INSERT INTO users
+--   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
+-- VALUES
+--   ('root','test1@example.com','1','1','1','1','12345678','','shiftroot');
 
 INSERT INTO tasks
   (task, place_id, url,  bureau_id, max_member, color, remark, year_id)
