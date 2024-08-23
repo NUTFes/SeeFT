@@ -70,7 +70,7 @@ export default function Users(props: Props) {
     <ListPageLayout title='タスク一覧'>
       <div className='items-center'>
         <div className='w-full flex justify-center items-center gap-6 p-1 '>
-          <div className='w-1/6'>
+          <div className='w-1/6 ml-auto'>
             <Select className="w-full" value={filteredBureau} onChange={filterBureauHandler()}>
               <option key={0} value={0}>全局</option>
               {bureaus.map((data) => (
@@ -80,7 +80,7 @@ export default function Users(props: Props) {
               ))}
             </Select>
           </div>
-          <div className='text-right pr-4'>
+          <div className='text-right pr-4 ml-auto'>
             <Button className='bg-surface-2 border-accent-2 text-right text-emphasis pr-4 hover:bg-surface-1' onClick={addTaskPageRouter}>
               タスク追加
             </Button>
