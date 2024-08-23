@@ -345,20 +345,125 @@ export default function Users(props: Props) {
             </div>
           </div>
         </div>
-        <div className='object-bottom w-1/3 border border-accent-1 my-2'>
+        <div className='object-bottom w-2/3 border border-accent-1 my-2'>
           <div>
             シフトの人数
           </div>
           <div className='pl-4'>
             <div>
               <div className='flex justify-center items-center gap-4 pl-4'>
-                <div className='w-2/3'>タスクの最大人数:</div>
+                <div className='w-2/3'>タスクの最大人数</div>
+                <p>:</p>
                 <div className='w-full'>
                   {tasks.find((task: Task) => (task.id === formData.taskID))?.maxMember}人
                 </div>
               </div>
+              <div className='flex justify-center items-center gap-4 pl-4'>
+                <div className='w-2/3'>現在の人数</div>
+                <p>:</p>
+                <div className='w-full'>
+                  8:00のシフトの合計人数: {filteredShifts
+                    .filter((shift: Shift) => (shift.taskID === formData.taskID)) // 選択中のタスクのシフトを抽出
+                    .filter((shift: Shift) => (shift.dateID === formData.dateID)) // 選択中の日付のシフトを抽出
+                    .filter((shift: Shift) => (shift.timeID === formData.dateID * 16 + 2)) // 選択中の時間のシフトを抽出
+                    .length}人, 
+                    
+                  シフトの合計人数: {filteredShifts
+                    .filter((shift: Shift) => (shift.taskID === formData.taskID)) // 選択中のタスクのシフトを抽出
+                    .length}人, 
+                  formData.taskID: {formData.taskID}, 
+                  {timeList.filter(
+                    (time: Time) => (filteredShifts.filter(
+                      (shift: Shift) => (
+                        shift.taskID === formData.taskID)
+                      ).filter(
+                        (shift: Shift) => (
+                          shift.timeID === time.id
+                        )
+                      ).length > 0)
+                    ).length}人, 
+                  time: {timeList ? timeList[0].time : null}, 
+                  {shifts.filter((shift: Shift) => (shift.taskID === formData.taskID)).length}人, 
+                  {shifts
+                    // .filter((shift: Shift) => (shift.taskID === formData.taskID))
+                    .filter((shift: Shift) => (shift.dateID === formData.dateID))
+                    .filter((shift: Shift) => (shift.timeID === 1))
+                    .length}人, 
+                  shifts[0].timeID: {shifts[0].timeID}, 
+                  Date: {formData.dateID}
+                  {/* {shifts.filter((shift: Shift) => (shift.taskID === formData.taskID)).filter((shift: Shift) => (shift.timeID === 0))?.length}人 */}
+                  {/* {shifts.filter((shift: Shift) => (shift.taskID === formData.taskID)).length}人 */}
+                </div>
+              </div>
             </div>
           </div>
+          <div className='max-h-64 px-2 pb-2 overflow-y-auto select-none'>
+          <table className='table-fixed mb-5 w-full border-collapse'>
+            <thead className='sticky top-0 z-10'>
+              <tr>
+                <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
+                  <p className='text-center text-sm text-emphasis'>タスク名</p>
+                </th>
+                <th className='w-2/12 bg-surface-2 border border-accent-1 py-1'>
+                  <p className='text-center text-sm text-emphasis'>最大人数</p>
+                </th>
+                {timeList.map((time: Time, i: number) => (
+                  i % 2 === 0 ?
+                    <th className='w-3/64 bg-surface-2 border border-accent-1 py-1'>
+                      <p className='text-center text-sm text-emphasis'>{time.time + '-'}</p>
+                    </th>
+                    :
+                    <th className='w-3/64 bg-surface-2 border border-accent-1 py-1' />
+                ))}
+              </tr>
+            </thead>
+            <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
+              {tasks ? tasks.map((task: Task, index) => (
+                <tr key={task.id}>
+                  <td
+                    className={clsx(
+                      'px-1 py-1 bg-surface-2',
+                      index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                      index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                    )}
+                  >
+                    <p className='text-center text-sm text-emphasis'>{tasks[index].task}</p>
+                  </td>
+                  <td
+                    className={clsx(
+                      'px-1 py-1 bg-surface-2 border-accent-1 ',
+                      index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                      index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                    )}
+                  >
+                    <p className='text-center text-sm text-emphasis'>{tasks[index].maxMember}</p>
+                  </td>
+                  {timeList.map((time: Time, i: number) => {
+                    // const shift = filteredShifts.find((shift: Shift) => (shift.userID === shift.id && shift.timeID === time.id));
+                    // const task = shift ? tasks.find(task => task.id === shift.taskID) : null;
+                    // const backgroundColor = task ? `#${task.color}` : '#ffffff';
+
+                    return (
+                      <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
+                        style={{
+                          // background: (backgroundColor)
+                        }}
+                      >
+                        {filteredShifts
+                          .filter((shift: Shift) => (shift.taskID === task.id))
+                          .filter((shift: Shift) => (shift.dateID === formData.dateID))
+                          .filter((shift: Shift) => (shift.timeID === formData.dateID * 16 + i + 1))
+                          .length}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )) :
+                'ユーザーが登録されていません'
+              }
+            </tbody>
+          </table>
+        </div>
         </div>
       </div>
     </ListPageLayout >
