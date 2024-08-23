@@ -304,43 +304,60 @@ export default function Users(props: Props) {
           </table>
         </div>
       </div>
-      <div className='object-bottom w-1/3 border border-accent-1 my-2'>
-        <div>
-          シフトの編集方法
+      <div className='flex gap-4'>
+        <div className='object-bottom w-1/3 border border-accent-1 my-2'>
+          <div>
+            シフトの編集方法
+          </div>
+          <div className='pl-4'>
+            <div>
+              <p>1. 担当局を選択</p>
+              <div className='flex justify-center items-center gap-4 pl-4'>
+                <div className='w-1/3'>担当局</div>
+                <Select className='w-full' value={selectedBureau} onChange={bureauHandler()}>
+                  <option key={0} value={0}>All</option>
+                  {bureaus.map((data) => (
+                    <option key={data.id} value={data.id}>
+                      {data.bureau}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+            <div>
+              <p>2. 入力するシフトを選択</p>
+              <div className='flex justify-center items-center gap-4 pl-4'>
+                <div className='w-1/3'>シフト検索</div>
+                <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
+                  {filteredTasks.length > 0 ? filteredTasks.map((data) => (
+                    <option key={data.id} value={data.id}>
+                      {data.task}
+                    </option>
+                  )) : <option key={1} value={1}>シフトが見つかりません</option>}
+                </Select>
+              </div>
+            </div>
+            <div>
+              <p>3. 開始時刻のセルをクリック&ドラッグ</p>
+            </div>
+            <div className='pt-2'>
+              <p>* [編集モード]/[削除モード]をクリックで切り替えられます</p>
+            </div>
+          </div>
         </div>
-        <div className='pl-4'>
+        <div className='object-bottom w-1/3 border border-accent-1 my-2'>
           <div>
-            <p>1. 担当局を選択</p>
-            <div className='flex justify-center items-center gap-4 pl-4'>
-              <div className='w-1/3'>担当局</div>
-              <Select className='w-full' value={selectedBureau} onChange={bureauHandler()}>
-                <option key={0} value={0}>All</option>
-                {bureaus.map((data) => (
-                  <option key={data.id} value={data.id}>
-                    {data.bureau}
-                  </option>
-                ))}
-              </Select>
+            シフトの人数
+          </div>
+          <div className='pl-4'>
+            <div>
+              <div className='flex justify-center items-center gap-4 pl-4'>
+                <div className='w-2/3'>タスクの最大人数:</div>
+                <div className='w-full'>
+                  {tasks.find((task: Task) => (task.id === formData.taskID))?.maxMember}人
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <p>2. 入力するシフトを選択</p>
-            <div className='flex justify-center items-center gap-4 pl-4'>
-              <div className='w-1/3'>シフト検索</div>
-              <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
-                {filteredTasks.length > 0 ? filteredTasks.map((data) => (
-                  <option key={data.id} value={data.id}>
-                    {data.task}
-                  </option>
-                )) : <option key={1} value={1}>シフトが見つかりません</option>}
-              </Select>
-            </div>
-          </div>
-          <div>
-            <p>3. 開始時刻のセルをクリック&ドラッグ</p>
-          </div>
-          <div className='pt-2'>
-            <p>* [編集モード]/[削除モード]をクリックで切り替えられます</p>
           </div>
         </div>
       </div>
