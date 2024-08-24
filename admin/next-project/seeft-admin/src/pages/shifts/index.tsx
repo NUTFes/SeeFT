@@ -13,9 +13,6 @@ import { DateItem } from '@constants/dateItem';
 import { FaChevronRight } from "react-icons/fa";
 import { FaChevronLeft } from "react-icons/fa";
 import ReactSelect from 'react-select';
-import makeAnimated from 'react-select/animated';
-import { GroupBase } from 'react-select';
-import { set } from 'react-hook-form';
 
 interface Props {
   shifts: Shift[];
@@ -191,16 +188,15 @@ export default function Users(props: Props) {
     )));
   }, [formData['yearID'], formData['dateID'], formData['weatherID'], shifts]);
   
-  // selectedOptionsをtask型にしたらいい感じにできそう
-  const formattedOptions = tasks.map((task: Task) => ({
+  const formattedTasks = tasks.map((task: Task) => ({
     value: task.id,
     label: task.task
   }));
-  const [selectedOptions, setSelectedOptions] = useState(
-    formattedOptions
+  const [selectedTasks, setSelectedTasks] = useState(
+    formattedTasks
   );
-  const selectedOptionsHandler = (selectedOptions: any) => {
-    setSelectedOptions(selectedOptions);
+  const selectedTasksHandler = (selectedTasks: any) => {
+    setSelectedTasks(selectedTasks.sort((a: any, b: any) => a.value - b.value));
   }
 
   return (
@@ -365,21 +361,15 @@ export default function Users(props: Props) {
           <div>
             シフトの現在の人数
           </div>
-          {selectedOptions.length > 0?
-            selectedOptions.map((data) => (
-              <p>{data.label}</p>
-            )) : null
-          }
           <div className='flex justify-center items-center gap-4 pl-4'>
             <div className='w-1/3'>表示するシフトを選択</div>
             <ReactSelect className='w-full z-20'
               closeMenuOnSelect={false}
-              // components={makeAnimated()}
-              value={selectedOptions}
-              defaultValue={formattedOptions}
+              value={selectedTasks}
+              defaultValue={formattedTasks}
               isMulti
-              options={formattedOptions}
-              onChange={selectedOptionsHandler}
+              options={formattedTasks}
+              onChange={selectedTasksHandler}
             />
           </div>
           <div className='max-h-64 px-2 pb-2 overflow-y-auto select-none'>
@@ -404,7 +394,7 @@ export default function Users(props: Props) {
               </thead>
               <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
                 {tasks ? tasks
-                  .filter((task: Task) => (task.id === selectedOptions.find((option) => option.label === task.task)?.value))
+                  .filter((task: Task) => (task.id === selectedTasks.find((option) => option.label === task.task)?.value))
                   .sort((a: Task, b: Task) => (a.id - b.id))
                   .map((task: Task, index) => (
                   
@@ -416,7 +406,7 @@ export default function Users(props: Props) {
                         index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
                       )}
                     >
-                      <p className='text-center text-sm text-emphasis'>{selectedOptions[index].label}</p>
+                      <p className='text-center text-sm text-emphasis'>{selectedTasks[index].label}</p>
                     </td>
                     <td
                       className={clsx(
@@ -436,7 +426,6 @@ export default function Users(props: Props) {
                       const excessMemberColor = '#ffaaaa';
                       const shortageMemberColor = '#aaccff';
                       const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
-
                       return (
                         <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
                           style={{background: (backgroundColor)}}
