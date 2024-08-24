@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { use, useEffect, useMemo, useState } from 'react';
 
 import { get } from '@api/api_methods';
 import { User, Task, Bureau, Time, Shift, Weather, Date } from "@type/common";
@@ -188,13 +188,20 @@ export default function Users(props: Props) {
     )));
   }, [formData['yearID'], formData['dateID'], formData['weatherID'], shifts]);
   
-  const formattedTasks = tasks.map((task: Task) => ({
-    value: task.id,
-    label: task.task
-  }));
+  // タスクをマルチセレクタで扱えるように変換
+  const formattedTasks = useMemo(() => { 
+    return filteredTasks.map((task: Task) => ({
+      value: task.id,
+      label: task.task
+    }))}, [filteredTasks, selectedBureau]);
+  // セレクトされたタスクをstateで管理
   const [selectedTasks, setSelectedTasks] = useState(
     formattedTasks
   );
+  useEffect(() => {
+    setSelectedTasks(formattedTasks);
+  }, [formattedTasks]);
+  // タスクの選択状態を更新する関数
   const selectedTasksHandler = (selectedTasks: any) => {
     setSelectedTasks(selectedTasks.sort((a: any, b: any) => a.value - b.value));
   }
@@ -379,7 +386,7 @@ export default function Users(props: Props) {
                   <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
                     <p className='text-center text-sm text-emphasis'>タスク名</p>
                   </th>
-                  <th className='w-2/12 bg-surface-2 border border-accent-1 py-1'>
+                  <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
                     <p className='text-center text-sm text-emphasis'>最大人数</p>
                   </th>
                   {timeList.map((time: Time, i: number) => (
