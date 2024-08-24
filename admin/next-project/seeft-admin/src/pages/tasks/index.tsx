@@ -4,8 +4,9 @@ import { useRouter } from 'next/router';
 import { get } from '@api/api_methods';
 import { Task, User, Place, Bureau } from "@type/common";
 import { destroy } from '@api/task';
-import { Button, DeleteButton, EditButton } from '@components/common';
+import { Button, DeleteButton, EditButton, Select } from '@components/common';
 import ListPageLayout from '@components/layout/ListPageLayout';
+import { useMemo, useState } from 'react';
 
 interface Props {
   tasks: Task[];
@@ -36,6 +37,7 @@ export const getServerSideProps = async () => {
 
 export default function Users(props: Props) {
   const { tasks, users, places, bureaus } = props;
+  const [filteredBureau, setFilteredBureau] = useState<number>(0);
   const router = useRouter();
 
   const addTaskPageRouter = () => {
@@ -51,14 +53,38 @@ export default function Users(props: Props) {
     await destroy(destroyTaskInformationUrl, data);
     router.reload();
   };
+  
+  const filterBureauHandler = () =>
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setFilteredBureau(Number(e.target.value));
+    };
+
+  const filteredTasks = useMemo(() => {
+    return filteredBureau === 0 ? tasks.sort((a: Task, b: Task) => a.bureauID - b.bureauID)
+      : tasks.filter((task: Task) => (
+        task.bureauID === filteredBureau
+      ))
+  }, [filteredBureau]);
 
   return (
     <ListPageLayout title='タスク一覧'>
       <div className='items-center'>
-        <div className='text-right pr-4'>
-          <Button className='bg-surface-2 border-accent-2 text-right text-emphasis pr-4 hover:bg-surface-1' onClick={addTaskPageRouter}>
-            タスク追加
-          </Button>
+        <div className='w-full flex justify-center items-center gap-6 p-1 '>
+          <div className='w-1/6 ml-auto'>
+            <Select className="w-full" value={filteredBureau} onChange={filterBureauHandler()}>
+              <option key={0} value={0}>全局</option>
+              {bureaus.map((data) => (
+                <option key={data.id} value={data.id}>
+                  {data.bureau}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className='text-right pr-4 ml-auto'>
+            <Button className='bg-surface-2 border-accent-2 text-right text-emphasis pr-4 hover:bg-surface-1' onClick={addTaskPageRouter}>
+              タスク追加
+            </Button>
+          </div>
         </div>
       </div>
       <div className='p-5'>
@@ -91,13 +117,13 @@ export default function Users(props: Props) {
             </tr>
           </thead>
           <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
-            {tasks ? tasks.map((task: Task, index) => (
+            {filteredTasks ? filteredTasks.map((task: Task, index) => (
               <tr key={task.id}>
                 <td
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === filteredTasks.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <p className='text-center text-sm text-emphasis'>{task.task}</p>
@@ -106,7 +132,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === filteredTasks.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <p className='text-center text-sm text-emphasis'>{places.find((place: Place) => { place.id === task.placeID })?.place}</p>
@@ -115,7 +141,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === filteredTasks.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <p className='text-center text-sm text-emphasis'>{task.url}</p>
@@ -124,7 +150,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === filteredTasks.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <p className='text-center text-sm text-emphasis'>{bureaus.length ? bureaus.find((bureau: Bureau) => (bureau.id === task.bureauID))?.bureau : "erorr"}</p>
@@ -133,7 +159,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === filteredTasks.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <p className='text-center text-sm text-emphasis'>{task.maxMember}</p>
@@ -142,7 +168,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === filteredTasks.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <div
