@@ -12,6 +12,10 @@ import { YearItem } from '@constants/yearItem';
 import { DateItem } from '@constants/dateItem';
 import { FaChevronRight } from "react-icons/fa";
 import { FaChevronLeft } from "react-icons/fa";
+import ReactSelect from 'react-select';
+import makeAnimated from 'react-select/animated';
+import { GroupBase } from 'react-select';
+import { set } from 'react-hook-form';
 
 interface Props {
   shifts: Shift[];
@@ -186,6 +190,18 @@ export default function Users(props: Props) {
       && shift.weatherID === formData['weatherID']
     )));
   }, [formData['yearID'], formData['dateID'], formData['weatherID'], shifts]);
+  
+  // selectedOptionsをtask型にしたらいい感じにできそう
+  const formattedOptions = tasks.map((task: Task) => ({
+    value: task.id,
+    label: task.task
+  }));
+  const [selectedOptions, setSelectedOptions] = useState(
+    formattedOptions
+  );
+  const selectedOptionsHandler = (selectedOptions: any) => {
+    setSelectedOptions(selectedOptions);
+  }
 
   return (
     <ListPageLayout title='シフト一覧'>
@@ -349,6 +365,23 @@ export default function Users(props: Props) {
           <div>
             シフトの現在の人数
           </div>
+          {selectedOptions.length > 0?
+            selectedOptions.map((data) => (
+              <p>{data.label}</p>
+            )) : null
+          }
+          <div className='flex justify-center items-center gap-4 pl-4'>
+            <div className='w-1/3'>表示するシフトを選択</div>
+            <ReactSelect className='w-full z-20'
+              closeMenuOnSelect={false}
+              // components={makeAnimated()}
+              value={selectedOptions}
+              defaultValue={formattedOptions}
+              isMulti
+              options={formattedOptions}
+              onChange={selectedOptionsHandler}
+            />
+          </div>
           <div className='max-h-64 px-2 pb-2 overflow-y-auto select-none'>
             <table className='table-fixed mb-5 w-full border-collapse'>
               <thead className='sticky top-0 z-10'>
@@ -370,7 +403,11 @@ export default function Users(props: Props) {
                 </tr>
               </thead>
               <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
-                {tasks ? tasks.map((task: Task, index) => (
+                {tasks ? tasks
+                  .filter((task: Task) => (task.id === selectedOptions.find((option) => option.label === task.task)?.value))
+                  .sort((a: Task, b: Task) => (a.id - b.id))
+                  .map((task: Task, index) => (
+                  
                   <tr key={task.id}>
                     <td
                       className={clsx(
@@ -379,7 +416,7 @@ export default function Users(props: Props) {
                         index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
                       )}
                     >
-                      <p className='text-center text-sm text-emphasis'>{tasks[index].task}</p>
+                      <p className='text-center text-sm text-emphasis'>{selectedOptions[index].label}</p>
                     </td>
                     <td
                       className={clsx(
@@ -409,7 +446,10 @@ export default function Users(props: Props) {
                       );
                     })}
                   </tr>
-                )) :
+                )
+                
+                )
+                 :
                   'ユーザーが登録されていません'
                 }
               </tbody>
