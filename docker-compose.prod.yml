@@ -28,7 +28,9 @@ services:
 
   admin:
     container_name: "nutfes-seeft-admin"
-    build: ./admin
+    build: 
+      context: ./admin
+      dockerfile: prod.Dockerfile
     volumes:
       - ./admin:/app
     command: sh -c "npm install && npm run dev"
