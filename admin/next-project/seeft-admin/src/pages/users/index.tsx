@@ -62,7 +62,7 @@ export default function Users(props: Props) {
     };
 
   const filteredUsers = useMemo(() => {
-    return filteredBureau === 0 ? users.sort((a: User, b: User) => a.bureauID - b.bureauID)
+    return filteredBureau === 0 ? users?.sort((a: User, b: User) => a.bureauID - b.bureauID)
       : users.filter((user: User) => (
         user.bureauID === filteredBureau
       ))
@@ -195,7 +195,10 @@ export default function Users(props: Props) {
                   </DeleteButton>
                 </td>
               </tr>
-            )) : null}
+            )) : 
+            <tr>
+              <td colSpan={8} className='text-center text-emphasis py-3'>ユーザーが存在しません</td>
+            </tr>}
           </tbody>
         </table>
       </div>

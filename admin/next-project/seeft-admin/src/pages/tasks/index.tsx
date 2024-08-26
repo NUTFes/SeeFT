@@ -60,8 +60,8 @@ export default function Users(props: Props) {
     };
 
   const filteredTasks = useMemo(() => {
-    return filteredBureau === 0 ? tasks.sort((a: Task, b: Task) => a.bureauID - b.bureauID)
-      : tasks.filter((task: Task) => (
+    return filteredBureau === 0 ? tasks?.sort((a: Task, b: Task) => a.bureauID - b.bureauID)
+      : tasks?.filter((task: Task) => (
         task.bureauID === filteredBureau
       ))
   }, [filteredBureau]);
@@ -180,7 +180,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === users?.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <p className='text-center text-sm text-emphasis'>{task.remark}</p>
@@ -189,7 +189,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === users?.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <EditButton onClick={() => { taskDetailPageRouter(task) }}>
@@ -200,7 +200,7 @@ export default function Users(props: Props) {
                   className={clsx(
                     'px-1 py-2',
                     index === 0 ? 'pb-3 pt-4' : 'py-3',
-                    index === users.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
+                    index === users?.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
                   <DeleteButton onClick={() => { destroyTaskInformation(task) }} >
@@ -208,7 +208,10 @@ export default function Users(props: Props) {
                   </DeleteButton>
                 </td>
               </tr>
-            )) : null}
+            )) : 
+              <tr>
+                <td colSpan={9} className='text-center text-emphasis py-3'>データがありません</td>
+              </tr>}
           </tbody>
         </table>
       </div>
