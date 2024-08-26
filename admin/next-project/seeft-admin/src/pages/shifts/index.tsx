@@ -61,9 +61,6 @@ export default function Users(props: Props) {
     weatherID: 1,
     isAttendance: false
   });
-  useEffect(() => {
-    setFormData({ ...formData, taskID: tasks.find(task => task.bureauID === selectedBureau)?.id || tasks[0].id });
-  }, [[filteredBureau]]);
 
   // シフトの追加API(DBの仕様上使用していない)
   const addShiftInformation = async (data: Shift, user: User, time: Time) => {
@@ -104,6 +101,7 @@ export default function Users(props: Props) {
   const bureauHandler = () =>
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedBureau(Number(e.target.value));
+      setFormData({ ...formData, taskID: tasks.find(task => task.bureauID === Number(e.target.value))?.id || tasks[0].id });
     };
 
   const filterBureauHandler = () =>
@@ -199,10 +197,10 @@ export default function Users(props: Props) {
     }))}, [filteredTasks, selectedBureau]);
   // セレクトされたタスクをstateで管理
   const [selectedTasks, setSelectedTasks] = useState(
-    formattedTasks
+    formattedTasks.filter((task: any) => task.label === '全て')
   );
   useEffect(() => {
-    setSelectedTasks(formattedTasks);
+    setSelectedTasks(formattedTasks.filter((task: any) => task.label === '全て'));
   }, [formattedTasks]);
   // タスクの選択状態を更新する関数
   const selectedTasksHandler = (selectedTasks: any) => {
@@ -374,9 +372,9 @@ export default function Users(props: Props) {
           <div className='flex justify-center items-center gap-4 pl-4'>
             <div className='w-1/3'>表示するシフトを選択</div>
             <ReactSelect className='w-full z-20'
-              closeMenuOnSelect={false}
+              closeMenuOnSelect={true}
               value={selectedTasks}
-              defaultValue={formattedTasks}
+              // defaultValue={null}
               isMulti
               options={formattedTasks}
               isSearchable
@@ -401,6 +399,12 @@ export default function Users(props: Props) {
                   ...provided,
                   maxHeight: (selectedTasks.length) < 5 ? '150px' : '200px',
                 }),
+                // 選択されたoptionの高さを指定
+                  control: (provided) => ({
+                    ...provided,
+                    maxHeight: '80px',
+                    overflowY: 'auto',
+                  }),
                 option: (provided, state) => ({
                   ...provided,
                   minHeight: '40px',
