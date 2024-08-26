@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 	"os"
 )
 
@@ -18,10 +18,10 @@ type Client interface {
 }
 
 func ConnectMySQL() (client, error) {
-	err := godotenv.Load("env/dev.env")
-	if err != nil {
-		fmt.Println(err)
-	}
+	// err := godotenv.Load("env/dev.env")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 	dbUser := os.Getenv("NUTMEG_DB_USER")
 	dbPassword := os.Getenv("NUTMEG_DB_PASSWORD")
 	dbHost := os.Getenv("NUTMEG_DB_HOST")

@@ -10,7 +10,6 @@ mac-up:
 prod-up:
 	docker compose -f docker-compose.prod.yml up -d
 
-
 .PHONY: up-db
 up-db:
 	docker compose up db
