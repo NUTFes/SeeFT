@@ -74,23 +74,6 @@ prod-seed:
 	docker compose -f docker-compose.prod.yml run --rm api go mod tidy
 	docker compose -f docker-compose.prod.yml run --rm api go run /app/seeds/seeds.go
 
-prod-seed-db:
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Bureaus.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Departments.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Grades.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Place.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Roles.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Times.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Weathers.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create1Years.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create2Dates.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create2Users.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create3Permissions.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create3Session.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create3Tasks.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/create4Shifts.sql
-	PGPASSWORD='gidaifes' psql -h 153.120.62.250 -U seeft -d seeft_db -f ./mysql/db/seed.sql
-
 .PHONY: mac seed
 mac-seed:
 	docker compose -f docker-compose.mac.yml run --rm api go mod tidy
