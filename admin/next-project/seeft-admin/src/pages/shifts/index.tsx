@@ -376,6 +376,39 @@ export default function Users(props: Props) {
               defaultValue={formattedTasks}
               isMulti
               options={formattedTasks}
+              isSearchable
+              noOptionsMessage={() => 'シフトが見つかりません'}
+              placeholder='シフトを選択'
+              styles={{
+                multiValueLabel: (provided) => ({
+                    ...provided,
+                    minWidth: '40px',  // 各選択されたoptionのラベルの最小幅を指定
+                    maxWidth: '40px', // 各選択されたoptionのラベルの最大幅を指定
+                    minHeight: '26.4px', // 各選択されたoptionのラベルの最小高さを指定
+                    overflow: 'hidden', // 幅を超えた場合の処理
+                    textOverflow: 'ellipsis',  // 溢れたテキストに省略記号を追加
+                    whiteSpace: 'nowrap', // テキストを折り返さないように設定
+                  }),
+                menu: (provided) => ({
+                  ...provided,
+                  overflowY: 'auto',
+                }),
+                // ドロップダウンの高さを指定
+                menuList: (provided) => ({
+                  ...provided,
+                  maxHeight: (selectedTasks.length)* 28.2 + 150,
+                }),
+                option: (provided, state) => ({
+                  ...provided,
+                  minHeight: '40px',
+                  color: state.isSelected ? 'white' : 'black',
+                  backgroundColor: state.isSelected ? '#3182ce' : 'white',
+                  '&:hover': {
+                    backgroundColor: '#3182ce',
+                    color: 'white',
+                  },
+                }),
+              }}
               onChange={selectedTasksHandler}
             />
           </div>
