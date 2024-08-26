@@ -396,7 +396,7 @@ export default function Users(props: Props) {
                 // ドロップダウンの高さを指定
                 menuList: (provided) => ({
                   ...provided,
-                  maxHeight: (selectedTasks.length)* 28.2 + 150,
+                  maxHeight: (selectedTasks.length) < 5 ? '150px' : '200px',
                 }),
                 option: (provided, state) => ({
                   ...provided,
@@ -437,7 +437,6 @@ export default function Users(props: Props) {
                   .filter((task: Task) => (task.id === selectedTasks.find((option) => option.label === task.task)?.value))
                   .sort((a: Task, b: Task) => (a.id - b.id))
                   .map((task: Task, index) => (
-                  
                   <tr key={task.id}>
                     <td
                       className={clsx(
@@ -446,7 +445,7 @@ export default function Users(props: Props) {
                         index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
                       )}
                     >
-                      <p className='text-center text-sm text-emphasis'>{selectedTasks[index].label}</p>
+                      <p className='text-center text-sm text-emphasis truncate'>{selectedTasks[index].label}</p>
                     </td>
                     <td
                       className={clsx(
