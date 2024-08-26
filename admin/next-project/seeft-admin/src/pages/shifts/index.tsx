@@ -61,6 +61,9 @@ export default function Users(props: Props) {
     weatherID: 1,
     isAttendance: false
   });
+  useEffect(() => {
+    setFormData({ ...formData, taskID: tasks.find(task => task.bureauID === selectedBureau)?.id || tasks[0].id });
+  }, [[filteredBureau]]);
 
   // シフトの追加API(DBの仕様上使用していない)
   const addShiftInformation = async (data: Shift, user: User, time: Time) => {
