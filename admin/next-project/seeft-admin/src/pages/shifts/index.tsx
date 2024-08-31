@@ -53,7 +53,7 @@ export default function Users(props: Props) {
 
   const [formData, setFormData] = useState<Shift>({
     id: 0,
-    taskID: tasks[0].id,
+    taskID: tasks ? tasks[0].id : 1,
     userID: 0,
     yearID: YearItem[YearItem.length - 1].id,
     dateID: 2,
@@ -188,13 +188,14 @@ export default function Users(props: Props) {
       && shift.weatherID === formData['weatherID']
     )));
   }, [formData['yearID'], formData['dateID'], formData['weatherID'], shifts]);
-  
+
   // タスクをマルチセレクタで扱えるように変換
-  const formattedTasks = useMemo(() => { 
-    return filteredTasks.map((task: Task) => ({
+  const formattedTasks = useMemo(() => {
+    return filteredTasks ? filteredTasks.map((task: Task) => ({
       value: task.id,
       label: task.task
-    }))}, [filteredTasks, selectedBureau]);
+    })) : [];
+  }, [filteredTasks, selectedBureau]);
   // セレクトされたタスクをstateで管理
   const [selectedTasks, setSelectedTasks] = useState(
     formattedTasks.filter((task: any) => task.label === '全て')
@@ -297,7 +298,7 @@ export default function Users(props: Props) {
                   >
                     <p className='text-center text-sm text-emphasis'>{user.name}</p>
                   </td>
-                  {timeList.map((time: Time, i: number) => {
+                  {filteredShifts ? timeList.map((time: Time, i: number) => {
                     const shift = filteredShifts.find((shift: Shift) => (shift.userID === user.id && shift.timeID === time.id));
                     const task = shift ? tasks.find(task => task.id === shift.taskID) : null;
                     const backgroundColor = task ? `#${task.color}` : '#ffffff';
@@ -315,7 +316,23 @@ export default function Users(props: Props) {
                           : null}
                       </td>
                     );
-                  })}
+                  }) : timeList.map((time: Time, i: number) => {
+                    const backgroundColor = '#ffffff';
+
+                    return (
+                      <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
+                        style={{
+                          background: (backgroundColor)
+                        }}
+                        onMouseDown={() => handleMouseDown(user, time, 0)}
+                        onMouseUp={handleMouseUp}
+                        onMouseEnter={() => handleMouseEnter(user, time, 0)}
+                      >
+                        {null}
+                      </td>
+                    )
+                  })
+                  }
                 </tr>
               )) :
                 'ユーザーが登録されていません'
@@ -349,7 +366,7 @@ export default function Users(props: Props) {
               <div className='flex justify-center items-center gap-4 pl-4'>
                 <div className='w-1/3'>シフト検索</div>
                 <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
-                  {filteredTasks.length > 0 ? filteredTasks.map((data) => (
+                  {filteredTasks ? filteredTasks.map((data) => (
                     <option key={data.id} value={data.id}>
                       {data.task}
                     </option>
@@ -382,14 +399,14 @@ export default function Users(props: Props) {
               placeholder='シフトを選択'
               styles={{
                 multiValueLabel: (provided) => ({
-                    ...provided,
-                    minWidth: '40px',  // 各選択されたoptionのラベルの最小幅を指定
-                    maxWidth: '40px', // 各選択されたoptionのラベルの最大幅を指定
-                    minHeight: '26.4px', // 各選択されたoptionのラベルの最小高さを指定
-                    overflow: 'hidden', // 幅を超えた場合の処理
-                    textOverflow: 'ellipsis',  // 溢れたテキストに省略記号を追加
-                    whiteSpace: 'nowrap', // テキストを折り返さないように設定
-                  }),
+                  ...provided,
+                  minWidth: '40px',  // 各選択されたoptionのラベルの最小幅を指定
+                  maxWidth: '40px', // 各選択されたoptionのラベルの最大幅を指定
+                  minHeight: '26.4px', // 各選択されたoptionのラベルの最小高さを指定
+                  overflow: 'hidden', // 幅を超えた場合の処理
+                  textOverflow: 'ellipsis',  // 溢れたテキストに省略記号を追加
+                  whiteSpace: 'nowrap', // テキストを折り返さないように設定
+                }),
                 menu: (provided) => ({
                   ...provided,
                   overflowY: 'auto',
@@ -400,11 +417,11 @@ export default function Users(props: Props) {
                   maxHeight: (selectedTasks.length) < 5 ? '150px' : '200px',
                 }),
                 // 選択されたoptionの高さを指定
-                  control: (provided) => ({
-                    ...provided,
-                    maxHeight: '80px',
-                    overflowY: 'auto',
-                  }),
+                control: (provided) => ({
+                  ...provided,
+                  maxHeight: '80px',
+                  overflowY: 'auto',
+                }),
                 option: (provided, state) => ({
                   ...provided,
                   minHeight: '40px',
@@ -444,47 +461,47 @@ export default function Users(props: Props) {
                   .filter((task: Task) => (task.id === selectedTasks.find((option) => option.label === task.task)?.value))
                   .sort((a: Task, b: Task) => (a.id - b.id))
                   .map((task: Task, index) => (
-                  <tr key={task.id}>
-                    <td
-                      className={clsx(
-                        'px-1 py-1 bg-surface-2',
-                        index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                        index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      )}
-                    >
-                      <p className='text-center text-sm text-emphasis truncate'>{selectedTasks[index].label}</p>
-                    </td>
-                    <td
-                      className={clsx(
-                        'px-1 py-1 bg-surface-2 border-accent-1 ',
-                        index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                        index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      )}
-                    >
-                      <p className='text-center text-sm text-emphasis'>{tasks[index].maxMember}</p>
-                    </td>
-                    {timeList.map((time: Time, i: number) => {
-                      const currentMemberCount = filteredShifts
-                            .filter((shift: Shift) => (shift.taskID === task.id))
-                            .filter((shift: Shift) => (shift.dateID === formData.dateID))
-                            .filter((shift: Shift) => (shift.timeID === time.id))
-                            .length
-                      const excessMemberColor = '#ffaaaa';
-                      const shortageMemberColor = '#aaccff';
-                      const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
-                      return (
-                        <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
-                          style={{background: (backgroundColor)}}
-                        >
-                          {currentMemberCount}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                )
-                
-                )
-                 :
+                    <tr key={task.id}>
+                      <td
+                        className={clsx(
+                          'px-1 py-1 bg-surface-2',
+                          index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                          index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                        )}
+                      >
+                        <p className='text-center text-sm text-emphasis truncate'>{selectedTasks[index].label}</p>
+                      </td>
+                      <td
+                        className={clsx(
+                          'px-1 py-1 bg-surface-2 border-accent-1 ',
+                          index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                          index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                        )}
+                      >
+                        <p className='text-center text-sm text-emphasis'>{tasks[index].maxMember}</p>
+                      </td>
+                      {timeList.map((time: Time, i: number) => {
+                        const currentMemberCount = filteredShifts
+                          .filter((shift: Shift) => (shift.taskID === task.id))
+                          .filter((shift: Shift) => (shift.dateID === formData.dateID))
+                          .filter((shift: Shift) => (shift.timeID === time.id))
+                          .length
+                        const excessMemberColor = '#ffaaaa';
+                        const shortageMemberColor = '#aaccff';
+                        const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
+                        return (
+                          <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
+                            style={{ background: (backgroundColor) }}
+                          >
+                            {currentMemberCount}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )
+
+                  )
+                  :
                   'ユーザーが登録されていません'
                 }
               </tbody>
@@ -492,11 +509,11 @@ export default function Users(props: Props) {
           </div>
           <div className='flex justify-center items-center gap-10 my-4'>
             <div className='flex ml-auto '>
-              <div  style={{width: 24, height: 24, background: '#aaccff'}}></div>
+              <div style={{ width: 24, height: 24, background: '#aaccff' }}></div>
               <p>: 人数不足</p>
             </div>
             <div className='flex mr-6'>
-              <div style={{width: 24, height: 24, background: '#ffaaaa'}}></div>
+              <div style={{ width: 24, height: 24, background: '#ffaaaa' }}></div>
               <p>: 人数超過</p>
             </div>
           </div>
