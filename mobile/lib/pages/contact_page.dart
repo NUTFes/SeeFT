@@ -41,13 +41,13 @@ class _ContactPageState extends State<ContactPage> {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  "委員長　市之瀬拓実",
+                  "委員長　高橋創真",
                   textAlign: TextAlign.center,
                 ),
                 TextButton(
                   onPressed: _openPhoneApp,
                   child: Text(
-                    "070-4389-9374\n",
+                    "090-9238-7275\n",
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -62,13 +62,13 @@ class _ContactPageState extends State<ContactPage> {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  "情報局長　原田典",
+                  "情報局長　若月耕紀",
                   textAlign: TextAlign.center,
                 ),
                 TextButton(
                   onPressed: _openMailApp,
                   child: Text(
-                    "22.t.harata.nutfes@gmail.com\n",
+                    "23.k.wakatsuki.nutfes@gmail.com\\n",
                     textAlign: TextAlign.center,
                   ),
                 ),
