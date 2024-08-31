@@ -35,7 +35,7 @@ services:
       - ./admin:/app
     command: sh -c "npm install && npm run dev"
     ports:
-      - "3000:3000"
+      - "5000:3000"
     environment:
       NEXT_PUBLIC_APP_ENV: "production"
     stdin_open: true

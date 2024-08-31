@@ -29,7 +29,7 @@ class ApplicationDrawer {
           leading: Icon(Icons.dynamic_feed),
           onTap: () async {
             var url =
-                "https://docs.google.com/spreadsheets/d/1fd4v6UF3V08OTQXKnGk9wxvjTRp1lLxBZzdBM2Uf2v4#gid=1709999697";
+                "https://docs.google.com/spreadsheets/d/1KVBNRupRBFeL6Ixn9IUXzbM0wr29bpFfuaOsOeaxUQ0/edit?gid=1158066929#gid=1158066929";
             if (await canLaunch(url)) {
               await launch(url);
             } else {
