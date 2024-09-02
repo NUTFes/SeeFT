@@ -30,7 +30,7 @@ type ShiftUseCase interface {
   CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
   UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
   DeleteShiftAdmin(context.Context, string) error
-	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.Shift, error)
+	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.ShiftAdmin, error)
 }
 
 func NewShiftUseCase(
@@ -647,10 +647,9 @@ func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
 	return err
 }
 
-func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, date string, weather string) ([]entity.Shift, error) {
-
-  shift := entity.Shift{}
-  var shifts []entity.Shift
+func (a *shiftUseCase) GetShiftsAdminByDateAndWeather(c context.Context, date string, weather string) ([]entity.ShiftAdmin, error) {
+  shift := entity.ShiftAdmin{}
+  var shifts []entity.ShiftAdmin
 
   // クエリー実行
 	rows, err := a.rep.DateAndWeather(c, date, weather)
