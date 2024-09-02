@@ -45,14 +45,15 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "lib/assets/icon_ico.png"
+  remove_alpha_ios: true
+  image_path: "lib/assets/43rd-icon.png"
   web: 
     generate: true
-    image_path: "lib/assets/icon_ico.png"
+    image_path: "lib/assets/43rd-icon.png"
 
 flutter_native_splash:
   color: "#009688"
-  image: "lib/assets/icon_ico.png"
+  image: "lib/assets/43rd-icon.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
