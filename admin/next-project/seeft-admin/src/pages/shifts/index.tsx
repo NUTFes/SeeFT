@@ -22,7 +22,7 @@ interface Props {
 }
 
 export const getServerSideProps = async () => {
-  const getShiftURL = process.env.SSR_API_URI + '/shifts-admin';
+  const getShiftURL = process.env.SSR_API_URI + '/shifts-admin/dates/2/weathers/1';
   const getUserURL = process.env.SSR_API_URI + '/users';
   const getTaskURL = process.env.SSR_API_URI + '/tasks';
   const getBureauURL = process.env.SSR_API_URI + '/bureaus';
@@ -61,6 +61,13 @@ export default function Users(props: Props) {
     weatherID: 1,
     isAttendance: false
   });
+
+  // シフトの取得API
+  const getShiftInformation = async (dateID: number, weatherID: number) => {
+    const getShiftURL = process.env.CSR_API_URI + '/shifts-admin/dates/' + dateID + '/weathers/' + weatherID;
+    const shiftRes = await get(getShiftURL);
+    setShifts(shiftRes);
+  };
 
   // シフトの追加API(DBの仕様上使用していない)
   const addShiftInformation = async (data: Shift, user: User, time: Time) => {
@@ -108,6 +115,10 @@ export default function Users(props: Props) {
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setFilteredBureau(Number(e.target.value));
     };
+
+  useEffect(() => {
+    getShiftInformation(formData.dateID, formData.weatherID);
+  }, [formData.dateID, formData.weatherID])
 
   const filteredTasks = useMemo(() => {
     return selectedBureau === 0 ? tasks
@@ -188,13 +199,14 @@ export default function Users(props: Props) {
       && shift.weatherID === formData['weatherID']
     )));
   }, [formData['yearID'], formData['dateID'], formData['weatherID'], shifts]);
-  
+
   // タスクをマルチセレクタで扱えるように変換
-  const formattedTasks = useMemo(() => { 
+  const formattedTasks = useMemo(() => {
     return filteredTasks.map((task: Task) => ({
       value: task.id,
       label: task.task
-    }))}, [filteredTasks, selectedBureau]);
+    }))
+  }, [filteredTasks, selectedBureau]);
   // セレクトされたタスクをstateで管理
   const [selectedTasks, setSelectedTasks] = useState(
     formattedTasks.filter((task: any) => task.label === '全て')
@@ -382,14 +394,14 @@ export default function Users(props: Props) {
               placeholder='シフトを選択'
               styles={{
                 multiValueLabel: (provided) => ({
-                    ...provided,
-                    minWidth: '40px',  // 各選択されたoptionのラベルの最小幅を指定
-                    maxWidth: '40px', // 各選択されたoptionのラベルの最大幅を指定
-                    minHeight: '26.4px', // 各選択されたoptionのラベルの最小高さを指定
-                    overflow: 'hidden', // 幅を超えた場合の処理
-                    textOverflow: 'ellipsis',  // 溢れたテキストに省略記号を追加
-                    whiteSpace: 'nowrap', // テキストを折り返さないように設定
-                  }),
+                  ...provided,
+                  minWidth: '40px',  // 各選択されたoptionのラベルの最小幅を指定
+                  maxWidth: '40px', // 各選択されたoptionのラベルの最大幅を指定
+                  minHeight: '26.4px', // 各選択されたoptionのラベルの最小高さを指定
+                  overflow: 'hidden', // 幅を超えた場合の処理
+                  textOverflow: 'ellipsis',  // 溢れたテキストに省略記号を追加
+                  whiteSpace: 'nowrap', // テキストを折り返さないように設定
+                }),
                 menu: (provided) => ({
                   ...provided,
                   overflowY: 'auto',
@@ -400,11 +412,11 @@ export default function Users(props: Props) {
                   maxHeight: (selectedTasks.length) < 5 ? '150px' : '200px',
                 }),
                 // 選択されたoptionの高さを指定
-                  control: (provided) => ({
-                    ...provided,
-                    maxHeight: '80px',
-                    overflowY: 'auto',
-                  }),
+                control: (provided) => ({
+                  ...provided,
+                  maxHeight: '80px',
+                  overflowY: 'auto',
+                }),
                 option: (provided, state) => ({
                   ...provided,
                   minHeight: '40px',
@@ -444,47 +456,47 @@ export default function Users(props: Props) {
                   .filter((task: Task) => (task.id === selectedTasks.find((option) => option.label === task.task)?.value))
                   .sort((a: Task, b: Task) => (a.id - b.id))
                   .map((task: Task, index) => (
-                  <tr key={task.id}>
-                    <td
-                      className={clsx(
-                        'px-1 py-1 bg-surface-2',
-                        index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                        index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      )}
-                    >
-                      <p className='text-center text-sm text-emphasis truncate'>{selectedTasks[index].label}</p>
-                    </td>
-                    <td
-                      className={clsx(
-                        'px-1 py-1 bg-surface-2 border-accent-1 ',
-                        index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                        index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      )}
-                    >
-                      <p className='text-center text-sm text-emphasis'>{tasks[index].maxMember}</p>
-                    </td>
-                    {timeList.map((time: Time, i: number) => {
-                      const currentMemberCount = filteredShifts
-                            .filter((shift: Shift) => (shift.taskID === task.id))
-                            .filter((shift: Shift) => (shift.dateID === formData.dateID))
-                            .filter((shift: Shift) => (shift.timeID === time.id))
-                            .length
-                      const excessMemberColor = '#ffaaaa';
-                      const shortageMemberColor = '#aaccff';
-                      const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
-                      return (
-                        <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
-                          style={{background: (backgroundColor)}}
-                        >
-                          {currentMemberCount}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                )
-                
-                )
-                 :
+                    <tr key={task.id}>
+                      <td
+                        className={clsx(
+                          'px-1 py-1 bg-surface-2',
+                          index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                          index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                        )}
+                      >
+                        <p className='text-center text-sm text-emphasis truncate'>{selectedTasks[index].label}</p>
+                      </td>
+                      <td
+                        className={clsx(
+                          'px-1 py-1 bg-surface-2 border-accent-1 ',
+                          index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                          index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                        )}
+                      >
+                        <p className='text-center text-sm text-emphasis'>{tasks[index].maxMember}</p>
+                      </td>
+                      {timeList.map((time: Time, i: number) => {
+                        const currentMemberCount = filteredShifts
+                          .filter((shift: Shift) => (shift.taskID === task.id))
+                          .filter((shift: Shift) => (shift.dateID === formData.dateID))
+                          .filter((shift: Shift) => (shift.timeID === time.id))
+                          .length
+                        const excessMemberColor = '#ffaaaa';
+                        const shortageMemberColor = '#aaccff';
+                        const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
+                        return (
+                          <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
+                            style={{ background: (backgroundColor) }}
+                          >
+                            {currentMemberCount}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )
+
+                  )
+                  :
                   'ユーザーが登録されていません'
                 }
               </tbody>
@@ -492,11 +504,11 @@ export default function Users(props: Props) {
           </div>
           <div className='flex justify-center items-center gap-10 my-4'>
             <div className='flex ml-auto '>
-              <div  style={{width: 24, height: 24, background: '#aaccff'}}></div>
+              <div style={{ width: 24, height: 24, background: '#aaccff' }}></div>
               <p>: 人数不足</p>
             </div>
             <div className='flex mr-6'>
-              <div style={{width: 24, height: 24, background: '#ffaaaa'}}></div>
+              <div style={{ width: 24, height: 24, background: '#ffaaaa' }}></div>
               <p>: 人数超過</p>
             </div>
           </div>
