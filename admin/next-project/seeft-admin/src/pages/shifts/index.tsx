@@ -22,7 +22,7 @@ interface Props {
 }
 
 export const getServerSideProps = async () => {
-  const getShiftURL = process.env.SSR_API_URI + '/shifts-admin';
+  const getShiftURL = process.env.SSR_API_URI + '/shifts-admin/dates/2/weathers/1';
   const getUserURL = process.env.SSR_API_URI + '/users';
   const getTaskURL = process.env.SSR_API_URI + '/tasks';
   const getBureauURL = process.env.SSR_API_URI + '/bureaus';
@@ -61,6 +61,13 @@ export default function Users(props: Props) {
     weatherID: 1,
     isAttendance: false
   });
+
+  // シフトの取得API
+  const getShiftInformation = async (dateID: number, weatherID: number) => {
+    const getShiftURL = process.env.CSR_API_URI + '/shifts-admin/dates/' + dateID + '/weathers/' + weatherID;
+    const shiftRes = await get(getShiftURL);
+    setShifts(shiftRes);
+  };
 
   // シフトの追加API(DBの仕様上使用していない)
   const addShiftInformation = async (data: Shift, user: User, time: Time) => {
@@ -108,6 +115,10 @@ export default function Users(props: Props) {
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setFilteredBureau(Number(e.target.value));
     };
+
+  useEffect(() => {
+    getShiftInformation(formData.dateID, formData.weatherID);
+  }, [formData.dateID, formData.weatherID])
 
   const filteredTasks = useMemo(() => {
     return selectedBureau === 0 ? tasks
@@ -191,10 +202,10 @@ export default function Users(props: Props) {
 
   // タスクをマルチセレクタで扱えるように変換
   const formattedTasks = useMemo(() => {
-    return filteredTasks ? filteredTasks.map((task: Task) => ({
+    return filteredTasks.map((task: Task) => ({
       value: task.id,
       label: task.task
-    })) : [];
+    }))
   }, [filteredTasks, selectedBureau]);
   // セレクトされたタスクをstateで管理
   const [selectedTasks, setSelectedTasks] = useState(
