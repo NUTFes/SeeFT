@@ -110,7 +110,10 @@ export default function Uesrs(props: Props) {
                   </DeleteButton>
                 </td>
               </tr>
-            )) : null}
+            )) : 
+              <tr>
+                <td colSpan={4} className='text-center text-emphasis py-3'>データがありません</td>
+              </tr>}
           </tbody>
         </table>
       </div>

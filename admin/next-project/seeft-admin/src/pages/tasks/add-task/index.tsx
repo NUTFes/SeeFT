@@ -70,7 +70,7 @@ export default function Users(props: Props) {
         <div className='flex w-1/4 whitespace-nowrap'>集合場所</div>
         <div className='col-span-4 w-full'>
           <Select className='w-full' value={formData.placeID} onChange={handler('placeID')}>
-            {places.map((data) => (
+            {places?.map((data) => (
               <option key={data.id} value={data.id}>
                 {data.place}
               </option>
