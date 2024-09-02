@@ -31,6 +31,7 @@ type ShiftUseCase interface {
   UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
   DeleteShiftAdmin(context.Context, string) error
 	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.ShiftAdmin, error)
+	GetShiftsAdminByDateAndWeatherAndTime(context.Context, string, string, string, string) ([]entity.ShiftAdmin, error)
 }
 
 func NewShiftUseCase(
@@ -653,6 +654,39 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeather(c context.Context, date st
 
   // クエリー実行
 	rows, err := a.rep.DateAndWeather(c, date, weather)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(
+			&shift.ID,
+			&shift.TaskID,
+			&shift.UserID,
+			&shift.YearID,
+			&shift.DateID,
+			&shift.TimeID,
+			&shift.WeatherID,
+			&shift.IsAttendance,
+			&shift.CreatedAt,
+			&shift.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot connect SQL")
+		}
+
+		shifts = append(shifts, shift)
+	}
+	return shifts, nil
+}
+
+func (a *shiftUseCase) GetShiftsAdminByDateAndWeatherAndTime(c context.Context, date string, weather string, lower string, upper string) ([]entity.ShiftAdmin, error) {
+  shift := entity.ShiftAdmin{}
+  var shifts []entity.ShiftAdmin
+
+  // クエリー実行
+	rows, err := a.rep.DateAndWeatherAndTime(c, date, weather, lower, upper)
 	if err != nil {
 		return nil, err
 	}
