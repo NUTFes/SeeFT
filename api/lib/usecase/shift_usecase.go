@@ -30,6 +30,7 @@ type ShiftUseCase interface {
   CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
   UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
   DeleteShiftAdmin(context.Context, string) error
+	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.Shift, error)
 }
 
 func NewShiftUseCase(
@@ -644,6 +645,40 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
 	err := u.rep.Destroy(c, id)
 	return err
+}
+
+func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, date string, weather string) ([]entity.Shift, error) {
+
+  shift := entity.Shift{}
+  var shifts []entity.Shift
+
+  // クエリー実行
+	rows, err := a.rep.DateAndWeather(c, date, weather)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(
+			&shift.ID,
+			&shift.TaskID,
+			&shift.UserID,
+			&shift.YearID,
+			&shift.DateID,
+			&shift.TimeID,
+			&shift.WeatherID,
+			&shift.IsAttendance,
+			&shift.CreatedAt,
+			&shift.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot connect SQL")
+		}
+
+		shifts = append(shifts, shift)
+	}
+	return shifts, nil
 }
 
 // import '../entity/entity.dart';

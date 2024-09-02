@@ -22,6 +22,7 @@ type ShiftController interface {
 	CreateShiftAdmin(echo.Context) error
 	UpdateShiftAdmin(echo.Context) error
 	DeleteShiftAdmin(echo.Context) error
+	ShowShiftAdminByDateAndWeather(echo.Context) error
 }
 
 func NewShiftController(u usecase.ShiftUseCase) ShiftController {
@@ -139,6 +140,16 @@ func (u *shiftController) DeleteShiftAdmin(c echo.Context) error {
 		return err
 	}
 	return c.String(http.StatusOK, "Destroy Shift")
+}
+
+func (b *shiftController) ShowShiftAdminByDateAndWeather(c echo.Context) error {
+	date := c.Param("date")
+	weather := c.Param("weather")
+	shifts, err := b.u.GetShiftsAdminByDateAndWeather(c.Request().Context(), date, weather)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shifts)
 }
 
 // import 'dart:convert';
