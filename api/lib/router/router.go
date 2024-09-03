@@ -95,6 +95,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.PUT("/shifts-admin/:id", r.shiftController.UpdateShiftAdmin)
 	e.DELETE("/shifts-admin", r.shiftController.DeleteShiftAdmin)
 	e.GET("/shifts-admin/dates/:date/weathers/:weather", r.shiftController.ShowShiftAdminByDateAndWeather)
+	e.GET("/shifts-admin/dates/:date/weathers/:weather/lower/:lower/upper/:upper", r.shiftController.ShowShiftAdminByDateAndWeatherAndTime)
 
 	// taskのRoute
 	e.GET("/tasks", r.taskController.IndexTask)

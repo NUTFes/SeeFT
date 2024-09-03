@@ -63,8 +63,8 @@ export default function Users(props: Props) {
   });
 
   // シフトの取得API
-  const getShiftInformation = async (dateID: number, weatherID: number) => {
-    const getShiftURL = process.env.CSR_API_URI + '/shifts-admin/dates/' + dateID + '/weathers/' + weatherID;
+  const getShiftInformation = async (dateID: number, weatherID: number, time: Time[]) => {
+    const getShiftURL = process.env.CSR_API_URI + '/shifts-admin/dates/' + dateID + '/weathers/' + weatherID + '/lower/' + time[0].id + '/upper/' + time[time.length - 1].id;
     const shiftRes = await get(getShiftURL);
     setShifts(shiftRes);
   };
@@ -115,10 +115,6 @@ export default function Users(props: Props) {
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setFilteredBureau(Number(e.target.value));
     };
-
-  useEffect(() => {
-    getShiftInformation(formData.dateID, formData.weatherID);
-  }, [formData.dateID, formData.weatherID])
 
   const filteredTasks = useMemo(() => {
     return selectedBureau === 0 ? tasks
@@ -191,6 +187,10 @@ export default function Users(props: Props) {
   const timeList = useMemo(() => {
     return TimeItems.slice(((timeScaleID - 1) * 16), (timeScaleID * 16));
   }, [timeScaleID]);
+
+  useEffect(() => {
+    getShiftInformation(formData.dateID, formData.weatherID, timeList);
+  }, [formData.dateID, formData.weatherID, timeList])
 
   useEffect(() => {
     setFilteredShifts(shifts.filter((shift: Shift) => (
