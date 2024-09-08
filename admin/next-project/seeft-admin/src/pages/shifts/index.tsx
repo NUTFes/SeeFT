@@ -50,10 +50,11 @@ export default function Users(props: Props) {
   const [hasDestoryMode, setHasDestoryMode] = useState(false);
   const [filteredBureau, setFilteredBureau] = useState<number>(0);
   const [selectedBureau, setSelectedBureau] = useState<number>(0);
+  const [pendingUpdates, setPendingUpdates] = useState<Shift[]>([]);
 
   const [formData, setFormData] = useState<Shift>({
     id: 0,
-    taskID: tasks[0].id,
+    taskID: tasks ? tasks[0].id : 0,
     userID: 0,
     yearID: YearItem[YearItem.length - 1].id,
     dateID: 2,
@@ -70,30 +71,21 @@ export default function Users(props: Props) {
   };
 
   // シフトの追加API(DBの仕様上使用していない)
-  const addShiftInformation = async (data: Shift, user: User, time: Time) => {
-    const addData = { ...data, id: shifts[shifts.length - 1].id + 1, userID: user.id, timeID: time.id }
+  const addShiftInformation = async (data: Shift) => {
     const addUserInformationUrl = process.env.CSR_API_URI + '/shifts-admin';
-    await post(addUserInformationUrl, addData);
-    const updatedShifts = [...shifts, addData];
-    setShifts(updatedShifts);
+    await post(addUserInformationUrl, data);
   };
 
   // シフトの編集API
-  const updateShiftInformation = async (data: Shift, user: User, time: Time, id: number) => {
-    const updateData = { ...data, id: id, taskID: Number(data.taskID), userID: user.id, timeID: time.id };
+  const updateShiftInformation = async (data: Shift, id: number) => {
     const putShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin/' + id;
-    await put(putShiftInformationUrl, updateData);
-    const updatedShifts = shifts.map((shift: Shift) => (shift.id === updateData.id ? updateData : shift));
-    setShifts(updatedShifts);
+    await put(putShiftInformationUrl, data);
   };
 
   // シフトの削除API
-  const destroyShiftInformation = async (data: Shift, user: User, time: Time, id: number) => {
-    const updateData = { ...data, id: id, taskID: 1, userID: user.id, timeID: time.id }
+  const destroyShiftInformation = async (data: Shift, id: number) => {
     const putShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin/' + id;
-    await put(putShiftInformationUrl, updateData);
-    const updatedShifts = shifts.map((shift: Shift) => (shift.id === updateData.id ? updateData : shift));
-    setShifts(updatedShifts);
+    await put(putShiftInformationUrl, data);
     // DBの仕様上destoryを実行しない方がよい(今後修正)
     // const destroyShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin';
     // await destroy(destroyShiftInformationUrl, data);
@@ -132,37 +124,55 @@ export default function Users(props: Props) {
 
   const handleMouseDown = (user: User, time: Time, id: number) => {
     setIsMouseDown(true);
+    const formDataCopy = { ...formData, userID: user.id, timeID: time.id };
 
-    const formDataCopy = { ...formData }; // formDataのコピーを作成
     if (id) {
-      if (hasDestoryMode) {
-        destroyShiftInformation(formDataCopy, user, time, id);
-      } else {
-        updateShiftInformation(formDataCopy, user, time, id);
-      }
+      // 既存のシフトがある場合は更新データを作成
+      setPendingUpdates(prev => [...prev, { ...formDataCopy, id }]);
+      setShifts(prevShifts => prevShifts.map(shift => shift.id === id ? { ...formDataCopy, id } : shift));
     } else {
-      addShiftInformation(formDataCopy, user, time);
+      // 新しいシフトを作成する場合
+      setPendingUpdates(prev => [...prev, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
+      setShifts(prevShifts => [...prevShifts, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
     }
-  };
-
-  const handleMouseUp = () => {
-    setIsMouseDown(false);
   };
 
   const handleMouseEnter = (user: User, time: Time, id: number) => {
-    const formDataCopy = { ...formData };
-    if (isMouseDown) {
-      if (hasDestoryMode) {
-        destroyShiftInformation(formDataCopy, user, time, id);
+    if (!isMouseDown) return; // マウスが押されていない場合は何もしない
+    const formDataCopy = { ...formData, userID: user.id, timeID: time.id };
+
+    if (hasDestoryMode && id) {
+      // 削除モードの場合の処理
+      setPendingUpdates(prev => [...prev, { ...formDataCopy, id, taskID: tasks[0].id }]);
+      setShifts(prevShifts => prevShifts.filter(shift => shift.id !== id));
+    } else if (id) {
+      // 更新モードの場合の処理
+      setPendingUpdates(prev => [...prev, { ...formDataCopy, id }]);
+      setShifts(prevShifts => prevShifts.map(shift => shift.id === id ? { ...formDataCopy, id } : shift));
+    } else {
+      // 追加モードの場合の処理
+      setPendingUpdates(prev => [...prev, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
+      setShifts(prevShifts => [...prevShifts, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
+    }
+  };
+
+  const handleMouseUp = async () => {
+    setIsMouseDown(false);
+
+    for (const update of pendingUpdates) {
+      if (update.taskID === tasks[0].id) {
+        // 削除処理
+        await destroyShiftInformation(update, update.id);
+      } else if (shifts.some(shift => shift.id === update.id)) {
+        // 更新処理
+        await updateShiftInformation(update, update.id);
       } else {
-        const existingShift = filteredShifts.find(shift => shift.userID === user.id && shift.timeID === time.id);
-        if (existingShift) {
-          updateShiftInformation(formDataCopy, user, time, existingShift.id);
-        } else {
-          addShiftInformation(formDataCopy, user, time);
-        }
+        // 新規追加処理
+        await addShiftInformation(update);
       }
     }
+
+    setPendingUpdates([]); // API呼び出し後にペンディングをクリア
   };
 
   const changeTimeScale = (value: number) => {
