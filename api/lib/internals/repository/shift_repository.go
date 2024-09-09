@@ -27,6 +27,7 @@ type ShiftRepository interface {
 	Update(context.Context, string, string, string, string, string, string, string, string) error
 	Destroy(context.Context, string) error
 	FindLatestRecord(context.Context) (*sql.Row, error)
+	MaxID(context.Context) (*sql.Row, error)
 }
 
 func NewShiftRepository(c db.Client, ac abstract.Crud) ShiftRepository {
@@ -139,6 +140,17 @@ func (b *shiftRepository) FindLatestRecord(c context.Context) (*sql.Row, error) 
 		ORDER BY
 			id
 		DESC LIMIT 1
+	`
+	return b.crud.ReadByID(c, query)
+}
+
+// 最大のIDを取得する
+func (b *shiftRepository) MaxID(c context.Context) (*sql.Row, error) {
+	query := `
+		SELECT
+			MAX(id)
+		FROM
+			shifts
 	`
 	return b.crud.ReadByID(c, query)
 }

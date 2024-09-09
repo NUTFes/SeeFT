@@ -32,6 +32,7 @@ type ShiftUseCase interface {
   DeleteShiftAdmin(context.Context, string) error
 	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.ShiftAdmin, error)
 	GetShiftsAdminByDateAndWeatherAndTime(context.Context, string, string, string, string) ([]entity.ShiftAdmin, error)
+	GetMaxID(context.Context) (int, error)
 }
 
 func NewShiftUseCase(
@@ -712,6 +713,25 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeatherAndTime(c context.Context, 
 		shifts = append(shifts, shift)
 	}
 	return shifts, nil
+}
+
+func (a *shiftUseCase) GetMaxID(c context.Context) (int, error) {
+  maxID := 0
+
+  // クエリー実行
+	row, err := a.rep.MaxID(c)
+	if err != nil {
+		return 0, err
+	}
+
+	err = row.Scan(
+		&maxID,
+	)
+	if err != nil {
+		return maxID, err
+	}
+
+	return maxID, nil
 }
 
 // import '../entity/entity.dart';
