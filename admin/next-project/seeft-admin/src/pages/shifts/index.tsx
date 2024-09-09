@@ -60,7 +60,7 @@ export default function Users(props: Props) {
 
   const [formData, setFormData] = useState<Shift>({
     id: 0,
-    taskID: tasks ? tasks[0].id : 1,
+    taskID: tasks ? tasks[0].id : 0,
     userID: 0,
     yearID: YearItem[YearItem.length - 1].id,
     dateID: 2,
