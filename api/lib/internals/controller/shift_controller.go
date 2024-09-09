@@ -23,6 +23,7 @@ type ShiftController interface {
 	UpdateShiftAdmin(echo.Context) error
 	DeleteShiftAdmin(echo.Context) error
 	ShowShiftAdminByDateAndWeather(echo.Context) error
+	ShowShiftAdminByDateAndWeatherAndTime(echo.Context) error
 }
 
 func NewShiftController(u usecase.ShiftUseCase) ShiftController {
@@ -146,6 +147,18 @@ func (b *shiftController) ShowShiftAdminByDateAndWeather(c echo.Context) error {
 	date := c.Param("date")
 	weather := c.Param("weather")
 	shifts, err := b.u.GetShiftsAdminByDateAndWeather(c.Request().Context(), date, weather)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shifts)
+}
+
+func (b *shiftController) ShowShiftAdminByDateAndWeatherAndTime(c echo.Context) error {
+	date := c.Param("date")
+	weather := c.Param("weather")
+	lower := c.Param("lower")
+	upper := c.Param("upper")
+	shifts, err := b.u.GetShiftsAdminByDateAndWeatherAndTime(c.Request().Context(), date, weather, lower, upper)
 	if err != nil {
 		return err
 	}
