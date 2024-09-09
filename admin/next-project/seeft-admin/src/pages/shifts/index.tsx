@@ -148,15 +148,20 @@ export default function Users(props: Props) {
 
     // shifts にリアルタイムで反映
     setShifts((prev) => {
-      const existingIndex = prev.findIndex((s) => s.userID === shift.userID && s.timeID === shift.timeID);
-      if (existingIndex !== -1) {
-        // 既存のシフトがあれば更新
-        const updatedShifts = [...prev];
-        updatedShifts[existingIndex] = shift;
-        return updatedShifts;
-      } else {
-        // 新しいシフトを追加
-        return [...prev, shift];
+      if (hasDestroyMode) {
+        return shifts.filter((s) => s.id != shift.id);
+      }
+      else {
+        const existingIndex = prev.findIndex((s) => s.userID === shift.userID && s.timeID === shift.timeID);
+        if (existingIndex !== -1) {
+          // 既存のシフトがあれば更新
+          const updatedShifts = [...prev];
+          updatedShifts[existingIndex] = shift;
+          return updatedShifts;
+        } else {
+          // 新しいシフトを追加
+          return [...prev, shift];
+        }
       }
     });
   };
