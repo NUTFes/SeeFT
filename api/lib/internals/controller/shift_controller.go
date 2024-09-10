@@ -24,6 +24,7 @@ type ShiftController interface {
 	DeleteShiftAdmin(echo.Context) error
 	ShowShiftAdminByDateAndWeather(echo.Context) error
 	ShowShiftAdminByDateAndWeatherAndTime(echo.Context) error
+	SerachMaxID(echo.Context) error
 }
 
 func NewShiftController(u usecase.ShiftUseCase) ShiftController {
@@ -163,6 +164,15 @@ func (b *shiftController) ShowShiftAdminByDateAndWeatherAndTime(c echo.Context) 
 		return err
 	}
 	return c.JSON(http.StatusOK, shifts)
+}
+
+
+func (b *shiftController) SerachMaxID(c echo.Context) error {
+	id, err := b.u.GetMaxID(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, id)
 }
 
 // import 'dart:convert';

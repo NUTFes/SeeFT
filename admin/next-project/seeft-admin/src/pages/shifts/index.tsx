@@ -19,6 +19,7 @@ interface Props {
   users: User[];
   tasks: Task[];
   bureaus: Bureau[];
+  maxID: number;
 }
 
 export const getServerSideProps = async () => {
@@ -26,10 +27,12 @@ export const getServerSideProps = async () => {
   const getUserURL = process.env.SSR_API_URI + '/users';
   const getTaskURL = process.env.SSR_API_URI + '/tasks';
   const getBureauURL = process.env.SSR_API_URI + '/bureaus';
+  const getShiftMaxIDURL = process.env.SSR_API_URI + '/shifts-admin/max-id';
   const shiftRes = await get(getShiftURL);
   const userRes = await get(getUserURL);
   const taskRes = await get(getTaskURL);
   const bureauRes = await get(getBureauURL);
+  const maxIDRes = await get(getShiftMaxIDURL);
 
   return {
     props: {
@@ -37,17 +40,20 @@ export const getServerSideProps = async () => {
       users: userRes,
       tasks: taskRes,
       bureaus: bureauRes,
+      maxID: maxIDRes,
     },
   };
 };
 
 export default function Users(props: Props) {
   const { users, tasks, bureaus } = props;
-  const [shifts, setShifts] = useState(props.shifts);
+  const [shifts, setShifts] = useState(props.shifts || []);
+  const [shiftMaxID, setShiftMaxID] = useState(props.maxID || 0);
+  const [initialShifts, setInitialShifts] = useState<Shift[]>([]);
   const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
   const [timeScaleID, setTimeScaleID] = useState(3);
-  const [hasDestoryMode, setHasDestoryMode] = useState(false);
+  const [hasDestroyMode, setHasDestroyMode] = useState(false);
   const [filteredBureau, setFilteredBureau] = useState<number>(0);
   const [selectedBureau, setSelectedBureau] = useState<number>(0);
   const [pendingUpdates, setPendingUpdates] = useState<Shift[]>([]);
@@ -67,7 +73,10 @@ export default function Users(props: Props) {
   const getShiftInformation = async (dateID: number, weatherID: number, time: Time[]) => {
     const getShiftURL = process.env.CSR_API_URI + '/shifts-admin/dates/' + dateID + '/weathers/' + weatherID + '/lower/' + time[0].id + '/upper/' + time[time.length - 1].id;
     const shiftRes = await get(getShiftURL);
-    setShifts(shiftRes);
+    setShifts(shiftRes || []);
+    const getShiftMaxIDURL = process.env.CSR_API_URI + '/shifts-admin/max-id';
+    const maxIDRes = await get(getShiftMaxIDURL);
+    setShiftMaxID(maxIDRes || 0);
   };
 
   // シフトの追加API(DBの仕様上使用していない)
@@ -83,13 +92,12 @@ export default function Users(props: Props) {
   };
 
   // シフトの削除API
-  const destroyShiftInformation = async (data: Shift, id: number) => {
-    const putShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin/' + id;
-    await put(putShiftInformationUrl, data);
+  const destroyShiftInformation = async (data: Shift) => {
+    // const putShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin/' + id;
+    // await put(putShiftInformationUrl, data);
     // DBの仕様上destoryを実行しない方がよい(今後修正)
-    // const destroyShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin';
-    // await destroy(destroyShiftInformationUrl, data);
-    // const updatedShifts = shifts.filter((shift: Shift) => (shift.id !== id));
+    const destroyShiftInformationUrl = process.env.CSR_API_URI + '/shifts-admin';
+    await destroy(destroyShiftInformationUrl, data);
   };
 
   const handler = (input: string) =>
@@ -122,18 +130,56 @@ export default function Users(props: Props) {
       ))
   }, [filteredBureau]);
 
+  // シフトの変更を即時反映させ、管理するための関数
+  const modifyShift = (shift: Shift) => {
+    // pendingUpdates に追加
+    setPendingUpdates((prev) => {
+      const existingIndex = prev.findIndex((s) => s.userID === shift.userID && s.timeID === shift.timeID);
+      if (existingIndex !== -1) {
+        // 既存のシフトがあれば更新
+        const updatedShifts = [...prev];
+        updatedShifts[existingIndex] = shift;
+        return updatedShifts;
+      } else {
+        // 新しいシフトを追加
+        return [...prev, shift];
+      }
+    });
+
+    // shifts にリアルタイムで反映
+    setShifts((prev) => {
+      if (hasDestroyMode) {
+        return shifts.filter((s) => s.id != shift.id);
+      }
+      else {
+        const existingIndex = prev.findIndex((s) => s.userID === shift.userID && s.timeID === shift.timeID);
+        if (existingIndex !== -1) {
+          // 既存のシフトがあれば更新
+          const updatedShifts = [...prev];
+          updatedShifts[existingIndex] = shift;
+          return updatedShifts;
+        } else {
+          // 新しいシフトを追加
+          return [...prev, shift];
+        }
+      }
+    });
+  };
+
   const handleMouseDown = (user: User, time: Time, id: number) => {
     setIsMouseDown(true);
     const formDataCopy = { ...formData, userID: user.id, timeID: time.id };
+    // MouseDownのタイミングで現状のshiftsの状態を保存
+    setInitialShifts([...shifts]);
 
     if (id) {
       // 既存のシフトがある場合は更新データを作成
-      setPendingUpdates(prev => [...prev, { ...formDataCopy, id }]);
-      setShifts(prevShifts => prevShifts.map(shift => shift.id === id ? { ...formDataCopy, id } : shift));
+      modifyShift({ ...formDataCopy, id });
     } else {
       // 新しいシフトを作成する場合
-      setPendingUpdates(prev => [...prev, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
-      setShifts(prevShifts => [...prevShifts, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
+      const newShiftID = shiftMaxID + 1;
+      setShiftMaxID(shiftMaxID + 1);
+      modifyShift({ ...formDataCopy, id: newShiftID });
     }
   };
 
@@ -141,34 +187,45 @@ export default function Users(props: Props) {
     if (!isMouseDown) return; // マウスが押されていない場合は何もしない
     const formDataCopy = { ...formData, userID: user.id, timeID: time.id };
 
-    if (hasDestoryMode && id) {
+    if (hasDestroyMode && id) {
       // 削除モードの場合の処理
-      setPendingUpdates(prev => [...prev, { ...formDataCopy, id, taskID: tasks[0].id }]);
-      setShifts(prevShifts => prevShifts.filter(shift => shift.id !== id));
+      modifyShift({ ...formDataCopy, id, taskID: tasks[0].id });
     } else if (id) {
       // 更新モードの場合の処理
-      setPendingUpdates(prev => [...prev, { ...formDataCopy, id }]);
-      setShifts(prevShifts => prevShifts.map(shift => shift.id === id ? { ...formDataCopy, id } : shift));
+      modifyShift({ ...formDataCopy, id });
     } else {
       // 追加モードの場合の処理
-      setPendingUpdates(prev => [...prev, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
-      setShifts(prevShifts => [...prevShifts, { ...formDataCopy, id: shifts[shifts.length - 1].id + 1 }]);
+      const newShiftID = shiftMaxID + 1;
+      setShiftMaxID(shiftMaxID + 1);
+      modifyShift({ ...formDataCopy, id: newShiftID });
     }
   };
 
   const handleMouseUp = async () => {
     setIsMouseDown(false);
 
-    for (const update of pendingUpdates) {
-      if (update.taskID === tasks[0].id) {
-        // 削除処理
-        await destroyShiftInformation(update, update.id);
-      } else if (shifts.some(shift => shift.id === update.id)) {
-        // 更新処理
-        await updateShiftInformation(update, update.id);
-      } else {
-        // 新規追加処理
-        await addShiftInformation(update);
+    if (hasDestroyMode) {
+      // 削除モードがオンの場合
+      for (const shift of pendingUpdates) {
+        if (shift.id) {
+          // シフト削除処理
+          await destroyShiftInformation(shift);
+        }
+      }
+    } else {
+      // 初期状態と現在のshiftsの差分を検出
+      for (const shift of shifts) {
+        const initialShift = initialShifts.find(
+          (s) => s.userID === shift.userID && s.timeID === shift.timeID
+        );
+
+        if (!initialShift) {
+          // 新規追加の場合（初期状態に存在しないシフト）
+          await addShiftInformation(shift);
+        } else if (JSON.stringify(initialShift) !== JSON.stringify(shift)) {
+          // 更新の場合（初期状態と異なる内容のシフト）
+          await updateShiftInformation(shift, shift.id);
+        }
       }
     }
 
@@ -212,10 +269,12 @@ export default function Users(props: Props) {
 
   // タスクをマルチセレクタで扱えるように変換
   const formattedTasks = useMemo(() => {
-    return filteredTasks.map((task: Task) => ({
-      value: task.id,
-      label: task.task
-    }))
+    return filteredTasks ?
+      filteredTasks.map((task: Task) => ({
+        value: task.id,
+        label: task.task
+      })) :
+      []
   }, [filteredTasks, selectedBureau]);
   // セレクトされたタスクをstateで管理
   const [selectedTasks, setSelectedTasks] = useState(
@@ -231,133 +290,13 @@ export default function Users(props: Props) {
 
   return (
     <ListPageLayout title='シフト一覧'>
-      <div className='my-3 border border-accent-1'>
-        <div className='w-full flex justify-center items-center gap-6 p-1 '>
-          <div className='w-1/6'>
-            <Select className="w-full" value={filteredBureau} onChange={filterBureauHandler()}>
-              <option key={0} value={0}>全局</option>
-              {bureaus.map((data) => (
-                <option key={data.id} value={data.id}>
-                  {data.bureau}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className='w-1/6'>
-            <Select className="w-full" value={formData.dateID} onChange={handler('dateID')}>
-              {DateItem.map((data) => (
-                <option key={data.id} value={data.id}>
-                  {data.date}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className='w-1/6'>
-            <Select className="w-full" value={formData.weatherID} onChange={handler('weatherID')}>
-              {WeatherItem.map((data) => (
-                <option key={data.id} value={data.id}>
-                  {data.weather}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className='w-1/6'>
-            <ToggleButton isToggleState={hasDestoryMode} initialLabel='編集モード' toggledLabel='削除モード' onClick={() => (setHasDestoryMode(!hasDestoryMode))} />
-          </div>
-        </div>
-        <div className='flex justify-between items-center p-2'>
-          <div className='flex justify-center items-center gap-4 px-2 rounded-lg border border-accent-1 hover:bg-accent-1' onClick={() => { changeTimeScale(-1) }}>
-            <FaChevronLeft />
-            {timeScaleID === 1 ? TimeScaleItem[5].time : TimeScaleItem[timeScaleID - 2].time}
-          </div>
-          <div className='text-xl'>
-            {TimeScaleItem[timeScaleID - 1].time}
-          </div>
-          <div className='flex justify-center items-center gap-4 px-2 rounded-lg border border-accent-1 hover:bg-accent-1' onClick={() => { changeTimeScale(1) }}>
-            {timeScaleID === 6 ? TimeScaleItem[0].time : TimeScaleItem[timeScaleID].time}
-            <FaChevronRight />
-          </div>
-        </div>
-        <div className='h-screen px-2 pb-2 overflow-y-auto select-none'>
-          <table className='table-fixed mb-5 w-full border-collapse'>
-            <thead className='sticky top-0 z-10'>
-              <tr>
-                <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
-                  <p className='text-center text-sm text-emphasis'>所属局</p>
-                </th>
-                <th className='w-2/12 bg-surface-2 border border-accent-1 py-1'>
-                  <p className='text-center text-sm text-emphasis'>名前</p>
-                </th>
-                {timeList.map((time: Time, i: number) => (
-                  i % 2 === 0 ?
-                    <th className='w-3/64 bg-surface-2 border border-accent-1 py-1'>
-                      <p className='text-center text-sm text-emphasis'>{time.time + '-'}</p>
-                    </th>
-                    :
-                    <th className='w-3/64 bg-surface-2 border border-accent-1 py-1' />
-                ))}
-              </tr>
-            </thead>
-            <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
-              {filteredUsers ? filteredUsers.map((user: User, index) => (
-                <tr key={user.id}>
-                  <td
-                    className={clsx(
-                      'px-1 py-1 bg-surface-2',
-                      index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                    )}
-                  >
-                    <p className='text-center text-sm text-emphasis'>{bureaus.find((bureau: Bureau) => (bureau.id === user.bureauID))?.bureau}</p>
-                  </td>
-                  <td
-                    className={clsx(
-                      'px-1 py-1 bg-surface-2 border-accent-1 ',
-                      index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                      index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
-                    )}
-                  >
-                    <p className='text-center text-sm text-emphasis'>{user.name}</p>
-                  </td>
-                  {timeList.map((time: Time, i: number) => {
-                    const shift = filteredShifts.find((shift: Shift) => (shift.userID === user.id && shift.timeID === time.id));
-                    const task = shift ? tasks.find(task => task.id === shift.taskID) : null;
-                    const backgroundColor = task ? `#${task.color}` : '#ffffff';
-
-                    return (
-                      <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
-                        style={{
-                          background: (backgroundColor)
-                        }}
-                        onMouseDown={() => handleMouseDown(user, time, shift?.id || 0)}
-                        onMouseUp={handleMouseUp}
-                        onMouseEnter={() => handleMouseEnter(user, time, shift?.id || 0)}
-                      >
-                        {tasks ? tasks.find((task: Task) => (task.id === (filteredShifts ? filteredShifts.find((shift: Shift) => (shift.userID === user.id && shift.timeID === time.id))?.taskID : null)))?.task
-                          : null}
-                      </td>
-                    );
-                  })}
-                </tr>
-              )) :
-                'ユーザーが登録されていません'
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div className='flex gap-4'>
-        <div className='object-bottom w-1/3 border border-accent-1 my-2'>
-          <div>
-            シフトの編集方法
-          </div>
-          <div className='pl-4'>
-            <div>
-              <p>1. 担当局を選択</p>
-              <div className='flex justify-center items-center gap-4 pl-4'>
-                <div className='w-1/3'>担当局</div>
-                <Select className='w-full' value={selectedBureau} onChange={bureauHandler()}>
-                  <option key={0} value={0}>All</option>
+      {tasks ?
+        <>
+          <div className='my-3 border border-accent-1'>
+            <div className='w-full flex justify-center items-center gap-6 p-1 '>
+              <div className='w-1/6'>
+                <Select className="w-full" value={filteredBureau} onChange={filterBureauHandler()}>
+                  <option key={0} value={0}>全局</option>
                   {bureaus.map((data) => (
                     <option key={data.id} value={data.id}>
                       {data.bureau}
@@ -365,108 +304,64 @@ export default function Users(props: Props) {
                   ))}
                 </Select>
               </div>
-            </div>
-            <div>
-              <p>2. 入力するシフトを選択</p>
-              <div className='flex justify-center items-center gap-4 pl-4'>
-                <div className='w-1/3'>シフト検索</div>
-                <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
-                  {filteredTasks.length > 0 ? filteredTasks.map((data) => (
+              <div className='w-1/6'>
+                <Select className="w-full" value={formData.dateID} onChange={handler('dateID')}>
+                  {DateItem.map((data) => (
                     <option key={data.id} value={data.id}>
-                      {data.task}
+                      {data.date}
                     </option>
-                  )) : <option key={1} value={1}>シフトが見つかりません</option>}
+                  ))}
                 </Select>
               </div>
-            </div>
-            <div>
-              <p>3. 開始時刻のセルをクリック&ドラッグ</p>
-            </div>
-            <div className='pt-2'>
-              <p>* [編集モード]/[削除モード]をクリックで切り替えられます</p>
-            </div>
-          </div>
-        </div>
-        <div className='object-bottom w-2/3 border border-accent-1 my-2'>
-          <div>
-            シフトの現在の人数
-          </div>
-          <div className='flex justify-center items-center gap-4 pl-4'>
-            <div className='w-1/3'>表示するシフトを選択</div>
-            <ReactSelect className='w-full z-20'
-              closeMenuOnSelect={true}
-              value={selectedTasks}
-              // defaultValue={null}
-              isMulti
-              options={formattedTasks}
-              isSearchable
-              noOptionsMessage={() => 'シフトが見つかりません'}
-              placeholder='シフトを選択'
-              styles={{
-                multiValueLabel: (provided) => ({
-                  ...provided,
-                  minWidth: '40px',  // 各選択されたoptionのラベルの最小幅を指定
-                  maxWidth: '40px', // 各選択されたoptionのラベルの最大幅を指定
-                  minHeight: '26.4px', // 各選択されたoptionのラベルの最小高さを指定
-                  overflow: 'hidden', // 幅を超えた場合の処理
-                  textOverflow: 'ellipsis',  // 溢れたテキストに省略記号を追加
-                  whiteSpace: 'nowrap', // テキストを折り返さないように設定
-                }),
-                menu: (provided) => ({
-                  ...provided,
-                  overflowY: 'auto',
-                }),
-                // ドロップダウンの高さを指定
-                menuList: (provided) => ({
-                  ...provided,
-                  maxHeight: (selectedTasks.length) < 5 ? '150px' : '200px',
-                }),
-                // 選択されたoptionの高さを指定
-                control: (provided) => ({
-                  ...provided,
-                  maxHeight: '80px',
-                  overflowY: 'auto',
-                }),
-                option: (provided, state) => ({
-                  ...provided,
-                  minHeight: '40px',
-                  color: state.isSelected ? 'white' : 'black',
-                  backgroundColor: state.isSelected ? '#3182ce' : 'white',
-                  '&:hover': {
-                    backgroundColor: '#3182ce',
-                    color: 'white',
-                  },
-                }),
-              }}
-              onChange={selectedTasksHandler}
-            />
-          </div>
-          <div className='max-h-64 px-2 pb-2 overflow-y-auto select-none'>
-            <table className='table-fixed mb-5 w-full border-collapse'>
-              <thead className='sticky top-0 z-10'>
-                <tr>
-                  <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
-                    <p className='text-center text-sm text-emphasis'>タスク名</p>
-                  </th>
-                  <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
-                    <p className='text-center text-sm text-emphasis'>最大人数</p>
-                  </th>
-                  {timeList.map((time: Time, i: number) => (
-                    i % 2 === 0 ?
-                      <th className='w-3/64 bg-surface-2 border border-accent-1 py-1'>
-                        <p className='text-center text-sm text-emphasis'>{time.time + '-'}</p>
-                      </th>
-                      :
-                      <th className='w-3/64 bg-surface-2 border border-accent-1 py-1' />
+              <div className='w-1/6'>
+                <Select className="w-full" value={formData.weatherID} onChange={handler('weatherID')}>
+                  {WeatherItem.map((data) => (
+                    <option key={data.id} value={data.id}>
+                      {data.weather}
+                    </option>
                   ))}
-                </tr>
-              </thead>
-              <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
-                {tasks ? tasks
-                  .filter((task: Task) => (task.id === selectedTasks.find((option) => option.label === task.task)?.value))
-                  .sort((a: Task, b: Task) => (a.id - b.id))
-                  .map((task: Task, index) => (
-                    <tr key={task.id}>
+                </Select>
+              </div>
+              <div className='w-1/6'>
+                <ToggleButton isToggleState={hasDestroyMode} initialLabel='編集モード' toggledLabel='削除モード' onClick={() => (setHasDestroyMode(!hasDestroyMode))} />
+              </div>
+            </div>
+            <div className='flex justify-between items-center p-2'>
+              <div className='flex justify-center items-center gap-4 px-2 rounded-lg border border-accent-1 hover:bg-accent-1' onClick={() => { changeTimeScale(-1) }}>
+                <FaChevronLeft />
+                {timeScaleID === 1 ? TimeScaleItem[5].time : TimeScaleItem[timeScaleID - 2].time}
+              </div>
+              <div className='text-xl'>
+                {TimeScaleItem[timeScaleID - 1].time}
+              </div>
+              <div className='flex justify-center items-center gap-4 px-2 rounded-lg border border-accent-1 hover:bg-accent-1' onClick={() => { changeTimeScale(1) }}>
+                {timeScaleID === 6 ? TimeScaleItem[0].time : TimeScaleItem[timeScaleID].time}
+                <FaChevronRight />
+              </div>
+            </div>
+            <div className='h-screen px-2 pb-2 overflow-y-auto select-none'>
+              <table className='table-fixed mb-5 w-full border-collapse'>
+                <thead className='sticky top-0 z-10'>
+                  <tr>
+                    <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
+                      <p className='text-center text-sm text-emphasis'>所属局</p>
+                    </th>
+                    <th className='w-2/12 bg-surface-2 border border-accent-1 py-1'>
+                      <p className='text-center text-sm text-emphasis'>名前</p>
+                    </th>
+                    {timeList.map((time: Time, i: number) => (
+                      i % 2 === 0 ?
+                        <th className='w-3/64 bg-surface-2 border border-accent-1 py-1'>
+                          <p className='text-center text-sm text-emphasis'>{time.time + '-'}</p>
+                        </th>
+                        :
+                        <th className='w-3/64 bg-surface-2 border border-accent-1 py-1' />
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
+                  {filteredUsers ? filteredUsers.map((user: User, index) => (
+                    <tr key={user.id}>
                       <td
                         className={clsx(
                           'px-1 py-1 bg-surface-2',
@@ -474,7 +369,7 @@ export default function Users(props: Props) {
                           index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
                         )}
                       >
-                        <p className='text-center text-sm text-emphasis truncate'>{selectedTasks[index].label}</p>
+                        <p className='text-center text-sm text-emphasis'>{bureaus.find((bureau: Bureau) => (bureau.id === user.bureauID))?.bureau}</p>
                       </td>
                       <td
                         className={clsx(
@@ -483,47 +378,238 @@ export default function Users(props: Props) {
                           index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
                         )}
                       >
-                        <p className='text-center text-sm text-emphasis'>{tasks[index].maxMember}</p>
+                        <p className='text-center text-sm text-emphasis'>{user.name}</p>
                       </td>
-                      {timeList.map((time: Time, i: number) => {
-                        const currentMemberCount = filteredShifts
-                          .filter((shift: Shift) => (shift.taskID === task.id))
-                          .filter((shift: Shift) => (shift.dateID === formData.dateID))
-                          .filter((shift: Shift) => (shift.timeID === time.id))
-                          .length
-                        const excessMemberColor = '#ffaaaa';
-                        const shortageMemberColor = '#aaccff';
-                        const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
+                      {filteredShifts ? timeList.map((time: Time, i: number) => {
+                        const shift = filteredShifts.find((shift: Shift) => (shift.userID === user.id && shift.timeID === time.id));
+                        const task = shift ? tasks.find(task => task.id === shift.taskID) : null;
+                        const backgroundColor = task ? `#${task.color}` : '#ffffff';
+
                         return (
                           <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
-                            style={{ background: (backgroundColor) }}
+                            style={{
+                              background: (backgroundColor)
+                            }}
+                            onMouseDown={() => handleMouseDown(user, time, shift?.id || 0)}
+                            onMouseUp={handleMouseUp}
+                            onMouseEnter={() => handleMouseEnter(user, time, shift?.id || 0)}
                           >
-                            {currentMemberCount}
+                            {tasks ? tasks.find((task: Task) => (task.id === (filteredShifts ? filteredShifts.find((shift: Shift) => (shift.userID === user.id && shift.timeID === time.id))?.taskID : null)))?.task
+                              : null}
                           </td>
                         );
-                      })}
-                    </tr>
-                  )
+                      }) : timeList.map((time: Time, i: number) => {
+                        const backgroundColor = '#ffffff';
 
-                  )
-                  :
-                  'ユーザーが登録されていません'
-                }
-              </tbody>
-            </table>
-          </div>
-          <div className='flex justify-center items-center gap-10 my-4'>
-            <div className='flex ml-auto '>
-              <div style={{ width: 24, height: 24, background: '#aaccff' }}></div>
-              <p>: 人数不足</p>
+                        return (
+                          <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
+                            style={{
+                              background: (backgroundColor)
+                            }}
+                            onMouseDown={() => handleMouseDown(user, time, 0)}
+                            onMouseUp={handleMouseUp}
+                            onMouseEnter={() => handleMouseEnter(user, time, 0)}
+                          >
+                            {null}
+                          </td>
+                        )
+                      })
+                      }
+                    </tr>
+                  )) :
+                    'ユーザーが登録されていません'
+                  }
+                </tbody>
+              </table>
             </div>
-            <div className='flex mr-6'>
-              <div style={{ width: 24, height: 24, background: '#ffaaaa' }}></div>
-              <p>: 人数超過</p>
+          </div>
+          <div className='flex gap-4'>
+            <div className='object-bottom w-1/3 border border-accent-1 my-2'>
+              <div>
+                シフトの編集方法
+              </div>
+              <div className='pl-4'>
+                <div>
+                  <p>1. 担当局を選択</p>
+                  <div className='flex justify-center items-center gap-4 pl-4'>
+                    <div className='w-1/3'>担当局</div>
+                    <Select className='w-full' value={selectedBureau} onChange={bureauHandler()}>
+                      <option key={0} value={0}>All</option>
+                      {bureaus.map((data) => (
+                        <option key={data.id} value={data.id}>
+                          {data.bureau}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <p>2. 入力するシフトを選択</p>
+                  <div className='flex justify-center items-center gap-4 pl-4'>
+                    <div className='w-1/3'>シフト検索</div>
+                    <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
+                      {filteredTasks ? filteredTasks.map((data) => (
+                        <option key={data.id} value={data.id}>
+                          {data.task}
+                        </option>
+                      )) : <option key={1} value={1}>シフトが見つかりません</option>}
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <p>3. 開始時刻のセルをクリック&ドラッグ</p>
+                </div>
+                <div className='pt-2'>
+                  <p>* [編集モード]/[削除モード]をクリックで切り替えられます</p>
+                </div>
+              </div>
+            </div>
+            <div className='object-bottom w-2/3 border border-accent-1 my-2'>
+              <div>
+                シフトの現在の人数
+              </div>
+              <div className='flex justify-center items-center gap-4 pl-4'>
+                <div className='w-1/3'>表示するシフトを選択</div>
+                <ReactSelect className='w-full z-20'
+                  closeMenuOnSelect={true}
+                  value={selectedTasks}
+                  // defaultValue={null}
+                  isMulti
+                  options={formattedTasks}
+                  isSearchable
+                  noOptionsMessage={() => 'シフトが見つかりません'}
+                  placeholder='シフトを選択'
+                  styles={{
+                    multiValueLabel: (provided) => ({
+                      ...provided,
+                      minWidth: '40px',  // 各選択されたoptionのラベルの最小幅を指定
+                      maxWidth: '40px', // 各選択されたoptionのラベルの最大幅を指定
+                      minHeight: '26.4px', // 各選択されたoptionのラベルの最小高さを指定
+                      overflow: 'hidden', // 幅を超えた場合の処理
+                      textOverflow: 'ellipsis',  // 溢れたテキストに省略記号を追加
+                      whiteSpace: 'nowrap', // テキストを折り返さないように設定
+                    }),
+                    menu: (provided) => ({
+                      ...provided,
+                      overflowY: 'auto',
+                    }),
+                    // ドロップダウンの高さを指定
+                    menuList: (provided) => ({
+                      ...provided,
+                      maxHeight: (selectedTasks.length) < 5 ? '150px' : '200px',
+                    }),
+                    // 選択されたoptionの高さを指定
+                    control: (provided) => ({
+                      ...provided,
+                      maxHeight: '80px',
+                      overflowY: 'auto',
+                    }),
+                    option: (provided, state) => ({
+                      ...provided,
+                      minHeight: '40px',
+                      color: state.isSelected ? 'white' : 'black',
+                      backgroundColor: state.isSelected ? '#3182ce' : 'white',
+                      '&:hover': {
+                        backgroundColor: '#3182ce',
+                        color: 'white',
+                      },
+                    }),
+                  }}
+                  onChange={selectedTasksHandler}
+                />
+              </div>
+              <div className='max-h-64 px-2 pb-2 overflow-y-auto select-none'>
+                <table className='table-fixed mb-5 w-full border-collapse'>
+                  <thead className='sticky top-0 z-10'>
+                    <tr>
+                      <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
+                        <p className='text-center text-sm text-emphasis'>タスク名</p>
+                      </th>
+                      <th className='w-1/12 bg-surface-2 border border-accent-1 py-1'>
+                        <p className='text-center text-sm text-emphasis'>最大人数</p>
+                      </th>
+                      {timeList.map((time: Time, i: number) => (
+                        i % 2 === 0 ?
+                          <th className='w-3/64 bg-surface-2 border border-accent-1 py-1'>
+                            <p className='text-center text-sm text-emphasis'>{time.time + '-'}</p>
+                          </th>
+                          :
+                          <th className='w-3/64 bg-surface-2 border border-accent-1 py-1' />
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
+                    {tasks ? tasks
+                      .filter((task: Task) => (task.id === selectedTasks.find((option) => option.label === task.task)?.value))
+                      .sort((a: Task, b: Task) => (a.id - b.id))
+                      .map((task: Task, index) => (
+                        <tr key={task.id}>
+                          <td
+                            className={clsx(
+                              'px-1 py-1 bg-surface-2',
+                              index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                              index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                            )}
+                          >
+                            <p className='text-center text-sm text-emphasis truncate'>{selectedTasks[index].label}</p>
+                          </td>
+                          <td
+                            className={clsx(
+                              'px-1 py-1 bg-surface-2 border-accent-1 ',
+                              index === 0 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                              index === filteredUsers.length - 1 ? 'pb-2 pt-1' : 'border border-accent-1 py-1',
+                            )}
+                          >
+                            <p className='text-center text-sm text-emphasis'>{tasks[index].maxMember}</p>
+                          </td>
+                          {timeList.map((time: Time, i: number) => {
+                            const currentMemberCount = filteredShifts
+                              .filter((shift: Shift) => (shift.taskID === task.id))
+                              .filter((shift: Shift) => (shift.dateID === formData.dateID))
+                              .filter((shift: Shift) => (shift.timeID === time.id))
+                              .length
+                            const excessMemberColor = '#ffaaaa';
+                            const shortageMemberColor = '#aaccff';
+                            const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
+                            return (
+                              <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
+                                style={{ background: (backgroundColor) }}
+                              >
+                                {currentMemberCount}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )
+
+                      )
+                      :
+                      'ユーザーが登録されていません'
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <div className='flex justify-center items-center gap-10 my-4'>
+                <div className='flex ml-auto '>
+                  <div style={{ width: 24, height: 24, background: '#aaccff' }}></div>
+                  <p>: 人数不足</p>
+                </div>
+                <div className='flex mr-6'>
+                  <div style={{ width: 24, height: 24, background: '#ffaaaa' }}></div>
+                  <p>: 人数超過</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+        :
+        <>
+          <div className='mt-4'>
+            <p>タスクが1つも登録されていません。</p>
+            <p>「タスク」に移動し、タスクを追加してください。</p>
+          </div>
+        </>
+      }
     </ListPageLayout >
   );
 }
