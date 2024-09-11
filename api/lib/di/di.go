@@ -42,7 +42,7 @@ func InitializeServer() db.Client {
 	gradeUseCase := usecase.NewGradeUseCase(gradeRepository)
 	placeUseCase := usecase.NewPlaceUseCase(placeRepository)
 	departmentUseCase := usecase.NewDepartmentUseCase(departmentRepository)
-	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository)
+	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository, placeRepository)
 	taskUseCase := usecase.NewTaskUseCase(taskRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
