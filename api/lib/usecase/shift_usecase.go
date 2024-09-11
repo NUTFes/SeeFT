@@ -17,6 +17,7 @@ type shiftUseCase struct {
   dateRep rep.DateRepository
   timeRep rep.TimeRepository
   weatherRep rep.WeatherRepository
+	placeRep rep.PlaceRepository
 }
 
 type ShiftUseCase interface {
@@ -42,11 +43,12 @@ func NewShiftUseCase(
   yearRep rep.YearRepository,
   dateRep rep.DateRepository,
   timeRep rep.TimeRepository,
-  weatherRep rep.WeatherRepository) ShiftUseCase {
-  return &shiftUseCase{rep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep}
+  weatherRep rep.WeatherRepository,
+	placeRep rep.PlaceRepository) ShiftUseCase {
+  return &shiftUseCase{rep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep}
 }
 
-var TaskID, UserID, YearID, DateID, TimeID, WeatherID string
+var TaskID, UserID, YearID, DateID, TimeID, WeatherID, PlaceID string
 
 // 時間でソート
 type ByTime []entity.Shift
@@ -57,6 +59,7 @@ func (a ByTime) Less(i, j int) bool { return a[i].Time.ID < a[j].Time.ID }
 func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
   shift := entity.Shift{}
   var shifts []entity.Shift
+	place := entity.Place{}
 
   // クエリー実行
 	rows, err := a.rep.All(c)
@@ -83,7 +86,7 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 		err = row.Scan(
 			&shift.Task.ID,
 			&shift.Task.Task,
-			&shift.Task.PlaceID,
+			&PlaceID,
 			&shift.Task.Url,
 			&shift.Task.BureauID,
 			&shift.Task.MaxMember,
@@ -92,6 +95,15 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 			&shift.Task.YearID,
 			&shift.Task.CreatedAt,
 			&shift.Task.UpdatedAt,
+		)
+
+		row, err = a.placeRep.Find(c, PlaceID)
+		err = rows.Scan(
+			&place.ID,
+			&shift.Task.Place,
+			&place.Remark,
+			&place.CreatedAt,
+			&place.UpdatedAt,
 		)
 
 		row, err = a.userRep.Find(c, UserID)
@@ -155,6 +167,8 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 
 func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift, error) {
 	var shift entity.Shift
+	place := entity.Place{}
+
 	row, err := a.rep.Find(c, id)
 	err = row.Scan(
 		&shift.ID,
@@ -163,8 +177,8 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 		&YearID,
 		&DateID,
 		&TimeID,
-  		&WeatherID,
-  		&shift.IsAttendance,
+  	&WeatherID,
+  	&shift.IsAttendance,
 		&shift.CreatedAt,
 		&shift.UpdatedAt,
 	)
@@ -173,7 +187,7 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 	err = row.Scan(
 		&shift.Task.ID,
 		&shift.Task.Task,
-		&shift.Task.PlaceID,
+		&PlaceID,
 		&shift.Task.Url,
 		&shift.Task.BureauID,
 		&shift.Task.MaxMember,
@@ -182,6 +196,15 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 		&shift.Task.YearID,
 		&shift.Task.CreatedAt,
 		&shift.Task.UpdatedAt,
+	)
+
+	row, err = a.placeRep.Find(c, PlaceID)
+	err = row.Scan(
+		&place.ID,
+		&shift.Task.Place,
+		&place.Remark,
+		&place.CreatedAt,
+		&place.UpdatedAt,
 	)
 
 	row, err = a.userRep.Find(c, UserID)
@@ -244,6 +267,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 
   shift := entity.Shift{}
   var shifts []entity.Shift
+	place := entity.Place{}
 
   // クエリー実行
 	rows, err := a.rep.User(c, id)
@@ -270,7 +294,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 		err = row.Scan(
 			&shift.Task.ID,
 			&shift.Task.Task,
-			&shift.Task.PlaceID,
+			&PlaceID,
 			&shift.Task.Url,
 			&shift.Task.BureauID,
 			&shift.Task.MaxMember,
@@ -279,6 +303,15 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 			&shift.Task.YearID,
 			&shift.Task.CreatedAt,
 			&shift.Task.UpdatedAt,
+		)
+
+		row, err = a.placeRep.Find(c, PlaceID)
+		err = row.Scan(
+			&place.ID,
+			&shift.Task.Place,
+			&place.Remark,
+			&place.CreatedAt,
+			&place.UpdatedAt,
 		)
 
 		row, err = a.userRep.Find(c, UserID)
@@ -346,6 +379,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 
   shift := entity.Shift{}
   var shifts []entity.Shift
+	place := entity.Place{}
 
   // クエリー実行
 	rows, err := a.rep.UserAndDateAndWeather(c, id, date, weather)
@@ -372,7 +406,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 		err = row.Scan(
 			&shift.Task.ID,
 			&shift.Task.Task,
-			&shift.Task.PlaceID,
+			&PlaceID,
 			&shift.Task.Url,
 			&shift.Task.BureauID,
 			&shift.Task.MaxMember,
@@ -381,6 +415,15 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&shift.Task.YearID,
 			&shift.Task.CreatedAt,
 			&shift.Task.UpdatedAt,
+		)
+
+		row, err = a.placeRep.Find(c, PlaceID)
+		err = row.Scan(
+			&place.ID,
+			&shift.Task.Place,
+			&place.Remark,
+			&place.CreatedAt,
+			&place.UpdatedAt,
 		)
 
 		row, err = a.userRep.Find(c, UserID)

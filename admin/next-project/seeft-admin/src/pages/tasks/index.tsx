@@ -53,7 +53,7 @@ export default function Users(props: Props) {
     await destroy(destroyTaskInformationUrl, data);
     router.reload();
   };
-  
+
   const filterBureauHandler = () =>
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setFilteredBureau(Number(e.target.value));
@@ -135,7 +135,7 @@ export default function Users(props: Props) {
                     index === filteredTasks.length - 1 ? 'pb-4 pt-3' : 'border-b-accent-1 py-3',
                   )}
                 >
-                  <p className='text-center text-sm text-emphasis'>{places.find((place: Place) => { place.id === task.placeID })?.place}</p>
+                  <p className='text-center text-sm text-emphasis'>{places.length ? places.find((place: Place) => (place.id === task.placeID))?.place : "error"}</p>
                 </td>
                 <td
                   className={clsx(
@@ -208,7 +208,7 @@ export default function Users(props: Props) {
                   </DeleteButton>
                 </td>
               </tr>
-            )) : 
+            )) :
               <tr>
                 <td colSpan={9} className='text-center text-emphasis py-3'>データがありません</td>
               </tr>}

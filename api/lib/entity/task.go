@@ -18,6 +18,20 @@ type Task struct {
 	UpdatedAt time.Time	`json:"updatetedAt"`
 }
 
+type TaskMobile struct {
+	ID        int    	`json:"id"`
+	Task      string 	`json:"task"`
+	Place 		string		`json:"place"`
+	Url       string 	`json:"url"`
+	BureauID  int     	`json:"bureauID"`
+	MaxMember int 		`json:"maxMember"`
+	Color     string	`json:"color"`
+	Remark    string	`json:"remark"`
+	YearID	  int		`json:"yearID"`
+	CreatedAt time.Time	`json:"createdAt"`
+	UpdatedAt time.Time	`json:"updatetedAt"`
+}
+
 // import './entity.dart';
 
 // class Task {

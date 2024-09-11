@@ -7,7 +7,7 @@ import (
 // スマホアプリ用
 type Shift struct {
 	ID		   	int    		`json:"id"`
-	Task		Task  		`json:"task"`
+	Task		TaskMobile  		`json:"task"`
 	User     	User  		`json:"user"`
 	Year	   	Year  		`json:"year"`
 	Date     	Date		`json:"date"`
