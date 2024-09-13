@@ -448,7 +448,13 @@ export default function Users(props: Props) {
                   <div className='flex justify-center items-center gap-4 pl-4'>
                     <div className='w-1/3'>シフト検索</div>
                     <Select className='w-full' value={formData.taskID} onChange={handler('taskID')}>
-                      {filteredTasks ? filteredTasks.map((data) => (
+                      {filteredTasks ? filteredTasks.sort(function (a, b) {
+                        if (a.task > b.task) {
+                          return 1
+                        } else {
+                          return -1
+                        }
+                      }).map((data) => (
                         <option key={data.id} value={data.id}>
                           {data.task}
                         </option>
@@ -541,7 +547,13 @@ export default function Users(props: Props) {
                   <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
                     {tasks ? tasks
                       .filter((task: Task) => (task.id === selectedTasks.find((option) => option.label === task.task)?.value))
-                      .sort((a: Task, b: Task) => (a.id - b.id))
+                      .sort(function (a, b) {
+                        if (a.task > b.task) {
+                          return 1
+                        } else {
+                          return -1
+                        }
+                      })
                       .map((task: Task, index) => (
                         <tr key={task.id}>
                           <td
