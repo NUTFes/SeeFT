@@ -117,7 +117,13 @@ export default function Users(props: Props) {
             </tr>
           </thead>
           <tbody className='border border-x-white-0 border-b-accent-1 border-t-white-0'>
-            {filteredTasks ? filteredTasks.map((task: Task, index) => (
+            {filteredTasks ? filteredTasks.sort(function (a, b) {
+              if (a.task > b.task) {
+                return 1
+              } else {
+                return -1
+              }
+            }).map((task: Task, index) => (
               <tr key={task.id}>
                 <td
                   className={clsx(
