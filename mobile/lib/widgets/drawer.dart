@@ -83,7 +83,8 @@ class ApplicationDrawer {
           leading: Icon(Icons.help),
           onTap: () async {
             var url =
-                "https://docs.google.com/document/d/1zCiz6rcrQuAXdVNg15MWCun2c2Babz0umPJxfJLD-Wg";
+            "https://docs.google.com/presentation/d/1ukPkDkkVSXWmEDY_MBOwEHPtkgm3DL64nDdLQjoTQ_0/edit#slide=id.p1";
+                //"https://docs.google.com/document/d/1zCiz6rcrQuAXdVNg15MWCun2c2Babz0umPJxfJLD-Wg";
             if (await canLaunch(url)) {
               await launch(url);
             } else {
