@@ -2,6 +2,10 @@
 up:
 	docker compose up 
 
+d:
+	docker compose up -d
+	docker ps
+
 .PHONY: mac up
 mac-up:
 	docker compose -f docker-compose.mac.yml up 
