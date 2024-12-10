@@ -35,7 +35,7 @@ services:
     volumes:
       - ./mobile:/app
     #シェルスクリプトを実行するコマンド
-    command: "python3 ./python/server.py"
+    command: flutter run -d web-server --web-port=45029
     ports:
       - "45029:45029"
     stdin_open: true
