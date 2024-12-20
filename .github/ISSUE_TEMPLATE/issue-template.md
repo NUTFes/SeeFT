@@ -1,7 +1,7 @@
 ---
 name: issue template
 about: issueのテンプレート
-title: "[ tag ]Title"
+title: "[ tag ] Title"
 labels: ''
 assignees: uchida189
 
@@ -30,8 +30,12 @@ assignees: uchida189
 - Docker / Dockerfile, docker-compose.yaml
 - Google-Spread-Sheet / Google Spread Sheet, Google Apps Script
 #### 難易度・規模
-<!-- XL, L, M, S, XS から選択（XLが最大） -->
-- 
+<!-- 不要なものを消す -->
+- XL（20時間以上）
+- L （15時間くらい）
+- M（15時間くらい）
+- S （15時間くらい）
+- XS（3時間くらい）
 #### 担当者
 - 
 
