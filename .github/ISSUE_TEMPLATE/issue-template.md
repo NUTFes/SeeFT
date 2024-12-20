@@ -9,20 +9,34 @@ assignees: uchida189
 
 # 開発概要
 #### 目的
+<!-- この機能を実装する目的 または このタスクの目的を記入 -->
 - 
 #### 開発期間
 - 開始日：
 - 締切日：
 #### 優先度
+<!-- 0, 1, 2, 3 から選択（数字が小さいほど優先度高い） -->
 - 
 #### カテゴリ/スキル
-- 
+<!-- 不要なものを消す -->
+- Meeting
+- Hearing
+- Training
+- Design / Figma
+- Frontend-Mobile / Dart(Flutter)
+- Frontend-Admin / TypeScript, React, NextJS
+- Backend / Go, TypeScript
+- Database / PostgreSQL
+- Docker / Dockerfile, docker-compose.yaml
+- Google-Spread-Sheet / Google Spread Sheet, Google Apps Script
 #### 難易度・規模
+<!-- XL, L, M, S, XS から選択（XLが最大） -->
 - 
 #### 担当者
 - 
 
 # 考えられる開発内容
+<!-- チェックボックスで書くと「todo: △/○」みたいに表示されるので良き -->
 - [ ] 
 
 # 備考
