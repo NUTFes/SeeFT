@@ -31,10 +31,10 @@ assignees: uchida189
 - Google-Spread-Sheet / Google Spread Sheet, Google Apps Script
 #### 難易度・規模
 <!-- 不要なものを消す -->
-- XL（20時間以上）
-- L （15時間くらい）
-- M（15時間くらい）
-- S （15時間くらい）
+- XL（25時間以上）
+- L （20時間くらい）
+- M（10時間くらい）
+- S （5時間くらい）
 - XS（3時間くらい）
 #### 担当者
 - 
