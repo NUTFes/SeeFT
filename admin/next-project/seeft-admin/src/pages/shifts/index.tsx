@@ -383,12 +383,12 @@ export default function Users(props: Props) {
                       {filteredShifts ? timeList.map((time: Time, i: number) => {
                         const shift = filteredShifts.find((shift: Shift) => (shift.userID === user.id && shift.timeID === time.id));
                         const task = shift ? tasks.find(task => task.id === shift.taskID) : null;
-                        const backgroundColor = task ? `#${task.color}` : '#ffffff';
+                        const colorScheme = task ? `#${task.color}` : '#ffffff';
 
                         return (
                           <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
                             style={{
-                              background: (backgroundColor)
+                              background: (colorScheme)
                             }}
                             onMouseDown={() => handleMouseDown(user, time, shift?.id || 0)}
                             onMouseUp={handleMouseUp}
@@ -399,12 +399,12 @@ export default function Users(props: Props) {
                           </td>
                         );
                       }) : timeList.map((time: Time, i: number) => {
-                        const backgroundColor = '#ffffff';
+                        const colorScheme = '#ffffff';
 
                         return (
                           <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
                             style={{
-                              background: (backgroundColor)
+                              background: (colorScheme)
                             }}
                             onMouseDown={() => handleMouseDown(user, time, 0)}
                             onMouseUp={handleMouseUp}
@@ -514,9 +514,9 @@ export default function Users(props: Props) {
                       ...provided,
                       minHeight: '40px',
                       color: state.isSelected ? 'white' : 'black',
-                      backgroundColor: state.isSelected ? '#3182ce' : 'white',
+                      colorScheme: state.isSelected ? '#3182ce' : 'white',
                       '&:hover': {
-                        backgroundColor: '#3182ce',
+                        colorScheme: '#3182ce',
                         color: 'white',
                       },
                     }),
@@ -582,10 +582,10 @@ export default function Users(props: Props) {
                               .length
                             const excessMemberColor = '#ffaaaa';
                             const shortageMemberColor = '#aaccff';
-                            const backgroundColor = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
+                            const colorScheme = currentMemberCount < task.maxMember ? shortageMemberColor : currentMemberCount > task.maxMember ? excessMemberColor : '#ffffff';
                             return (
                               <td className='fixed-width w-3/64 bg-white-0 border border-accent-1 py-1 overflow-hidden text-ellipsis whitespace-nowrap text-center text-sm text-emphasis'
-                                style={{ background: (backgroundColor) }}
+                                style={{ background: (colorScheme) }}
                               >
                                 {currentMemberCount}
                               </td>

@@ -67,10 +67,10 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
                   GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
               primarySwatch: Colors.teal,
               secondaryHeaderColor: Colors.teal,
-              focusColor: Colors.teal,
-              backgroundColor: Colors.white,
-              cardColor: Colors.white,
-              dialogBackgroundColor: Colors.white,
+              focusColor: Colors.teal, 
+              // : Colors.white,
+              cardColor: Colors.white,//カードの背景色
+              scaffoldBackgroundColor: Colors.white,//背景色
               pageTransitionsTheme: const PageTransitionsTheme(
                 builders: <TargetPlatform, PageTransitionsBuilder>{
                   TargetPlatform.android: CupertinoPageTransitionsBuilder(),
@@ -98,11 +98,11 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
               textTheme:
                   GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
               primarySwatch: Colors.teal,
-              secondaryHeaderColor: Colors.teal,
+              // : Colors.teal,
               focusColor: Colors.teal,
-              backgroundColor: Colors.white,
+              // : Colors.white,
               cardColor: Colors.white,
-              dialogBackgroundColor: Colors.white,
+              scaffoldBackgroundColor: Colors.white,//配色の段階や構造は要検討　今はどれがどれか分かってない。1/28
               pageTransitionsTheme: const PageTransitionsTheme(
                 builders: <TargetPlatform, PageTransitionsBuilder>{
                   TargetPlatform.android: CupertinoPageTransitionsBuilder(),

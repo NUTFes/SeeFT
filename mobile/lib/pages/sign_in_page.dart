@@ -36,7 +36,7 @@ class _SignInPageState extends State<SignInPage> {
         setState(() {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('学籍番号もしくはパスワードが違います'),
-            backgroundColor: Colors.redAccent,
+            // cardColor: Colors.redAccent, //元colorScheme
           ));
         });
       }
@@ -44,7 +44,7 @@ class _SignInPageState extends State<SignInPage> {
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('学籍番号もしくはパスワードが違います'),
-          backgroundColor: Colors.redAccent,
+          // colorScheme: Colors.redAccent,
         ));
       });
     }
@@ -122,8 +122,8 @@ class _SignInPageState extends State<SignInPage> {
                         child: ElevatedButton(
                           child: const Text('ログイン'),
                           style: ElevatedButton.styleFrom(
-                            primary: Colors.teal,
-                            onPrimary: Colors.white,
+                            // primary: Colors.teal,
+                            // onPrimary: Colors.white,
                           ),
                           onPressed: () async {
                             _signIn();
