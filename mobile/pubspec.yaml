@@ -32,6 +32,7 @@ dependencies:
   shared_preferences: ^2.2.0
   http: ^0.13.3
   flutter_local_notifications: ^9.0.0
+  flutter_local_notifications_linux: ^0.5.1   #追加1/28
   google_fonts: ^4.0.0
   url_launcher: ^6.0.10
 
@@ -59,7 +60,10 @@ flutter_native_splash:
 
 # The following section is specific to Flutter.
 flutter:
-
+  plugin:                                                   #追加
+    platforms:                                              #追加
+      linux:                                                #追加
+        default_package: flutter_local_notifications_linux  #追加
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
