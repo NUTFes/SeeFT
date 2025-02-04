@@ -9,6 +9,7 @@ import 'package:seeft_mobile/pages/schedule_page.dart';
 import 'package:seeft_mobile/pages/contact_page.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 import 'package:seeft_mobile/pages/users_page.dart';
+import 'package:seeft_mobile/theme/theme.dart';
 
 class FirstJumpSelector extends StatefulWidget {
   @override
@@ -38,6 +39,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
   @override
   Widget build(BuildContext context) {
     logger.i('navigated Splash.');
+    final _materialTheme = MaterialTheme(Typography().black); // Typography() は変更が必要な可能性があります
 
     return FutureBuilder(
       future: getPrefRead(),
@@ -62,22 +64,25 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
 
           app = new MaterialApp(
             title: constant.appName,
-            theme: ThemeData(
-              textTheme:
-                  GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
-              primarySwatch: Colors.teal,
-              secondaryHeaderColor: Colors.teal,
-              focusColor: Colors.teal,
-              backgroundColor: Colors.white,
-              cardColor: Colors.white,
-              dialogBackgroundColor: Colors.white,
-              pageTransitionsTheme: const PageTransitionsTheme(
-                builders: <TargetPlatform, PageTransitionsBuilder>{
-                  TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
-                },
-              ),
-            ),
+            theme: _materialTheme.light(), // ライトモードのテーマ
+              darkTheme: _materialTheme.dark(), // ダークモードのテーマ
+              themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
+            // theme: ThemeData(
+            //   textTheme:
+            //       GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),  
+            //   primarySwatch: Colors.teal, // hex: #009688
+            //   secondaryHeaderColor: Colors.teal,
+            //   focusColor: Colors.teal,
+            //   backgroundColor: Colors.white,
+            //   cardColor: Colors.white,
+            //   dialogBackgroundColor: Colors.white,
+            //   pageTransitionsTheme: const PageTransitionsTheme(
+            //     builders: <TargetPlatform, PageTransitionsBuilder>{
+            //       TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            //       TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
+            //     },
+            //   ),
+            // ),
             //home: homeWidget,
             initialRoute: homeWidget,
             routes: {
