@@ -66,24 +66,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
             title: constant.appName,
             theme: _materialTheme.light(), // ライトモードのテーマ
               darkTheme: _materialTheme.dark(), // ダークモードのテーマ
-              // themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
-              themeMode: ThemeMode.light,
-            // theme: ThemeData(
-            //   textTheme:
-            //       GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),  
-            //   primarySwatch: Colors.teal, // hex: #009688
-            //   secondaryHeaderColor: Colors.teal,
-            //   focusColor: Colors.teal,
-            //   backgroundColor: Colors.white,
-            //   cardColor: Colors.white,
-            //   dialogBackgroundColor: Colors.white,
-            //   pageTransitionsTheme: const PageTransitionsTheme(
-            //     builders: <TargetPlatform, PageTransitionsBuilder>{
-            //       TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            //       TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
-            //     },
-            //   ),
-            // ),
+              themeMode: ThemeMode.light, // ライトモードを適用
             //home: homeWidget,
             initialRoute: homeWidget,
             routes: {
@@ -102,24 +85,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
             title: constant.appName,
             theme: _materialTheme.light(), // ライトモードのテーマ
               darkTheme: _materialTheme.dark(), // ダークモードのテーマ
-              // themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
-              themeMode: ThemeMode.light,
-            // theme: ThemeData(
-            //   textTheme:
-            //       GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
-            //   primarySwatch: Colors.teal,
-            //   secondaryHeaderColor: Colors.teal,
-            //   focusColor: Colors.teal,
-            //   backgroundColor: Colors.white,
-            //   cardColor: Colors.white,
-            //   dialogBackgroundColor: Colors.white,
-            //   pageTransitionsTheme: const PageTransitionsTheme(
-            //     builders: <TargetPlatform, PageTransitionsBuilder>{
-            //       TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            //       TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
-            //     },
-            //   ),
-            // ),
+              themeMode: ThemeMode.light, // ライトモードを適用
             home: Scaffold(
               appBar: AppBar(
                 title: const Text('Error Message'),
