@@ -99,22 +99,25 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
         } else if (snapshot.hasError) {
           app = new MaterialApp(
             title: constant.appName,
-            theme: ThemeData(
-              textTheme:
-                  GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
-              primarySwatch: Colors.teal,
-              secondaryHeaderColor: Colors.teal,
-              focusColor: Colors.teal,
-              backgroundColor: Colors.white,
-              cardColor: Colors.white,
-              dialogBackgroundColor: Colors.white,
-              pageTransitionsTheme: const PageTransitionsTheme(
-                builders: <TargetPlatform, PageTransitionsBuilder>{
-                  TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
-                },
-              ),
-            ),
+            theme: _materialTheme.light(), // ライトモードのテーマ
+              darkTheme: _materialTheme.dark(), // ダークモードのテーマ
+              themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
+            // theme: ThemeData(
+            //   textTheme:
+            //       GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),
+            //   primarySwatch: Colors.teal,
+            //   secondaryHeaderColor: Colors.teal,
+            //   focusColor: Colors.teal,
+            //   backgroundColor: Colors.white,
+            //   cardColor: Colors.white,
+            //   dialogBackgroundColor: Colors.white,
+            //   pageTransitionsTheme: const PageTransitionsTheme(
+            //     builders: <TargetPlatform, PageTransitionsBuilder>{
+            //       TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            //       TargetPlatform.iOS: CupertinoPageTransitionsBuilder()
+            //     },
+            //   ),
+            // ),
             home: Scaffold(
               appBar: AppBar(
                 title: const Text('Error Message'),
