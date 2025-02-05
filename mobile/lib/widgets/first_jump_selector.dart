@@ -66,7 +66,8 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
             title: constant.appName,
             theme: _materialTheme.light(), // ライトモードのテーマ
               darkTheme: _materialTheme.dark(), // ダークモードのテーマ
-              themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
+              // themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
+              themeMode: ThemeMode.light,
             // theme: ThemeData(
             //   textTheme:
             //       GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),  
@@ -101,7 +102,8 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
             title: constant.appName,
             theme: _materialTheme.light(), // ライトモードのテーマ
               darkTheme: _materialTheme.dark(), // ダークモードのテーマ
-              themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
+              // themeMode: ThemeMode.system, // システムの設定に従う (ライト/ダーク)
+              themeMode: ThemeMode.light,
             // theme: ThemeData(
             //   textTheme:
             //       GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),

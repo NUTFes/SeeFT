@@ -122,8 +122,8 @@ class _SignInPageState extends State<SignInPage> {
                         child: ElevatedButton(
                           child: const Text('ログイン'),
                           style: ElevatedButton.styleFrom(
-                            primary: Colors.teal,
-                            onPrimary: Colors.white,
+                            // primary: Colors.teal,
+                            // onPrimary: Colors.white,
                           ),
                           onPressed: () async {
                             _signIn();
