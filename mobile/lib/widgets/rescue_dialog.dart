@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:seeft_mobile/configs/importer.dart';
 
-rescueDialog(BuildContext context,) async {
+openRescueDialog(BuildContext context,) async {
   showDialog(
     context: context,
     builder: (context) {
@@ -14,19 +14,11 @@ rescueDialog(BuildContext context,) async {
             appBar: AppBar(
               title: Text("レスキュー"), 
               centerTitle: true,
-              actions: <Widget>[
-                IconButton(
-                  onPressed: () async {
-                    _launchURL(resURL);
-                  },
-                  icon: Icon(Icons.wrap_text),
-                  color: Colors.orangeAccent[100],
-                ),
-              ],
             ),
             body: Container(
               child: TextButton(
-                child: Text("送信")
+                child: Text("送信"),
+                onPressed: () {}
               )
             ),
           ),
