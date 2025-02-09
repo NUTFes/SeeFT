@@ -119,3 +119,4 @@ app.*.symbols
 
 # FVM Version Cache
 .fvm/
+mobile/.fvm/
