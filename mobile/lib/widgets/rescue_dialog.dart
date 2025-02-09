@@ -18,7 +18,7 @@ openRescueDialog(BuildContext context,) async {
             body: Container(
               child: TextButton(
                 child: Text("送信"),
-                onPressed: postRescue(),
+                onPressed: api.postRescue
               )
             ),
           ),

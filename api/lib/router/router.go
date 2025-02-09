@@ -7,16 +7,17 @@ import (
 )
 
 type router struct {
-	healthcheckController     controller.HealthcheckController
-	mailAuthController		  controller.MailAuthController
-	bureauController          controller.BureauController
-	gradeController						controller.GradeController
-	placeController						controller.PlaceController
-	departmentController      controller.DepartmentController
-	shiftController 		  		controller.ShiftController
-	taskController			  		controller.TaskController
-	timeController			  		controller.TimeController
-	userController						controller.UserController
+	healthcheckController controller.HealthcheckController
+	mailAuthController    controller.MailAuthController
+	bureauController      controller.BureauController
+	gradeController       controller.GradeController
+	placeController       controller.PlaceController
+	departmentController  controller.DepartmentController
+	shiftController       controller.ShiftController
+	taskController        controller.TaskController
+	timeController        controller.TimeController
+	userController        controller.UserController
+	rescueController      controller.RescueController
 }
 
 type Router interface {
@@ -34,6 +35,7 @@ func NewRouter(
 	taskController controller.TaskController,
 	timeController controller.TimeController,
 	userController controller.UserController,
+	rescueController controller.RescueController,
 ) Router {
 	return router{
 		healthController,
@@ -46,6 +48,7 @@ func NewRouter(
 		taskController,
 		timeController,
 		userController,
+		rescueController,
 	}
 }
 
@@ -119,4 +122,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 
 	// current_user
 	e.GET("/current_user", r.userController.GetCurrentUser)
+
+	// rescue
+	e.POST("/rescue", r.rescueController.CreateRescue)
 }
