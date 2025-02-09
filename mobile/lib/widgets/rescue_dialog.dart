@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:seeft_mobile/configs/importer.dart';
 
-openShiftDialog(BuildContext context,) async {
+rescueDialog(BuildContext context,) async {
   showDialog(
     context: context,
     builder: (context) {
