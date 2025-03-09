@@ -380,9 +380,9 @@ Future<void> openRescueDialog(BuildContext context,) async {
                   ),
                   onPressed:(){
                     setState((){
+                      api.postRescue();
                       _rescuePageIndex = 3;//データを送信する機能はここに入れる
                     });
-                    api.postRescue;
                   }
                 )
               ]
