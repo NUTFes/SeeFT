@@ -33,6 +33,16 @@ class _ContactPageState extends State<ContactPage> {
             child: Column(
               children: <Widget>[
                 Text(
+                  "レスキュー\n",
+                  textAlign: TextAlign.center,
+                ),
+                TextButton(
+                  child: Text("ダイアログを開く"),
+                  onPressed: () async {
+                    await openRescueDialog(context);
+                  }
+                ),
+                Text(
                   "当日の対応などでマニュアルでは\n対応できないことがあったときは\n本部へ連絡して指示を仰いでください。\n",
                   textAlign: TextAlign.center,
                 ),

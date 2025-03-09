@@ -305,4 +305,21 @@ class Api {
       throw Exception('Failed GET in Api.workDetail()');
     }
   }
+
+  Future postRescue() async {
+    var url = constant.apiUrl + "/rescue";
+    var body = {
+      // 'task_id': 100,
+      'test': 'test',
+    };
+    final response = await post(url, body);
+
+    if (response.statusCode == 200) {
+      logger.i('success posted.');
+      return json.decode(response.body);
+    } else {
+      logger.e('failed posted.');
+      throw Exception('Failed POST in Api.post()');
+    }
+  }
 }

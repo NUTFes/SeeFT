@@ -8,8 +8,8 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
-	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/NUTFes/SeeFT/api/lib/router"
+	"github.com/NUTFes/SeeFT/api/lib/usecase"
 )
 
 func InitializeServer() db.Client {
@@ -46,6 +46,7 @@ func InitializeServer() db.Client {
 	taskUseCase := usecase.NewTaskUseCase(taskRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
+	rescueUseCase := usecase.NewRescueUseCase()
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
@@ -58,6 +59,7 @@ func InitializeServer() db.Client {
 	taskController := controller.NewTaskController(taskUseCase)
 	timeController := controller.NewTimeController(timeUsecase)
 	userController := controller.NewUserController(userUseCase)
+	rescueController := controller.NewRescueController(rescueUseCase)
 
 	// router
 	router := router.NewRouter(
@@ -71,6 +73,7 @@ func InitializeServer() db.Client {
 		taskController,
 		timeController,
 		userController,
+		rescueController,
 	)
 
 	// Server
