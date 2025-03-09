@@ -24,9 +24,11 @@ func NewRescueUseCase() RescueUseCase {
 
 // structの中身を定義
 func (u *rescueUseCase) CreateRescue(ctx context.Context, taskID string) error {
-	url := "https://script.google.com/macros/s/AKfycbz6ueqUXhXX6EvFwBCXPBtD571CpGy8hHJysSRiUIBPaEesil8qUB3Q_fB1Oy0Fk3MGPg/exec"
+	url := "https://script.google.com/macros/s/AKfycbw7rQNDPdB5fjKORCLbM9NU8hbOgCqPoiojkTZ4S2wk4t20DI_tSvbHhjL80kDv6lZ2Og/exec"
 	data := map[string]string{"task_id": taskID}
+	
 	jsonData, err := json.Marshal(data)
+
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
