@@ -20,12 +20,6 @@ class _ContactPageState extends State<ContactPage> {
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('本部連絡先'),
-          actions: <Widget>[],
-          // debug
-        ),
-        drawer: drawer.applicationDrawer(context),
         body: Container(
           alignment: Alignment.center,
           padding: const EdgeInsets.all(40.0),
