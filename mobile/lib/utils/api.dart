@@ -309,8 +309,7 @@ class Api {
   Future postRescue() async {
     var url = constant.apiUrl + "/rescue";
     var body = {
-      // 'task_id': 100,
-      'test': 'test',
+      "task_id": "100",
     };
     final response = await post(url, body);
 
