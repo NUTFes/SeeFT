@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:seeft_mobile/theme/tokens.dart';
-// import 'package:seeft_mobile/widgets/app_bar.dart';
-
+import 'package:seeft_mobile/widgets/app_bar.dart';
+import 'package:seeft_mobile/pages/my_shift_page.dart';
+import 'package:seeft_mobile/pages/manual_list_page.dart';
+import 'package:seeft_mobile/pages/contact_page.dart';
+import 'package:seeft_mobile/pages/wait_page.dart';
 
 class Layout extends StatefulWidget {
   const Layout({Key? key}) : super(key: key);
@@ -11,97 +14,80 @@ class Layout extends StatefulWidget {
 }
 
 class _LayoutState extends State<Layout> {
-  var _currentPageIndex = 0;
+  var _currentPageIndex = 0;  // 現在のページのインデックス
 
   final _pages = <Widget>[
-    Container(
-      color: Colors.red,
-      alignment: Alignment.center,
-      child: const Text('Page 1'),
-    ),
-    Container(
-      color: Colors.green,
-      alignment: Alignment.center,
-      child: const Text('Page 2'),
-    ),
-    Container(
-      color: Colors.blue,
-      alignment: Alignment.center,
-      child: const Text('Page 3'),
-    ),
-    Container(
-      color: Colors.yellow,
-      alignment: Alignment.center,
-      child: const Text('Page 4'),
-    ),
-    Container(
-      color: Colors.orange,
-      alignment: Alignment.center,
-      child: const Text('Page 5'),
-    ),
+    MyShiftPage(),    // マイシフト
+    ManualListPage(), // マニュアル
+    ContactPage(),    // 緊急時対応
+    WaitPage(),       // 仮のページ(後で「その他」に差し替える)
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (int index) {  // タップ時の処理
-          setState(() {
-            _currentPageIndex = index;
-          });
-        },
-        currentIndex: _currentPageIndex,  // 現在のページのインデックス
-        elevation: 10,
-        // height: 78,
-        backgroundColor: AppColors.base,          // ナビゲーションバーの背景色
-        type: BottomNavigationBarType.fixed,        // ラベルを常に表示
-        // enableFeedback: true,                       // タップ時のフィードバックを有効にする
-        selectedIconTheme: const IconThemeData(     // 選択時のアイコンのスタイル
-          size: 24, 
-          color: AppColors.main,
-        ),
-        selectedItemColor: AppColors.main,        // 選択時の文字の色
-        selectedLabelStyle: const TextStyle(        // 選択時の文字のスタイル
-          fontSize: AppFontSizes.xs, 
-          fontWeight: FontWeight.bold, 
-        ),
-        unselectedIconTheme: const IconThemeData(   // 未選択時のアイコンのスタイル
-          size: 24, 
-          color: AppColors.grayDark,
-        ),
-        unselectedItemColor: AppColors.grayDark,  // 未選択時の文字の色
-        unselectedLabelStyle: const TextStyle(      // 未選択時の文字のスタイル
-          fontSize: AppFontSizes.xs, 
-          fontWeight: FontWeight.normal, 
-        ),
-        items: const <BottomNavigationBarItem>[     // ナビゲーションバーのアイテム
-          BottomNavigationBarItem(
-            icon: Icon(Icons.today_outlined),
-            activeIcon: Icon(Icons.today), 
-            label: 'マイシフト', 
-            tooltip: "マイシフト",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.quiz_outlined),
-            activeIcon: Icon(Icons.quiz),
-            label: 'マニュアル',
-            tooltip: "マニュアル"
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.error_outline),
-            activeIcon: Icon(Icons.error),
-            label: '緊急時対応',
-            tooltip: "緊急時対応",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz_outlined),
-            activeIcon: Icon(Icons.more_horiz),
-            label: 'その他', 
-            tooltip: "その他"
-          ),
-        ],
+      appBar: _currentPageIndex == 0 ? null : CustomAppBar(  // マイシフト以外のページの場合はアプリバーを表示
+        title: _currentPageIndex == 1 ? 'マニュアル' : _currentPageIndex == 2 ? '緊急時対応' : 'その他',
       ),
-      body: _pages[_currentPageIndex],
+      bottomNavigationBar: SizedBox(
+        height: 78, // ナビゲーションバーの高さを設定
+        child: BottomNavigationBar( // ナビゲーションバー
+          onTap: (int index) {
+            setState(() {
+              _currentPageIndex = index;    // タップしたアイテムのインデックスに変更
+            });
+          },
+          currentIndex: _currentPageIndex,
+          elevation: 5,                               // ナビゲーションバーの影
+          backgroundColor: AppColors.base,          // ナビゲーションバーの背景色
+          type: BottomNavigationBarType.fixed,        // ラベルを常に表示
+          selectedIconTheme: const IconThemeData(     // 選択時のアイコンのスタイル
+            size: 24, 
+            color: AppColors.main,
+          ),
+          selectedItemColor: AppColors.main,        // 選択時の文字の色
+          selectedLabelStyle: const TextStyle(        // 選択時の文字のスタイル
+            fontSize: AppFontSizes.xs, 
+            fontWeight: FontWeight.bold, 
+          ),
+          unselectedIconTheme: const IconThemeData(   // 未選択時のアイコンのスタイル
+            size: 24, 
+            color: AppColors.grayDark,
+          ),
+          unselectedItemColor: AppColors.grayDark,  // 未選択時の文字の色
+          unselectedLabelStyle: const TextStyle(      // 未選択時の文字のスタイル
+            fontSize: AppFontSizes.xs, 
+            fontWeight: FontWeight.normal, 
+          ),
+          items: const <BottomNavigationBarItem>[     // ナビゲーションバーのアイテム
+            BottomNavigationBarItem(
+              icon: Icon(Icons.today_outlined),
+              activeIcon: Icon(Icons.today), 
+              label: 'マイシフト', 
+              tooltip: "マイシフト",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.quiz_outlined),
+              activeIcon: Icon(Icons.quiz),
+              label: 'マニュアル',
+              tooltip: "マニュアル"
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.error_outline),
+              activeIcon: Icon(Icons.error),
+              label: '緊急時対応',
+              tooltip: "緊急時対応",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.more_horiz_outlined),
+              activeIcon: Icon(Icons.more_horiz),
+              label: 'その他', 
+              tooltip: "その他"
+            ),
+          ],
+        ),
+      ),
+      body: _pages[_currentPageIndex],  // 現在のインデックスのページを表示
     );
   }
 }
