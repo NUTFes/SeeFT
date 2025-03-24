@@ -28,7 +28,7 @@ class _EtcPageState extends State<EtcPage>{
             {
                 'title':'通知',
                 'icon':Icons.notifications_outlined,
-                'content':() => print('通知 tapped'),
+                'content':null,
             },
             {
                 'title':'ログアウト',
