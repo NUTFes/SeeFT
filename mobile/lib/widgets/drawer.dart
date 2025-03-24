@@ -93,6 +93,14 @@ class ApplicationDrawer {
             }
           },
         ),
+        ListTile(
+          title: Text("その他"),
+          leading: Icon(Icons.supervised_user_circle),
+          onTap: () => {
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/etc_page', (Route<dynamic> route) => false)
+          },
+        ),
       ],
     ));
   }
