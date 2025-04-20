@@ -18,7 +18,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         fontWeight: FontWeight.bold,
       )),
       centerTitle: false,
-      toolbarHeight: 47,
+      toolbarHeight: 63,
       backgroundColor: AppColors.main,
     );
   }
