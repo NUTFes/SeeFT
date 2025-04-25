@@ -5,8 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:seeft_mobile/pages/wait_page.dart';
 import 'package:seeft_mobile/theme/tokens.dart';
 
-// final ShiftRequestTable table = ShiftRequestTable();
-
 class ShiftRequestPage extends StatefulWidget {
   @override
   _ShiftRequestPageState createState() => _ShiftRequestPageState();
@@ -43,6 +41,10 @@ class _ShiftRequestPageState extends State<ShiftRequestPage> {
       shiftReqests[day][index] = !shiftReqests[day][index];
     });
   }
+  
+  // シフト希望のデータを送信する関数
+  void sendShiftRequest() {
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,20 +53,33 @@ class _ShiftRequestPageState extends State<ShiftRequestPage> {
     }
     
     return Container(
-      padding: const EdgeInsets.all(40.0),
+      padding: const EdgeInsets.all(32.0),
       decoration: BoxDecoration(
         color: AppColors.base,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            Text("参加できない時間を選択してください", textAlign: TextAlign.start),
-            Container(
-              // child: table.shiftRequestTable(shiftReqests, editShiftRequest, context)),
-              child: shiftRequestTable(shiftReqests, editShiftRequest, context),
-            )
-          ],
-        ),
+      child: Column(
+        spacing: 16,
+        children: [
+          Text("参加できない時間を選択してください", style: TextStyle(color: AppColors.textBlack, fontSize: AppFontSizes.sm)),
+          Expanded(
+            child: SingleChildScrollView(
+              child: shiftRequestTable(shiftReqests, editShiftRequest, context),  // シフト希望のテーブルを表示
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              sendShiftRequest();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.main,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text("シフト希望を送信", style: TextStyle(color: AppColors.textWhite, fontSize: AppFontSizes.sm))
+          ),
+        ],
       )
     );
   }
