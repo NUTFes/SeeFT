@@ -125,4 +125,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 
 	// rescue
 	e.POST("/rescue", r.rescueController.CreateRescue)
+
+	// shiftの希望日程
+	e.POST("/request_shifts", r.shiftController.SubmitShift)
 }

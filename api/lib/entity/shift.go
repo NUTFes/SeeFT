@@ -41,6 +41,29 @@ type ShiftAdmin struct {
 	UpdatedAt  	time.Time	`json:"updatedAt"`
 }
 
+type ShiftRequest struct {
+    UserID int `json:"user_id"`
+    Shift  []struct {
+        Date     int
+        Contents []struct {
+            TimeID   int
+            IsAttend bool
+        }
+    } `json:"shift"`
+}
+
+type GASShiftData struct {
+    Name  string `json:"name"`
+    Shift []struct {
+        Date     int `json:"date"`
+        Contents []struct {
+					Row    int `json:"row"`
+					Column int `json:"column"`
+					Value  bool `json:"value"`
+			} `json:"contents"`
+    } `json:"shift"`
+}
+
 // class Shift {
 //   int id;
 //   User user;

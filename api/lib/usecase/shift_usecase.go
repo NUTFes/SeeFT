@@ -1,11 +1,16 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"log"
+	"net/http"
 	"sort"
+	"sync"
 
-	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
+	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/pkg/errors"
 )
 
@@ -34,6 +39,8 @@ type ShiftUseCase interface {
 	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.ShiftAdmin, error)
 	GetShiftsAdminByDateAndWeatherAndTime(context.Context, string, string, string, string) ([]entity.ShiftAdmin, error)
 	GetMaxID(context.Context) (int, error)
+	SaveShiftData(context.Context, entity.ShiftRequest) (error)
+	SendToGAS(context.Context, entity.ShiftRequest) (error)
 }
 
 func NewShiftUseCase(
@@ -775,6 +782,85 @@ func (a *shiftUseCase) GetMaxID(c context.Context) (int, error) {
 	}
 
 	return maxID, nil
+}
+
+func (u *shiftUseCase) SaveShiftData(ctx context.Context, req entity.ShiftRequest) error {
+    // DB保存処理（仮実装）
+    // 実際にはリポジトリを通じてDBに保存する
+    return nil
+}
+
+func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) error {
+    const maxConcurrentRequests = 20
+    var wg sync.WaitGroup
+    sem := make(chan struct{}, maxConcurrentRequests)
+
+    for _, shift := range req.Shift {
+        wg.Add(1)
+        sem <- struct{}{}
+
+        go func(shiftData struct {
+            Date     int
+            Contents []struct {
+                TimeID   int
+                IsAttend bool
+            }
+        }) {
+            defer wg.Done()
+            defer func() { <-sem }()
+
+						 // GAS用データの変換
+			var gasData []struct {
+					Row    int  `json:"row"`    // 行番号 (timeID)
+					Column int  `json:"column"` // 列番号 (userID)
+					Value  bool `json:"value"`  // セルの値 (IsAttend)
+			}
+			
+			for _, content := range shiftData.Contents {
+				gasData = append(gasData, struct {
+					Row    int  `json:"row"`
+					Column int  `json:"column"`
+					Value  bool `json:"value"`
+				}{
+					Row:    content.TimeID,   // timeID を行番号として使用
+					Column: req.UserID,       // userID を列番号として使用
+					Value:  content.IsAttend, // セルの値として IsAttend を使用
+				})
+			}
+			
+			// JSONに変換
+			jsonData, err := json.Marshal(gasData)
+			if err != nil {
+					log.Printf("failed to marshal GAS data: %v", err)
+					return
+			}
+
+			// GASエンドポイントに送信
+			url := "https://script.google.com/macros/s/AKfycbw7rQNDPdB5fjKORCLbM9NU8hbOgCqPoiojkTZ4S2wk4t20DI_tSvbHhjL80kDv6lZ2Og/exec"
+			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+			if err != nil {
+					log.Printf("failed to create request: %v", err)
+					return
+			}
+			req.Header.Set("Content-Type", "application/json")
+
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+					log.Printf("failed to send request to GAS: %v", err)
+					return
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+					log.Printf("GAS returned non-OK status: %d", resp.StatusCode)
+					return
+			}
+		}(shift)
+	}
+
+	wg.Wait()
+	return nil
 }
 
 // import '../entity/entity.dart';
