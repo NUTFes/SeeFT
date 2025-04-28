@@ -18,11 +18,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         fontWeight: FontWeight.bold,
       )),
       centerTitle: false,
-      toolbarHeight: 47,
+      toolbarHeight: 63,
       backgroundColor: AppColors.main,
     );
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(47); // AppBarの標準の高さ
+  Size get preferredSize => Size.fromHeight(63); // AppBarの標準の高さ
 }
