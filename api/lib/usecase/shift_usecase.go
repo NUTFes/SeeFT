@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sort"
-	"sync"
 
 	"github.com/NUTFes/SeeFT/api/lib/entity"
 	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
@@ -15,60 +15,61 @@ import (
 )
 
 type shiftUseCase struct {
-  rep rep.ShiftRepository
-  taskRep rep.TaskRepository
-  userRep rep.UserRepository
-  yearRep rep.YearRepository
-  dateRep rep.DateRepository
-  timeRep rep.TimeRepository
-  weatherRep rep.WeatherRepository
-	placeRep rep.PlaceRepository
+	rep        rep.ShiftRepository
+	taskRep    rep.TaskRepository
+	userRep    rep.UserRepository
+	yearRep    rep.YearRepository
+	dateRep    rep.DateRepository
+	timeRep    rep.TimeRepository
+	weatherRep rep.WeatherRepository
+	placeRep   rep.PlaceRepository
 }
 
 type ShiftUseCase interface {
-  GetShifts(context.Context) ([]entity.Shift, error)
-  GetShiftByID(context.Context, string) (entity.Shift, error)
-  GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
-  GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
-  GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error) 
-  GetShiftsAdmin(context.Context) ([]entity.ShiftAdmin, error)
-  GetShiftAdminByID(context.Context, string) (entity.ShiftAdmin, error)
-  CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
-  UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
-  DeleteShiftAdmin(context.Context, string) error
+	GetShifts(context.Context) ([]entity.Shift, error)
+	GetShiftByID(context.Context, string) (entity.Shift, error)
+	GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
+	GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
+	GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error)
+	GetShiftsAdmin(context.Context) ([]entity.ShiftAdmin, error)
+	GetShiftAdminByID(context.Context, string) (entity.ShiftAdmin, error)
+	CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
+	UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
+	DeleteShiftAdmin(context.Context, string) error
 	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.ShiftAdmin, error)
 	GetShiftsAdminByDateAndWeatherAndTime(context.Context, string, string, string, string) ([]entity.ShiftAdmin, error)
 	GetMaxID(context.Context) (int, error)
-	SaveShiftData(context.Context, entity.ShiftRequest) (error)
-	SendToGAS(context.Context, entity.ShiftRequest) (error)
+	SaveShiftData(context.Context, entity.ShiftRequest) error
+	SendToGAS(context.Context, entity.ShiftRequest) error
 }
 
 func NewShiftUseCase(
-  rep rep.ShiftRepository, 
-  taskRep rep.TaskRepository,
-  userRep rep.UserRepository,
-  yearRep rep.YearRepository,
-  dateRep rep.DateRepository,
-  timeRep rep.TimeRepository,
-  weatherRep rep.WeatherRepository,
+	rep rep.ShiftRepository,
+	taskRep rep.TaskRepository,
+	userRep rep.UserRepository,
+	yearRep rep.YearRepository,
+	dateRep rep.DateRepository,
+	timeRep rep.TimeRepository,
+	weatherRep rep.WeatherRepository,
 	placeRep rep.PlaceRepository) ShiftUseCase {
-  return &shiftUseCase{rep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep}
+	return &shiftUseCase{rep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep}
 }
 
 var TaskID, UserID, YearID, DateID, TimeID, WeatherID, PlaceID string
 
 // 時間でソート
 type ByTime []entity.Shift
+
 func (a ByTime) Len() int           { return len(a) }
 func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTime) Less(i, j int) bool { return a[i].Time.ID < a[j].Time.ID }
 
 func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
-  shift := entity.Shift{}
-  var shifts []entity.Shift
+	shift := entity.Shift{}
+	var shifts []entity.Shift
 	place := entity.Place{}
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := a.rep.All(c)
 	if err != nil {
 		return nil, err
@@ -184,8 +185,8 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 		&YearID,
 		&DateID,
 		&TimeID,
-  	&WeatherID,
-  	&shift.IsAttendance,
+		&WeatherID,
+		&shift.IsAttendance,
 		&shift.CreatedAt,
 		&shift.UpdatedAt,
 	)
@@ -272,11 +273,11 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 
 func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.Shift, error) {
 
-  shift := entity.Shift{}
-  var shifts []entity.Shift
+	shift := entity.Shift{}
+	var shifts []entity.Shift
 	place := entity.Place{}
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := a.rep.User(c, id)
 	if err != nil {
 		return nil, err
@@ -289,10 +290,10 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 			&TaskID,
 			&UserID,
 			&YearID,
-	  		&DateID,
-	  		&TimeID,
-  			&WeatherID,
-  			&shift.IsAttendance,
+			&DateID,
+			&TimeID,
+			&WeatherID,
+			&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -370,7 +371,6 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 			&shift.Weather.CreatedAt,
 			&shift.Weather.UpdatedAt,
 		)
-
 
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot connect SQL")
@@ -384,11 +384,11 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 
 func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id string, date string, weather string) ([]entity.Shift, error) {
 
-  shift := entity.Shift{}
-  var shifts []entity.Shift
+	shift := entity.Shift{}
+	var shifts []entity.Shift
 	place := entity.Place{}
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := a.rep.UserAndDateAndWeather(c, id, date, weather)
 	if err != nil {
 		return nil, err
@@ -401,10 +401,10 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&TaskID,
 			&UserID,
 			&YearID,
-	  		&DateID,
-	  		&TimeID,
-  			&WeatherID,
-  			&shift.IsAttendance,
+			&DateID,
+			&TimeID,
+			&WeatherID,
+			&shift.IsAttendance,
 			&shift.CreatedAt,
 			&shift.UpdatedAt,
 		)
@@ -483,7 +483,6 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&shift.Weather.UpdatedAt,
 		)
 
-
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot connect SQL")
 		}
@@ -496,10 +495,10 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 
 func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year string, date string, time string, weather string) (entity.ShiftUsers, error) {
 
-  	users := entity.User{}
-  	var shiftUsers entity.ShiftUsers
+	users := entity.User{}
+	var shiftUsers entity.ShiftUsers
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := a.rep.Users(c, task, year, date, time, weather)
 	if err != nil {
 		return shiftUsers, err
@@ -573,14 +572,13 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	return shiftUsers, nil
 }
 
-
 // Webアプリ用API
 
 func (a *shiftUseCase) GetShiftsAdmin(c context.Context) ([]entity.ShiftAdmin, error) {
-  shift := entity.ShiftAdmin{}
-  var shifts []entity.ShiftAdmin
+	shift := entity.ShiftAdmin{}
+	var shifts []entity.ShiftAdmin
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := a.rep.All(c)
 	if err != nil {
 		return nil, err
@@ -700,10 +698,10 @@ func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
 }
 
 func (a *shiftUseCase) GetShiftsAdminByDateAndWeather(c context.Context, date string, weather string) ([]entity.ShiftAdmin, error) {
-  shift := entity.ShiftAdmin{}
-  var shifts []entity.ShiftAdmin
+	shift := entity.ShiftAdmin{}
+	var shifts []entity.ShiftAdmin
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := a.rep.DateAndWeather(c, date, weather)
 	if err != nil {
 		return nil, err
@@ -733,10 +731,10 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeather(c context.Context, date st
 }
 
 func (a *shiftUseCase) GetShiftsAdminByDateAndWeatherAndTime(c context.Context, date string, weather string, lower string, upper string) ([]entity.ShiftAdmin, error) {
-  shift := entity.ShiftAdmin{}
-  var shifts []entity.ShiftAdmin
+	shift := entity.ShiftAdmin{}
+	var shifts []entity.ShiftAdmin
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := a.rep.DateAndWeatherAndTime(c, date, weather, lower, upper)
 	if err != nil {
 		return nil, err
@@ -766,9 +764,9 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeatherAndTime(c context.Context, 
 }
 
 func (a *shiftUseCase) GetMaxID(c context.Context) (int, error) {
-  maxID := 0
+	maxID := 0
 
-  // クエリー実行
+	// クエリー実行
 	row, err := a.rep.MaxID(c)
 	if err != nil {
 		return 0, err
@@ -785,113 +783,76 @@ func (a *shiftUseCase) GetMaxID(c context.Context) (int, error) {
 }
 
 func (u *shiftUseCase) SaveShiftData(ctx context.Context, req entity.ShiftRequest) error {
-    // DB保存処理（仮実装）
-    // 実際にはリポジトリを通じてDBに保存する
-    return nil
-}
-
-func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) error {
-    const maxConcurrentRequests = 20
-    var wg sync.WaitGroup
-    sem := make(chan struct{}, maxConcurrentRequests)
-
-    for _, shift := range req.Shift {
-        wg.Add(1)
-        sem <- struct{}{}
-
-        go func(shiftData struct {
-            Date     int
-            Contents []struct {
-                TimeID   int
-                IsAttend bool
-            }
-        }) {
-            defer wg.Done()
-            defer func() { <-sem }()
-
-						 // GAS用データの変換
-			var gasData []struct {
-					Row    int  `json:"row"`    // 行番号 (timeID)
-					Column int  `json:"column"` // 列番号 (userID)
-					Value  bool `json:"value"`  // セルの値 (IsAttend)
-			}
-			
-			for _, content := range shiftData.Contents {
-				gasData = append(gasData, struct {
-					Row    int  `json:"row"`
-					Column int  `json:"column"`
-					Value  bool `json:"value"`
-				}{
-					Row:    content.TimeID,   // timeID を行番号として使用
-					Column: req.UserID,       // userID を列番号として使用
-					Value:  content.IsAttend, // セルの値として IsAttend を使用
-				})
-			}
-			
-			// JSONに変換
-			jsonData, err := json.Marshal(gasData)
-			if err != nil {
-					log.Printf("failed to marshal GAS data: %v", err)
-					return
-			}
-
-			// GASエンドポイントに送信
-			url := "https://script.google.com/macros/s/AKfycbw7rQNDPdB5fjKORCLbM9NU8hbOgCqPoiojkTZ4S2wk4t20DI_tSvbHhjL80kDv6lZ2Og/exec"
-			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-			if err != nil {
-					log.Printf("failed to create request: %v", err)
-					return
-			}
-			req.Header.Set("Content-Type", "application/json")
-
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			if err != nil {
-					log.Printf("failed to send request to GAS: %v", err)
-					return
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-					log.Printf("GAS returned non-OK status: %d", resp.StatusCode)
-					return
-			}
-		}(shift)
-	}
-
-	wg.Wait()
+	// DB保存処理（仮実装）
+	// 実際にはリポジトリを通じてDBに保存する
 	return nil
 }
 
-// import '../entity/entity.dart';
-// import './repository/repository.dart';
+func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) error {
+	var gasData entity.GASShiftData
+	gasData.Name = req.Name // ユーザー名を設定（必要に応じて変更）
 
-// abstract class ShiftUsecase {
-//   Future<List<Shift>> getShiftsByUser(ctx, User req);
-//   Future<List<Shift>> getShiftsByUserAndDateAndWeather(ctx, Shift req);
-//   Future<List<Shift>> getShiftsByYearAndDateAndWeather(ctx, Shift req);
-// }
+	for _, shift := range req.Shift {
+		var gasShift struct {
+			Date     int `json:"date"`
+			Contents []struct {
+				Row    int  `json:"row"`
+				Column int  `json:"column"`
+				Value  bool `json:"value"`
+			} `json:"contents"`
+		}
 
-// class ShiftUsecaseImpl implements ShiftUsecase {
-//   ShiftRepository shiftRepository;
+		gasShift.Date = shift.Date
+		for _, content := range shift.Contents {
+			// TimeID を基に列番号を計算 (TimeID=1 が G列=7)
+			column := content.TimeID
 
-//   ShiftUsecaseImpl(this.shiftRepository);
+			gasShift.Contents = append(gasShift.Contents, struct {
+				Row    int  `json:"row"`
+				Column int  `json:"column"`
+				Value  bool `json:"value"`
+			}{
+				Row:    0, // ユーザーIDを行番号として使用
+				Column: column,    // 計算した列番号
+				Value:  content.IsAttend,
+			})
+		}
 
-//   @override
-//   Future<List<Shift>> getShiftsByUser(ctx, User req) async {
-//     List<Shift> list = await shiftRepository.getShiftsByUser(ctx, req);
-//     return list;
-//   }
+		gasData.Shift = append(gasData.Shift, gasShift)
+	}
 
-//   @override
-//   Future<List<Shift>> getShiftsByUserAndDateAndWeather(ctx, Shift req) async {
-//     List<Shift> list = await shiftRepository.getShiftsByUserAndDateAndWeather(ctx, req);
-//     return list;
-//   }
+	// JSONに変換して送信
+	jsonData, err := json.Marshal(gasData)
+	if err != nil {
+		log.Printf("failed to marshal GAS data: %v", err)
+		return err
+	}
 
-//   @override
-//   Future<List<Shift>> getShiftsByYearAndDateAndWeather(ctx, Shift req) async {
-//     List<Shift> list = await shiftRepository.getShiftsByYearAndDateAndWeather(ctx, req);
-//     return list;
-//   }
-// }
+	fmt.Printf("Sending data to GAS: %s\n", string(jsonData))
+
+	// GASエンドポイントに送信
+	url := "https://script.google.com/macros/s/AKfycbxjhHW10LZPgfvnUD2wzPqECq-k49fFt02ggx5RGivfhdenMvtFnSFKEdLSO37QVGQh/exec" // GASのエンドポイントURLを設定
+	reqBody := bytes.NewBuffer(jsonData)
+	httpReq, err := http.NewRequest("POST", url, reqBody)
+	if err != nil {
+		log.Printf("failed to create request: %v", err)
+		return err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		log.Printf("failed to send request to GAS: %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("GAS returned non-OK status: %d", resp.StatusCode)
+		return fmt.Errorf("GAS returned non-OK status: %d", resp.StatusCode)
+	}
+
+	log.Println("Data successfully sent to GAS")
+	return nil
+}
