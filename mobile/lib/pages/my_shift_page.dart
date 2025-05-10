@@ -36,7 +36,7 @@ class _MyShiftPageState extends State<MyShiftPage>
     TabInfo("片付け日", WaitPage()),
   ];
   late TabController _tabController;
-  int _selectedWeatherIndex = 0;
+  int _selectedWeatherIndex = 0;  // 天気の選択肢のインデックス(0:晴れ, 1:雨)
 
   @override
   void initState() {
@@ -51,7 +51,6 @@ class _MyShiftPageState extends State<MyShiftPage>
 
   @override
   Widget build(BuildContext context) {
-    print('initState _tabController.length: ${_tabController.length}'); // デバッグ用
     return Scaffold(
       appBar: AppBar(
         title: Padding(
@@ -61,7 +60,6 @@ class _MyShiftPageState extends State<MyShiftPage>
               color: AppColors.textWhite,
               fontSize: AppFontSizes.lg,
               fontWeight: FontWeight.bold,
-              // height: 23,
             ),
           ),
         ),
@@ -73,6 +71,7 @@ class _MyShiftPageState extends State<MyShiftPage>
             child: SizedBox(
               width: 131,
               height: 30,
+              // 天気を選択するセグメントボタン
               child: SegmentedButton(
                 selected: {_selectedWeatherIndex},
                 onSelectionChanged: (Set<int> newSelection) {
@@ -83,8 +82,6 @@ class _MyShiftPageState extends State<MyShiftPage>
                 style: SegmentedButton.styleFrom(
                   backgroundColor: AppColors.main,
                   selectedBackgroundColor: AppColors.base,
-                  // foregroundColor: AppColors.grayLight,
-                  // selectedForegroundColor: AppColors.main,
                   side: BorderSide(
                     color: AppColors.grayLight,
                     width: 1.0,
@@ -93,7 +90,6 @@ class _MyShiftPageState extends State<MyShiftPage>
                 showSelectedIcon: false,
                 segments: [
                   ButtonSegment(
-                    // label: const Text('晴れ'),
                     icon: Icon(
                       Icons.sunny,
                       color: _selectedWeatherIndex == 0 ? AppColors.main : AppColors.grayLight,
@@ -102,7 +98,6 @@ class _MyShiftPageState extends State<MyShiftPage>
                     value: 0,
                   ),
                   ButtonSegment(
-                    // label: const Text('雨'),
                     icon: Icon(
                       Icons.cloudy_snowing,
                       color: _selectedWeatherIndex == 1 ? AppColors.main : AppColors.grayLight,
@@ -118,6 +113,7 @@ class _MyShiftPageState extends State<MyShiftPage>
         backgroundColor: AppColors.main,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(75.0),
+          // 日付のタブバー
           child: TabBar(
             isScrollable: false,
             tabs: _tabs.map((TabInfo tab) {
@@ -144,41 +140,10 @@ class _MyShiftPageState extends State<MyShiftPage>
             dividerHeight: 0,
           ),
         ),
-        // debug
       ),
-      // drawer: drawer.applicationDrawer(context),
-      // body: TabBarView(
-      //     controller: _tabController,
-      //     children: _tabs.map((tab) => tab.widget).toList()),
-      body: Container(
-        padding: const EdgeInsets.all(40.0),
-        child: TabBar(
-            isScrollable: true,
-            tabs: _tabs.map((TabInfo tab) {
-              return Tab(text: tab.label);
-            }).toList(),
-            controller: _tabController,
-            // labelColor: AppColors.main,
-            labelStyle: TextStyle(
-              color: AppColors.main,
-              fontSize: AppFontSizes.md,
-              fontWeight: FontWeight.normal,
-            ),
-            // unselectedLabelColor: AppColors.grayLight,
-            unselectedLabelStyle: TextStyle(
-              color: AppColors.grayLight,
-              fontSize: AppFontSizes.md,
-              fontWeight: FontWeight.normal,
-            ),
-            indicator: BoxDecoration(
-              color: AppColors.base,
-              borderRadius: BorderRadius.circular(100),
-            ),
-            indicatorSize: TabBarIndicatorSize.tab,
-            // indicatorColor: AppColors.base,
-            dividerColor: AppColors.grayLight,
-          ),
-      ),
+      body: TabBarView(
+          controller: _tabController,
+          children: _tabs.map((tab) => tab.widget).toList()),
     );
   }
 }
