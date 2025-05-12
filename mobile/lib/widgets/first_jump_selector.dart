@@ -9,6 +9,7 @@ import 'package:seeft_mobile/pages/schedule_page.dart';
 import 'package:seeft_mobile/pages/contact_page.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 import 'package:seeft_mobile/pages/users_page.dart';
+import 'package:seeft_mobile/pages/etc_page.dart';
 import 'package:seeft_mobile/theme/theme.dart';
 
 class FirstJumpSelector extends StatefulWidget {
@@ -78,6 +79,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
               '/contact_page': (context) => ContactPage(),
               '/wait_page': (context) => WaitPage(),
               '/users_page': (context) => UsersPage(),
+              '/etc_page':(context) => EtcPage(),
             },
           );
         } else if (snapshot.hasError) {
