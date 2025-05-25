@@ -778,7 +778,6 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 	}
 
 	var shiftCards []entity.ShiftCard
-	// var GradeID, BureauID string
 
 	// 3. 各タスクグループを処理
 	for _, taskShifts := range taskGroups {
@@ -793,18 +792,24 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 				continue
 			}
 
+			// 最後のグループの終了時刻を取得
+			endTime, err := a.getNextTimeString(c, group[len(group)-1].Time.ID)
+			if err != nil {
+				endTime = group[len(group)-1].Time.Time // フォールバック
+			}
+
 			// ShiftCardを作成
 			shiftCard := entity.ShiftCard{
 				TaskName:  group[0].Task.Task,
 				StartTime: group[0].Time.Time,
-				EndTime:   group[len(group)-1].Time.Time,
+				EndTime:   endTime,
 				Place:     group[0].Task.Place,
 				Url:       group[0].Task.Url,
 			}
 
 			// ShiftMembersを作成（15分ごと）
 			var shiftMembers []entity.ShiftMembers
-			for _, shift := range group {
+			for i, shift := range group {
 				// その時間のメンバーを取得
 				shiftUsers, err := a.GetUsersByShift(c, 
 					strconv.Itoa(shift.Task.ID), 
@@ -819,17 +824,31 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 				var members []entity.ShiftMember
 				for _, user := range shiftUsers.Users {
 					// Grade情報を取得
-					gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
 					var grade entity.Grade
-					if err == nil {
+					gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
+					if err != nil {
+						// エラー時はデフォルト値を設定
+						grade.Grade = "不明"
+					} else {
 						err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
+						if err != nil {
+							// Scanエラー時もデフォルト値を設定
+							grade.Grade = "不明"
+						}
 					}
 
 					// Bureau情報を取得
-					bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
 					var bureau entity.Bureau
-					if err == nil {
+					bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
+					if err != nil {
+						// エラー時はデフォルト値を設定
+						bureau.Bureau = "不明"
+					} else {
 						err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
+						if err != nil {
+							// Scanエラー時もデフォルト値を設定
+							bureau.Bureau = "不明"
+						}
 					}
 
 					member := entity.ShiftMember{
@@ -840,9 +859,24 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 					members = append(members, member)
 				}
 
+				// 終了時刻を計算
+				var eTime string
+				if i < len(group)-1 {
+					// 次のシフトの開始時刻を使用
+					eTime = group[i+1].Time.Time
+				} else {
+					// 最後のシフトの場合、次の時間を取得
+					nextTime, err := a.getNextTimeString(c, shift.Time.ID)
+					if err != nil {
+						eTime = shift.Time.Time // フォールバック
+					} else {
+						eTime = nextTime
+					}
+				}
+
 				shiftMember := entity.ShiftMembers{
 					STime:   shift.Time.Time,
-					ETime:   shift.Time.Time, // 終了時刻は次の時間を計算する必要があるが、簡略化
+					ETime:   eTime,
 					Members: members,
 				}
 				shiftMembers = append(shiftMembers, shiftMember)
@@ -853,41 +887,59 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 			if len(group) > 0 {
 				firstShift := group[0]
 				if firstShift.Time.ID > 1 {
-					// 前の時間のメンバーを取得
-					beforeUsers, err := a.GetUsersByShift(c,
-						strconv.Itoa(firstShift.Task.ID),
-						strconv.Itoa(firstShift.Year.ID),
-						strconv.Itoa(firstShift.Date.ID),
-						strconv.Itoa(firstShift.Time.ID-1),
-						strconv.Itoa(firstShift.Weather.ID))
+					// 前の時間の情報を取得
+					beforeTimeString, err := a.getPreviousTimeString(c, firstShift.Time.ID)
 					if err == nil {
-						var beforeMembers []entity.ShiftMember
-						for _, user := range beforeUsers.Users {
-							// Grade情報を取得
-							gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
-							var grade entity.Grade
-							if err == nil {
-								err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
-							}
+						// 前の時間のメンバーを取得
+						beforeUsers, err := a.GetUsersByShift(c,
+							strconv.Itoa(firstShift.Task.ID),
+							strconv.Itoa(firstShift.Year.ID),
+							strconv.Itoa(firstShift.Date.ID),
+							strconv.Itoa(firstShift.Time.ID-1),
+							strconv.Itoa(firstShift.Weather.ID))
+						if err == nil {
+							var beforeMembers []entity.ShiftMember
+							for _, user := range beforeUsers.Users {
+								// Grade情報を取得
+								var grade entity.Grade
+								gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
+								if err != nil {
+									// エラー時はデフォルト値を設定
+									grade.Grade = "不明"
+								} else {
+									err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
+									if err != nil {
+										// Scanエラー時もデフォルト値を設定
+										grade.Grade = "不明"
+									}
+								}
 
-							// Bureau情報を取得
-							bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
-							var bureau entity.Bureau
-							if err == nil {
-								err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
-							}
+								// Bureau情報を取得
+								var bureau entity.Bureau
+								bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
+								if err != nil {
+									// エラー時はデフォルト値を設定
+									bureau.Bureau = "不明"
+								} else {
+									err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
+									if err != nil {
+										// Scanエラー時もデフォルト値を設定
+										bureau.Bureau = "不明"
+									}
+								}
 
-							member := entity.ShiftMember{
-								Name:   user.Name,
-								Grade:  grade.Grade,
-								Bureau: bureau.Bureau,
+								member := entity.ShiftMember{
+									Name:   user.Name,
+									Grade:  grade.Grade,
+									Bureau: bureau.Bureau,
+								}
+								beforeMembers = append(beforeMembers, member)
 							}
-							beforeMembers = append(beforeMembers, member)
-						}
-						shiftCard.BeforeMembers = entity.ShiftMembers{
-							STime:   "前の時間", // 実際の時間を計算
-							ETime:   firstShift.Time.Time,
-							Members: beforeMembers,
+							shiftCard.BeforeMembers = entity.ShiftMembers{
+								STime:   beforeTimeString,
+								ETime:   firstShift.Time.Time,
+								Members: beforeMembers,
+							}
 						}
 					}
 				}
@@ -896,41 +948,66 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 			// AfterMembers（後の時間のメンバー）
 			if len(group) > 0 {
 				lastShift := group[len(group)-1]
-				// 後の時間のメンバーを取得
-				afterUsers, err := a.GetUsersByShift(c,
-					strconv.Itoa(lastShift.Task.ID),
-					strconv.Itoa(lastShift.Year.ID),
-					strconv.Itoa(lastShift.Date.ID),
-					strconv.Itoa(lastShift.Time.ID+1),
-					strconv.Itoa(lastShift.Weather.ID))
+				// 後の時間の情報を取得
+				afterTimeString, err := a.getNextTimeString(c, lastShift.Time.ID)
 				if err == nil {
-					var afterMembers []entity.ShiftMember
-					for _, user := range afterUsers.Users {
-						// Grade情報を取得
-						gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
-						var grade entity.Grade
-						if err == nil {
-							err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
-						}
+					// 後の時間のメンバーを取得
+					afterUsers, err := a.GetUsersByShift(c,
+						strconv.Itoa(lastShift.Task.ID),
+						strconv.Itoa(lastShift.Year.ID),
+						strconv.Itoa(lastShift.Date.ID),
+						strconv.Itoa(lastShift.Time.ID+1),
+						strconv.Itoa(lastShift.Weather.ID))
+					if err == nil {
+						var afterMembers []entity.ShiftMember
+						for _, user := range afterUsers.Users {
+							// Grade情報を取得
+							var grade entity.Grade
+							gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
+							if err != nil {
+								// エラー時はデフォルト値を設定
+								grade.Grade = "不明"
+							} else {
+								err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
+								if err != nil {
+									// Scanエラー時もデフォルト値を設定
+									grade.Grade = "不明"
+								}
+							}
 
-						// Bureau情報を取得
-						bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
-						var bureau entity.Bureau
-						if err == nil {
-							err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
-						}
+							// Bureau情報を取得
+							var bureau entity.Bureau
+							bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
+							if err != nil {
+								// エラー時はデフォルト値を設定
+								bureau.Bureau = "不明"
+							} else {
+								err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
+								if err != nil {
+									// Scanエラー時もデフォルト値を設定
+									bureau.Bureau = "不明"
+								}
+							}
 
-						member := entity.ShiftMember{
-							Name:   user.Name,
-							Grade:  grade.Grade,
-							Bureau: bureau.Bureau,
+							member := entity.ShiftMember{
+								Name:   user.Name,
+								Grade:  grade.Grade,
+								Bureau: bureau.Bureau,
+							}
+							afterMembers = append(afterMembers, member)
 						}
-						afterMembers = append(afterMembers, member)
-					}
-					shiftCard.AfterMembers = entity.ShiftMembers{
-						STime:   lastShift.Time.Time,
-						ETime:   "次の時間", // 実際の時間を計算
-						Members: afterMembers,
+						
+						// 後の時間の終了時刻を計算
+						afterEndTime, err := a.getNextTimeString(c, lastShift.Time.ID+1)
+						if err != nil {
+							afterEndTime = afterTimeString // フォールバック
+						}
+						
+						shiftCard.AfterMembers = entity.ShiftMembers{
+							STime:   afterTimeString,
+							ETime:   afterEndTime,
+							Members: afterMembers,
+						}
 					}
 				}
 			}
@@ -940,6 +1017,42 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 	}
 
 	return shiftCards, nil
+}
+
+// 前の時間の文字列を取得するヘルパー関数
+func (a *shiftUseCase) getPreviousTimeString(c context.Context, currentTimeID int) (string, error) {
+	if currentTimeID <= 1 {
+		return "", errors.New("no previous time available")
+	}
+	
+	row, err := a.timeRep.Find(c, strconv.Itoa(currentTimeID-1))
+	if err != nil {
+		return "", err
+	}
+	
+	var time entity.Time
+	err = row.Scan(&time.ID, &time.Time, &time.CreatedAt, &time.UpdatedAt)
+	if err != nil {
+		return "", err
+	}
+	
+	return time.Time, nil
+}
+
+// 次の時間の文字列を取得するヘルパー関数
+func (a *shiftUseCase) getNextTimeString(c context.Context, currentTimeID int) (string, error) {
+	row, err := a.timeRep.Find(c, strconv.Itoa(currentTimeID+1))
+	if err != nil {
+		return "", err
+	}
+	
+	var time entity.Time
+	err = row.Scan(&time.ID, &time.Time, &time.CreatedAt, &time.UpdatedAt)
+	if err != nil {
+		return "", err
+	}
+	
+	return time.Time, nil
 }
 
 // 連続するTimeIDでシフトをグループ化するヘルパー関数
