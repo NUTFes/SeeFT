@@ -17,6 +17,7 @@ type ShiftController interface {
 	ShowShiftsByUser(echo.Context) error
 	ShowUsersByShift(echo.Context) error
 	ShowShiftsByUserAndDateAndWeather(echo.Context) error
+	ShowShiftCardsByUserAndDateAndWeather(echo.Context) error
 	IndexShiftAdmin(echo.Context) error
 	ShowShiftAdmin(echo.Context) error
 	CreateShiftAdmin(echo.Context) error
@@ -80,6 +81,17 @@ func (b *shiftController) ShowShiftsByUserAndDateAndWeather(c echo.Context) erro
 		return err
 	}
 	return c.JSON(http.StatusOK, shifts)
+}
+
+func (b *shiftController) ShowShiftCardsByUserAndDateAndWeather(c echo.Context) error {
+	userID := c.Param("user_id")
+	dateID := c.Param("date_id")
+	weatherID := c.Param("weather_id")
+	shiftCards, err := b.u.GetShiftCardsByUserAndDateAndWeather(c.Request().Context(), userID, dateID, weatherID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shiftCards)
 }
 
 // Webアプリ用API
