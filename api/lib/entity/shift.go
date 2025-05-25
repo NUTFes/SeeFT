@@ -41,6 +41,30 @@ type ShiftAdmin struct {
 	UpdatedAt  	time.Time	`json:"updatedAt"`
 }
 
+// タスクの結合用エンティティ
+type ShiftMember struct {
+	Name   string `json:"name"`
+	Grade  string `json:"grade"`
+	Bureau string `json:"bureau"`
+}
+
+type ShiftMembers struct {
+	STime   string        `json:"s_time"`
+	ETime   string        `json:"e_time"`
+	Members []ShiftMember `json:"members"`
+}
+
+type ShiftCard struct {
+	TaskName      string         `json:"task_name"`
+	StartTime     string         `json:"start_time"`
+	EndTime       string         `json:"end_time"`
+	Place         string         `json:"place"`
+	Url           string         `json:"url"`
+	ShiftMembers  []ShiftMembers `json:"shift_members"`
+	BeforeMembers ShiftMembers   `json:"before_members"`
+	AfterMembers  ShiftMembers   `json:"after_members"`
+}
+
 // class Shift {
 //   int id;
 //   User user;
