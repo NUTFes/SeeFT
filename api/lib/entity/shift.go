@@ -64,6 +64,17 @@ type GASShiftData struct {
     } `json:"shift"`
 }
 
+type ShiftChange struct {
+	SheetName string `json:"sheetName"`
+	Row       string `json:"row"`
+	Column    int    `json:"column"`
+	Value     string `json:"value"`
+}
+
+type ShiftChangeRequest struct {
+	Changes []ShiftChange `json:"changes"`
+}
+
 // class Shift {
 //   int id;
 //   User user;

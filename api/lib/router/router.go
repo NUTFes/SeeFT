@@ -128,4 +128,6 @@ func (r router) ProvideRouter(e *echo.Echo) {
 
 	// shiftの希望日程
 	e.POST("/request_shifts", r.shiftController.SubmitShift)
+
+	e.POST("/api/update_shifts", r.shiftController.UpdateShiftsFromGAS)
 }

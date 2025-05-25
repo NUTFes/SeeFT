@@ -27,6 +27,7 @@ type ShiftController interface {
 	ShowShiftAdminByDateAndWeatherAndTime(echo.Context) error
 	SerachMaxID(echo.Context) error
 	SubmitShift(echo.Context) error
+	UpdateShiftsFromGAS(echo.Context) error
 }
 
 func NewShiftController(u usecase.ShiftUseCase) ShiftController {
@@ -194,6 +195,21 @@ func (sc *shiftController) SubmitShift(c echo.Context) error {
     }
 
     return c.JSON(http.StatusOK, "Shift data submitted successfully")
+}
+
+// GASからのシフト変更通知を受け取るエンドポイント
+func (sc *shiftController) UpdateShiftsFromGAS(c echo.Context) error {
+	var req entity.ShiftChangeRequest
+	if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, "Invalid request")
+	}
+
+	// 必要に応じてユースケース層へ処理を委譲
+	if err := sc.u.UpdateShiftsFromGAS(c.Request().Context(), req); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Shifts updated successfully")
 }
 
 // import 'dart:convert';
