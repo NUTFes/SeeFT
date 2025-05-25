@@ -180,14 +180,20 @@ VALUES
 -- VALUES
 --   ('root','test1@example.com',1,1,1,1,'12345678','','shiftroot'),
 --   ('test','test1@testmail.com',1,1,1,1,'12345678','09012345678','123456'),
---   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, '11111111', '00000000000', 'gidaifes');
+--   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, '11111111', '00000000000', 'gidaifes'),
+--   ('田中太郎','tanaka@example.com',2,2,2,1,'22222222','09011111111','password1'),
+--   ('佐藤花子','sato@example.com',3,3,3,1,'33333333','09022222222','password2'),
+--   ('山田次郎','yamada@example.com',4,4,4,1,'44444444','09033333333','password3');
 
 -- INSERT INTO permissions
 --   (user_id, allow_shift, allow_task, allow_user, allow_property)
 -- VALUES
 --   (1, True, True, True, True),
 --   (2, True, False, False, False),
---   (3, True, True, True, True);
+--   (3, True, True, True, True),
+--   (4, True, False, False, False),
+--   (5, True, False, False, False),
+--   (6, True, False, False, False);
 
 -- INSERT INTO tasks
 --   (task, place_id, url, bureau_id, max_member, color, remark, year_id)
@@ -203,10 +209,12 @@ VALUES
 --   (1, 1, 43, 1, 1, 1),
 --   (1, 1, 43, 1, 2, 1),
 --   (1, 1, 43, 1, 3, 1),
+--   (4, 1, 43, 1, 1, 1),
+--   (5, 1, 43, 1, 1, 1),
+--   (4, 1, 43, 1, 2, 1),
+--   (6, 1, 43, 1, 2, 1),
+--   (5, 1, 43, 1, 3, 1),
+--   (6, 1, 43, 1, 3, 1),
 --   (2, 2, 43, 1, 1, 1),
 --   (2, 2, 43, 1, 2, 1),
 --   (3, 3, 43, 1, 1, 1);
-
-
-
-
