@@ -826,29 +826,21 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 					// Grade情報を取得
 					var grade entity.Grade
 					gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
-					if err != nil {
-						// エラー時はデフォルト値を設定
-						grade.Grade = "不明"
-					} else {
+					if err == nil {
 						err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
-						if err != nil {
-							// Scanエラー時もデフォルト値を設定
-							grade.Grade = "不明"
-						}
+					}
+					if err != nil {
+						grade.Grade = "不明"
 					}
 
 					// Bureau情報を取得
 					var bureau entity.Bureau
 					bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
-					if err != nil {
-						// エラー時はデフォルト値を設定
-						bureau.Bureau = "不明"
-					} else {
+					if err == nil {
 						err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
-						if err != nil {
-							// Scanエラー時もデフォルト値を設定
-							bureau.Bureau = "不明"
-						}
+					}
+					if err != nil {
+						bureau.Bureau = "不明"
 					}
 
 					member := entity.ShiftMember{
