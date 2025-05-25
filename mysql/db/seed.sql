@@ -170,44 +170,43 @@ VALUES
 -- INSERT INTO places
 --   (place, remark)
 -- VALUES
---   ('未定', '本部に指示を聞いてください');
+--   ('未定', '本部に指示を聞いてください'),
+--   ('体育館', ''),
+--   ('D講', ''),
+--   ('24', '');
 
 -- INSERT INTO users
 --   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
 -- VALUES
---   ('root','test1@example.com','1','1','1','1','12345678','','shiftroot');
-
--- INSERT INTO tasks
---   (task, place_id, url,  bureau_id, max_member, color, remark, year_id)
--- VALUES
---   ('', 1, '', 1, 1, 'ffffff', '', 43),
---   ('NG', 1, '', 1, 1, '949593', '', 43);
-
--- INSERT INTO users
---   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
--- VALUES
---   ('test','test1@testmail.com','1','1','1','1','12345678','09012345678','123456');
--- 以下テスト用のデータなので本番環境で起こらないようにする
--- INSERT INTO users
---   (`name`, `mail`, `grade_id`, `department_id`, `bureau_id`, `role_id`, 'student_number', `tel`, `password`)
--- VALUES
---   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, 11111111, '00000000000', "gidaifes");
+--   ('root','test1@example.com',1,1,1,1,'12345678','','shiftroot'),
+--   ('test','test1@testmail.com',1,1,1,1,'12345678','09012345678','123456'),
+--   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, '11111111', '00000000000', 'gidaifes');
 
 -- INSERT INTO permissions
---   (`user_id`, `allow_shift`, `allow_task`, `allow_user`, `allow_property`)
+--   (user_id, allow_shift, allow_task, allow_user, allow_property)
 -- VALUES
---   (1, True, True, True, True);
+--   (1, True, True, True, True),
+--   (2, True, False, False, False),
+--   (3, True, True, True, True);
 
 -- INSERT INTO tasks
---   (`task`, `place`, `url`, `superviser`, `notes`, `year_id`)
+--   (task, place_id, url, bureau_id, max_member, color, remark, year_id)
 -- VALUES
---   ('テスト1', '24', 'https://example.com', 'Admin', 'a', 42),
---   ('テスト2', '体育館', 'https://example.com', 'Admin', 'b', 42),
---   ('テスト3', 'D講', 'https://nutfes.net', 'Admin', 'c', 42);
+--   ('テスト1', 2, 'https://example.com', 1, 3, 'ff0000', 'テスト用タスク1', 43),
+--   ('テスト2', 3, 'https://example.com', 1, 2, '00ff00', 'テスト用タスク2', 43),
+--   ('テスト3', 4, 'https://nutfes.net', 1, 4, '0000ff', 'テスト用タスク3', 43),
+--   ('NG', 1, '', 1, 1, '949593', '', 43);
 
 -- INSERT INTO shifts
 --   (user_id, task_id, year_id, date_id, time_id, weather_id)
 -- VALUES
---   (1, 1, 41, 1, 1, 1),
---   (1, 1, 41, 1, 2, 1),
---   (1, 1, 41, 1, 3, 1);
+--   (1, 1, 43, 1, 1, 1),
+--   (1, 1, 43, 1, 2, 1),
+--   (1, 1, 43, 1, 3, 1),
+--   (2, 2, 43, 1, 1, 1),
+--   (2, 2, 43, 1, 2, 1),
+--   (3, 3, 43, 1, 1, 1);
+
+
+
+
