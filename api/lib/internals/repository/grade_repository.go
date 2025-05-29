@@ -34,7 +34,7 @@ func (b *gradeRepository) All(c context.Context) (*sql.Rows, error) {
 
 // 1件取得
 func (b *gradeRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT * FROM gradeus WHERE id =" + id
+	query := "SELECT * FROM grades WHERE id =" + id
 	return b.crud.ReadByID(c, query)
 }
 
@@ -69,4 +69,3 @@ func (b *gradeRepository) FindLatestRecord(c context.Context) (*sql.Row, error) 
 	`
 	return b.crud.ReadByID(c, query)
 }
-
