@@ -23,6 +23,7 @@ type TaskRepository interface {
 	Update(context.Context, string, string, string, string, string, string, string, string, string) error
 	Destroy(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
+	FindByName(context.Context, string) (*sql.Row, error)
 }
 
 func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
@@ -82,6 +83,11 @@ func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 		DESC LIMIT 1
 	`
 	return b.crud.ReadByID(c, query)
+}
+
+func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
+	query := "SELECT * FROM tasks WHERE task = '" + name + "'"
+	return b.client.DB().QueryRowContext(c, query), nil
 }
 
 // import '../../usecase/repository/task_repository.dart';

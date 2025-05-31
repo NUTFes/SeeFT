@@ -167,6 +167,25 @@ VALUES
   ('量子・原子力統合工学分野/原子力システム安全工学専攻'),
   ('技術科学イノベーション');
 
+-- placesテーブルの初期データ
+INSERT INTO places
+  (id, place, remark)
+VALUES
+  (1, '未定', '本部に指示を聞いてください'),
+  (2, '体育館', '体育館での作業'),
+  (3, 'D講', 'D講義室'),
+  (4, '屋外', '屋外エリア');
+
+-- tasksテーブルの初期データ
+INSERT INTO tasks
+  (task, place_id, url, bureau_id, max_member, color, remark, year_id)
+VALUES
+  ('', 1, '', 1, 1, 'ffffff', '', 43),
+  ('NG', 1, '', 1, 1, '949593', '', 43),
+  ('テスト1', 2, 'https://example.com', 1, 10, 'ff0000', 'テストタスク1', 43),
+  ('テスト2', 3, 'https://example.com', 2, 8, '00ff00', 'テストタスク2', 43),
+  ('テスト3', 4, 'https://nutfes.net', 3, 5, '0000ff', 'テストタスク3', 43);
+
 -- INSERT INTO places
 --   (place, remark)
 -- VALUES

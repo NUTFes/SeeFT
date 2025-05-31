@@ -22,6 +22,7 @@ type UserRepository interface {
 	Update(context.Context, string, string, string, string, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
+	FindByName(context.Context, string) (*sql.Row, error)
 }
 
 func NewUserRepository(c db.Client, ac abstract.Crud) UserRepository {
@@ -86,6 +87,11 @@ func (ur *userRepository) Delete(c context.Context, id string) error {
 func (ur *userRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 	query := "SELECT * FROM users ORDER BY id DESC LIMIT 1"
 	return ur.crud.ReadByID(c, query)
+}
+
+func (b *userRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
+	query := "SELECT * FROM users WHERE name = '" + name + "'"
+	return b.client.DB().QueryRowContext(c, query), nil
 }
 
 // import '../../usecase/repository/user_repository.dart';

@@ -6,39 +6,39 @@ import (
 
 // スマホアプリ用
 type Shift struct {
-	ID		   	int    		`json:"id"`
-	Task		TaskMobile  		`json:"task"`
-	User     	User  		`json:"user"`
-	Year	   	Year  		`json:"year"`
-	Date     	Date		`json:"date"`
-	Time     	Time		`json:"time"`
-	Weather  	Weather		`json:"weather"`
-	IsAttendance bool   	`json:"isAttendance"`
-	CreatedAt  	time.Time	`json:"createdAt"`
-	UpdatedAt  	time.Time	`json:"updatedAt"`
+	ID           int        `json:"id"`
+	Task         TaskMobile `json:"task"`
+	User         User       `json:"user"`
+	Year         Year       `json:"year"`
+	Date         Date       `json:"date"`
+	Time         Time       `json:"time"`
+	Weather      Weather    `json:"weather"`
+	IsAttendance bool       `json:"isAttendance"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    time.Time  `json:"updatedAt"`
 }
 
 type ShiftUsers struct {
-	Task		Task  		`json:"task"`
-	Users     	[]User  	`json:"users"`
-	Year	   	Year  		`json:"year"`
-	Date     	Date		`json:"date"`
-	Time     	Time		`json:"time"`
-	Weather  	Weather		`json:"weather"`
+	Task    Task    `json:"task"`
+	Users   []User  `json:"users"`
+	Year    Year    `json:"year"`
+	Date    Date    `json:"date"`
+	Time    Time    `json:"time"`
+	Weather Weather `json:"weather"`
 }
 
 // Webアプリ用
 type ShiftAdmin struct {
-	ID		   	int    		`json:"id"`
-	TaskID		int  		`json:"taskID"`
-	UserID     	int  		`json:"userID"`
-	YearID	   	int  		`json:"yearID"`
-	DateID     	int		`json:"dateID"`
-	TimeID     	int		`json:"timeID"`
-	WeatherID  	int		`json:"weatherID"`
-	IsAttendance bool   	`json:"isAttendance"`
-	CreatedAt  	time.Time	`json:"createdAt"`
-	UpdatedAt  	time.Time	`json:"updatedAt"`
+	ID           int       `json:"id"`
+	TaskID       int       `json:"taskID"`
+	UserID       int       `json:"userID"`
+	YearID       int       `json:"yearID"`
+	DateID       int       `json:"dateID"`
+	TimeID       int       `json:"timeID"`
+	WeatherID    int       `json:"weatherID"`
+	IsAttendance bool      `json:"isAttendance"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // タスクの結合用エンティティ
@@ -63,6 +63,40 @@ type ShiftCard struct {
 	ShiftMembers  []ShiftMembers `json:"shift_members"`
 	BeforeMembers ShiftMembers   `json:"before_members"`
 	AfterMembers  ShiftMembers   `json:"after_members"`
+}
+
+type ShiftRequest struct {
+	Name  string `json:"name"` // ユーザーID
+	Shift []struct {
+		Date     int `json:"date"` // 日付
+		Contents []struct {
+			TimeID   int  `json:"timeID"`   // 時間ID
+			IsAttend bool `json:"isAttend"` // 出席フラグ
+		} `json:"contents"`
+	} `json:"shift"`
+}
+
+type GASShiftData struct {
+	Name  string `json:"name"` // ユーザー名
+	Shift []struct {
+		Date     int `json:"date"` // 日付
+		Contents []struct {
+			Row    int  `json:"row"`    // 行番号
+			Column int  `json:"column"` // 列番号
+			Value  bool `json:"value"`  // セルの値
+		} `json:"contents"`
+	} `json:"shift"`
+}
+
+type ShiftChange struct {
+	SheetName string `json:"sheetName"`
+	Row       string `json:"row"`
+	Column    int    `json:"column"`
+	Value     string `json:"value"`
+}
+
+type ShiftChangeRequest struct {
+	Changes []ShiftChange `json:"changes"`
 }
 
 // class Shift {
