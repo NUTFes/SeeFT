@@ -5,24 +5,38 @@ import (
 )
 
 type User struct {
-	ID        		int    	`json:"id"`
-	Name      		string 	`json:"name"`
-	Mail	  		string	`json:"mail"`
-	GradeID   		int		`json:"gradeID"`
-	DepartmentID 	int 	`json:"departmentID"`
-	BureauID  		int     `json:"bureauID"`
-	RoleID    		int     `json:"roleID"`
-	StudentNumber	int		`json:"studentNumber"`
-	Tel				string	`json:"tel"`
-	Password		string	`json:"password"`
-	CreatedAt 		time.Time	`json:"createdAt"`
-	UpdatedAt 		time.Time	`json:"updatedAt"`
+	ID            int       `json:"id"`
+	Name          string    `json:"name"`
+	Mail          string    `json:"mail"`
+	GradeID       int       `json:"gradeID"`
+	DepartmentID  int       `json:"departmentID"`
+	BureauID      int       `json:"bureauID"`
+	RoleID        int       `json:"roleID"`
+	StudentNumber int       `json:"studentNumber"`
+	Tel           string    `json:"tel"`
+	Password      string    `json:"password"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 type LoginUser struct {
-	ID 		int 	`json:"id"`
-	RoleID	int 	`json:"roleID"`
-	Mail 	string 	`json:"mail"`
+	ID     int    `json:"id"`
+	RoleID int    `json:"roleID"`
+	Mail   string `json:"mail"`
+}
+
+// GASから送られてくる名簿の変更内容
+type UserChange struct {
+	Name          string `json:"name"`
+	Bureau        string `json:"bureau"`
+	Grade         string `json:"grade"`
+	Department    string `json:"department"`
+	StudentNumber int    `json:"studentNumber"`
+	Tel           string `json:"tel"`
+}
+
+type UserChangeRequest struct {
+	Changes []UserChange `json:"changes"`
 }
 
 // class User {
