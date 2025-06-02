@@ -26,6 +26,7 @@ type UserUseCase interface {
 	UpdateUser(context.Context, string, string, string, string, string, string, string, string, string) (entity.User, error)
 	DeleteUser(context.Context, string) error
 	GetCurrentUser(context.Context, string) (entity.User, error)
+	UpdateUsersFromGAS(context.Context, entity.UserChangeRequest) error
 }
 
 func NewUserUseCase(userRep rep.UserRepository, sessionRep rep.SessionRepository) UserUseCase {
@@ -288,18 +289,25 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 		case `技術科学イノベーション`:
 			departmentID = "8"
 		default:
-			departmentID = "0"
+			departmentID = "1"
 		}
-
+		// 学籍番号を取得
 		studentNumber := strconv.Itoa(change.StudentNumber)
+		if studentNumber == "" {
+			studentNumber = "0" // 学籍番号が空の場合は0に設定
+		}
+		// 電話番号
 		tel := change.Tel
+		if tel == "" {
+			tel = "000-0000-0000" // 電話番号が空の場合は仮の値を設定
+		}
 
 		// 1. ユーザー名からUserID取得
 		userRow, _ := u.userRep.FindByName(ctx, change.Name) // Rowはユーザー名が入っている前提
 		var user entity.User
-		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, gradeID, departmentID, bureauID, &user.RoleID, studentNumber, tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err == nil {
+		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err == nil {
 			// ユーザーが存在すれば更新
-			u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, "", gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password)
+			u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password)
 		} else { // ユーザーがいなければ新規作成
 			if err.Error() == "sql: no rows in result set" {
 				// 必要な情報は仮値でOK（必要に応じて修正）
