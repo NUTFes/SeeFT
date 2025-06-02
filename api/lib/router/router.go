@@ -130,5 +130,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	// shiftの希望日程
 	e.POST("/request_shifts", r.shiftController.SubmitShift)
 
-	e.POST("/api/update_shifts", r.shiftController.UpdateShiftsFromGAS)
+	// GAS用のRoute
+	e.POST("/api/update_shifts", r.shiftController.UpdateShiftsFromGAS) // シフトの更新
+	e.POST("/api/update_users", r.userController.UpdateUsersFromGAS)    // ユーザの更新
 }
