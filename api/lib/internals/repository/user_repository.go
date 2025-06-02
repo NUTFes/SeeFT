@@ -10,14 +10,14 @@ import (
 )
 
 type userRepository struct {
-	client   db.Client
-	crud abstract.Crud
+	client db.Client
+	crud   abstract.Crud
 }
 
 type UserRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
-	FindByStudentNumber(context.Context, string) (*sql.Row)
+	FindByStudentNumber(context.Context, string) *sql.Row
 	Create(context.Context, string, string, string, string, string, string, string, string, string) error
 	Update(context.Context, string, string, string, string, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
@@ -42,20 +42,19 @@ func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
 }
 
 // 学籍番号から取得
-func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber string) (*sql.Row) {
-	query := "SELECT * FROM users WHERE student_number = " + studentNumber 
+func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber string) *sql.Row {
+	query := "SELECT * FROM users WHERE student_number = " + studentNumber
 	row := ur.client.DB().QueryRowContext(c, query)
 	fmt.Printf("\x1b[36m%s\n", query)
 	return row
 }
-
 
 // 作成
 func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string) error {
 	query := `
 		INSERT INTO
 			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, password)
-		VALUES ('` + name + "', '" + mail + "', " + gradeID + ", " + departmentID + ", " +  bureauID + ", " + roleID + ", " + studentNumber + ", '" + tel +  "', '" + password +"')"
+		VALUES ('` + name + "', '" + mail + "', " + gradeID + ", " + departmentID + ", " + bureauID + ", " + roleID + ", " + studentNumber + ", '" + tel + "', '" + password + "')"
 	return ur.crud.UpdateDB(c, query)
 }
 
@@ -72,8 +71,8 @@ func (ur *userRepository) Update(c context.Context, id string, name string, mail
 		", bureau_id = " + bureauID +
 		", role_id = " + roleID +
 		", student_number = " + studentNumber +
-		", tel = " + tel +
-		", password = '" + password +
+		", tel = '" + tel +
+		"', password = '" + password +
 		"' WHERE id = " + id
 	return ur.crud.UpdateDB(c, query)
 }
@@ -139,7 +138,7 @@ func (b *userRepository) FindByName(c context.Context, name string) (*sql.Row, e
 //   Future<User> insertUser(ctx, User req) async {
 //     String sql = '''
 // INSERT INTO users (name, bureau_id, grade_id)
-//     VALUES ("${req.name}", "${req.bureauId}", "${req.gradeId}") 
+//     VALUES ("${req.name}", "${req.bureauId}", "${req.gradeId}")
 //     returning *;
 // ''';
 
