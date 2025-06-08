@@ -16,6 +16,7 @@ type yearRepository struct {
 type YearRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
+	FindByYear(context.Context, string) (*sql.Row, error)
 }
 
 func NewYearRepository(c db.Client, ac abstract.Crud) YearRepository {
@@ -41,5 +42,17 @@ func (b *yearRepository) Find(c context.Context, id string) (*sql.Row, error) {
 			years 
 		WHERE 
 			id =` + id
+	return b.crud.ReadByID(c, query)
+}
+
+// 年から検索
+func (b *yearRepository) FindByYear(c context.Context, year string) (*sql.Row, error) {
+	query := `
+		SELECT 
+			* 
+		FROM 
+			years 
+		WHERE 
+			year =` + year
 	return b.crud.ReadByID(c, query)
 }
