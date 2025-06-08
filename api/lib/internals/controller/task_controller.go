@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 )
@@ -18,12 +19,12 @@ type TaskController interface {
 	CreateTask(echo.Context) error
 	UpdateTask(echo.Context) error
 	DeleteTask(echo.Context) error
+	UpdateTasksAndPlacesFromGAS(echo.Context) error
 }
 
 func NewTaskController(u usecase.TaskUseCase) TaskController {
 	return &taskController{u}
 }
-
 
 func (b *taskController) IndexTask(c echo.Context) error {
 	tasks, err := b.u.GetTasks(c.Request().Context())
@@ -94,6 +95,22 @@ func (u *taskController) DeleteTask(c echo.Context) error {
 		return err
 	}
 	return c.String(http.StatusOK, "Destroy Task")
+}
+
+// GASからのタスクと集合場所変更通知を受け取るエンドポイント
+func (sc *taskController) UpdateTasksAndPlacesFromGAS(c echo.Context) error {
+	var req entity.TaskAndPlaceChangeRequest
+	if err := c.Bind(&req); err != nil {
+		// return c.JSON(http.StatusBadRequest, "Invalid request")
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "無効なリクエスト形式"})
+	}
+
+	// 必要に応じてユースケース層へ処理を委譲
+	if err := sc.u.UpdateTasksAndPlacesFromGAS(c.Request().Context(), req); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Shifts updated successfully")
 }
 
 // type TaskController struct{}

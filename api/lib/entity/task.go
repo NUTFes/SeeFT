@@ -5,31 +5,44 @@ import (
 )
 
 type Task struct {
-	ID        int    	`json:"id"`
-	Task      string 	`json:"task"`
-	PlaceID   int		`json:"placeID"`
-	Url       string 	`json:"url"`
-	BureauID  int     	`json:"bureauID"`
-	MaxMember int 		`json:"maxMember"`
-	Color     string	`json:"color"`
-	Remark    string	`json:"remark"`
-	YearID	  int		`json:"yearID"`
-	CreatedAt time.Time	`json:"createdAt"`
-	UpdatedAt time.Time	`json:"updatetedAt"`
+	ID        int       `json:"id"`
+	Task      string    `json:"task"`
+	PlaceID   int       `json:"placeID"`
+	Url       string    `json:"url"`
+	BureauID  int       `json:"bureauID"`
+	MaxMember int       `json:"maxMember"`
+	Color     string    `json:"color"`
+	Remark    string    `json:"remark"`
+	YearID    int       `json:"yearID"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatetedAt"`
 }
 
 type TaskMobile struct {
-	ID        int    	`json:"id"`
-	Task      string 	`json:"task"`
-	Place 		string		`json:"place"`
-	Url       string 	`json:"url"`
-	BureauID  int     	`json:"bureauID"`
-	MaxMember int 		`json:"maxMember"`
-	Color     string	`json:"color"`
-	Remark    string	`json:"remark"`
-	YearID	  int		`json:"yearID"`
-	CreatedAt time.Time	`json:"createdAt"`
-	UpdatedAt time.Time	`json:"updatetedAt"`
+	ID        int       `json:"id"`
+	Task      string    `json:"task"`
+	Place     string    `json:"place"`
+	Url       string    `json:"url"`
+	BureauID  int       `json:"bureauID"`
+	MaxMember int       `json:"maxMember"`
+	Color     string    `json:"color"`
+	Remark    string    `json:"remark"`
+	YearID    int       `json:"yearID"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatetedAt"`
+}
+
+// GASから送られてくるタスクと集合場所の変更内容
+type TaskAndPlaceChange struct {
+	TaskName  string `json:"taskName"`  // タスク名
+	Bureau    string `json:"bureau"`    // 管轄局
+	Place     string `json:"place"`     // 集合場所
+	Url       string `json:"url"`       // マニュアルURL
+	MaxMember int    `json:"maxMember"` // 最大人数
+}
+
+type TaskAndPlaceChangeRequest struct {
+	Changes []TaskAndPlaceChange `json:"changes"` // タスクと集合場所の変更内容のリスト
 }
 
 // import './entity.dart';

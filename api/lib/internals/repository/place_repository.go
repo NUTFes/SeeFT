@@ -20,6 +20,7 @@ type PlaceRepository interface {
 	Update(context.Context, string, string, string) error
 	Destroy(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
+	FindByName(context.Context, string) (*sql.Row, error)
 }
 
 func NewPlaceRepository(c db.Client, ac abstract.Crud) PlaceRepository {
@@ -40,13 +41,13 @@ func (b *placeRepository) Find(c context.Context, id string) (*sql.Row, error) {
 
 // 作成
 func (b *placeRepository) Create(c context.Context, name string, remark string) error {
-	query := "INSERT INTO places (place, remark) VALUES ('" + name + "', '" + remark +"')"
+	query := "INSERT INTO places (place, remark) VALUES ('" + name + "', '" + remark + "')"
 	return b.crud.UpdateDB(c, query)
 }
 
 // 編集
 func (b *placeRepository) Update(c context.Context, id string, name string, remark string) error {
-	query := "UPDATE places SET (place, remark) = ('" + name + "', '" + remark +"') WHERE id = " + id
+	query := "UPDATE places SET (place, remark) = ('" + name + "', '" + remark + "') WHERE id = " + id
 	return b.crud.UpdateDB(c, query)
 }
 
@@ -70,3 +71,8 @@ func (b *placeRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 	return b.crud.ReadByID(c, query)
 }
 
+// 集合場所名から取得
+func (b *placeRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
+	query := "SELECT * FROM places WHERE place = '" + name + "'"
+	return b.client.DB().QueryRowContext(c, query), nil
+}
