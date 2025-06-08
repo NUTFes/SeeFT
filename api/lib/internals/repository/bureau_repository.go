@@ -20,6 +20,7 @@ type BureauRepository interface {
 	Update(context.Context, string, string) error
 	Destroy(context.Context, string) error
 	FindLatestRecord(context.Context) (*sql.Row, error)
+	FindByBureau(context.Context, string) (*sql.Row, error)
 }
 
 func NewBureauRepository(c db.Client, ac abstract.Crud) BureauRepository {
@@ -70,6 +71,11 @@ func (b *bureauRepository) FindLatestRecord(c context.Context) (*sql.Row, error)
 	return b.crud.ReadByID(c, query)
 }
 
+// 局名からbureauを取得する
+func (b *bureauRepository) FindByBureau(c context.Context, bureau string) (*sql.Row, error) {
+	query := "SELECT * FROM bureaus WHERE bureau = '" + bureau + "'"
+	return b.client.DB().QueryRowContext(c, query), nil
+}
 
 // import '../../usecase/repository/bureau_repository.dart';
 // import '../../entity/entity.dart';
