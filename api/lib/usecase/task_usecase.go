@@ -193,7 +193,11 @@ func (u *taskUseCase) DeleteTask(c context.Context, id string) error {
 // GASからのタスクと集合場所変更通知を受けてDBを更新
 func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entity.TaskAndPlaceChangeRequest) error {
 	for _, change := range req.Changes {
-		// 1. 局名からBureauIDを取得
+		// YearIDを取得
+		yearID := strings.ReplaceAll(strconv.Itoa(change.YearID), " ", "")
+		yearID = strings.ReplaceAll(yearID, "　", "")
+
+		// 局名からBureauIDを取得
 		var bureauID string
 		bureau := strings.ReplaceAll(change.Bureau, " ", "")
 		bureau = strings.ReplaceAll(bureau, "　", "")
@@ -218,7 +222,7 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 			bureauID = "1" // デフォルトは執行部
 		}
 
-		// 2. 集合場所名からPlaceIDを取得
+		// 集合場所名からPlaceIDを取得
 		placeName := strings.ReplaceAll(change.Place, " ", "")
 		placeName = strings.ReplaceAll(placeName, "　", "")
 		var placeID string
@@ -240,7 +244,7 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 					return errors.Wrapf(createErr, "集合場所新規作成失敗: %v", change.Place)
 				}
 				// 再取得
-				placeRow, err = u.placeRep.FindByName(ctx, placeName)
+				placeRow, _ = u.placeRep.FindByName(ctx, placeName)
 				if err := placeRow.Scan(&place.ID, &place.Place, &place.Remark, &place.CreatedAt, &place.UpdatedAt); err != nil {
 					return errors.Wrapf(err, "集合場所再取得失敗: %v", change.Place)
 				}
@@ -258,20 +262,20 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 		if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err == nil {
 			// タスクが存在する場合は更新
 			color := "ffffff"
-			yearID := "43"
+			yearID := yearID
 			remark := ""
 			u.rep.Update(ctx, strconv.Itoa(task.ID), taskName, placeID, change.Url, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID)
 		} else if err.Error() == "sql: no rows in result set" {
 			// タスクが存在しない場合は新規作成
 			color := "ffffff"
-			yearID := "43"
+			yearID := yearID
 			remark := ""
 			createErr := u.rep.Create(ctx, taskName, placeID, change.Url, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID)
 			if createErr != nil {
 				return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.TaskName)
 			}
 			// // 再取得
-			// taskRow, err = u.rep.FindByName(ctx, taskName)
+			// taskRow, _ = u.rep.FindByName(ctx, taskName)
 			// if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
 			// 	return errors.Wrapf(err, "タスク再取得失敗: %v", change.TaskName)
 			// }

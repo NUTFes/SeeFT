@@ -34,6 +34,7 @@ type TaskMobile struct {
 
 // GASから送られてくるタスクと集合場所の変更内容
 type TaskAndPlaceChange struct {
+	YearID    int    `json:"yearID"`    // yearID
 	TaskName  string `json:"taskName"`  // タスク名
 	Bureau    string `json:"bureau"`    // 管轄局
 	Place     string `json:"place"`     // 集合場所
