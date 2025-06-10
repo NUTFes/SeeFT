@@ -117,7 +117,7 @@ func (sc *userController) UpdateUsersFromGAS(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "Shifts updated successfully")
+	return c.JSON(http.StatusOK, "Users updated successfully")
 }
 
 // import (

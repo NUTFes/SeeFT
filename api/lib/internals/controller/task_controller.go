@@ -110,7 +110,7 @@ func (sc *taskController) UpdateTasksAndPlacesFromGAS(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, "Shifts updated successfully")
+	return c.JSON(http.StatusOK, "Tasks and Places updated successfully")
 }
 
 // type TaskController struct{}
