@@ -299,35 +299,35 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 		// 電話番号
 		tel := change.Tel
 		if tel == "" {
-			tel = "000-0000-0000" // 電話番号が空の場合は仮の値を設定
+			tel = "00000000000" // 電話番号が空の場合は仮の値を設定
 		}
 
-		// 1. ユーザー名からUserID取得
-		userRow, _ := u.userRep.FindByName(ctx, change.Name) // Rowはユーザー名が入っている前提
+		// ユーザー名からUserID取得
+		userName := strings.ReplaceAll(change.Name, " ", "")
+		userName = strings.ReplaceAll(userName, "　", "")
+		userRow, _ := u.userRep.FindByName(ctx, userName) // Rowはユーザー名が入っている前提
 		var user entity.User
 		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err == nil {
 			// ユーザーが存在すれば更新
 			u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password)
-		} else { // ユーザーがいなければ新規作成
-			if err.Error() == "sql: no rows in result set" {
-				// 必要な情報は仮値でOK（必要に応じて修正）
-				name := change.Name
-				mail := ""
-				roleID := "1"
-				password := "password" // 仮のパスワード（必要に応じて変更）
-				hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-				createErr := u.userRep.Create(ctx, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed))
-				if createErr != nil {
-					return errors.Wrapf(createErr, "ユーザー新規作成失敗: %v", change.Name)
-				}
-				// 再取得
-				userRow, _ = u.userRep.FindByName(ctx, change.Name)
-				if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
-					return errors.Wrapf(err, "ユーザー再取得失敗: %v", change.Name)
-				}
-			} else {
-				return errors.Wrapf(err, "ユーザー取得失敗: %v", change.Name)
+		} else if err.Error() == "sql: no rows in result set" {
+			// ユーザーがいなければ新規作成
+			name := change.Name
+			mail := ""
+			roleID := "1"
+			password := "password" // 仮のパスワード（必要に応じて変更）
+			hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+			createErr := u.userRep.Create(ctx, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed))
+			if createErr != nil {
+				return errors.Wrapf(createErr, "ユーザー新規作成失敗: %v", change.Name)
 			}
+			// 再取得
+			userRow, _ = u.userRep.FindByName(ctx, change.Name)
+			if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+				return errors.Wrapf(err, "ユーザー再取得失敗: %v", change.Name)
+			}
+		} else {
+			return errors.Wrapf(err, "ユーザー取得失敗: %v", change.Name)
 		}
 	}
 	return nil
