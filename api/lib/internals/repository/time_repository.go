@@ -37,7 +37,7 @@ func (b *timeRepository) Find(c context.Context, id string) (*sql.Row, error) {
 
 // 時刻から検索
 func (b *timeRepository) FindByTime(c context.Context, time string) (*sql.Row, error) {
-	query := "SELECT * FROM times WHERE time =" + time
+	query := "SELECT * FROM times WHERE time = '" + time + "'"
 	return b.crud.ReadByID(c, query)
 }
 

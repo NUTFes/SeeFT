@@ -88,6 +88,7 @@ func (ur *userRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 	return ur.crud.ReadByID(c, query)
 }
 
+// ユーザ名からユーザを取得する
 func (b *userRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
 	query := "SELECT * FROM users WHERE name = '" + name + "'"
 	return b.client.DB().QueryRowContext(c, query), nil

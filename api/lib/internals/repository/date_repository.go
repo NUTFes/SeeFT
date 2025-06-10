@@ -53,6 +53,6 @@ func (b *dateRepository) FindByName(c context.Context, name string) (*sql.Row, e
 		FROM 
 			dates 
 		WHERE 
-			name =` + name
+			name = '` + name + `'`
 	return b.crud.ReadByID(c, query)
 }

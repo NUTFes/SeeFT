@@ -53,6 +53,6 @@ func (b *weatherRepository) FindByWeather(c context.Context, weather string) (*s
 		FROM 
 			weathers 
 		WHERE 
-			weather =` + weather
+			weather = '` + weather + `'`
 	return b.crud.ReadByID(c, query)
 }
