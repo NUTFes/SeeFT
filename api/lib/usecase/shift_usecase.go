@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/NUTFes/SeeFT/api/lib/entity"
 	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
@@ -1176,83 +1177,93 @@ func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) e
 // GASからのシフト変更通知を受けてDBを更新
 func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.ShiftChangeRequest) error {
 	for _, change := range req.Changes {
-		// 1. ユーザー名からUserID取得
-		userRow, err := u.userRep.FindByName(ctx, change.Row) // Rowはユーザー名が入っている前提
+		// 年からYearIDを取得
+		yearID := strings.ReplaceAll(strconv.Itoa(change.YearID), " ", "")
+		yearID = strings.ReplaceAll(yearID, "　", "")
+
+		// 時刻からTimeIDを取得
+		timeID := strings.ReplaceAll(strconv.Itoa(change.TimeID), " ", "")
+		timeID = strings.ReplaceAll(timeID, "　", "")
+
+		// 日付名からDateIDを取得
+		date := strings.ReplaceAll(change.Date, " ", "")
+		date = strings.ReplaceAll(date, "　", "")
+		var dateID string
+		switch date {
+		case "準備日":
+			dateID = "1"
+		case "1日目":
+			dateID = "2"
+		case "2日目":
+			dateID = "3"
+		case "片付け日":
+			dateID = "4"
+		default:
+			return errors.New("不正な日付名: " + change.Date)
+		}
+
+		// 天気からWeatherIDを取得
+		weather := strings.ReplaceAll(change.Weather, " ", "")
+		weather = strings.ReplaceAll(weather, "　", "")
+		var weatherID string
+		switch weather {
+		case "晴れ":
+			weatherID = "1"
+		case "雨":
+			weatherID = "2"
+		case "none":
+			weatherID = "3"
+		default:
+			return errors.New("不正な天気: " + change.Weather)
+		}
+
+		// ユーザー名からUserID取得
+		userRow, _ := u.userRep.FindByName(ctx, change.UserName)
 		var user entity.User
 		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
-			// ユーザーがいなければ新規作成
-			if err.Error() == "sql: no rows in result set" {
-				// 必要な情報は仮値でOK（必要に応じて修正）
-				name := change.Row
-				mail := ""
-				gradeID := "1"
-				departmentID := "1"
-				bureauID := "1"
-				roleID := "1"
-				studentNumber := "0"
-				tel := ""
-				password := ""
-				createErr := u.userRep.Create(ctx, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
-				if createErr != nil {
-					return errors.Wrapf(createErr, "ユーザー新規作成失敗: %v", change.Row)
-				}
-				// 再取得
-				userRow, err = u.userRep.FindByName(ctx, change.Row)
-				if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
-					return errors.Wrapf(err, "ユーザー再取得失敗: %v", change.Row)
-				}
-			} else {
-				return errors.Wrapf(err, "ユーザー取得失敗: %v", change.Row)
-			}
+			// ユーザーが存在しない場合はエラーを返す
+			return errors.Wrapf(err, "ユーザーが存在しません: %v", change.UserName)
 		}
 		userID := strconv.Itoa(user.ID)
 
-		// 2. Task名からTaskID取得
-		taskRow, err := u.taskRep.FindByName(ctx, change.Value)
+		// タスク名からTaskID取得
+		taskRow, _ := u.taskRep.FindByName(ctx, change.TaskName)
 		var task entity.Task
 		if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
 			if err.Error() == "sql: no rows in result set" {
-				// 必要な情報は仮値でOK（必要に応じて修正）
-				name := change.Value
+				// タスクが存在しない場合は新規作成
+				name := change.TaskName
 				placeID := "1"
 				url := ""
 				bureauID := "1"
-				maxMember := "0"
-				color := ""
+				maxMember := "1"
+				color := "000000"
 				remark := ""
-				yearID := "43"
+				yearID := yearID
 				createErr := u.taskRep.Create(ctx, name, placeID, url, bureauID, maxMember, color, remark, yearID)
 				if createErr != nil {
-					return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.Value)
+					return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.TaskName)
 				}
 				// 再取得
-				taskRow, err = u.taskRep.FindByName(ctx, change.Value)
+				taskRow, _ = u.taskRep.FindByName(ctx, change.TaskName)
 				if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
-					return errors.Wrapf(err, "タスク再取得失敗: %v", change.Value)
+					return errors.Wrapf(err, "タスク再取得失敗: %v", change.TaskName)
 				}
 			} else {
-				return errors.Wrapf(err, "タスク取得失敗: %v", change.Value)
+				return errors.Wrapf(err, "タスク取得失敗: %v", change.TaskName)
 			}
 		}
 		taskID := strconv.Itoa(task.ID)
 
-		// 3. DateIDはSheetName、WeatherIDは1で固定
-		// dateID := change.SheetName
-		dateID := "1"
-		weatherID := "1"
-		timeID := strconv.Itoa(change.Column)
-
 		// 4. 既存シフトがあるか確認
-		existRow, err := u.rep.FindByUnique(ctx, taskID, userID, dateID, timeID, weatherID)
+		existRow, _ := u.rep.FindByUnique(ctx, taskID, userID, dateID, timeID, weatherID)
 		var existShift entity.ShiftAdmin
-		err = existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt)
-		if err == nil && existShift.ID != 0 {
+		if err := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt); err == nil && existShift.ID != 0 {
 			// 既存があれば更新
 			isAttendance := false
 			u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
 		} else {
 			// なければ新規作成
-			yearID := "43" // 必要に応じて適切なYearIDを設定
 			isAttendance := false
 			u.rep.Create(ctx, taskID, userID, yearID, dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
 		}
