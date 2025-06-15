@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"net/http"
+
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 type userController struct {
@@ -17,6 +19,7 @@ type UserController interface {
 	UpdateUser(echo.Context) error
 	DeleteUser(echo.Context) error
 	GetCurrentUser(echo.Context) error
+	UpdateUsersFromGAS(echo.Context) error
 }
 
 func NewUserController(u usecase.UserUseCase) UserController {
@@ -100,6 +103,21 @@ func (auth *userController) GetCurrentUser(c echo.Context) error {
 		c.JSON(http.StatusOK, user)
 		return nil
 	}
+}
+
+// GASからの名簿変更通知を受け取るエンドポイント
+func (sc *userController) UpdateUsersFromGAS(c echo.Context) error {
+	var req entity.UserChangeRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request")
+	}
+
+	// 必要に応じてユースケース層へ処理を委譲
+	if err := sc.u.UpdateUsersFromGAS(c.Request().Context(), req); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Users updated successfully")
 }
 
 // import (

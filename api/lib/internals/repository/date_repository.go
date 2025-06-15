@@ -16,6 +16,7 @@ type dateRepository struct {
 type DateRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
+	FindByName(context.Context, string) (*sql.Row, error)
 }
 
 func NewDateRepository(c db.Client, ac abstract.Crud) DateRepository {
@@ -41,5 +42,17 @@ func (b *dateRepository) Find(c context.Context, id string) (*sql.Row, error) {
 			dates 
 		WHERE 
 			id =` + id
+	return b.crud.ReadByID(c, query)
+}
+
+// 日付名から検索
+func (b *dateRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
+	query := `
+		SELECT 
+			* 
+		FROM 
+			dates 
+		WHERE 
+			name = '` + name + `'`
 	return b.crud.ReadByID(c, query)
 }

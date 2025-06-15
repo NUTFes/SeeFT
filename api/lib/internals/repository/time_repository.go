@@ -16,6 +16,7 @@ type timeRepository struct {
 type TimeRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
+	FindByTime(context.Context, string) (*sql.Row, error)
 }
 
 func NewTimeRepository(c db.Client, ac abstract.Crud) TimeRepository {
@@ -31,6 +32,12 @@ func (b *timeRepository) All(c context.Context) (*sql.Rows, error) {
 // 1件取得
 func (b *timeRepository) Find(c context.Context, id string) (*sql.Row, error) {
 	query := "SELECT * FROM times WHERE id =" + id
+	return b.crud.ReadByID(c, query)
+}
+
+// 時刻から検索
+func (b *timeRepository) FindByTime(c context.Context, time string) (*sql.Row, error) {
+	query := "SELECT * FROM times WHERE time = '" + time + "'"
 	return b.crud.ReadByID(c, query)
 }
 

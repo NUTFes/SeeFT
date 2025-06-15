@@ -43,7 +43,7 @@ func InitializeServer() db.Client {
 	placeUseCase := usecase.NewPlaceUseCase(placeRepository)
 	departmentUseCase := usecase.NewDepartmentUseCase(departmentRepository)
 	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository, placeRepository, gradeRepository, bureauRepository)
-	taskUseCase := usecase.NewTaskUseCase(taskRepository)
+	taskUseCase := usecase.NewTaskUseCase(taskRepository, placeRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
 	rescueUseCase := usecase.NewRescueUseCase()

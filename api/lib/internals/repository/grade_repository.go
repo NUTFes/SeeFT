@@ -20,6 +20,7 @@ type GradeRepository interface {
 	Update(context.Context, string, string) error
 	Destroy(context.Context, string) error
 	FindLatestRecord(context.Context) (*sql.Row, error)
+	FindByGrade(context.Context, string) (*sql.Row, error)
 }
 
 func NewGradeRepository(c db.Client, ac abstract.Crud) GradeRepository {
@@ -67,5 +68,11 @@ func (b *gradeRepository) FindLatestRecord(c context.Context) (*sql.Row, error) 
 			id
 		DESC LIMIT 1
 	`
+	return b.crud.ReadByID(c, query)
+}
+
+// 学年から検索
+func (b *gradeRepository) FindByGrade(c context.Context, grade string) (*sql.Row, error) {
+	query := "SELECT * FROM grades WHERE grade = '" + grade + "'"
 	return b.crud.ReadByID(c, query)
 }

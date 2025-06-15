@@ -10,6 +10,10 @@ mac-up:
 prod-up:
 	docker compose -f docker-compose.prod.yml up -d
 
+.PHONY: mobile up
+mobile-up:
+	cd mobile && fvm flutter run -d web-server --web-port 45029
+
 .PHONY: up-db
 up-db:
 	docker compose up db

@@ -23,6 +23,7 @@ type TaskRepository interface {
 	Update(context.Context, string, string, string, string, string, string, string, string, string) error
 	Destroy(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
+	FindByName(context.Context, string) (*sql.Row, error)
 }
 
 func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
@@ -54,13 +55,13 @@ func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error
 
 // 作成
 func (b *taskRepository) Create(c context.Context, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) error {
-	query := "INSERT INTO tasks (task, place_id, url, bureau_id, max_member, color, remark, year_id) VALUES ('" + name + "', " + placeID + ", '" + url + "', " + bureauID  + ", " + maxMember + ", '" + color + "', '" + remark +"', " + yearID + ")"
+	query := "INSERT INTO tasks (task, place_id, url, bureau_id, max_member, color, remark, year_id) VALUES ('" + name + "', " + placeID + ", '" + url + "', " + bureauID + ", " + maxMember + ", '" + color + "', '" + remark + "', " + yearID + ")"
 	return b.crud.UpdateDB(c, query)
 }
 
 // 編集
 func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) error {
-	query := "UPDATE tasks SET (task, place_id, url, bureau_id, max_member, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + bureauID  + ", " + maxMember + ", '" + color + "', '" + remark +"', " + yearID + ") WHERE id = " + id
+	query := "UPDATE tasks SET (task, place_id, url, bureau_id, max_member, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + bureauID + ", " + maxMember + ", '" + color + "', '" + remark + "', " + yearID + ") WHERE id = " + id
 	return b.crud.UpdateDB(c, query)
 }
 
@@ -82,6 +83,12 @@ func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 		DESC LIMIT 1
 	`
 	return b.crud.ReadByID(c, query)
+}
+
+// タスク名からタスクを取得する
+func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
+	query := "SELECT * FROM tasks WHERE task = '" + name + "'"
+	return b.client.DB().QueryRowContext(c, query), nil
 }
 
 // import '../../usecase/repository/task_repository.dart';

@@ -16,6 +16,7 @@ type weatherRepository struct {
 type WeatherRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
+	FindByWeather(context.Context, string) (*sql.Row, error)
 }
 
 func NewWeatherRepository(c db.Client, ac abstract.Crud) WeatherRepository {
@@ -41,5 +42,17 @@ func (b *weatherRepository) Find(c context.Context, id string) (*sql.Row, error)
 			weathers 
 		WHERE 
 			id =` + id
+	return b.crud.ReadByID(c, query)
+}
+
+// 天気から検索
+func (b *weatherRepository) FindByWeather(c context.Context, weather string) (*sql.Row, error) {
+	query := `
+		SELECT 
+			* 
+		FROM 
+			weathers 
+		WHERE 
+			weather = '` + weather + `'`
 	return b.crud.ReadByID(c, query)
 }

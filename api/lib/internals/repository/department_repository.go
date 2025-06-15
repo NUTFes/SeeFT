@@ -14,7 +14,7 @@ type departmentRepository struct {
 }
 
 type DepartmentRepository interface {
-    All(context.Context) (*sql.Rows, error)
+	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	Create(context.Context, string) error
 	Update(context.Context, string, string) error
@@ -26,14 +26,14 @@ func NewDepartmentRepository(c db.Client, ac abstract.Crud) DepartmentRepository
 	return &departmentRepository{c, ac}
 }
 
-//全件取得
+// 全件取得
 func (b *departmentRepository) All(c context.Context) (*sql.Rows, error) {
 	query := "SELECT * FROM departments"
 	return b.crud.Read(c, query)
 }
 
 // 1件取得
-func (b *departmentRepository) Find(c context.Context, id string) (*sql.Row, error){
+func (b *departmentRepository) Find(c context.Context, id string) (*sql.Row, error) {
 	query := "SELECT * FROM departments WHERE id =" + id
 	return b.crud.ReadByID(c, query)
 }
@@ -67,5 +67,11 @@ func (b *departmentRepository) FindLatestRecord(c context.Context) (*sql.Row, er
 			id
 		DESC LIMIT 1
 	`
+	return b.crud.ReadByID(c, query)
+}
+
+// 学科名から検索
+func (b *departmentRepository) FindByDepartment(c context.Context, department string) (*sql.Row, error) {
+	query := "SELECT * FROM departments WHERE department = '" + department + "'"
 	return b.crud.ReadByID(c, query)
 }
