@@ -75,11 +75,87 @@ class _SignInPageState extends State<SignInPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           TextField(
+                            cursorColor: AppColors.main, 
+                            style: TextStyle(
+                              color: AppColors.textBlack,
+                              fontSize: AppFontSizes.md,
+                            ),
                             decoration: InputDecoration(
+                              // 枠線の色を指定
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.grayDark,
+                                  width: 1.0,
+                                ),
                               ),
+                              // 有効時の枠線の色を指定
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.grayDark,
+                                  width: 1.0,
+                                ),
+                              ),
+                              // フォーカス時の枠線の色を指定
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.main,
+                                  width: 2.0,
+                                ),
+                              ),
+                              // エラー時の枠線の色を指定
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.error,
+                                  width: 1.0,
+                                ),
+                              ),
+                              // フォーカス時のエラー枠線の色を指定
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.error,
+                                  width: 2.0,
+                                ),
+                              ),
+                              // ラベルのテキスト
                               labelText: '学籍番号',
+                              // ラベルのスタイル
+                              labelStyle: TextStyle(
+                                color: AppColors.grayDark,
+                                fontSize: AppFontSizes.md,
+                              ),
+                              // フローティングラベルのスタイル
+                              floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+                                (Set<WidgetState> states) {
+                                  if (states.contains(WidgetState.error)) {
+                                    return TextStyle(
+                                      color: AppColors.error,
+                                      fontSize: AppFontSizes.md,
+                                    );
+                                  }
+                                  if (states.contains(WidgetState.focused)) {
+                                    return TextStyle(
+                                      color: AppColors.main,
+                                      fontSize: AppFontSizes.md,
+                                    );
+                                  }
+                                  return TextStyle(
+                                    color: AppColors.grayDark,
+                                    fontSize: AppFontSizes.md,
+                                  );
+                                },
+                              ),
+                              // プレースホルダーのテキスト
+                              hintText: '例) 12345678',
+                              // プレースホルダーのスタイル
+                              hintStyle: TextStyle(
+                                color: AppColors.grayDark,
+                                fontSize: AppFontSizes.md,
+                              ),
                             ),
                             onChanged: (String value) {
                               setState(() {
@@ -87,26 +163,99 @@ class _SignInPageState extends State<SignInPage> {
                               });
                             },
                           ),
-                          const SizedBox(height: 25.0),
+                          const SizedBox(height: 24.0),
                           TextField(
                             obscureText: _isObscure,
+                            cursorColor: AppColors.main,
+                            style: TextStyle(
+                              color: AppColors.textBlack,
+                              fontSize: AppFontSizes.md,
+                            ),
                             decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
+                              // 枠線の色を指定
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.grayDark,
+                                  width: 1.0,
                                 ),
-                                labelText: 'パスワード',
-                                suffixIcon: IconButton(
-                                  // 文字の表示・非表示でアイコンを変える
-                                  icon: Icon(_isObscure
-                                      ? Icons.visibility_off
-                                      : Icons.visibility),
-                                  // アイコンがタップされたら現在と反対の状態をセットする
-                                  onPressed: () {
-                                    setState(() {
-                                      _isObscure = !_isObscure;
-                                    });
-                                  },
-                                )),
+                              ),
+                              // 有効時の枠線の色を指定
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.grayDark,
+                                  width: 1.0,
+                                ),
+                              ),
+                              // フォーカス時の枠線の色を指定
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.main,
+                                  width: 2.0,
+                                ),
+                              ),
+                              // エラー時の枠線の色を指定
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.error,
+                                  width: 1.0,
+                                ),
+                              ),
+                              // フォーカス時のエラー枠線の色を指定
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: AppColors.error,
+                                  width: 2.0,
+                                ),
+                              ),
+                              // ラベルのテキスト
+                              labelText: 'パスワード',
+                              // ラベルのスタイル
+                              labelStyle: TextStyle(
+                                color: AppColors.grayDark,
+                                fontSize: AppFontSizes.md,
+                              ),
+                              // フローティングラベルのスタイル
+                              floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+                                (Set<WidgetState> states) {
+                                  if (states.contains(WidgetState.error)) {
+                                    return TextStyle(
+                                      color: AppColors.error,
+                                      fontSize: AppFontSizes.md,
+                                    );
+                                  }
+                                  if (states.contains(WidgetState.focused)) {
+                                    return TextStyle(
+                                      color: AppColors.main,
+                                      fontSize: AppFontSizes.md,
+                                    );
+                                  }
+                                  return TextStyle(
+                                    color: AppColors.grayDark,
+                                    fontSize: AppFontSizes.md,
+                                  );
+                                },
+                              ),
+                              // アイコンの表示
+                              suffixIcon: IconButton(
+                                // 文字の表示・非表示でアイコンを変える
+                                icon: Icon(_isObscure
+                                    ? Icons.visibility_off
+                                    : Icons.visibility),
+                                iconSize: 24.0,
+                                color: AppColors.grayDark,
+                                // アイコンがタップされたら現在と反対の状態をセットする
+                                onPressed: () {
+                                  setState(() {
+                                    _isObscure = !_isObscure;
+                                  });
+                                },
+                              ),
+                            ),
                             onChanged: (String value) {
                               setState(() {
                                 password = value;
@@ -115,7 +264,7 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 50.0),
+                      const SizedBox(height: 48.0),
                       Container(
                         width: double.infinity,
                         height: 54.0,
@@ -136,7 +285,6 @@ class _SignInPageState extends State<SignInPage> {
                               vertical: 16.0,
                               horizontal: 24.0,
                             ),
-                            
                           ),
                           onPressed: () async {
                             _signIn();
