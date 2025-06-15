@@ -37,7 +37,7 @@ class _SignInPageState extends State<SignInPage> {
       } else {
         setState(() {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('学籍番号もしくはパスワードが違います'),
+            content: const Text('学籍番号もしくはパスワードが違います'),
             backgroundColor: AppColors.error,
           ));
         });
@@ -45,7 +45,7 @@ class _SignInPageState extends State<SignInPage> {
     } catch (e) {
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('学籍番号もしくはパスワードが違います'),
+          content: const Text('学籍番号もしくはパスワードが違います'),
           backgroundColor: AppColors.error,
         ));
       });
@@ -56,7 +56,7 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: const CustomAppBar(
         title: 'ログイン',
       ),
       backgroundColor: AppColors.base,
@@ -76,7 +76,7 @@ class _SignInPageState extends State<SignInPage> {
                         children: [
                           TextField(
                             cursorColor: AppColors.main, 
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.textBlack,
                               fontSize: AppFontSizes.md,
                             ),
@@ -84,7 +84,7 @@ class _SignInPageState extends State<SignInPage> {
                               // 枠線の色を指定
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.grayDark,
                                   width: 1.0,
                                 ),
@@ -92,7 +92,7 @@ class _SignInPageState extends State<SignInPage> {
                               // 有効時の枠線の色を指定
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.grayDark,
                                   width: 1.0,
                                 ),
@@ -100,7 +100,7 @@ class _SignInPageState extends State<SignInPage> {
                               // フォーカス時の枠線の色を指定
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.main,
                                   width: 2.0,
                                 ),
@@ -108,7 +108,7 @@ class _SignInPageState extends State<SignInPage> {
                               // エラー時の枠線の色を指定
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.error,
                                   width: 1.0,
                                 ),
@@ -116,7 +116,7 @@ class _SignInPageState extends State<SignInPage> {
                               // フォーカス時のエラー枠線の色を指定
                               focusedErrorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.error,
                                   width: 2.0,
                                 ),
@@ -124,7 +124,7 @@ class _SignInPageState extends State<SignInPage> {
                               // ラベルのテキスト
                               labelText: '学籍番号',
                               // ラベルのスタイル
-                              labelStyle: TextStyle(
+                              labelStyle: const TextStyle(
                                 color: AppColors.grayDark,
                                 fontSize: AppFontSizes.md,
                               ),
@@ -132,18 +132,18 @@ class _SignInPageState extends State<SignInPage> {
                               floatingLabelStyle: WidgetStateTextStyle.resolveWith(
                                 (Set<WidgetState> states) {
                                   if (states.contains(WidgetState.error)) {
-                                    return TextStyle(
+                                    return const TextStyle(
                                       color: AppColors.error,
                                       fontSize: AppFontSizes.md,
                                     );
                                   }
                                   if (states.contains(WidgetState.focused)) {
-                                    return TextStyle(
+                                    return const TextStyle(
                                       color: AppColors.main,
                                       fontSize: AppFontSizes.md,
                                     );
                                   }
-                                  return TextStyle(
+                                  return const TextStyle(
                                     color: AppColors.grayDark,
                                     fontSize: AppFontSizes.md,
                                   );
@@ -152,7 +152,7 @@ class _SignInPageState extends State<SignInPage> {
                               // プレースホルダーのテキスト
                               hintText: '例) 12345678',
                               // プレースホルダーのスタイル
-                              hintStyle: TextStyle(
+                              hintStyle: const TextStyle(
                                 color: AppColors.grayDark,
                                 fontSize: AppFontSizes.md,
                               ),
@@ -167,7 +167,7 @@ class _SignInPageState extends State<SignInPage> {
                           TextField(
                             obscureText: _isObscure,
                             cursorColor: AppColors.main,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.textBlack,
                               fontSize: AppFontSizes.md,
                             ),
@@ -175,7 +175,7 @@ class _SignInPageState extends State<SignInPage> {
                               // 枠線の色を指定
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.grayDark,
                                   width: 1.0,
                                 ),
@@ -183,7 +183,7 @@ class _SignInPageState extends State<SignInPage> {
                               // 有効時の枠線の色を指定
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.grayDark,
                                   width: 1.0,
                                 ),
@@ -191,7 +191,7 @@ class _SignInPageState extends State<SignInPage> {
                               // フォーカス時の枠線の色を指定
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.main,
                                   width: 2.0,
                                 ),
@@ -199,7 +199,7 @@ class _SignInPageState extends State<SignInPage> {
                               // エラー時の枠線の色を指定
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.error,
                                   width: 1.0,
                                 ),
@@ -207,7 +207,7 @@ class _SignInPageState extends State<SignInPage> {
                               // フォーカス時のエラー枠線の色を指定
                               focusedErrorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
+                                borderSide: const BorderSide(
                                   color: AppColors.error,
                                   width: 2.0,
                                 ),
@@ -215,7 +215,7 @@ class _SignInPageState extends State<SignInPage> {
                               // ラベルのテキスト
                               labelText: 'パスワード',
                               // ラベルのスタイル
-                              labelStyle: TextStyle(
+                              labelStyle: const TextStyle(
                                 color: AppColors.grayDark,
                                 fontSize: AppFontSizes.md,
                               ),
@@ -223,18 +223,18 @@ class _SignInPageState extends State<SignInPage> {
                               floatingLabelStyle: WidgetStateTextStyle.resolveWith(
                                 (Set<WidgetState> states) {
                                   if (states.contains(WidgetState.error)) {
-                                    return TextStyle(
+                                    return const TextStyle(
                                       color: AppColors.error,
                                       fontSize: AppFontSizes.md,
                                     );
                                   }
                                   if (states.contains(WidgetState.focused)) {
-                                    return TextStyle(
+                                    return const TextStyle(
                                       color: AppColors.main,
                                       fontSize: AppFontSizes.md,
                                     );
                                   }
-                                  return TextStyle(
+                                  return const TextStyle(
                                     color: AppColors.grayDark,
                                     fontSize: AppFontSizes.md,
                                   );
