@@ -1,6 +1,8 @@
 // import 'dart:ffi';
 
 import 'package:seeft_mobile/configs/importer.dart';
+import 'package:seeft_mobile/theme/tokens.dart';
+import 'package:seeft_mobile/widgets/app_bar.dart';
 
 class SignInPage extends StatefulWidget {
   @override
@@ -36,7 +38,7 @@ class _SignInPageState extends State<SignInPage> {
         setState(() {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('学籍番号もしくはパスワードが違います'),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: AppColors.error,
           ));
         });
       }
@@ -44,7 +46,7 @@ class _SignInPageState extends State<SignInPage> {
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('学籍番号もしくはパスワードが違います'),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: AppColors.error,
         ));
       });
     }
@@ -54,9 +56,10 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ログインページ'),
+      appBar: CustomAppBar(
+        title: 'ログイン',
       ),
+      backgroundColor: AppColors.base,
       body: Center(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -120,10 +123,20 @@ class _SignInPageState extends State<SignInPage> {
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         child: ElevatedButton(
-                          child: const Text('ログイン'),
+                          child: const Text(
+                            'ログイン',
+                            style: TextStyle(
+                              fontSize: AppFontSizes.sm,
+                              color: AppColors.textWhite,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
-                            // primary: Colors.teal,
-                            // onPrimary: Colors.white,
+                            backgroundColor: AppColors.main,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16.0,
+                              horizontal: 24.0,
+                            ),
+                            
                           ),
                           onPressed: () async {
                             _signIn();
