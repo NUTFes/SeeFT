@@ -126,6 +126,12 @@ func (r router) ProvideRouter(e *echo.Echo) {
 
 	// rescue
 	e.POST("/rescue", r.rescueController.CreateRescue)
+	e.POST("/rescues/trouble", r.rescueController.CreateTroubleRescue)
+	e.POST("/rescues/question", r.rescueController.CreateQuestionRescue)
+	e.POST("/rescues/shorthanded", r.rescueController.CreateShorthandedRescue)
+	e.GET("/rescues/user/:user_id", r.rescueController.GetRescuesByUserID)
+	e.GET("/rescues", r.rescueController.GetAllRescues)
+	e.PUT("/rescues/update", r.rescueController.UpdateRescues)
 
 	// shiftの希望日程
 	e.POST("/request_shifts", r.shiftController.SubmitShift)
