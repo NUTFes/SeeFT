@@ -35,6 +35,7 @@ func InitializeServer() db.Client {
 	yearRepository := repository.NewYearRepository(client, crud)
 	dateRepository := repository.NewDateRepository(client, crud)
 	weatherRepository := repository.NewWeatherRepository(client, crud)
+	rescueRepository := repository.NewRescueRepository(client, crud)
 
 	// UseCase
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
@@ -46,7 +47,7 @@ func InitializeServer() db.Client {
 	taskUseCase := usecase.NewTaskUseCase(taskRepository, placeRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
-	rescueUseCase := usecase.NewRescueUseCase()
+	rescueUseCase := usecase.NewRescueUseCase(rescueRepository, userRepository, taskRepository)
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
