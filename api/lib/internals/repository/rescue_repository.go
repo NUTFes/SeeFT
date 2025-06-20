@@ -70,7 +70,8 @@ func (r *rescueRepository) AllTroubleRescues(c context.Context) (*sql.Rows, erro
 // トラブルレスキュー更新
 func (r *rescueRepository) UpdateTroubleRescue(c context.Context, id int, status string, response string) error {
 	query := "UPDATE trouble_rescues SET status = $1, response = $2 WHERE id = $3"
-	return r.crud.UpdateDB(c, query)
+	_, err := r.client.DB().ExecContext(c, query, status, response, id)
+	return err
 }
 
 // 質問レスキュー作成

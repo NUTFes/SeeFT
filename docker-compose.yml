@@ -14,6 +14,11 @@ services:
       TZ: 'Asia/Tokyo'
     ports:
       - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seeft -d seeft_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     container_name: nutfes-seeft-api
@@ -29,7 +34,7 @@ services:
     tty: true
     depends_on:
       db: 
-        condition: service_started
+        condition: service_healthy
 
   # mobile:
   #   container_name: nutfes-seeft-mobile
@@ -58,5 +63,3 @@ services:
     stdin_open: true
     tty: true
     depends_on: [api]
-
-
