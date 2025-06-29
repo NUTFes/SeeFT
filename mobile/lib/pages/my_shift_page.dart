@@ -1,4 +1,5 @@
 import 'package:seeft_mobile/configs/importer.dart';
+import 'dart:async';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:http/http.dart' as http;
 // import 'package:seeft_mobile/pages/my_shift_page_preparation_day.dart';
@@ -11,24 +12,40 @@ import 'package:seeft_mobile/widgets/shift_card.dart';
 
 
 Future<ShiftCardDataList> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
+  logger.i('=== API Call Started ===');
+  logger.i('Parameters - userID: $userID, dayID: $dayID, weatherID: $weatherID');
+  
   try {
-    // var userID = await store.getUserID();
     var res = await api.getShiftCardsByUserAndDateAndWeather(
       userID,
       dayID,
       weatherID,
-      // DateTime.now().year.toString(),
     );
-    logger.i('res: $res');
-    // var taskName = res[0]['task_name'] as String? ?? 'No Task Name';
-    // logger.i('taskName: $taskName');
+    
+    logger.i('=== API Response Received ===');
+    logger.i('Raw API Response: $res');
+    logger.i('Response Type: ${res.runtimeType}');
+    
+    if (res is List) {
+      logger.i('Response is List with ${res.length} items');
+      if (res.isNotEmpty) {
+        logger.i('First item: ${res[0]}');
+      }
+    }
+    
     // resをShiftCardDataListに変換
     ShiftCardDataList resList = ShiftCardDataList.fromJson(res);
-    logger.i('resList: $resList');
-    // return res;
+    logger.i('=== Converted to ShiftCardDataList ===');
+    logger.i('ShiftCardDataList data count: ${resList.data.length}');
+    if (resList.data.isNotEmpty) {
+      logger.i('First ShiftCardData: ${resList.data[0].taskName}');
+    }
+    
     return resList;
   } catch (err) {
-    logger.e('don`t response. error message: $err');
+    logger.e('=== API Error ===');
+    logger.e('Error message: $err');
+    logger.e('Error type: ${err.runtimeType}');
     // エラーが発生した場合は空のリストを返す
     return ShiftCardDataList([]);
   }
@@ -60,6 +77,13 @@ class MyShiftPage extends StatefulWidget {
 class _MyShiftPageState extends State<MyShiftPage>
     with TickerProviderStateMixin {
   int _selectedWeatherIndex = 1;  // 天気の選択肢のインデックス(1:晴れ, 2:雨)
+  
+  // データフェッチ管理用の変数
+  Map<String, ShiftCardDataList> _dataCache = {}; // Futureではなく実際のデータをキャッシュ
+  Map<String, bool> _loadingStates = {}; // ロード状態を管理
+  Timer? _debounceTimer;
+  int _currentTabIndex = 0; // 現在のタブインデックス
+  
   // 天気ごとのweatherID
   final Map<String, int> _weatherOptions = {
     "晴れ": 1,
@@ -99,7 +123,7 @@ class _MyShiftPageState extends State<MyShiftPage>
     ),
     TabInfo(
       " ２日目 ", 
-      _dayOptions["2日目"] ?? 2, // １日目のdateIDを取得
+      _dayOptions["2日目"] ?? 3, // ２日目のdateIDを取得
       // _selectedWeatherIndex, // 選択された天気のインデックスを使用
       WaitPage()
     ),
@@ -111,72 +135,146 @@ class _MyShiftPageState extends State<MyShiftPage>
     ),
   ];
   late TabController _tabController;
-  Future<ShiftCardDataList>? _shiftCardDataListFuture; // シフトカードデータのFuture
 
   @override
   void initState() {
     _tabController = TabController(length: _tabs.length, vsync: this);
     _tabController.addListener(_handleTabChange);
-    _loadShiftCardDataList(); // 初期データの読み込み
     super.initState();
+    
+    // 初期タブのデータを取得
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDataForCurrentTab();
+    });
   }
   @override
   void dispose() {
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
+    _debounceTimer?.cancel(); // デバウンスタイマーをキャンセル
     super.dispose();
   }
   
   // タブが切り替わったときの処理
   void _handleTabChange() {
     if (_tabController.indexIsChanging) {
-      // タブが実際に変更された場合のみデータを再読み込み
-      _loadShiftCardDataList();
+      logger.i('=== Tab Change ===');
+      logger.i('New tab index: ${_tabController.index}');
+      
+      setState(() {
+        _currentTabIndex = _tabController.index;
+      });
+      
+      // 新しいタブのデータを取得
+      _loadDataForCurrentTab();
     }
   }
   
   // SegmentedButtonの選択状態が変わったときの処理
   void _handleWeatherSelectionChanged(Set<int> newSelection) {
+    final oldWeatherIndex = _selectedWeatherIndex;
+    final newWeatherIndex = newSelection.first;
+    
+    logger.i('=== Weather Selection Changed ===');
+    logger.i('Old weather index: $oldWeatherIndex');
+    logger.i('New weather index: $newWeatherIndex');
+    
     setState(() {
-      _selectedWeatherIndex = newSelection.first;
-      _loadShiftCardDataList();
-      // // タブの内容を更新
-      // _tabs[1] = TabInfo(
-      //   " １日目 ",
-      //   _dayOptions["1日目"] ?? 2, // １日目のdateIDを取得
-      //   WaitPage(), // 後で実装するページに置き換える
-      // );
-      // _tabs[2] = TabInfo(
-      //   " ２日目 ",
-      //   _dayOptions["2日目"] ?? 3, // ２日目のdateIDを取得
-      //   WaitPage(), // 後で実装するページに置き換える
-      // );
-      // _tabController = TabController(
-      //   initialIndex: _tabController.index,
-      //   length: _tabs.length,
-      //   vsync: this,
-      // );
-      logger.i('Selected weather index: $_selectedWeatherIndex');
+      _selectedWeatherIndex = newWeatherIndex;
+    });
+    
+    if (oldWeatherIndex != newWeatherIndex) {
+      logger.i('Weather actually changed - triggering debounced reload');
+      _loadShiftCardDataListWithDebounce(); // デバウンス付きでデータ読み込み
+    } else {
+      logger.i('Weather not changed - skipping reload');
+    }
+  }
+  
+  // デバウンス付きデータ読み込み
+  void _loadShiftCardDataListWithDebounce() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(milliseconds: 500), () {
+      _clearCacheAndReload();
     });
   }
   
-  // データ読み込みのトリガーとなる関数
-  void _loadShiftCardDataList() {
+  // キャッシュをクリアして再読み込み
+  void _clearCacheAndReload() {
+    logger.i('=== Clearing Cache and Reloading ===');
+    logger.i('Cache before clear: ${_dataCache.keys.toList()}');
+    
     setState(() {
-      _shiftCardDataListFuture = _getShiftCardDataList(
-        // _userID,
-        1,
-        _tabs[_tabController.index].dayID, // タブのインデックスから日付IDを取得
-        
-        // _dayOptions[_tabs[_tabController.index].label.trim()] ?? 1, // タブのラベルから日付IDを取得
-        _selectedWeatherIndex, // 選択された天気のインデックスを使用
-      );
-      // _weatherDataFuture = fetchWeatherData(
-      //   _selectedWeather.first, // SegmentedButtonはSetで選択状態を持つためfirstで取得
-      //   _dates[_tabController.index],
-      // );
-      
+      _dataCache.clear(); // キャッシュをクリア
+      _loadingStates.clear(); // ロード状態もクリア
     });
+    
+    logger.i('Cache cleared successfully');
+    // 現在のタブのデータを再取得
+    _loadDataForCurrentTab();
+  }
+  
+  // 現在のタブのデータを取得
+  void _loadDataForCurrentTab() {
+    final dayID = _tabs[_currentTabIndex].dayID;
+    final weatherID = _selectedWeatherIndex;
+    final cacheKey = '${_currentTabIndex}_${dayID}_${weatherID}';
+    
+    logger.i('=== Loading Data for Current Tab ===');
+    logger.i('tabIndex: $_currentTabIndex, dayID: $dayID, weatherID: $weatherID');
+    logger.i('cacheKey: $cacheKey');
+    
+    // 既にロード中またはキャッシュに存在する場合はスキップ
+    if (_loadingStates[cacheKey] == true || _dataCache.containsKey(cacheKey)) {
+      logger.i('Data already loading or cached for: $cacheKey');
+      return;
+    }
+    
+    // ロード状態を設定
+    setState(() {
+      _loadingStates[cacheKey] = true;
+    });
+    
+    // データを取得
+    _getShiftCardDataList(1, dayID, weatherID).then((data) {
+      setState(() {
+        _dataCache[cacheKey] = data;
+        _loadingStates[cacheKey] = false;
+      });
+      logger.i('Data loaded and cached for: $cacheKey');
+    }).catchError((error) {
+      setState(() {
+        _loadingStates[cacheKey] = false;
+      });
+      logger.e('Error loading data for $cacheKey: $error');
+    });
+  }
+  
+  // タブごとのデータを取得する関数（同期版）
+  ShiftCardDataList? _getDataForTab(int tabIndex) {
+    final dayID = _tabs[tabIndex].dayID;
+    final weatherID = _selectedWeatherIndex;
+    final cacheKey = '${tabIndex}_${dayID}_${weatherID}';
+    
+    logger.i('=== _getDataForTab Called (Sync) ===');
+    logger.i('tabIndex: $tabIndex, dayID: $dayID, weatherID: $weatherID');
+    logger.i('cacheKey: $cacheKey');
+    
+    // キャッシュから取得
+    if (_dataCache.containsKey(cacheKey)) {
+      logger.i('Cache HIT - returning cached data for: $cacheKey');
+      return _dataCache[cacheKey];
+    }
+    
+    // 現在のタブの場合のみデータを取得開始
+    if (tabIndex == _currentTabIndex) {
+      logger.i('Current tab - starting data load for: $cacheKey');
+      _loadDataForCurrentTab();
+    } else {
+      logger.i('Not current tab - skipping data load for: $cacheKey');
+    }
+    
+    return null; // データがない場合はnullを返す
   }
 
   @override
@@ -296,43 +394,60 @@ class _MyShiftPageState extends State<MyShiftPage>
           ),
         ),
       ),
-      body: FutureBuilder<ShiftCardDataList>(
-        future: _shiftCardDataListFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: TabBarView(
+        controller: _tabController,
+        children: List.generate(_tabs.length, (index) {
+          final shiftCardDataList = _getDataForTab(index);
+          final isLoading = _loadingStates['${index}_${_tabs[index].dayID}_$_selectedWeatherIndex'] == true;
+          
+          logger.i('=== Building tab $index ===');
+          logger.i('Has data: ${shiftCardDataList != null}');
+          logger.i('Is loading: $isLoading');
+          
+          if (isLoading) {
+            logger.i('Tab $index: Showing loading indicator');
             return Center(
               child: CircularProgressIndicator(
-                color: AppColors.main, // 待機中のインジケーターの色
-              ), // データ取得中は待機画面を表示
+                color: AppColors.main,
+              ),
             );
-          } else if (snapshot.hasError) {
-            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final shiftCardDataList = snapshot.data!;
-            // Widgetのリストを作成
+          } else if (shiftCardDataList != null) {
+            logger.i('Tab $index: Data available with ${shiftCardDataList.data.length} items');
+            
+            if (shiftCardDataList.data.isNotEmpty) {
+              logger.i('Tab $index: First item task name: ${shiftCardDataList.data[0].taskName}');
+            }
+            
             List<Widget> _shiftCards = [];
             for (var data in shiftCardDataList.data) {
               _shiftCards.add(ShiftCard(data: data));
               _shiftCards.add(const SizedBox(height: 16.0));
             }
+            
             return SingleChildScrollView(
               child: Container(
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: _shiftCards,
-                  // children: _tabs.map((tab) => tab.widget).toList()),
-                  // children: shiftCardDataList.data.map((data) => [
-                  //   ShiftCard(data: data),
-                  //   const SizedBox(height: 16.0), // 各カードの間にスペースを追加
-                  // ]).expand((widgets) => widgets).toList(),
                 ),
               ),
             );
           } else {
-            return WaitPage(); // データがない場合は待機画面を表示
+            logger.i('Tab $index: No data available');
+            if (index == _currentTabIndex) {
+              // 現在のタブでデータがない場合はロード中表示
+              return Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.main,
+                ),
+              );
+            } else {
+              // 他のタブは空の状態
+              return Center(child: Text('タブを選択してください'));
+            }
           }
-        },
+        }),
       ),
     );
   }
@@ -458,7 +573,7 @@ class _MyShiftPageState extends State<MyShiftPage>
 //       afterMembers: ShiftMembers(
 //         s_time: json['after_members']['s_time'],
 //         e_time: json['after_members']['e_time'],
-        // members: json['after_members']['members'] != null?
+//         members: json['after_members']['members'] != null?
         //   (json['after_members']['members'] as List<dynamic>)
         //     .map((m) => ShiftMember(
         //           name: m['name']?? '',
