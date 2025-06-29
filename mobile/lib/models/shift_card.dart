@@ -57,19 +57,23 @@ class ShiftCardDataList {
       endTime: item['end_time'] as String,
       place: item['place'] as String,
       url: item['url'] as String,
-      shiftMembers: (item['shift_members'] as List<dynamic>)
+      shiftMembers: item['shift_members'] != null?
+        (item['shift_members'] as List<dynamic>)
           .map((member) => ShiftMembers(
                 s_time: member['s_time'],
                 e_time: member['e_time'],
-                members: (member['members'] as List<dynamic>)
+                members: member['members'] != null?
+                  (member['members'] as List<dynamic>)
                     .map((m) => ShiftMember(
                           name: m['name'],
                           grade: m['grade'],
                           bureau: m['bureau'],
                         ))
-                    .toList(),
+                    .toList():
+                  [],
               ))
-          .toList(),
+          .toList():
+        [],
       beforeMembers: ShiftMembers(
         s_time: item['before_members']['s_time'],
         e_time: item['before_members']['e_time'],
