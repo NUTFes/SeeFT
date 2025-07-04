@@ -402,25 +402,33 @@ class _MyShiftPageState extends State<MyShiftPage>
     return Scaffold(
       backgroundColor: AppColors.base,
       appBar: AppBar(
-        title: Padding(
-          padding: const EdgeInsets.only(top: 20.0),
-          child: Text("マイシフト", 
+        // title: Padding(
+        //   padding: const EdgeInsets.only(top: 20.0),
+        //   child: Text("マイシフト", 
+        //     style: TextStyle(
+        //       color: AppColors.textWhite,
+        //       fontSize: AppFontSizes.lg,
+        //       fontWeight: FontWeight.bold,
+        //     ),
+        //   ),
+        // ),
+        title: Text("マイシフト", 
             style: TextStyle(
               color: AppColors.textWhite,
               fontSize: AppFontSizes.lg,
               fontWeight: FontWeight.bold,
             ),
           ),
-        ),
         centerTitle: false,
-        toolbarHeight: 50,
+        toolbarHeight: 63,
         backgroundColor: AppColors.main,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(top: 20.0, right: 20.0),
+            // padding: const EdgeInsets.only(top: 20.0, right: 20.0),
+            padding: const EdgeInsets.only(right: 20.0),
             child: SizedBox(
-              width: 131,
-              height: 30,
+              width: 200,
+              // height: 30,
               // 天気を選択するセグメントボタン
               child: SegmentedButton(
                 selected: {_selectedWeatherIndex}, // 選択されている天気のインデックスをセット
@@ -436,6 +444,13 @@ class _MyShiftPageState extends State<MyShiftPage>
                 showSelectedIcon: false,
                 segments: [
                   ButtonSegment(
+                    label: Text(
+                      "晴れ",
+                      style: TextStyle(
+                        color: _selectedWeatherIndex == (_weatherOptions["晴れ"] ?? 1) ? AppColors.main : AppColors.grayLight,
+                        fontSize: AppFontSizes.sm,
+                      ),
+                    ),
                     icon: Icon(
                       Icons.sunny,
                       color: _selectedWeatherIndex == (_weatherOptions["晴れ"] ?? 1) ? AppColors.main : AppColors.grayLight,
@@ -444,6 +459,13 @@ class _MyShiftPageState extends State<MyShiftPage>
                     value: _weatherOptions["晴れ"] ?? 1, // 晴れのインデックス
                   ),
                   ButtonSegment(
+                    label: Text(
+                      "雨",
+                      style: TextStyle(
+                        color: _selectedWeatherIndex == (_weatherOptions["雨"] ?? 2) ? AppColors.main : AppColors.grayLight,
+                        fontSize: AppFontSizes.sm,
+                      ),
+                    ),
                     icon: Icon(
                       Icons.cloudy_snowing,
                       color: _selectedWeatherIndex == (_weatherOptions["雨"] ?? 2) ? AppColors.main : AppColors.grayLight,
