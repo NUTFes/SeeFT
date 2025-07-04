@@ -195,7 +195,7 @@ class _MyShiftPageState extends State<MyShiftPage>
   void _handleWeatherSelectionChanged(Set<Object> newSelection) {
     final oldWeatherIndex = _selectedWeatherIndex;
     // final newWeatherIndex = newSelection.first + 1; // セグメントボタンのインデックスは0から始まるので1を足す
-    final newWeatherIndex = (newSelection.first as int) + 1; // セグメントボタンのインデックスは0から始まるので1を足す
+    final newWeatherIndex = (newSelection.first as int);
     
     logger.i('=== Weather Selection Changed ===');
     logger.i('Old weather index: $oldWeatherIndex');
@@ -423,7 +423,7 @@ class _MyShiftPageState extends State<MyShiftPage>
               height: 30,
               // 天気を選択するセグメントボタン
               child: SegmentedButton(
-                selected: {_selectedWeatherIndex},
+                selected: {_selectedWeatherIndex}, // 選択されている天気のインデックスをセット
                 onSelectionChanged: _handleWeatherSelectionChanged,
                 style: SegmentedButton.styleFrom(
                   backgroundColor: AppColors.main,
