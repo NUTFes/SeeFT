@@ -1,9 +1,13 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 import 'package:seeft_mobile/widgets/shift_card.dart';
+// import 'package:shared_preferences/shared_preferences.dart'; // キャッシュ用
+// import 'dart:convert'; // JSONエンコード/デコード用
 
 
-Future<ShiftCardDataList> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
+// Future<ShiftCardDataList?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
+// Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
+Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
   logger.i('=== API Call Started ===');
   logger.i('Parameters - userID: $userID, dayID: $dayID, weatherID: $weatherID');
   
@@ -25,21 +29,23 @@ Future<ShiftCardDataList> _getShiftCardDataList(int userID, int dayID, int weath
       }
     }
     
-    // resをShiftCardDataListに変換
-    ShiftCardDataList resList = ShiftCardDataList.fromJson(res);
-    logger.i('=== Converted to ShiftCardDataList ===');
-    logger.i('ShiftCardDataList data count: ${resList.data.length}');
-    if (resList.data.isNotEmpty) {
-      logger.i('First ShiftCardData: ${resList.data[0].taskName}');
-    }
+    // // resをShiftCardDataListに変換
+    // ShiftCardDataList resList = ShiftCardDataList.fromJson(res);
+    // logger.i('=== Converted to ShiftCardDataList ===');
+    // logger.i('ShiftCardDataList data count: ${resList.data.length}');
+    // if (resList.data.isNotEmpty) {
+    //   logger.i('First ShiftCardData: ${resList.data[0]}');
+    // }
     
-    return resList;
+    // return resList;
+    return res;
   } catch (err) {
     logger.e('=== API Error ===');
     logger.e('Error message: $err');
     logger.e('Error type: ${err.runtimeType}');
     // エラーが発生した場合は空のリストを返す
-    return ShiftCardDataList([]);
+    // return ShiftCardDataList([]);
+    return null; // エラー時はnullを返す
   }
 }
 
@@ -71,6 +77,7 @@ class _MyShiftPageState extends State<MyShiftPage>
   int _selectedWeatherIndex = 1;  // 天気の選択肢のインデックス(1:晴れ, 2:雨)
   int _selectedDayIndex = 1; // 日付の選択肢のインデックス(1:準備日, 2:1日目, 3:2日目, 4:片付け日)
   ShiftCardDataList? shiftCardDataList; // ShiftCardDataListを格納する変数
+  Map<String, ShiftCardDataList>? allShiftCardDataList; // 全てのシフトカードデータを格納する変数
   
   // データフェッチ管理用の変数
   Map<String, ShiftCardDataList> _dataCache = {}; // Futureではなく実際のデータをキャッシュ
@@ -225,29 +232,79 @@ class _MyShiftPageState extends State<MyShiftPage>
   }
   
   // シフトカードデータリストをロードする関数
-  void _loadShiftCardDataList(int userID, int dayID, int weatherID) {
+  // void _loadShiftCardDataList(int userID, int dayID, int weatherID) {
+  void _loadShiftCardDataList(int userID, int dayID, int weatherID) async {
     logger.i('=== Loading Shift Card Data List ===');
     logger.i('Parameters - userID: $userID, dayID: $dayID, weatherID: $weatherID');
     
-    _getShiftCardDataList(userID, dayID, weatherID).then((data) {
+    // _getShiftCardDataList(userID, dayID, weatherID).then((resList) async{
+    _getShiftCardDataList(userID, dayID, weatherID).then((fetchedData) async{
       logger.i('=== Shift Card Data List Loaded ===');
-      logger.i('Data count: ${data.data.length}');
+      // logger.i('Data count: ${fetchData!.data.length}');
+      
+      // final ShiftCardDataList fetchedData = ShiftCardDataList.fromJson(resList);
+      final cashedData = await shiftCardBox.get('${dayID}_${weatherID}');  // キャッシュからデータを取得
+      
+      if (fetchedData == null) {
+        logger.w('データが空です。キャッシュを使用します。');
+        if (cashedData == null) {
+          logger.e('$dayID, $weatherID のキャッシュデータがありません。');
+          return;
+        }
+        setState(() {
+          logger.i('=== Using Cached Data ===');
+          shiftCardDataList = ShiftCardDataList.fromJson(cashedData); // キャッシュデータを状態に格納
+          logger.i('キャッシュデータを状態に格納しました: ${shiftCardDataList!.data.length} items');
+        });
+        
+        return;
+      // } else if (fetchedData == shiftCardDataList) {
+      } else if (fetchedData == cashedData) {
+        logger.i('データは既に最新です。キャッシュ更新をスキップします。');
+        return; // データが既に最新の場合も何もしない
+      } else {
+        logger.i('新しいデータが取得されました。キャッシュ更新を行います。');
+      }
       
       setState(() {
-        // キャッシュにデータを保存
-        _dataCache['${dayID}_${weatherID}'] = data;
+        logger.i('=== Updating State with Fetched Data ===');
+        logger.i('dayID: $dayID, weatherID: $weatherID のデータを状態に格納します。');
+        // shiftCardDataList = fetchedData; // 状態にデータを格納
+        shiftCardDataList = ShiftCardDataList.fromJson(fetchedData); // 状態にデータを格納
+        logger.i('データを状態に格納しました: ${shiftCardDataList!.data.length} items');
+        
+        logger.i('dayID: $dayID, weatherID: $weatherID のデータをキャッシュに保存します。');
+        shiftCardBox.put('${dayID}_${weatherID}', fetchedData); // hiveでキャッシュにデータを保存
+        logger.i('データをキャッシュに保存しました: ${dayID}_${weatherID}');
+        
         // ロード状態を更新
-        _loadingStates['${dayID}_${weatherID}'] = false;
+        // _loadingStates['${dayID}_${weatherID}'] = false;
         // データを状態に格納
-        shiftCardDataList = data;
-        logger.i('Data cached successfully for dayID: $dayID, weatherID: $weatherID');
+        // shiftCardDataList = fetchData;
       });
-      
-      logger.i('Data cached successfully for dayID: $dayID, weatherID: $weatherID');
-    }).catchError((error) {
-      logger.e('Error loading shift card data list: $error');
+      logger.i('=== Shift Card Data List Loaded and Cached ===');
+    }).catchError((error) async {
+      logger.e('=== Error Loading Shift Card Data List ===');
+      // var casheData = await store.getShiftCardDataList('${dayID}_${weatherID}');
+      final cashedData = await shiftCardBox.get('${dayID}_${weatherID}');  // キャッシュからデータを取得
+      if (cashedData == null) {
+        logger.e('$dayID, $weatherID のキャッシュデータがありません。');
+        return; // キャッシュデータがない場合は何もしない
+      }
       setState(() {
-        _loadingStates['${dayID}_${weatherID}'] = false; // ロード状態を更新
+        logger.i('=== Using Cached Data ===');
+        // shiftCardDataList = cashedData;
+        shiftCardDataList = ShiftCardDataList.fromJson(cashedData); // キャッシュデータを状態に格納
+        logger.i('キャッシュデータを状態に格納しました: ${shiftCardDataList!.data.length} items');
+        
+        // if (casheData != null) {
+        //   logger.i('Using cached data for dayID: $dayID, weatherID: $weatherID');
+        //   shiftCardDataList = ShiftCardDataList.fromJson(casheData);
+        // } else {
+        //   logger.e('No cached data available for dayID: $dayID, weatherID: $weatherID');
+        // }
+
+        // _loadingStates['${dayID}_${weatherID}'] = false; // ロード状態を更新
       });
     });
   }
