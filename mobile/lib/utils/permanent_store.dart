@@ -1,8 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeft_mobile/configs/importer.dart';
-import 'package:seeft_mobile/utils/logger.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-final store = PermanentStore.getInstance();
+// ユーザID等の保存のためのshared_preferencesのインスタンス
+final PermanentStore store = PermanentStore.getInstance();
+
+// シフトカードのデータを保存するためのHiveのBox
+late final Box shiftCardBox;
 
 class PermanentStore {
   static PermanentStore _instance = PermanentStore();
@@ -50,4 +54,15 @@ class PermanentStore {
     logger.d('load isUserID parmeanent store: $isUserID');
     return isUserID;
   }
+}
+
+// Hiveの初期化とBoxのオープン
+Future<void> initHive() async {
+  logger.i('Hiveの初期化を開始します。');
+  // Hiveの初期化
+  await Hive.initFlutter();
+  
+  // シフトカードのデータを保存するためのBoxを開く
+  shiftCardBox = await Hive.openBox('shiftCardData');
+  logger.i('Hiveの初期化が完了しました。');
 }
