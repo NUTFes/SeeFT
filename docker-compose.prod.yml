@@ -6,25 +6,41 @@ services:
     volumes: ["./web/prod:/home/nonroot/.cloudflared"]
     command: tunnel run
 
-  mobile:
-    build: "./mobile"
-    container_name: "nutfes-seeft-mobile"
-    volumes: ["./mobile:/app"]
-    command: "python3 ./python/server.py"
-    ports: ["45029:45029"]
-    environment:
-      NEXT_PUBLIC_APP_ENV: "production"
-    depends_on: ["api"]
+  # mobile:
+  #   build: "./mobile"
+  #   container_name: "nutfes-seeft-mobile"
+  #   volumes: ["./mobile:/app"]
+  #   command: "python3 ./python/server.py"
+  #   ports: ["45029:45029"]
+  #   environment:
+  #     NEXT_PUBLIC_APP_ENV: "production"
+  #   depends_on: ["api"]
 
+  # api:
+  #   build:
+  #     context: ./api
+  #     dockerfile: prod.Dockerfile
+  #   container_name: "nutfes-seeft-api"
+  #   volumes: ["./api:/env/app"]
+  #   command: "go run main.go"
+  #   env_file: ["./api/env/seeft.env"]
+  #   ports: ["1234:1234"]
+    
   api:
-    build:
-      context: ./api
-      dockerfile: prod.Dockerfile
-    container_name: "nutfes-seeft-api"
-    volumes: ["./api:/env/app"]
-    command: "go run main.go"
+    container_name: nutfes-seeft-api
+    build: ./api
     env_file: ["./api/env/seeft.env"]
-    ports: ["1234:1234"]
+    volumes:
+      - ./api:/app
+    #シェルスクリプトを実行するコマンド
+    command: "./start.sh"
+    ports:
+      - "1234:1234"
+    stdin_open: true
+    tty: true
+    depends_on:
+      db: 
+        condition: service_started
 
   admin:
     container_name: "nutfes-seeft-admin"
