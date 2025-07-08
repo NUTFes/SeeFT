@@ -234,6 +234,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/rescues": {
+            "post": {
+                tags: ["rescue"],
+                "description": "統一されたレスキューリクエストを作成（trouble/question/shorthandedの3種類に対応）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "responses": {
+                    "201": {
+                        "description": "レスキューリクエストが正常に作成されました",
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です",
+                    },
+                    "500": {
+                        "description": "サーバーエラー",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "レスキューリクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["trouble", "question", "shorthanded"],
+                                    "description": "レスキューの種類"
+                                },
+                                "user_id": {
+                                    "type": "integer",
+                                    "description": "送信者のユーザーID"
+                                },
+                                "time": {
+                                    "type": "string",
+                                    "description": "発生時刻（YYYY/MM/DD hh:mm:ss形式）"
+                                },
+                                "content": {
+                                    "type": "object",
+                                    "description": "レスキューの詳細内容（typeによって構造が異なる）"
+                                }
+                            },
+                            "required": ["type", "user_id", "content"]
+                        }
+                    }
+                ]
+            }
+        },
         "/question-rescues": {
             "get": {
                 tags: ["question-rescue"],

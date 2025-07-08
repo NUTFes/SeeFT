@@ -49,7 +49,6 @@ func InitializeServer() db.Client {
 	taskUseCase := usecase.NewTaskUseCase(taskRepository, placeRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
-	rescueUseCase := usecase.NewRescueUseCase()
 	questionRescueUseCase := usecase.NewQuestionRescueUseCase(questionRescueRepository)
 	shorthandedRescueUseCase := usecase.NewShorthandedRescueUseCase(shorthandedRescueRepository)
 	troubleRescueUseCase := usecase.NewTroubleRescueUseCase(troubleRescueRepository)
@@ -65,10 +64,10 @@ func InitializeServer() db.Client {
 	taskController := controller.NewTaskController(taskUseCase)
 	timeController := controller.NewTimeController(timeUsecase)
 	userController := controller.NewUserController(userUseCase)
-	rescueController := controller.NewRescueController(rescueUseCase)
 	questionRescueController := controller.NewQuestionRescueController(questionRescueUseCase)
 	shorthandedRescueController := controller.NewShorthandedRescueController(shorthandedRescueUseCase)
 	troubleRescueController := controller.NewTroubleRescueController(troubleRescueUseCase)
+	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase)
 
 	// router
 	router := router.NewRouter(
@@ -82,10 +81,10 @@ func InitializeServer() db.Client {
 		taskController,
 		timeController,
 		userController,
-		rescueController,
 		questionRescueController,
 		shorthandedRescueController,
 		troubleRescueController,
+		rescueUnifiedController,
 	)
 
 	// Server

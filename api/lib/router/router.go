@@ -17,10 +17,10 @@ type router struct {
 	taskController                  controller.TaskController
 	timeController                  controller.TimeController
 	userController                  controller.UserController
-	rescueController                controller.RescueController
 	questionRescueController        controller.QuestionRescueController
 	shorthandedRescueController     controller.ShorthandedRescueController
 	troubleRescueController         controller.TroubleRescueController
+	rescueUnifiedController         controller.RescueUnifiedController
 }
 
 type Router interface {
@@ -38,10 +38,10 @@ func NewRouter(
 	taskController controller.TaskController,
 	timeController controller.TimeController,
 	userController controller.UserController,
-	rescueController controller.RescueController,
 	questionRescueController controller.QuestionRescueController,
 	shorthandedRescueController controller.ShorthandedRescueController,
 	troubleRescueController controller.TroubleRescueController,
+	rescueUnifiedController controller.RescueUnifiedController,
 ) Router {
 	return router{
 		healthController,
@@ -54,10 +54,10 @@ func NewRouter(
 		taskController,
 		timeController,
 		userController,
-		rescueController,
 		questionRescueController,
 		shorthandedRescueController,
 		troubleRescueController,
+		rescueUnifiedController,
 	}
 }
 
@@ -133,8 +133,8 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	// current_user
 	e.GET("/current_user", r.userController.GetCurrentUser)
 
-	// rescue
-	e.POST("/rescue", r.rescueController.CreateRescue)
+	// rescue（新統一エンドポイント）
+	e.POST("/rescues", r.rescueUnifiedController.CreateRescue)
 
 	// question rescues
 	e.GET("/question-rescues", r.questionRescueController.IndexQuestionRescue)
