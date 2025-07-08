@@ -135,6 +135,8 @@ func (r router) ProvideRouter(e *echo.Echo) {
 
 	// rescue（新統一エンドポイント）
 	e.POST("/rescues", r.rescueUnifiedController.CreateRescue)
+	e.GET("/rescues", r.rescueUnifiedController.GetAllRescues)
+	e.GET("/rescues/users/:user_id", r.rescueUnifiedController.GetRescuesByUserID)
 
 	// question rescues
 	e.GET("/question-rescues", r.questionRescueController.IndexQuestionRescue)

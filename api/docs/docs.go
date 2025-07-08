@@ -235,6 +235,19 @@ const docTemplate = `{
             }
         },
         "/rescues": {
+            "get": {
+                tags: ["rescue"],
+                "description": "全ての統一レスキューの一覧を取得",
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "レスキュー一覧の取得成功",
+                    },
+                    "500": {
+                        "description": "サーバーエラー",
+                    }
+                }
+            },
             "post": {
                 tags: ["rescue"],
                 "description": "統一されたレスキューリクエストを作成（trouble/question/shorthandedの3種類に対応）",
@@ -280,6 +293,33 @@ const docTemplate = `{
                             },
                             "required": ["type", "user_id", "content"]
                         }
+                    }
+                ]
+            }
+        },
+        "/rescues/users/{user_id}": {
+            "get": {
+                tags: ["rescue"],
+                "description": "特定ユーザーの統一レスキューの一覧を取得",
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "ユーザー別レスキュー一覧の取得成功",
+                    },
+                    "400": {
+                        "description": "ユーザーIDが不正です",
+                    },
+                    "500": {
+                        "description": "サーバーエラー",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "description": "ユーザーID",
+                        "type": "integer",
+                        "required": true
                     }
                 ]
             }

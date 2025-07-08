@@ -39,18 +39,22 @@ type rescueUnifiedController struct {
 	questionRescueUseCase    usecase.QuestionRescueUseCase
 	shorthandedRescueUseCase usecase.ShorthandedRescueUseCase
 	troubleRescueUseCase     usecase.TroubleRescueUseCase
+	rescueUnifiedUseCase     usecase.RescueUnifiedUseCase
 }
 
 type RescueUnifiedController interface {
 	CreateRescue(echo.Context) error
+	GetAllRescues(echo.Context) error
+	GetRescuesByUserID(echo.Context) error
 }
 
 func NewRescueUnifiedController(
 	qu usecase.QuestionRescueUseCase,
 	su usecase.ShorthandedRescueUseCase,
 	tu usecase.TroubleRescueUseCase,
+	ru usecase.RescueUnifiedUseCase,
 ) RescueUnifiedController {
-	return &rescueUnifiedController{qu, su, tu}
+	return &rescueUnifiedController{qu, su, tu, ru}
 }
 
 // 統一されたレスキューリクエスト処理
@@ -199,4 +203,32 @@ func (r *rescueUnifiedController) handleShorthandedRescue(c echo.Context, req Re
 		"message": "Shorthanded rescue created successfully",
 		"data":    createdShorthandedRescue,
 	})
+}
+
+// 全件取得
+func (r *rescueUnifiedController) GetAllRescues(c echo.Context) error {
+	rescues, err := r.rescueUnifiedUseCase.GetAllRescues(c.Request().Context())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, rescues)
+}
+
+// ユーザーID別取得
+func (r *rescueUnifiedController) GetRescuesByUserID(c echo.Context) error {
+	userID := c.Param("user_id")
+	if userID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "User ID is required"})
+	}
+
+	// 数値チェック
+	if _, err := strconv.Atoi(userID); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+	}
+
+	rescues, err := r.rescueUnifiedUseCase.GetRescuesByUserID(c.Request().Context(), userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, rescues)
 }
