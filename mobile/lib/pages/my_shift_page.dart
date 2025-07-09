@@ -1,12 +1,11 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 import 'package:seeft_mobile/widgets/shift_card.dart';
+import 'package:collection/collection.dart';
 // import 'package:shared_preferences/shared_preferences.dart'; // キャッシュ用
 // import 'dart:convert'; // JSONエンコード/デコード用
 
 
-// Future<ShiftCardDataList?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
-// Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
 Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
   logger.i('=== API Call Started ===');
   logger.i('Parameters - userID: $userID, dayID: $dayID, weatherID: $weatherID');
@@ -19,7 +18,7 @@ Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherI
     );
     
     logger.i('=== API Response Received ===');
-    logger.i('Raw API Response: $res');
+    // logger.i('Raw API Response: $res');
     logger.i('Response Type: ${res.runtimeType}');
     
     if (res is List) {
@@ -29,15 +28,6 @@ Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherI
       }
     }
     
-    // // resをShiftCardDataListに変換
-    // ShiftCardDataList resList = ShiftCardDataList.fromJson(res);
-    // logger.i('=== Converted to ShiftCardDataList ===');
-    // logger.i('ShiftCardDataList data count: ${resList.data.length}');
-    // if (resList.data.isNotEmpty) {
-    //   logger.i('First ShiftCardData: ${resList.data[0]}');
-    // }
-    
-    // return resList;
     return res;
   } catch (err) {
     logger.e('=== API Error ===');
@@ -77,16 +67,11 @@ class _MyShiftPageState extends State<MyShiftPage>
   int _selectedWeatherIndex = 1;  // 天気の選択肢のインデックス(1:晴れ, 2:雨)
   int _selectedDayIndex = 1; // 日付の選択肢のインデックス(1:準備日, 2:1日目, 3:2日目, 4:片付け日)
   ShiftCardDataList? shiftCardDataList; // ShiftCardDataListを格納する変数
-  Map<String, ShiftCardDataList>? allShiftCardDataList; // 全てのシフトカードデータを格納する変数
-  
-  // データフェッチ管理用の変数
-  Map<String, ShiftCardDataList> _dataCache = {}; // Futureではなく実際のデータをキャッシュ
-  Map<String, bool> _loadingStates = {}; // ロード状態を管理
-  Map<String, int> _requestSequences = {}; // リクエストのシーケンス番号を管理
-  int _globalSequence = 0; // グローバルシーケンス番号
+  // Map<String, ShiftCardDataList>? allShiftCardDataList; // 全てのシフトカードデータを格納する変数(キーはhiveのキーと同じ)
   Timer? _debounceTimer;
   Timer? _tabSwitchDebounceTimer; // タブ切り替え用のデバウンスタイマー
   // int _currentTabIndex = 0; // 現在のタブインデックス
+  final deepEq = DeepCollectionEquality.unordered().equals; // シフトカードデータの比較用の関数
   
   // 天気ごとのweatherID
   final Map<int, String> _weatherOptions = {
@@ -109,37 +94,9 @@ class _MyShiftPageState extends State<MyShiftPage>
     _userID = store.getUserID();
     logger.i('User ID: $_userID');
   }
-  // late List<TabInfo> _tabs = [
-  //   // TabInfo(" 準備日 ", _MyShiftPageTabPage(day: _dayOptions["準備日"]?? 1, weather: _weatherOptions["晴れ"]?? 1)), // 準備日は天気を選択しないので1を固定
-  //   // TabInfo(" １日目 ", _MyShiftPageTabPage(day: _dayOptions["1日目"]?? 2, weather: _selectedWeatherIndex)),
-  //   // TabInfo(" ２日目 ", _MyShiftPageTabPage(day: _dayOptions["2日目"]?? 3, weather: _selectedWeatherIndex)),
-  //   TabInfo(
-  //     " 準備日 ", 
-  //     _dayOptions["準備日"] ?? 1, // 準備日のdateIDを取得
-  //     // _weatherOptions["晴れ"] ?? 1, // 準備日は天気を選択しないので1を固定
-  //     WaitPage()
-  //   ),
-  //   TabInfo(
-  //     " １日目 ", 
-  //     _dayOptions["1日目"] ?? 2, // １日目のdateIDを取得
-  //     // _selectedWeatherIndex, // 選択された天気のインデックスを使用
-  //     WaitPage()
-  //   ),
-  //   TabInfo(
-  //     " ２日目 ", 
-  //     _dayOptions["2日目"] ?? 3, // ２日目のdateIDを取得
-  //     // _selectedWeatherIndex, // 選択された天気のインデックスを使用
-  //     WaitPage()
-  //   ),
-  //   TabInfo(
-  //     "片付け日", 
-  //     _dayOptions["片付け日"] ?? 4, // 片付け日のdateIDを取得
-  //     // _weatherOptions["晴れ"] ?? 1, // 片付け日は天気を選択しないので1を固定
-  //     WaitPage()
-  //   ),
-  // ];
   late TabController _tabController;
-
+  
+  // ウィジェットの初期化時の処理
   @override
   void initState() {
     _tabController = TabController(
@@ -152,17 +109,17 @@ class _MyShiftPageState extends State<MyShiftPage>
     
     // 初期タブのデータを取得
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // _loadDataForCurrentTab();
       _userID.then((id) {
         logger.i('User ID in initState: $id');
         // 初期タブのデータをロード
         _loadShiftCardDataList(id, _selectedDayIndex, _selectedWeatherIndex);
       });
-      // _loadShiftCardDataList(1, _selectedDayIndex, _selectedWeatherIndex); // ユーザIDは1、日付IDは1(準備日)、天気IDは選択された天気のインデックスを使用
     });
   }
+  
+  // ウィジェットが破棄されるときの処理
   @override
-  void dispose() {
+  void dispose() {  
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     _debounceTimer?.cancel(); // デバウンスタイマーをキャンセル
@@ -170,7 +127,7 @@ class _MyShiftPageState extends State<MyShiftPage>
     super.dispose();
   }
   
-  // タブが切り替わったときの処理
+  // タブ(日付)が切り替わったときの処理
   void _handleTabChange() {
     _tabController.index; // indexを参照しておく
     logger.i('=== Tab Change ===');
@@ -185,23 +142,11 @@ class _MyShiftPageState extends State<MyShiftPage>
       // タブ切り替え時にデータをロード
       _loadShiftCardDataList(id, _selectedDayIndex, _selectedWeatherIndex);
     });
-    
-    // // タブ切り替えのデバウンス処理
-    // _tabSwitchDebounceTimer?.cancel();
-    // _tabSwitchDebounceTimer = Timer(Duration(milliseconds: 200), () {
-    //   setState(() {
-    //     // _currentTabIndex = _tabController.index;
-    //     _selectedDayIndex = _tabController.index + 1; // タブのインデックスを1から始まる日付IDに変換
-    //   });
-    //   // 新しいタブのデータを取得
-    //   _loadDataForCurrentTab();
-    // });
   }
   
-  // SegmentedButtonの選択状態が変わったときの処理
+  // SegmentedButton(天気)の選択状態が変わったときの処理
   void _handleWeatherSelectionChanged(Set<Object> newSelection) {
     final oldWeatherIndex = _selectedWeatherIndex;
-    // final newWeatherIndex = newSelection.first + 1; // セグメントボタンのインデックスは0から始まるので1を足す
     final newWeatherIndex = (newSelection.first as int);
     
     logger.i('=== Weather Selection Changed ===');
@@ -218,71 +163,101 @@ class _MyShiftPageState extends State<MyShiftPage>
       // 新しい天気のデータをロード
       _loadShiftCardDataList(id, _selectedDayIndex, _selectedWeatherIndex);
     });
+  }
+  
+  // キャッシュからデータをロードする関数
+  // ShiftCardDataList? _getCashedShiftCardDataList(int dayID, int weatherID) {
+  List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
+    // キャッシュからデータを取得
+    logger.i('=== キャッシュからデータを取得します ===');
+    final List<dynamic>? cashedData = shiftCardBox.get('${dayID}_${weatherID}');
+    logger.i('キャッシュデータの取得に成功しました: ${cashedData != null ? cashedData.length : 'null'} items');
     
-    // setState(() {
-    //   _selectedWeatherIndex = newWeatherIndex;
-    // });
+    // キャッシュデータがない場合は表示データをnullに設定する
+    if (cashedData == null) {
+      logger.e('$dayID, $weatherID のキャッシュデータがありません。');
+      return null;
+    }
     
-    // if (oldWeatherIndex != newWeatherIndex) {
-    //   logger.i('Weather actually changed - triggering debounced reload');
-    //   _loadShiftCardDataListWithDebounce(); // デバウンス付きでデータ読み込み
-    // } else {
-    //   logger.i('Weather not changed - skipping reload');
-    // }
+    // キャッシュデータがある場合はそれを使用
+    logger.i('$dayID, $weatherID のキャッシュデータを発見しました。');
+    // final ShiftCardDataList shiftCardDataList = ShiftCardDataList.fromJson(cashedData); // キャッシュデータを状態に格納
+    
+    // return shiftCardDataList; // キャッシュデータを返す
+    return cashedData; // キャッシュデータを返す
   }
   
   // シフトカードデータリストをロードする関数
-  // void _loadShiftCardDataList(int userID, int dayID, int weatherID) {
   void _loadShiftCardDataList(int userID, int dayID, int weatherID) async {
-    logger.i('=== Loading Shift Card Data List ===');
+    logger.i('=== シフトカードのデータを再設定します ===');
     logger.i('Parameters - userID: $userID, dayID: $dayID, weatherID: $weatherID');
     
-    // _getShiftCardDataList(userID, dayID, weatherID).then((resList) async{
-    _getShiftCardDataList(userID, dayID, weatherID).then((fetchedData) async{
+    
+    // 先にキャッシュデータを表示データを設定しておく(キャッシュデータがない場合はnull)
+    // final ShiftCardDataList? cashedData = _getCashedShiftCardDataList(dayID, weatherID);
+    final List<dynamic>? cashedData = _getCashedShiftCardDataList(dayID, weatherID); // キャッシュからデータを取得
+    final ShiftCardDataList? cashedShiftCardDataList = 
+      cashedData != null ? ShiftCardDataList.fromJson(cashedData) : null; // キャッシュデータをShiftCardDataListに変換
+    // setState(() => shiftCardDataList = cashedData); // キャッシュデータを状態に格納
+    setState(() => shiftCardDataList = cashedShiftCardDataList); // キャッシュデータを状態に格納
+    logger.i('キャッシュデータを状態に格納しました: ${shiftCardDataList?.data.length ?? 0} items');
+    
+    // サーバーからデータをフェッチ
+    _getShiftCardDataList(userID, dayID, weatherID).then((data) {
+      // データフェッチ成功時の処理
       logger.i('=== Shift Card Data List Loaded ===');
-      // logger.i('Data count: ${fetchData!.data.length}');
       
-      // final ShiftCardDataList fetchedData = ShiftCardDataList.fromJson(resList);
-      final cashedData = await shiftCardBox.get('${dayID}_${weatherID}');  // キャッシュからデータを取得
+      final ShiftCardDataList? fetchedData = ShiftCardDataList.fromJson(data!);
       
-      if (fetchedData == null) {
-        logger.w('データが空です。キャッシュを使用します。');
-        if (cashedData == null) {
-          logger.e('$dayID, $weatherID のキャッシュデータがありません。');
-          return;
-        }
-        setState(() {
-          logger.i('=== Using Cached Data ===');
-          shiftCardDataList = ShiftCardDataList.fromJson(cashedData); // キャッシュデータを状態に格納
-          logger.i('キャッシュデータを状態に格納しました: ${shiftCardDataList!.data.length} items');
-        });
-        
+      // フェッチデータがnullの場合は何もしない
+      if (fetchedData == null || deepEq(data, cashedData)) {
+      // if (fetchedData == null) {
+        fetchedData == null
+          ? logger.w('フェッチデータが空です。キャッシュを使用します。')
+          : logger.w('フェッチデータが既に最新です。キャッシュを使用します。');
         return;
-      // } else if (fetchedData == shiftCardDataList) {
-      } else if (fetchedData == cashedData) {
-        logger.i('データは既に最新です。キャッシュ更新をスキップします。');
-        return; // データが既に最新の場合も何もしない
-      } else {
-        logger.i('新しいデータが取得されました。キャッシュ更新を行います。');
-      }
+      } 
+      // if (fetchedData == cashedData) {
+      //   logger.i('データは既に最新です。キャッシュ更新をスキップします。');
+      //   return; // データが既に最新の場合も何もしない
+      // } else {
+      //   logger.i('新しいデータが取得されました。キャッシュ更新を行います。');
+      // }
+      logger.i('新しいデータが取得されました。');
+      logger.i('fetchedData data : ${data}');
+      logger.i('cachedData data : ${cashedData}');
+      // print(deepEq(data, cashedData) ? 'データは同じです。' : 'データは異なります。');
+      // キャッシュデータとフェッチデータの差分
+      // final diff = fetchedData.data.where((item) => 
+        // !cashedShiftCardDataList!.data.any((cachedItem) => cachedItem == item)
+      // ).toList();
+      // logger.i(diff[0]);
+      logger.i('キャッシュ更新を行います。');
+      shiftCardBox.put('${dayID}_${weatherID}', data); // hiveでキャッシュにデータを保存
+      logger.i('dayID: $dayID, weatherID: $weatherID のデータをキャッシュに保存しました。key: ${dayID}_${weatherID}');
       
-      setState(() {
-        logger.i('=== Updating State with Fetched Data ===');
-        logger.i('dayID: $dayID, weatherID: $weatherID のデータを状態に格納します。');
-        // shiftCardDataList = fetchedData; // 状態にデータを格納
-        shiftCardDataList = ShiftCardDataList.fromJson(fetchedData); // 状態にデータを格納
-        logger.i('データを状態に格納しました: ${shiftCardDataList!.data.length} items');
+      logger.i('表示データを更新します。');
+      setState(() => shiftCardDataList = fetchedData); // 状態にデータを格納
+      logger.i('データを状態に格納しました: ${shiftCardDataList!.data.length} items');
+      
+      
+      // setState(() {
+      //   logger.i('=== Updating State with Fetched Data ===');
+      //   logger.i('dayID: $dayID, weatherID: $weatherID のデータを状態に格納します。');
+      //   // shiftCardDataList = fetchedData; // 状態にデータを格納
+      //   shiftCardDataList = ShiftCardDataList.fromJson(fetchedData); // 状態にデータを格納
+      //   logger.i('データを状態に格納しました: ${shiftCardDataList!.data.length} items');
         
-        logger.i('dayID: $dayID, weatherID: $weatherID のデータをキャッシュに保存します。');
-        shiftCardBox.put('${dayID}_${weatherID}', fetchedData); // hiveでキャッシュにデータを保存
-        logger.i('データをキャッシュに保存しました: ${dayID}_${weatherID}');
+      //   logger.i('dayID: $dayID, weatherID: $weatherID のデータをキャッシュに保存します。');
+      //   shiftCardBox.put('${dayID}_${weatherID}', fetchedData); // hiveでキャッシュにデータを保存
+      //   logger.i('データをキャッシュに保存しました: ${dayID}_${weatherID}');
         
-        // ロード状態を更新
-        // _loadingStates['${dayID}_${weatherID}'] = false;
-        // データを状態に格納
-        // shiftCardDataList = fetchData;
-      });
-      logger.i('=== Shift Card Data List Loaded and Cached ===');
+      //   // ロード状態を更新
+      //   // _loadingStates['${dayID}_${weatherID}'] = false;
+      //   // データを状態に格納
+      //   // shiftCardDataList = fetchData;
+      // });
+      // logger.i('=== Shift Card Data List Loaded and Cached ===');
     }).catchError((error) async {
       logger.e('=== Error Loading Shift Card Data List ===');
       // var casheData = await store.getShiftCardDataList('${dayID}_${weatherID}');
