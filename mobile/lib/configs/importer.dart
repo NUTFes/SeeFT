@@ -24,3 +24,6 @@ export 'package:seeft_mobile/widgets/drawer.dart';
 //style
 export 'package:seeft_mobile/theme/theme.dart';
 export 'package:seeft_mobile/theme/tokens.dart';
+
+// models
+export 'package:seeft_mobile/models/shift_card.dart';

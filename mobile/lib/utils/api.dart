@@ -321,4 +321,18 @@ class Api {
       throw Exception('Failed POST in Api.post()');
     }
   }
+  
+  // シフトカードの情報を取得する
+  Future getShiftCardsByUserAndDateAndWeather(int userId, int dateId, int weatherId) async {
+    var url = constant.apiUrl + "/shift-cards/users/" + userId.toString() + "/dates/" + dateId.toString() + "/weathers/" + weatherId.toString();
+    try {
+      logger.i(url);
+      var res = await get(url);
+      // logger.i(res);
+      return res;
+    } catch (e) {
+      logger.e('failed got.');
+      throw Exception('Failed GET in Api.getShiftCardsByUserAndDateAndWeather()');
+    }
+  }
 }

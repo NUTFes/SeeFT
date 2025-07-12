@@ -1,7 +1,4 @@
-// import 'dart:ffi';
-
 import 'package:seeft_mobile/configs/importer.dart';
-import 'package:seeft_mobile/theme/tokens.dart';
 import 'package:seeft_mobile/widgets/app_bar.dart';
 
 class SignInPage extends StatefulWidget {
@@ -30,9 +27,8 @@ class _SignInPageState extends State<SignInPage> {
           infoText = "Your ID : ${userID}";
         });
         Navigator.pushNamedAndRemoveUntil(
-//        context, '/wait_page', (Route<dynamic> route) => false);
             context,
-            '/my_shift_page',
+            '/layout',
             (Route<dynamic> route) => false);
       } else {
         setState(() {

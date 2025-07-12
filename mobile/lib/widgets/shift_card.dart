@@ -1,51 +1,6 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// シフトカードのデータモデル
-class ShiftMember {
-  final String name;
-  final String grade;
-  final String bureau;
-
-  ShiftMember({
-    required this.name,
-    required this.grade,
-    required this.bureau,
-  });
-}
-class ShiftMembers {
-  final String s_time;
-  final String e_time;
-  final List<ShiftMember> members;
-
-  ShiftMembers({
-    required this.s_time,
-    required this.e_time,
-    required this.members,
-  });
-}
-
-class ShiftCardData {
-  final String taskName;
-  final String startTime;
-  final String endTime;
-  final String place;
-  final String url;
-  final List<ShiftMembers> shiftMembers;
-  final ShiftMembers beforeMembers;
-  final ShiftMembers afterMembers;
-
-  ShiftCardData({
-    required this.taskName,
-    required this.startTime,
-    required this.endTime,
-    required this.place,
-    required this.url,
-    required this.shiftMembers,
-    required this.beforeMembers,
-    required this.afterMembers,
-  });
-}
 // シフトカードのウィジェット
 class ShiftCard extends StatelessWidget {
   final ShiftCardData data;
@@ -143,7 +98,7 @@ class ShiftCard extends StatelessWidget {
               children: [
                 // タスク名の表示
                 Text(
-                  data.taskName,
+                  data.taskName.toString(),
                   style: const TextStyle(
                     fontSize: AppFontSizes.md,
                     color: AppColors.textBlack, 
