@@ -187,63 +187,19 @@ VALUES
   ('テスト2', 3, 'https://example.com', 2, 8, '00ff00', 'テストタスク2', 43),
   ('テスト3', 4, 'https://nutfes.net', 3, 5, '0000ff', 'テストタスク3', 43);
 
--- INSERT INTO places
---   (place, remark)
--- VALUES
---   ('未定', '本部に指示を聞いてください'),
---   ('体育館', ''),
---   ('D講', ''),
---   ('24', '');
+-- usersテーブルの初期データ
+INSERT INTO users
+  (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
+VALUES
+  ('root','test1@example.com',1,1,1,1,'12345678','00000000000','$2a$10$JrT4uLKjbc1IktgQkM7JgOiOKfaIASrSpxEvPvwy7vAifnIx38Ju.'),
+  ('test','test2@example.com',1,1,1,1,'12345679','00000000000','$2a$10$JrT4uLKjbc1IktgQkM7JgOiOKfaIASrSpxEvPvwy7vAifnIx38Ju.'),
+  ('Admin', 'nutfes@gmail.com', 1, 1, 1, 2, '11111111', '00000000000', '$2a$10$JrT4uLKjbc1IktgQkM7JgOiOKfaIASrSpxEvPvwy7vAifnIx38Ju.');
 
--- INSERT INTO users
---   (name,mail,grade_id,department_id,bureau_id,role_id,student_number,tel,password)
--- VALUES
---   ('root','test1@example.com',1,1,1,1,'12345678','','shiftroot'),
---   ('test','test1@testmail.com',1,1,1,1,'12345678','09012345678','123456'),
---   ('Admin', 'nutfes@gmail.com', 1, 1, 1, 1, '11111111', '00000000000', 'gidaifes'),
---   ('田中太郎','tanaka@example.com',2,2,2,1,'22222222','09011111111','password1'),
---   ('佐藤花子','sato@example.com',3,3,3,1,'33333333','09022222222','password2'),
---   ('山田次郎','yamada@example.com',4,4,4,1,'44444444','09033333333','password3');
+-- permissionsテーブルの初期データ
+INSERT INTO permissions
+  (user_id, allow_shift, allow_task, allow_user, allow_property)
+VALUES
+  (1, True, True, True, True),
+  (2, True, False, False, False),
+  (3, True, True, True, True);
 
--- INSERT INTO permissions
---   (user_id, allow_shift, allow_task, allow_user, allow_property)
--- VALUES
---   (1, True, True, True, True),
---   (2, True, False, False, False),
---   (3, True, True, True, True),
---   (4, True, False, False, False),
---   (5, True, False, False, False),
---   (6, True, False, False, False);
-
--- INSERT INTO tasks
---   (task, place_id, url, bureau_id, max_member, color, remark, year_id)
--- VALUES
---   ('テスト1', 2, 'https://example.com', 1, 3, 'ff0000', 'テスト用タスク1', 43),
---   ('テスト2', 3, 'https://example.com', 1, 2, '00ff00', 'テスト用タスク2', 43),
---   ('テスト3', 4, 'https://nutfes.net', 1, 4, '0000ff', 'テスト用タスク3', 43),
---   ('NG', 1, '', 1, 1, '949593', '', 43);
-
--- INSERT INTO shifts
---   (user_id, task_id, year_id, date_id, time_id, weather_id)
--- VALUES
---   -- before_membersのためのデータ（11:45の時間帯）
---   (2, 1, 43, 1, 48, 1),
---   (4, 1, 43, 1, 48, 1),
---   -- メインのシフトデータ（12:00-12:45）
---   (1, 1, 43, 1, 49, 1),
---   (1, 1, 43, 1, 50, 1),
---   (1, 1, 43, 1, 51, 1),
---   (4, 1, 43, 1, 49, 1),
---   (5, 1, 43, 1, 49, 1),
---   (4, 1, 43, 1, 50, 1),
---   (6, 1, 43, 1, 50, 1),
---   (5, 1, 43, 1, 51, 1),
---   (6, 1, 43, 1, 51, 1),
---   -- after_membersのためのデータ（12:45-13:00の時間帯）
---   (3, 1, 43, 1, 52, 1),
---   (5, 1, 43, 1, 52, 1),
---   (6, 1, 43, 1, 52, 1),
---   -- その他のテストデータ
---   (2, 2, 43, 1, 49, 1),
---   (2, 2, 43, 1, 50, 1),
---   (3, 3, 43, 1, 49, 1);

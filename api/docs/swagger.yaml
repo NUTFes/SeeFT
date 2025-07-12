@@ -1,4 +1,6 @@
 info:
+  title: "SeeFT API"
+  version: "1.0.0"
   contact: {}
 paths: {}
 swagger: "2.0"
