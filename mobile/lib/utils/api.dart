@@ -328,7 +328,7 @@ class Api {
     try {
       logger.i(url);
       var res = await get(url);
-      logger.i(res);
+      // logger.i(res);
       return res;
     } catch (e) {
       logger.e('failed got.');
