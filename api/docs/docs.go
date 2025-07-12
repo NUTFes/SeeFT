@@ -282,16 +282,73 @@ const docTemplate = `{
                                     "type": "integer",
                                     "description": "送信者のユーザーID"
                                 },
-                                "time": {
-                                    "type": "string",
-                                    "description": "発生時刻（YYYY/MM/DD hh:mm:ss形式）"
-                                },
                                 "content": {
-                                    "type": "object",
-                                    "description": "レスキューの詳細内容（typeによって構造が異なる）"
+                                    "oneOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "task_id": { "type": "integer" },
+                                                "place": { "type": "string" },
+                                                "detail": { "type": "string" }
+                                            },
+                                            "required": ["task_id", "detail"],
+                                            "description": "troubleの場合"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "question": { "type": "string" }
+                                            },
+                                            "required": ["question"],
+                                            "description": "questionの場合"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "task_id": { "type": "integer" },
+                                                "missing_number": { "type": "integer" },
+                                                "place": { "type": "string" }
+                                            },
+                                            "required": ["task_id", "missing_number"],
+                                            "description": "shorthandedの場合"
+                                        }
+                                    ]
                                 }
                             },
                             "required": ["type", "user_id", "content"]
+                        },
+                        "examples": {
+                            "trouble": {
+                                "value": {
+                                    "type": "trouble",
+                                    "user_id": 1,
+                                    "content": {
+                                        "task_id": 1,
+                                        "place": "体育館",
+                                        "detail": "機材トラブル"
+                                    }
+                                }
+                            },
+                            "question": {
+                                "value": {
+                                    "type": "question",
+                                    "user_id": 1,
+                                    "content": {
+                                        "question": "○○のやり方は？"
+                                    }
+                                }
+                            },
+                            "shorthanded": {
+                                "value": {
+                                    "type": "shorthanded",
+                                    "user_id": 1,
+                                    "content": {
+                                        "task_id": 1,
+                                        "missing_number": 2,
+                                        "place": "D講"
+                                    }
+                                }
+                            }
                         }
                     }
                 ]
@@ -336,33 +393,44 @@ const docTemplate = `{
             },
             "post": {
                 tags: ["question-rescue"],
-                "description": "質問救助を作成",
+                "description": "質問救助を作成（application/json専用）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
                 "responses": {
                     "201": {
-                        "description": "作成した質問救助が返ってくる",
+                        "description": "作成した質問救助が返ってくる"
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です"
+                    },
+                    "500": {
+                        "description": "サーバーエラー"
                     }
                 },
                 "parameters": [
                     {
-                        "name": "user_id",
-                        "in": "formData",
-                        "description": "ユーザーID",
-                        "type": "integer",
-                        "required": true
-                    },
-                    {
-                        "name": "question",
-                        "in": "formData",
-                        "description": "質問内容",
-                        "type": "string",
-                        "required": true
-                    },
-                    {
-                        "name": "status",
-                        "in": "formData",
-                        "description": "ステータス（todo/in_progress/done）",
-                        "type": "string",
-                        "required": false
+                        "name": "body",
+                        "in": "body",
+                        "description": "質問救助リクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": { "type": "integer", "description": "ユーザーID" },
+                                "question": { "type": "string", "description": "質問内容" },
+                                "status": { "type": "string", "description": "ステータス（todo/in_progress/done）" }
+                            },
+                            "required": ["user_id", "question"]
+                        },
+                        "examples": {
+                            "question": {
+                                "value": {
+                                    "user_id": 1,
+                                    "question": "○○のやり方は？",
+                                    "status": "todo"
+                                }
+                            }
+                        }
                     }
                 ]
             },
@@ -469,47 +537,48 @@ const docTemplate = `{
             },
             "post": {
                 tags: ["shorthanded-rescue"],
-                "description": "人手不足救助を作成",
+                "description": "人手不足救助を作成（application/json専用）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
                 "responses": {
                     "201": {
-                        "description": "作成した人手不足救助が返ってくる",
+                        "description": "作成した人手不足救助が返ってくる"
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です"
+                    },
+                    "500": {
+                        "description": "サーバーエラー"
                     }
                 },
                 "parameters": [
                     {
-                        "name": "user_id",
-                        "in": "formData",
-                        "description": "ユーザーID",
-                        "type": "integer",
-                        "required": true
-                    },
-                    {
-                        "name": "task_id",
-                        "in": "formData",
-                        "description": "タスクID",
-                        "type": "integer",
-                        "required": true
-                    },
-                    {
-                        "name": "missing_number",
-                        "in": "formData",
-                        "description": "不足人数",
-                        "type": "integer",
-                        "required": true
-                    },
-                    {
-                        "name": "place",
-                        "in": "formData",
-                        "description": "場所",
-                        "type": "string",
-                        "required": false
-                    },
-                    {
-                        "name": "status",
-                        "in": "formData",
-                        "description": "ステータス（todo/in_progress/done）",
-                        "type": "string",
-                        "required": false
+                        "name": "body",
+                        "in": "body",
+                        "description": "人手不足救助リクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": { "type": "integer", "description": "ユーザーID" },
+                                "task_id": { "type": "integer", "description": "タスクID" },
+                                "missing_number": { "type": "integer", "description": "不足人数" },
+                                "place": { "type": "string", "description": "場所" },
+                                "status": { "type": "string", "description": "ステータス（todo/in_progress/done）" }
+                            },
+                            "required": ["user_id", "task_id", "missing_number"]
+                        },
+                        "examples": {
+                            "shorthanded": {
+                                "value": {
+                                    "user_id": 1,
+                                    "task_id": 1,
+                                    "missing_number": 2,
+                                    "place": "受付",
+                                    "status": "todo"
+                                }
+                            }
+                        }
                     }
                 ]
             },
@@ -636,47 +705,48 @@ const docTemplate = `{
             },
             "post": {
                 tags: ["trouble-rescue"],
-                "description": "トラブル救助を作成",
+                "description": "トラブル救助を作成（application/json専用）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
                 "responses": {
                     "201": {
-                        "description": "作成したトラブル救助が返ってくる",
+                        "description": "作成したトラブル救助が返ってくる"
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です"
+                    },
+                    "500": {
+                        "description": "サーバーエラー"
                     }
                 },
                 "parameters": [
                     {
-                        "name": "user_id",
-                        "in": "formData",
-                        "description": "ユーザーID",
-                        "type": "integer",
-                        "required": true
-                    },
-                    {
-                        "name": "task_id",
-                        "in": "formData",
-                        "description": "タスクID",
-                        "type": "integer",
-                        "required": true
-                    },
-                    {
-                        "name": "place",
-                        "in": "formData",
-                        "description": "場所",
-                        "type": "string",
-                        "required": false
-                    },
-                    {
-                        "name": "detail",
-                        "in": "formData",
-                        "description": "トラブル詳細",
-                        "type": "string",
-                        "required": true
-                    },
-                    {
-                        "name": "status",
-                        "in": "formData",
-                        "description": "ステータス（todo/in_progress/done）",
-                        "type": "string",
-                        "required": false
+                        "name": "body",
+                        "in": "body",
+                        "description": "トラブル救助リクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": { "type": "integer", "description": "ユーザーID" },
+                                "task_id": { "type": "integer", "description": "タスクID" },
+                                "place": { "type": "string", "description": "場所" },
+                                "detail": { "type": "string", "description": "トラブル詳細" },
+                                "status": { "type": "string", "description": "ステータス（todo/in_progress/done）" }
+                            },
+                            "required": ["user_id", "task_id", "detail"]
+                        },
+                        "examples": {
+                            "trouble": {
+                                "value": {
+                                    "user_id": 1,
+                                    "task_id": 1,
+                                    "place": "体育館",
+                                    "detail": "機材トラブル",
+                                    "status": "todo"
+                                }
+                            }
+                        }
                     }
                 ]
             },
@@ -796,16 +866,16 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.0.0",
-	Host:             "localhost:1234",
-	BasePath:         "/",
-	Schemes:          []string{"http"},
-	Title:            "NUTFes SeeFT API",
-	Description:      "SeeFT API ドキュメント",
-	InfoInstanceName: "swagger",
-	SwaggerTemplate:  docTemplate,
+    Version:          "2.0.0",
+    Host:             "localhost:1234",
+    BasePath:         "/",
+    Schemes:          []string{"http"},
+    Title:            "NUTFes SeeFT API",
+    Description:      "SeeFT API ドキュメント",
+    InfoInstanceName: "swagger",
+    SwaggerTemplate:  docTemplate,
 }
 
 func init() {
-	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
+    swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
 }

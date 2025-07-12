@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 )
@@ -79,31 +80,22 @@ func (tr *troubleRescueController) ShowTroubleRescuesByTaskID(c echo.Context) er
 
 // 作成
 func (tr *troubleRescueController) CreateTroubleRescue(c echo.Context) error {
-	userID := c.FormValue("user_id")
-	taskID := c.FormValue("task_id")
-	place := c.FormValue("place")
-	detail := c.FormValue("detail")
-	status := c.FormValue("status")
-	
-	if userID == "" {
+	var req entity.TroubleRescueCreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
+	if req.UserID <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "User ID is required"})
 	}
-	if taskID == "" {
+	if req.TaskID <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Task ID is required"})
 	}
-	if detail == "" {
+	if req.Detail == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Detail is required"})
 	}
-	
-	// 数値チェック
-	if _, err := strconv.Atoi(userID); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
-	}
-	if _, err := strconv.Atoi(taskID); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid task ID"})
-	}
-	
-	createdTroubleRescue, err := tr.u.CreateTroubleRescue(c.Request().Context(), userID, taskID, place, detail, status)
+	userIDStr := strconv.Itoa(req.UserID)
+	taskIDStr := strconv.Itoa(req.TaskID)
+	createdTroubleRescue, err := tr.u.CreateTroubleRescue(c.Request().Context(), userIDStr, taskIDStr, req.Place, req.Detail, req.Status)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -112,23 +104,21 @@ func (tr *troubleRescueController) CreateTroubleRescue(c echo.Context) error {
 
 // 更新
 func (tr *troubleRescueController) UpdateTroubleRescue(c echo.Context) error {
+	var req entity.TroubleRescueUpdateRequest
 	id := c.Param("id")
-	status := c.FormValue("status")
-	response := c.FormValue("response")
-	
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID is required"})
 	}
-	if status == "" {
+	if req.Status == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Status is required"})
 	}
-	
-	// 数値チェック
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	
-	updatedTroubleRescue, err := tr.u.UpdateTroubleRescue(c.Request().Context(), id, status, response)
+	updatedTroubleRescue, err := tr.u.UpdateTroubleRescue(c.Request().Context(), id, req.Status, req.Response)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -137,16 +127,17 @@ func (tr *troubleRescueController) UpdateTroubleRescue(c echo.Context) error {
 
 // 削除
 func (tr *troubleRescueController) DeleteTroubleRescue(c echo.Context) error {
-	id := c.FormValue("id")
+	var req entity.TroubleRescueDeleteRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
+	id := req.ID
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID is required"})
 	}
-	
-	// 数値チェック
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	
 	err := tr.u.DeleteTroubleRescue(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})

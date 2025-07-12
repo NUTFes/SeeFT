@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
@@ -12,10 +11,9 @@ import (
 
 // 共通のリクエスト構造体
 type RescueRequest struct {
-	Type    string      `json:"type"`
-	UserID  int         `json:"user_id"`
-	Time    string      `json:"time"`
-	Content interface{} `json:"content"`
+Type    string      `json:"type"`
+UserID  int         `json:"user_id"`
+Content interface{} `json:"content"`
 }
 
 // 各タイプ別のContent構造体
@@ -68,16 +66,6 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 	if req.UserID <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 	}
-
-	// 時刻の解析（オプション: 将来的に時刻を使用する場合のために解析処理を残しておく）
-	if req.Time != "" {
-		_, err := time.Parse("2006/01/02 15:04:05", req.Time)
-		if err != nil {
-			// 時刻の解析に失敗した場合でも処理を続行
-			// 将来的に時刻を使用する場合はここでエラーハンドリングを行う
-		}
-	}
-
 	userIDStr := strconv.Itoa(req.UserID)
 
 	switch req.Type {

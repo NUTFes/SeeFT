@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 )
@@ -64,23 +65,18 @@ func (qr *questionRescueController) ShowQuestionRescuesByUserID(c echo.Context) 
 
 // 作成
 func (qr *questionRescueController) CreateQuestionRescue(c echo.Context) error {
-	userID := c.FormValue("user_id")
-	question := c.FormValue("question")
-	status := c.FormValue("status")
-	
-	if userID == "" {
+	var req entity.QuestionRescueCreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
+	if req.UserID <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "User ID is required"})
 	}
-	if question == "" {
+	if req.Question == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Question is required"})
 	}
-	
-	// 数値チェック
-	if _, err := strconv.Atoi(userID); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
-	}
-	
-	createdQuestionRescue, err := qr.u.CreateQuestionRescue(c.Request().Context(), userID, question, status)
+	userIDStr := strconv.Itoa(req.UserID)
+	createdQuestionRescue, err := qr.u.CreateQuestionRescue(c.Request().Context(), userIDStr, req.Question, req.Status)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -89,23 +85,21 @@ func (qr *questionRescueController) CreateQuestionRescue(c echo.Context) error {
 
 // 更新
 func (qr *questionRescueController) UpdateQuestionRescue(c echo.Context) error {
+	var req entity.QuestionRescueUpdateRequest
 	id := c.Param("id")
-	status := c.FormValue("status")
-	response := c.FormValue("response")
-	
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID is required"})
 	}
-	if status == "" {
+	if req.Status == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Status is required"})
 	}
-	
-	// 数値チェック
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	
-	updatedQuestionRescue, err := qr.u.UpdateQuestionRescue(c.Request().Context(), id, status, response)
+	updatedQuestionRescue, err := qr.u.UpdateQuestionRescue(c.Request().Context(), id, req.Status, req.Response)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -114,16 +108,17 @@ func (qr *questionRescueController) UpdateQuestionRescue(c echo.Context) error {
 
 // 削除
 func (qr *questionRescueController) DeleteQuestionRescue(c echo.Context) error {
-	id := c.FormValue("id")
+	var req entity.QuestionRescueDeleteRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
+	id := req.ID
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID is required"})
 	}
-	
-	// 数値チェック
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	
 	err := qr.u.DeleteQuestionRescue(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})

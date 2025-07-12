@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 	"github.com/labstack/echo/v4"
 )
@@ -79,34 +80,23 @@ func (sr *shorthandedRescueController) ShowShorthandedRescuesByTaskID(c echo.Con
 
 // 作成
 func (sr *shorthandedRescueController) CreateShorthandedRescue(c echo.Context) error {
-	userID := c.FormValue("user_id")
-	taskID := c.FormValue("task_id")
-	missingNumber := c.FormValue("missing_number")
-	place := c.FormValue("place")
-	status := c.FormValue("status")
-	
-	if userID == "" {
+	var req entity.ShorthandedRescueCreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
+	if req.UserID <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "User ID is required"})
 	}
-	if taskID == "" {
+	if req.TaskID <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Task ID is required"})
 	}
-	if missingNumber == "" {
+	if req.MissingNumber <= 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing number is required"})
 	}
-	
-	// 数値チェック
-	if _, err := strconv.Atoi(userID); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
-	}
-	if _, err := strconv.Atoi(taskID); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid task ID"})
-	}
-	if _, err := strconv.Atoi(missingNumber); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid missing number"})
-	}
-	
-	createdShorthandedRescue, err := sr.u.CreateShorthandedRescue(c.Request().Context(), userID, taskID, missingNumber, place, status)
+	userIDStr := strconv.Itoa(req.UserID)
+	taskIDStr := strconv.Itoa(req.TaskID)
+	missingNumberStr := strconv.Itoa(req.MissingNumber)
+	createdShorthandedRescue, err := sr.u.CreateShorthandedRescue(c.Request().Context(), userIDStr, taskIDStr, missingNumberStr, req.Place, req.Status)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -115,23 +105,21 @@ func (sr *shorthandedRescueController) CreateShorthandedRescue(c echo.Context) e
 
 // 更新
 func (sr *shorthandedRescueController) UpdateShorthandedRescue(c echo.Context) error {
+	var req entity.ShorthandedRescueUpdateRequest
 	id := c.Param("id")
-	status := c.FormValue("status")
-	response := c.FormValue("response")
-	
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID is required"})
 	}
-	if status == "" {
+	if req.Status == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Status is required"})
 	}
-	
-	// 数値チェック
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	
-	updatedShorthandedRescue, err := sr.u.UpdateShorthandedRescue(c.Request().Context(), id, status, response)
+	updatedShorthandedRescue, err := sr.u.UpdateShorthandedRescue(c.Request().Context(), id, req.Status, req.Response)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -140,16 +128,17 @@ func (sr *shorthandedRescueController) UpdateShorthandedRescue(c echo.Context) e
 
 // 削除
 func (sr *shorthandedRescueController) DeleteShorthandedRescue(c echo.Context) error {
-	id := c.FormValue("id")
+	var req entity.ShorthandedRescueDeleteRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+	}
+	id := req.ID
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID is required"})
 	}
-	
-	// 数値チェック
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	
 	err := sr.u.DeleteShorthandedRescue(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
