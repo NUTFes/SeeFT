@@ -7,17 +7,20 @@ import (
 )
 
 type router struct {
-	healthcheckController controller.HealthcheckController
-	mailAuthController    controller.MailAuthController
-	bureauController      controller.BureauController
-	gradeController       controller.GradeController
-	placeController       controller.PlaceController
-	departmentController  controller.DepartmentController
-	shiftController       controller.ShiftController
-	taskController        controller.TaskController
-	timeController        controller.TimeController
-	userController        controller.UserController
-	rescueController      controller.RescueController
+	healthcheckController           controller.HealthcheckController
+	mailAuthController              controller.MailAuthController
+	bureauController                controller.BureauController
+	gradeController                 controller.GradeController
+	placeController                 controller.PlaceController
+	departmentController            controller.DepartmentController
+	shiftController                 controller.ShiftController
+	taskController                  controller.TaskController
+	timeController                  controller.TimeController
+	userController                  controller.UserController
+	questionRescueController        controller.QuestionRescueController
+	shorthandedRescueController     controller.ShorthandedRescueController
+	troubleRescueController         controller.TroubleRescueController
+	rescueUnifiedController         controller.RescueUnifiedController
 }
 
 type Router interface {
@@ -35,7 +38,10 @@ func NewRouter(
 	taskController controller.TaskController,
 	timeController controller.TimeController,
 	userController controller.UserController,
-	rescueController controller.RescueController,
+	questionRescueController controller.QuestionRescueController,
+	shorthandedRescueController controller.ShorthandedRescueController,
+	troubleRescueController controller.TroubleRescueController,
+	rescueUnifiedController controller.RescueUnifiedController,
 ) Router {
 	return router{
 		healthController,
@@ -48,7 +54,10 @@ func NewRouter(
 		taskController,
 		timeController,
 		userController,
-		rescueController,
+		questionRescueController,
+		shorthandedRescueController,
+		troubleRescueController,
+		rescueUnifiedController,
 	}
 }
 
@@ -124,8 +133,36 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	// current_user
 	e.GET("/current_user", r.userController.GetCurrentUser)
 
-	// rescue
-	e.POST("/rescue", r.rescueController.CreateRescue)
+	// rescue（新統一エンドポイント）
+	e.POST("/rescues", r.rescueUnifiedController.CreateRescue)
+	e.GET("/rescues", r.rescueUnifiedController.GetAllRescues)
+	e.GET("/rescues/users/:user_id", r.rescueUnifiedController.GetRescuesByUserID)
+
+	// question rescues
+	e.GET("/question-rescues", r.questionRescueController.IndexQuestionRescue)
+	e.GET("/question-rescues/:id", r.questionRescueController.ShowQuestionRescue)
+	e.GET("/question-rescues/users/:user_id", r.questionRescueController.ShowQuestionRescuesByUserID)
+	e.POST("/question-rescues", r.questionRescueController.CreateQuestionRescue)
+	e.PUT("/question-rescues/:id", r.questionRescueController.UpdateQuestionRescue)
+	e.DELETE("/question-rescues", r.questionRescueController.DeleteQuestionRescue)
+
+	// shorthanded rescues
+	e.GET("/shorthanded-rescues", r.shorthandedRescueController.IndexShorthandedRescue)
+	e.GET("/shorthanded-rescues/:id", r.shorthandedRescueController.ShowShorthandedRescue)
+	e.GET("/shorthanded-rescues/users/:user_id", r.shorthandedRescueController.ShowShorthandedRescuesByUserID)
+	e.GET("/shorthanded-rescues/tasks/:task_id", r.shorthandedRescueController.ShowShorthandedRescuesByTaskID)
+	e.POST("/shorthanded-rescues", r.shorthandedRescueController.CreateShorthandedRescue)
+	e.PUT("/shorthanded-rescues/:id", r.shorthandedRescueController.UpdateShorthandedRescue)
+	e.DELETE("/shorthanded-rescues", r.shorthandedRescueController.DeleteShorthandedRescue)
+
+	// trouble rescues
+	e.GET("/trouble-rescues", r.troubleRescueController.IndexTroubleRescue)
+	e.GET("/trouble-rescues/:id", r.troubleRescueController.ShowTroubleRescue)
+	e.GET("/trouble-rescues/users/:user_id", r.troubleRescueController.ShowTroubleRescuesByUserID)
+	e.GET("/trouble-rescues/tasks/:task_id", r.troubleRescueController.ShowTroubleRescuesByTaskID)
+	e.POST("/trouble-rescues", r.troubleRescueController.CreateTroubleRescue)
+	e.PUT("/trouble-rescues/:id", r.troubleRescueController.UpdateTroubleRescue)
+	e.DELETE("/trouble-rescues", r.troubleRescueController.DeleteTroubleRescue)
 
 	// shiftの希望日程
 	e.POST("/request_shifts", r.shiftController.SubmitShift)

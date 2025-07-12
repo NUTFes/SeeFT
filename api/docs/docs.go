@@ -233,22 +233,649 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/rescues": {
+            "get": {
+                tags: ["rescue"],
+                "description": "全ての統一レスキューの一覧を取得",
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "レスキュー一覧の取得成功",
+                    },
+                    "500": {
+                        "description": "サーバーエラー",
+                    }
+                }
+            },
+            "post": {
+                tags: ["rescue"],
+                "description": "統一されたレスキューリクエストを作成（trouble/question/shorthandedの3種類に対応）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "responses": {
+                    "201": {
+                        "description": "レスキューリクエストが正常に作成されました",
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です",
+                    },
+                    "500": {
+                        "description": "サーバーエラー",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "レスキューリクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["trouble", "question", "shorthanded"],
+                                    "description": "レスキューの種類"
+                                },
+                                "user_id": {
+                                    "type": "integer",
+                                    "description": "送信者のユーザーID"
+                                },
+                                "content": {
+                                    "oneOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "task_id": { "type": "integer" },
+                                                "place": { "type": "string" },
+                                                "detail": { "type": "string" }
+                                            },
+                                            "required": ["task_id", "detail"],
+                                            "description": "troubleの場合"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "question": { "type": "string" }
+                                            },
+                                            "required": ["question"],
+                                            "description": "questionの場合"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "task_id": { "type": "integer" },
+                                                "missing_number": { "type": "integer" },
+                                                "place": { "type": "string" }
+                                            },
+                                            "required": ["task_id", "missing_number"],
+                                            "description": "shorthandedの場合"
+                                        }
+                                    ]
+                                }
+                            },
+                            "required": ["type", "user_id", "content"]
+                        },
+                        "examples": {
+                            "trouble": {
+                                "value": {
+                                    "type": "trouble",
+                                    "user_id": 1,
+                                    "content": {
+                                        "task_id": 1,
+                                        "place": "体育館",
+                                        "detail": "機材トラブル"
+                                    }
+                                }
+                            },
+                            "question": {
+                                "value": {
+                                    "type": "question",
+                                    "user_id": 1,
+                                    "content": {
+                                        "question": "○○のやり方は？"
+                                    }
+                                }
+                            },
+                            "shorthanded": {
+                                "value": {
+                                    "type": "shorthanded",
+                                    "user_id": 1,
+                                    "content": {
+                                        "task_id": 1,
+                                        "missing_number": 2,
+                                        "place": "D講"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "/rescues/users/{user_id}": {
+            "get": {
+                tags: ["rescue"],
+                "description": "特定ユーザーの統一レスキューの一覧を取得",
+                "produces": ["application/json"],
+                "responses": {
+                    "200": {
+                        "description": "ユーザー別レスキュー一覧の取得成功",
+                    },
+                    "400": {
+                        "description": "ユーザーIDが不正です",
+                    },
+                    "500": {
+                        "description": "サーバーエラー",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "description": "ユーザーID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/question-rescues": {
+            "get": {
+                tags: ["question-rescue"],
+                "description": "質問救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "質問救助の一覧を取得",
+                    }
+                }
+            },
+            "post": {
+                tags: ["question-rescue"],
+                "description": "質問救助を作成（application/json専用）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "responses": {
+                    "201": {
+                        "description": "作成した質問救助が返ってくる"
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です"
+                    },
+                    "500": {
+                        "description": "サーバーエラー"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "質問救助リクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": { "type": "integer", "description": "ユーザーID" },
+                                "question": { "type": "string", "description": "質問内容" },
+                                "status": { "type": "string", "description": "ステータス（todo/in_progress/done）" }
+                            },
+                            "required": ["user_id", "question"]
+                        },
+                        "examples": {
+                            "question": {
+                                "value": {
+                                    "user_id": 1,
+                                    "question": "○○のやり方は？",
+                                    "status": "todo"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                tags: ["question-rescue"],
+                "description": "質問救助を削除",
+                "responses": {
+                    "200": {
+                        "description": "削除成功",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "formData",
+                        "description": "質問救助ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/question-rescues/{id}": {
+            "get": {
+                tags: ["question-rescue"],
+                "description": "質問救助の詳細を取得",
+                "responses": {
+                    "200": {
+                        "description": "質問救助の詳細を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "質問救助ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            },
+            "put": {
+                tags: ["question-rescue"],
+                "description": "質問救助を更新",
+                "responses": {
+                    "200": {
+                        "description": "更新した質問救助が返ってくる",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "質問救助ID",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "status",
+                        "in": "formData",
+                        "description": "ステータス（todo/in_progress/done）",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "response",
+                        "in": "formData",
+                        "description": "回答内容",
+                        "type": "string",
+                        "required": false
+                    }
+                ]
+            }
+        },
+        "/question-rescues/users/{user_id}": {
+            "get": {
+                tags: ["question-rescue"],
+                "description": "ユーザー別質問救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "ユーザー別質問救助の一覧を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "description": "ユーザーID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/shorthanded-rescues": {
+            "get": {
+                tags: ["shorthanded-rescue"],
+                "description": "人手不足救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "人手不足救助の一覧を取得",
+                    }
+                }
+            },
+            "post": {
+                tags: ["shorthanded-rescue"],
+                "description": "人手不足救助を作成（application/json専用）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "responses": {
+                    "201": {
+                        "description": "作成した人手不足救助が返ってくる"
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です"
+                    },
+                    "500": {
+                        "description": "サーバーエラー"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "人手不足救助リクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": { "type": "integer", "description": "ユーザーID" },
+                                "task_id": { "type": "integer", "description": "タスクID" },
+                                "missing_number": { "type": "integer", "description": "不足人数" },
+                                "place": { "type": "string", "description": "場所" },
+                                "status": { "type": "string", "description": "ステータス（todo/in_progress/done）" }
+                            },
+                            "required": ["user_id", "task_id", "missing_number"]
+                        },
+                        "examples": {
+                            "shorthanded": {
+                                "value": {
+                                    "user_id": 1,
+                                    "task_id": 1,
+                                    "missing_number": 2,
+                                    "place": "受付",
+                                    "status": "todo"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                tags: ["shorthanded-rescue"],
+                "description": "人手不足救助を削除",
+                "responses": {
+                    "200": {
+                        "description": "削除成功",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "formData",
+                        "description": "人手不足救助ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/shorthanded-rescues/{id}": {
+            "get": {
+                tags: ["shorthanded-rescue"],
+                "description": "人手不足救助の詳細を取得",
+                "responses": {
+                    "200": {
+                        "description": "人手不足救助の詳細を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "人手不足救助ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            },
+            "put": {
+                tags: ["shorthanded-rescue"],
+                "description": "人手不足救助を更新",
+                "responses": {
+                    "200": {
+                        "description": "更新した人手不足救助が返ってくる",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "人手不足救助ID",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "status",
+                        "in": "formData",
+                        "description": "ステータス（todo/in_progress/done）",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "response",
+                        "in": "formData",
+                        "description": "回答内容",
+                        "type": "string",
+                        "required": false
+                    }
+                ]
+            }
+        },
+        "/shorthanded-rescues/users/{user_id}": {
+            "get": {
+                tags: ["shorthanded-rescue"],
+                "description": "ユーザー別人手不足救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "ユーザー別人手不足救助の一覧を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "description": "ユーザーID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/shorthanded-rescues/tasks/{task_id}": {
+            "get": {
+                tags: ["shorthanded-rescue"],
+                "description": "タスク別人手不足救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "タスク別人手不足救助の一覧を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "description": "タスクID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/trouble-rescues": {
+            "get": {
+                tags: ["trouble-rescue"],
+                "description": "トラブル救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "トラブル救助の一覧を取得",
+                    }
+                }
+            },
+            "post": {
+                tags: ["trouble-rescue"],
+                "description": "トラブル救助を作成（application/json専用）",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "responses": {
+                    "201": {
+                        "description": "作成したトラブル救助が返ってくる"
+                    },
+                    "400": {
+                        "description": "リクエストデータが不正です"
+                    },
+                    "500": {
+                        "description": "サーバーエラー"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "トラブル救助リクエストデータ",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "user_id": { "type": "integer", "description": "ユーザーID" },
+                                "task_id": { "type": "integer", "description": "タスクID" },
+                                "place": { "type": "string", "description": "場所" },
+                                "detail": { "type": "string", "description": "トラブル詳細" },
+                                "status": { "type": "string", "description": "ステータス（todo/in_progress/done）" }
+                            },
+                            "required": ["user_id", "task_id", "detail"]
+                        },
+                        "examples": {
+                            "trouble": {
+                                "value": {
+                                    "user_id": 1,
+                                    "task_id": 1,
+                                    "place": "体育館",
+                                    "detail": "機材トラブル",
+                                    "status": "todo"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                tags: ["trouble-rescue"],
+                "description": "トラブル救助を削除",
+                "responses": {
+                    "200": {
+                        "description": "削除成功",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "formData",
+                        "description": "トラブル救助ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/trouble-rescues/{id}": {
+            "get": {
+                tags: ["trouble-rescue"],
+                "description": "トラブル救助の詳細を取得",
+                "responses": {
+                    "200": {
+                        "description": "トラブル救助の詳細を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "トラブル救助ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            },
+            "put": {
+                tags: ["trouble-rescue"],
+                "description": "トラブル救助を更新",
+                "responses": {
+                    "200": {
+                        "description": "更新したトラブル救助が返ってくる",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "トラブル救助ID",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "status",
+                        "in": "formData",
+                        "description": "ステータス（todo/in_progress/done）",
+                        "type": "string",
+                        "required": true
+                    },
+                    {
+                        "name": "response",
+                        "in": "formData",
+                        "description": "回答内容",
+                        "type": "string",
+                        "required": false
+                    }
+                ]
+            }
+        },
+        "/trouble-rescues/users/{user_id}": {
+            "get": {
+                tags: ["trouble-rescue"],
+                "description": "ユーザー別トラブル救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "ユーザー別トラブル救助の一覧を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "description": "ユーザーID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/trouble-rescues/tasks/{task_id}": {
+            "get": {
+                tags: ["trouble-rescue"],
+                "description": "タスク別トラブル救助の一覧を取得",
+                "responses": {
+                    "200": {
+                        "description": "タスク別トラブル救助の一覧を取得",
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "task_id",
+                        "in": "path",
+                        "description": "タスクID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.0.0",
-	Host:             "localhost:1234",
-	BasePath:         "/",
-	Schemes:          []string{"http"},
-	Title:            "NUTFes SeeFT API",
-	Description:      "SeeFT API ドキュメント",
-	InfoInstanceName: "swagger",
-	SwaggerTemplate:  docTemplate,
+    Version:          "2.0.0",
+    Host:             "localhost:1234",
+    BasePath:         "/",
+    Schemes:          []string{"http"},
+    Title:            "NUTFes SeeFT API",
+    Description:      "SeeFT API ドキュメント",
+    InfoInstanceName: "swagger",
+    SwaggerTemplate:  docTemplate,
 }
 
 func init() {
-	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
+    swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
 }
