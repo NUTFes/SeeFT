@@ -25,7 +25,7 @@ Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherI
       }
     }
     
-    return res;
+    return res as List<dynamic>;
   } catch (err) {
     logger.e('=== API Error ==='
       '\n'
@@ -41,11 +41,11 @@ Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherI
 List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
   // キャッシュからデータを取得
   logger.i('=== キャッシュからデータを取得します ===');
-  final List<dynamic>? cashedData = shiftCardBox.get('${dayID}_${weatherID}');
-  logger.i('キャッシュデータの取得に成功しました: ${cashedData != null ? cashedData.length : 'null'} items');
+  final List<dynamic>? cachedData = shiftCardBox.get('${dayID}_${weatherID}');
+  logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');
   
   // キャッシュデータがない場合は表示データをnullに設定する
-  if (cashedData == null) {
+  if (cachedData == null) {
     logger.e('$dayID, $weatherID のキャッシュデータがありません。');
     return null;
   }
@@ -53,7 +53,7 @@ List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
   // キャッシュデータがある場合はそれを使用
   logger.i('$dayID, $weatherID のキャッシュデータを発見しました。');
   
-  return cashedData; // キャッシュデータを返す
+  return cachedData; // キャッシュデータを返す
 }
 
 class MyShiftPage extends StatefulWidget {
@@ -91,7 +91,7 @@ class _MyShiftPageState extends State<MyShiftPage>
   // ウィジェットの初期化時の処理
   @override
   void initState() {
-    // ユーザIDと初期タブのデータを初期化
+    // 非同期処理を分離した関数を呼び出す
     _initialize();
     super.initState();
   }
@@ -110,12 +110,19 @@ class _MyShiftPageState extends State<MyShiftPage>
     _userID = await store.getUserID();
     logger.i('User ID: $_userID');
     // 初期タブのデータを初期化
-    await _loadShiftCardDataListForCurrentTab(_userID, _selectedDayID, _selectedWeatherID);
+    await _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
   }
   
   // ウィジェットが破棄されるときの処理
   @override
-  void dispose() async {  
+  void dispose() {  
+    // 非同期処理を分離した関数を呼び出す
+    _dispose();
+    super.dispose();
+  }
+  
+  // ウィジェットが破棄されるときの処理(非同期処理は直接disposeで行えないため分離)
+  Future<void> _dispose() async {  
     logger.i('MyShiftPage is being disposed.');
     // 選択された日付と天気のIDをHiveに保存
     await shiftCardBox.put('selectedDayID', _selectedDayID);
@@ -126,7 +133,6 @@ class _MyShiftPageState extends State<MyShiftPage>
     _tabController.dispose();
     // デバウンスタイマーをキャンセル    
     _debounceTimer?.cancel();
-    super.dispose();
   }
   
   // タブ(日付)が切り替わったときの処理
@@ -136,7 +142,7 @@ class _MyShiftPageState extends State<MyShiftPage>
       _selectedDayID = newDayID;  // 選択された日付のインデックスを更新
     });
     // シフトカードのデータを更新
-    _loadShiftCardDataListForCurrentTab(_userID, newDayID, _selectedWeatherID);
+    _loadShiftCardDataList(_userID, newDayID, _selectedWeatherID);
   }
   
   // SegmentedButton(天気)の選択状態が変わったときの処理
@@ -146,25 +152,25 @@ class _MyShiftPageState extends State<MyShiftPage>
       _selectedWeatherID = newWeatherID;  // 選択された天気のインデックスを更新
     });
     // シフトカードのデータを更新
-    _loadShiftCardDataListForCurrentTab(_userID, _selectedDayID, newWeatherID);
+    _loadShiftCardDataList(_userID, _selectedDayID, newWeatherID);
   }
   
   // 更新ボタンが押されたときの処理
   void _handleRefreshPressed() {
     // シフトカードのデータを再ロード
-    _loadShiftCardDataListForCurrentTab(_userID, _selectedDayID, _selectedWeatherID);
+    _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
   }
   
   // 指定のユーザID、日付ID、天気IDのシフトカードデータリストをロードする関数
-  Future<void> _loadShiftCardDataListForCurrentTab(int userID, int dayID, int weatherID) async {
+  Future<void> _loadShiftCardDataList(int userID, int dayID, int weatherID) async {
     _debounceTimer?.cancel();  // 既存のデバウンスタイマーをキャンセル
     setState(() => isLoading = true);   // ロード中フラグをtrueに設定
     
     // キャッシュからデータを取得
-    final List<dynamic>? cashedData = _getCashedShiftCardDataList(dayID, weatherID);
+    final List<dynamic>? cachedData = _getCashedShiftCardDataList(dayID, weatherID);
     // キャッシュデータをShiftCardDataListに変換
     final ShiftCardDataList? cashedShiftCardDataList = 
-      cashedData != null ? ShiftCardDataList.fromJson(cashedData) : null;
+      cachedData != null ? ShiftCardDataList.fromJson(cachedData) : null;
     
     // 表示データをキャッシュデータで更新
     setState(() {
@@ -177,7 +183,7 @@ class _MyShiftPageState extends State<MyShiftPage>
       final List<dynamic>? fetchedData = await _getShiftCardDataList(userID, dayID, weatherID);
       
       // キャッシュデータとフェッチデータを比較
-      if (fetchedData == null || deepEq(fetchedData, cashedData)) {
+      if (fetchedData == null || deepEq(fetchedData, cachedData)) {
         // フェッチデータがnullまたはキャッシュデータと同じ場合は、キャッシュデータを使用
         fetchedData == null
           ? {
