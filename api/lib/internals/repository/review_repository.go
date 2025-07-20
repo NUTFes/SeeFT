@@ -16,6 +16,8 @@ type reviewRepository struct {
 type ReviewRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
+	AllWithDetails(ctx context.Context) (*sql.Rows, error)
+	FindWithDetails(ctx context.Context, id string) (*sql.Row, error)
 	Create(context.Context, string, string, string, string, string) error
 	Update(context.Context, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
@@ -35,6 +37,39 @@ func (r *reviewRepository) All(c context.Context) (*sql.Rows, error) {
 func (r *reviewRepository) Find(c context.Context, id string) (*sql.Row, error) {
 	query := "SELECT * FROM review WHERE id =" + id
 	return r.crud.ReadByID(c, query)
+}
+
+// JOIN用定義
+const baseJoin = `
+SELECT
+  r.id,
+  u.name           AS user_name,
+  b.bureau         AS user_bureau,
+  g.grade          AS user_grade,
+  u.student_number AS user_studentnumber,
+  t.task           AS task_name,
+  r.staffing_rating,
+  r.manual_rating,
+  r.comment,
+  r.created_at,
+  r.updated_at
+FROM reviews r
+JOIN users   u ON r.user_id  = u.id
+JOIN tasks   t ON r.task_id  = t.id
+JOIN bureaus b ON u.bureauID = b.id
+JOIN grades  g ON u.gradeID  = g.id
+`
+
+// 全件指定時GAS用変換
+func (r *reviewRepository) AllWithDetails(ctx context.Context) (*sql.Rows, error) {
+	query := baseJoin + " ORDER BY r.id"
+	return r.client.DB().QueryContext(ctx, query)
+}
+
+// 指定時GAS用変換
+func (r *reviewRepository) FindWithDetails(ctx context.Context, id string) (*sql.Row, error) {
+	query := baseJoin + " WHERE r.id = $1"
+	return r.client.DB().QueryRowContext(ctx, query, id)
 }
 
 // 作成
