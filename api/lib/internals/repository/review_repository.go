@@ -21,6 +21,7 @@ type ReviewRepository interface {
 	Create(context.Context, string, string, string, string, string) error
 	Update(context.Context, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
+	FindNewRecord(context.Context) (*sql.Row, error)
 }
 
 func NewReviewRepository(c db.Client, ac abstract.Crud) ReviewRepository {
@@ -29,47 +30,47 @@ func NewReviewRepository(c db.Client, ac abstract.Crud) ReviewRepository {
 
 // 全件取得
 func (r *reviewRepository) All(c context.Context) (*sql.Rows, error) {
-	query := "SELECT * FROM review"
+	query := "SELECT * FROM reviews"
 	return r.crud.Read(c, query)
 }
 
-// 1件取得
+// 1件取得 - プリペアドステートメント使用
 func (r *reviewRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT * FROM review WHERE id =" + id
-	return r.crud.ReadByID(c, query)
+	query := "SELECT * FROM reviews WHERE id = $1"
+	return r.client.DB().QueryRowContext(c, query, id), nil
 }
 
 // JOIN用定義
 const baseJoin = `
 SELECT
   r.id,
-  u.name           AS user_name,
-  b.bureau         AS user_bureau,
-  g.grade          AS user_grade,
-  u.student_number AS user_studentnumber,
-  t.task           AS task_name,
+  COALESCE(u.name, 'Unknown') AS user_name,
+  COALESCE(b.bureau, 'Unknown') AS user_bureau,
+  COALESCE(g.grade, 'Unknown') AS user_grade,
+  COALESCE(u.student_number, '') AS user_studentnumber,
+  COALESCE(t.task, 'Unknown') AS task_name,
   r.staffing_rating,
   r.manual_rating,
   r.comment,
   r.created_at,
   r.updated_at
 FROM reviews r
-JOIN users   u ON r.user_id  = u.id
-JOIN tasks   t ON r.task_id  = t.id
-JOIN bureaus b ON u.bureauID = b.id
-JOIN grades  g ON u.gradeID  = g.id
+LEFT JOIN users   u ON r.user_id  = u.id
+LEFT JOIN tasks   t ON r.task_id  = t.id
+LEFT JOIN bureaus b ON u.bureau_id = b.id
+LEFT JOIN grades  g ON u.grade_id  = g.id
 `
 
 // 全件指定時GAS用変換
-func (r *reviewRepository) AllWithDetails(ctx context.Context) (*sql.Rows, error) {
+func (r *reviewRepository) AllWithDetails(c context.Context) (*sql.Rows, error) {
 	query := baseJoin + " ORDER BY r.id"
-	return r.client.DB().QueryContext(ctx, query)
+	return r.client.DB().QueryContext(c, query)
 }
 
 // 指定時GAS用変換
-func (r *reviewRepository) FindWithDetails(ctx context.Context, id string) (*sql.Row, error) {
+func (r *reviewRepository) FindWithDetails(c context.Context, id string) (*sql.Row, error) {
 	query := baseJoin + " WHERE r.id = $1"
-	return r.client.DB().QueryRowContext(ctx, query, id)
+	return r.client.DB().QueryRowContext(c, query, id), nil
 }
 
 // 作成
@@ -98,4 +99,17 @@ func (r *reviewRepository) Update(c context.Context, ID string, userID string, t
 func (r *reviewRepository) Delete(c context.Context, id string) error {
 	query := "DELETE FROM reviews WHERE id = " + id
 	return r.crud.UpdateDB(c, query)
+}
+
+// FindNewRecord 最新のレビューを取得する
+func (r *reviewRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
+	query := `
+		SELECT
+			*
+		FROM
+			reviews
+		ORDER BY
+			id DESC
+		LIMIT 1`
+	return r.crud.ReadByID(c, query)
 }
