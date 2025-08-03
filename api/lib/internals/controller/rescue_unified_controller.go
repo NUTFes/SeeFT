@@ -182,9 +182,22 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 	// ここでDB保存用データとスプシ保存用データを作成
 	commonInfo := r.extractRescueCommonInfo(c, req.Type, req.Content, req.UserID)
 	var rescueData map[string]interface{}
+	contentMap, ok := req.Content.(map[string]interface{})
+	if !ok {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentが不正な形式です"})
+	}
 	switch req.Type {
 	case "trouble":
-		c := req.Content.(map[string]interface{})
+		// 必須キー: task_id, place, detail
+		if _, ok := contentMap["task_id"]; !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentにtask_idがありません"})
+		}
+		if _, ok := contentMap["place"]; !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentにplaceがありません"})
+		}
+		if _, ok := contentMap["detail"]; !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentにdetailがありません"})
+		}
 		rescueData = map[string]interface{}{
 			"rescue_type": req.Type,
 			"sender_name": commonInfo.SenderName,
@@ -193,12 +206,15 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 			"grade": commonInfo.Grade,
 			"bureau": commonInfo.Bureau,
 			"answered_at": commonInfo.AnsweredAt,
-			"place": c["place"],
+			"place": contentMap["place"],
 			"task_name": commonInfo.TaskName,
-			"detail": c["detail"],
+			"detail": contentMap["detail"],
 		}
 	case "question":
-		c := req.Content.(map[string]interface{})
+		// 必須キー: question
+		if _, ok := contentMap["question"]; !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentにquestionがありません"})
+		}
 		rescueData = map[string]interface{}{
 			"rescue_type": req.Type,
 			"sender_name": commonInfo.SenderName,
@@ -207,10 +223,19 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 			"grade": commonInfo.Grade,
 			"bureau": commonInfo.Bureau,
 			"answered_at": commonInfo.AnsweredAt,
-			"question": c["question"],
+			"question": contentMap["question"],
 		}
 	case "shorthanded":
-		c := req.Content.(map[string]interface{})
+		// 必須キー: task_id, missing_number, place
+		if _, ok := contentMap["task_id"]; !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentにtask_idがありません"})
+		}
+		if _, ok := contentMap["missing_number"]; !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentにmissing_numberがありません"})
+		}
+		if _, ok := contentMap["place"]; !ok {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Contentにplaceがありません"})
+		}
 		rescueData = map[string]interface{}{
 			"rescue_type": req.Type,
 			"sender_name": commonInfo.SenderName,
@@ -219,12 +244,12 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 			"grade": commonInfo.Grade,
 			"bureau": commonInfo.Bureau,
 			"answered_at": commonInfo.AnsweredAt,
-			"place": c["place"],
+			"place": contentMap["place"],
 			"task_name": commonInfo.TaskName,
-			"missing_number": c["missing_number"],
+			"missing_number": contentMap["missing_number"],
 		}
 	default:
-		rescueData = map[string]interface{}{}
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid rescue type"})
 	}
 
 	var wg sync.WaitGroup
