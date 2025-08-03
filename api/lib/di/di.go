@@ -68,7 +68,7 @@ func InitializeServer() db.Client {
 	questionRescueController := controller.NewQuestionRescueController(questionRescueUseCase)
 	shorthandedRescueController := controller.NewShorthandedRescueController(shorthandedRescueUseCase)
 	troubleRescueController := controller.NewTroubleRescueController(troubleRescueUseCase)
-	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase, rescueUnifiedUseCase)
+	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase, rescueUnifiedUseCase, userUseCase, taskUseCase, gradeUseCase, bureauUseCase)
 
 	// router
 	router := router.NewRouter(
