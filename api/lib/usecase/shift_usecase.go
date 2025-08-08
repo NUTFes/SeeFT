@@ -868,6 +868,65 @@ func (a *shiftUseCase) convertShiftCardDataToShifts(data []entity.ShiftCardData)
     return shifts
 }
 
+// groupContinuousShifts は同じタスクで時間が連続するシフトをグループ化
+func (a *shiftUseCase) groupContinuousShifts(taskShifts []entity.Shift) [][]entity.Shift {
+    if len(taskShifts) == 0 {
+        return [][]entity.Shift{}
+    }
+
+    var groups [][]entity.Shift
+    currentGroup := []entity.Shift{taskShifts[0]}
+
+    for i := 1; i < len(taskShifts); i++ {
+        prev := taskShifts[i-1]
+        curr := taskShifts[i]
+
+        // 連続条件: 同じタスクID && TimeIDが+1
+        if prev.Task.ID == curr.Task.ID && curr.Time.ID == prev.Time.ID+1 {
+            currentGroup = append(currentGroup, curr)
+        } else {
+            // 新しいグループを開始
+            groups = append(groups, currentGroup)
+            currentGroup = []entity.Shift{curr}
+        }
+    }
+
+    // 最後のグループを追加
+    if len(currentGroup) > 0 {
+        groups = append(groups, currentGroup)
+    }
+
+    return groups
+}
+
+// compareTimeStrings は時刻文字列を比較
+func (a *shiftUseCase) compareTimeStrings(time1, time2 string) int {
+    // "8:00" と "10:00" のような時刻文字列を比較
+    t1Parts := strings.Split(time1, ":")
+    t2Parts := strings.Split(time2, ":")
+
+    if len(t1Parts) != 2 || len(t2Parts) != 2 {
+        return 0
+    }
+
+    h1, _ := strconv.Atoi(t1Parts[0])
+    m1, _ := strconv.Atoi(t1Parts[1])
+    h2, _ := strconv.Atoi(t2Parts[0])
+    m2, _ := strconv.Atoi(t2Parts[1])
+
+    t1Minutes := h1*60 + m1
+    t2Minutes := h2*60 + m2
+
+    if t1Minutes < t2Minutes {
+        return -1
+    } else if t1Minutes > t2Minutes {
+        return 1
+    }
+    return 0
+}
+
+
+// -----------------
 
 // 前の時間の文字列を取得するヘルパー関数
 func (a *shiftUseCase) getPreviousTimeString(c context.Context, currentTimeID int) (string, error) {
