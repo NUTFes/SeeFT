@@ -7,20 +7,20 @@ import (
 )
 
 type router struct {
-	healthcheckController           controller.HealthcheckController
-	mailAuthController              controller.MailAuthController
-	bureauController                controller.BureauController
-	gradeController                 controller.GradeController
-	placeController                 controller.PlaceController
-	departmentController            controller.DepartmentController
-	shiftController                 controller.ShiftController
-	taskController                  controller.TaskController
-	timeController                  controller.TimeController
-	userController                  controller.UserController
-	questionRescueController        controller.QuestionRescueController
-	shorthandedRescueController     controller.ShorthandedRescueController
-	troubleRescueController         controller.TroubleRescueController
-	rescueUnifiedController         controller.RescueUnifiedController
+	healthcheckController       controller.HealthcheckController
+	mailAuthController          controller.MailAuthController
+	bureauController            controller.BureauController
+	gradeController             controller.GradeController
+	placeController             controller.PlaceController
+	departmentController        controller.DepartmentController
+	shiftController             controller.ShiftController
+	taskController              controller.TaskController
+	timeController              controller.TimeController
+	userController              controller.UserController
+	questionRescueController    controller.QuestionRescueController
+	shorthandedRescueController controller.ShorthandedRescueController
+	troubleRescueController     controller.TroubleRescueController
+	rescueUnifiedController     controller.RescueUnifiedController
 }
 
 type Router interface {
@@ -115,6 +115,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/tasks", r.taskController.IndexTask)
 	e.GET("/tasks/:id", r.taskController.ShowTask)
 	e.GET("/tasks/shifts/:shift", r.taskController.ShowTasksByShift)
+	e.GET("/tasks/users/:user_id", r.taskController.ShowTasksByUserID) // 指定したユーザIDに紐づくタスクを取得
 	e.POST("/tasks", r.taskController.CreateTask)
 	e.PUT("/tasks/:id", r.taskController.UpdateTask)
 	e.DELETE("/tasks", r.taskController.DeleteTask)

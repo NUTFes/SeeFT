@@ -19,6 +19,7 @@ type TaskUseCase interface {
 	GetTasks(context.Context) ([]entity.Task, error)
 	GetTaskByID(context.Context, string) (entity.Task, error)
 	GetTasksByShift(context.Context, string) ([]entity.Task, error)
+	GetTasksByUserID(context.Context, string) ([]entity.Task, error)
 	CreateTask(context.Context, string, string, string, string, string, string, string, string) (entity.Task, error)
 	UpdateTask(context.Context, string, string, string, string, string, string, string, string, string) (entity.Task, error)
 	DeleteTask(context.Context, string) error
@@ -116,6 +117,40 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 		}
 		tasks = append(tasks, task)
 	}
+	return tasks, nil
+}
+
+// 指定したuserIDのタスクを取得
+func (b *taskUseCase) GetTasksByUserID(c context.Context, userID string) ([]entity.Task, error) {
+	task := entity.Task{}
+	var tasks []entity.Task
+
+	rows, err := b.rep.FindByUserID(c, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(
+			&task.ID,
+			&task.Task,
+			&task.PlaceID,
+			&task.Url,
+			&task.BureauID,
+			&task.MaxMember,
+			&task.Color,
+			&task.Remark,
+			&task.YearID,
+			&task.CreatedAt,
+			&task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot connect SQL")
+		}
+		tasks = append(tasks, task)
+	}
+
 	return tasks, nil
 }
 
