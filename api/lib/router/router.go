@@ -100,6 +100,7 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/shifts/tasks/:task_id/years/:year_id/dates/:date_id/times/:time_id/weathers/:weather_id", r.shiftController.ShowUsersByShift)
 	e.GET("/shifts/users/:user_id/dates/:date/weathers/:weather", r.shiftController.ShowShiftsByUserAndDateAndWeather)
 	e.GET("/shift-cards/users/:user_id/dates/:date_id/weathers/:weather_id", r.shiftController.ShowShiftCardsByUserAndDateAndWeather)
+	e.POST("/shift-cards", r.shiftController.PostShiftCards)
 
 	// shift(Web)のRoute
 	e.GET("/shifts-admin", r.shiftController.IndexShiftAdmin)
