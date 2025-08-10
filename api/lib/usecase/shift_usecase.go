@@ -18,6 +18,7 @@ import (
 
 type shiftUseCase struct {
 	rep        rep.ShiftRepository
+	shiftCardRep rep.ShiftCardRepository
 	taskRep    rep.TaskRepository
 	userRep    rep.UserRepository
 	yearRep    rep.YearRepository
@@ -51,6 +52,7 @@ type ShiftUseCase interface {
 
 func NewShiftUseCase(
 	rep rep.ShiftRepository,
+	shiftCardRep rep.ShiftCardRepository,
 	taskRep rep.TaskRepository,
 	userRep rep.UserRepository,
 	yearRep rep.YearRepository,
@@ -60,7 +62,7 @@ func NewShiftUseCase(
 	placeRep rep.PlaceRepository,
 	gradeRep rep.GradeRepository,
 	bureauRep rep.BureauRepository) ShiftUseCase {
-	return &shiftUseCase{rep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep, gradeRep, bureauRep}
+	return &shiftUseCase{rep, shiftCardRep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep, gradeRep, bureauRep}
 }
 
 var TaskID, UserID, YearID, DateID, TimeID, WeatherID, PlaceID string
@@ -1085,7 +1087,7 @@ func (a *shiftUseCase) getBeforeMembers(c context.Context, firstShift entity.Shi
     }
 
     // 前の時間の文字列を取得
-    prevTimeString, err := a.getPrevTimeString(c, firstShift.Time.ID)
+    prevTimeString, err := a.getPreviousTimeString(c, firstShift.Time.ID)
     if err != nil {
         return result
     }

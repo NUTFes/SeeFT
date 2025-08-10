@@ -29,7 +29,7 @@ func InitializeServer() db.Client {
 	placeRepository := repository.NewPlaceRepository(client, crud)
 	departmentRepository := repository.NewDepartmentRepository(client, crud)
 	shiftRepository := repository.NewShiftRepository(client, crud)
-	shiftCardRepository := repository.NewShiftCardRepository(client, crud)
+	shiftCardRepository := repository.NewShiftCardRepository(client)
 	taskRepository := repository.NewTaskRepository(client, crud)
 	timeRepository := repository.NewTimeRepository(client, crud)
 	userRepository := repository.NewUserRepository(client, crud)
