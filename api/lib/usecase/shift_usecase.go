@@ -1107,10 +1107,30 @@ func (a *shiftUseCase) getBeforeMembers(c context.Context, firstShift entity.Shi
 
     var members []entity.ShiftMember
     for _, user := range prevUsers.Users {
-        // Grade/Bureau情報取得（省略）
+        // Grade情報を取得
+        var grade entity.Grade
+        gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
+        if err == nil {
+            err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
+        }
+        if err != nil {
+            grade.Grade = ""
+        }
+
+        // Bureau情報を取得
+        var bureau entity.Bureau
+        bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
+        if err == nil {
+            err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
+        }
+        if err != nil {
+            bureau.Bureau = ""
+        }
+
         member := entity.ShiftMember{
-            Name: user.Name,
-            // Grade, Bureau設定
+            Name:   user.Name,
+            Grade:  grade.Grade,
+            Bureau: bureau.Bureau,
         }
         members = append(members, member)
     }
@@ -1128,14 +1148,79 @@ func (a *shiftUseCase) getBeforeMembers(c context.Context, firstShift entity.Shi
 
 // getAfterMembers は後の時間のメンバーを取得（同様の実装）
 func (a *shiftUseCase) getAfterMembers(c context.Context, lastShift entity.Shift) entity.ShiftMembers {
-    // getBeforeMembersと同様の実装
+    // 次の時間帯情報（空配列は保証）
     result := entity.ShiftMembers{
         STime:   "",
         ETime:   "",
         Members: []entity.ShiftMember{},
     }
 
-    // 実装は省略（getBeforeMembersと同じパターン）
+    // 次の時間ID
+    nextTimeID := lastShift.Time.ID + 1
+    if nextTimeID < 1 {
+        return result
+    }
+
+    // 次の時間帯の開始時刻（lastShift の直後）
+    nextStart, err := a.getNextTimeString(c, lastShift.Time.ID)
+    if err != nil || nextStart == "" {
+        return result
+    }
+
+    // 次の次の時間帯の開始時刻（終了時刻として使用）
+    nextEnd, err := a.getNextTimeString(c, nextTimeID)
+    if err != nil {
+        // フォールバック（環境によっては末尾時刻で終端）
+        nextEnd = nextStart
+    }
+
+    // 次の時間帯に属するメンバーを取得
+    nextUsers, err := a.GetUsersByShift(c,
+        strconv.Itoa(lastShift.Task.ID),
+        strconv.Itoa(lastShift.Year.ID),
+        strconv.Itoa(lastShift.Date.ID),
+        strconv.Itoa(nextTimeID),
+        strconv.Itoa(lastShift.Weather.ID))
+    if err != nil {
+        return result
+    }
+
+    var members []entity.ShiftMember
+    for _, user := range nextUsers.Users {
+        // Grade情報を取得
+        var grade entity.Grade
+        gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
+        if err == nil {
+            err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
+        }
+        if err != nil {
+            grade.Grade = ""
+        }
+
+        // Bureau情報を取得
+        var bureau entity.Bureau
+        bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
+        if err == nil {
+            err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
+        }
+        if err != nil {
+            bureau.Bureau = ""
+        }
+
+        member := entity.ShiftMember{
+            Name:   user.Name,
+            Grade:  grade.Grade,
+            Bureau: bureau.Bureau,
+        }
+        members = append(members, member)
+    }
+    if members == nil {
+        members = []entity.ShiftMember{}
+    }
+
+    result.STime = nextStart
+    result.ETime = nextEnd
+    result.Members = members
 
     return result
 }
