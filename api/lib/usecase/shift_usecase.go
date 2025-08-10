@@ -775,7 +775,7 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeatherAndTime(c context.Context, 
 
 func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, userID string, dateID string, weatherID string) ([]entity.ShiftCard, error) {
     // グローバル変数を使わずローカル変数で処理
-    var shiftCards []entity.ShiftCard
+    shiftCards := make([]entity.ShiftCard, 0)
 
     // 新規ShiftCardリポジトリを使用してデータ取得
     shiftData, err := a.shiftCardRep.GetOptimizedShiftData(c, userID, dateID, weatherID)
@@ -793,8 +793,8 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
         if shift.Task.Task == "" || shift.Task.Task == "NG" {
             continue // スキップ
         }
-        validShifts = append(validShifts, shift)
-    }
+            validShifts = append(validShifts, shift)
+        }
 
     // タスクIDごとにグループ化し、連続性を判定
     taskGroups := make(map[int][]entity.Shift)
@@ -833,6 +833,7 @@ func (a *shiftUseCase) convertShiftCardDataToShifts(data []entity.ShiftCardData)
     var shifts []entity.Shift
 
     for _, d := range data {
+        yearInt, _ := strconv.Atoi(d.YearValue)
         shift := entity.Shift{
             ID: d.ShiftID,
             Task: entity.TaskMobile{
@@ -850,7 +851,7 @@ func (a *shiftUseCase) convertShiftCardDataToShifts(data []entity.ShiftCardData)
             },
             Year: entity.Year{
                 ID:   d.YearID,
-                Year: d.YearValue,
+                Year: yearInt,
             },
             Date: entity.Date{
                 ID:   d.DateID,

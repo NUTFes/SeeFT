@@ -1,6 +1,5 @@
 package entity
 
-import "time"
 
 type ShiftCardData struct {
     // Shiftテーブルのカラム
