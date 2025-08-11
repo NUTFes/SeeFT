@@ -3,9 +3,11 @@ import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/models/rescue.dart';
 import 'package:seeft_mobile/widgets/refresh_button.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
+import 'package:collection/collection.dart';
 
 // レスキューの一覧を取得する関数
-Future<List<RescueResponse>?> _getRescueResponses(int userID) async {
+// Future<List<RescueResponse>?> _getRescueResponses(int userID) async {
+Future<List<dynamic>?> _getRescueResponses(int userID) async {
   try {
     // API呼び出し
     final res = await api.getRescueResponses(userID);
@@ -14,11 +16,32 @@ Future<List<RescueResponse>?> _getRescueResponses(int userID) async {
       return []; // レスキューのレスポンスがない場合は空のリストを返す
     }
     logger.i('Rescue responses fetched successfully: $res');
-    return (res as List).map((item) => RescueResponse.fromJson(item)).toList();
+    return (res as List<dynamic>);
+    // return (res as List).map((item) => RescueResponse.fromJson(item)).toList();
   } catch (e) {
     logger.e('Failed to fetch rescue report: $e');
     return null; // エラーが発生した場合はnullを返す
   }
+}
+
+// キャッシュからデータをロードする関数
+List<dynamic>? _getCashedRescueResponses(int userID) {
+// List<dynamic>? _getCashedRescueResponses(int? userID) {
+  // キャッシュからデータを取得
+  logger.i('=== キャッシュからデータを取得します ===');
+  final List<dynamic>? cachedData = rescueBox.get('rescue_responses_by_${userID}');
+  logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');
+  
+  // キャッシュデータがない場合は表示データをnullに設定する
+  if (cachedData == null) {
+    logger.e('$userID のキャッシュデータがありません。');
+    return null;
+  }
+  
+  // キャッシュデータがある場合はそれを使用
+  logger.i('$userID のキャッシュデータを発見しました。');
+  
+  return cachedData; // キャッシュデータを返す
 }
 
 class RescueResponseTab extends StatefulWidget {
@@ -31,6 +54,7 @@ class RescueResponseTab extends StatefulWidget {
 class _RescueResponseTabState extends State<RescueResponseTab> {
   bool _isLoading = true; // 読み込み中のフラグ
   List<RescueResponse>? _rescueResponses; // レスキューのレスポンスを格納する変数
+  final deepEq = DeepCollectionEquality.unordered().equals; // キャッシュデータとフェッチデータの比較用の関数
   late int _userID; // ユーザIDを格納する変数
   
   
@@ -55,24 +79,46 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
   // 指定のユーザIDのレスキューのレスポンスを取得する関数
   Future<void> _loadRescueResponses(int userID) async {
     setState(() => _isLoading = true);  // ロード中フラグをtrueに設定
-    // API呼び出し
-    final fetchedData = await _getRescueResponses(userID);
     
-    // if (fetchedData == null || fetchedData.isEmpty) {
-    if (fetchedData == null) {
-      // レスキューのレスポンスがない場合はnullを設定
-      showCustomErrorSnackBar(context, "データの取得に失敗しました。");
-      setState(() {
-        _rescueResponses = null;
-        _isLoading = false; // ロード中フラグをfalseに設定
-      });
-      // データがない場合は処理を終了
+    // キャッシュからデータを取得
+    final List<dynamic>? cachedData = _getCashedRescueResponses(userID);
+    // キャッシュデータをList<RescueResponse>に変換
+    final List<RescueResponse>? cachedRescueResponses = cachedData != null
+        ? cachedData.map((item) => RescueResponse.fromJson(item)).toList()
+        : null;
+    
+    // 表示データをキャッシュデータで更新
+    setState(() {
+      _rescueResponses = cachedRescueResponses;
+    });
+    
+    // サーバーからデータを取得
+    final List<dynamic>? fetchedData = await _getRescueResponses(userID);
+    
+    // キャッシュデータとフェッチデータを比較
+    if (fetchedData == null || deepEq(fetchedData, cachedData)) {
+      // フェッチデータがnullまたはキャッシュデータと同じ場合は、キャッシュデータを使用
+      fetchedData == null
+        ? {
+          logger.w('フェッチデータが空です。キャッシュを使用します。'),
+          showCustomErrorSnackBar(context, 'データの取得に失敗しました。'), // スナックバーでエラーメッセージを表示
+        }
+        : logger.w('フェッチデータが既に最新です。キャッシュを使用します。');
+      setState(() => _isLoading = false);   // ロード中フラグをfalseに設定
       return;
     }
     
-    // レスキューのレスポンスを格納
+    // フェッチデータが新しい場合はキャッシュデータと表示データを更新
+    rescueBox.put('rescue_responses_by_${userID}', fetchedData); // hiveのキャッシュデータをフェッチデータで更新
+    
+    // フェッチデータをList<RescueResponse>に変換
+    final List<RescueResponse> fetchedRescueResponses = fetchedData
+        .map((item) => RescueResponse.fromJson(item))
+        .toList();
+    
+    // 表示データをフェッチデータで更新
     setState(() {
-      _rescueResponses = fetchedData; // レスキューのレスポンスを格納
+      _rescueResponses = fetchedRescueResponses;
       _isLoading = false; // ロード中フラグをfalseに設定
       logger.i('Rescue responses loaded successfully: $_rescueResponses');
     });
@@ -176,7 +222,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
                   + "送信者: " + res.userName + "\n"
                   + "発生タスク: " + res.content.task + "\n"
                   + "発生場所: " + res.content.place + "\n"
-                  + "発生時刻: " + res.time.toIso8601String();
+                  + "発生時刻: " + res.time;
         break;
       // 質問
       case 'question':
@@ -184,7 +230,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
         titleRescue = "【質問】" + res.content.question;
         subTitle = "対応番号: Q" + res.id.toString() + "\n"
                   + "送信者: " + res.userName + "\n"
-                  + "発生時刻: " + res.time.toIso8601String();
+                  + "発生時刻: " + res.time;
         break;
       // 人が来ない
       case 'shorthanded':
@@ -193,7 +239,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
         subTitle = "対応番号: S" + res.id.toString() + "\n"
                   + "送信者: " + res.userName + "\n"
                   + "送り先の場所: " + res.content.place + "\n"
-                  + "発生時刻: " + res.time.toIso8601String();
+                  + "発生時刻: " + res.time;
         break;
     }
     return ListTile(

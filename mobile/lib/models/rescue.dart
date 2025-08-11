@@ -15,7 +15,7 @@ abstract class RescueResponse {
   final String type;
   final int id;
   final String userName;
-  final DateTime time;
+  final String time;
   final String status;
   final String response;
 
@@ -28,7 +28,8 @@ abstract class RescueResponse {
     required this.response,
   });
 
-  factory RescueResponse.fromJson(Map<String, dynamic> json) {
+  // factory RescueResponse.fromJson(Map<String, dynamic> json) {
+  factory RescueResponse.fromJson(dynamic json) {
     switch (json['type']) {
       case 'trouble':
         return TroubleRescueResponse.fromJson(json);
@@ -56,7 +57,8 @@ class TroubleContent {
     required this.detail,
   });
   
-  factory TroubleContent.fromJson(Map<String, dynamic> json) {
+  // factory TroubleContent.fromJson(Map<String, dynamic> json) {
+  factory TroubleContent.fromJson(dynamic json) {
     return TroubleContent(
       task: json['task'],
       place: json['place'],
@@ -77,7 +79,7 @@ class TroubleRescueResponse extends RescueResponse {
   TroubleRescueResponse({
     required int id,
     required String userName,
-    required DateTime time,
+    required String time,
     required String status,
     required String response,
     required this.content,
@@ -90,12 +92,13 @@ class TroubleRescueResponse extends RescueResponse {
           response: response,
         );
 
-  factory TroubleRescueResponse.fromJson(Map<String, dynamic> json) {
+  // factory TroubleRescueResponse.fromJson(Map<String, dynamic> json) {
+  factory TroubleRescueResponse.fromJson(dynamic json) {
     print(json);
     return TroubleRescueResponse(
       id: json['id'],
       userName: json['user_name'],
-      time: DateUtil.parseCustomDate(json['time']), // 共通パーサーを使用
+      time: json['time'],
       status: json['status'],
       response: json['response'],
       content: TroubleContent.fromJson(json['content']),
@@ -107,7 +110,7 @@ class TroubleRescueResponse extends RescueResponse {
         'type': type,
         'id': id,
         'user_name': userName,
-        'time': time.toIso8601String(),
+        'time': time,
         'status': status,
         'response': response,
         'content': content.toJson(),
@@ -120,7 +123,8 @@ class QuestionContent {
 
   QuestionContent({required this.question});
 
-  factory QuestionContent.fromJson(Map<String, dynamic> json) {
+  // factory QuestionContent.fromJson(Map<String, dynamic> json) {
+  factory QuestionContent.fromJson(dynamic json) {
     return QuestionContent(
       question: json['question'],
     );
@@ -137,7 +141,7 @@ class QuestionRescueResponse extends RescueResponse {
   QuestionRescueResponse({
     required int id,
     required String userName,
-    required DateTime time,
+    required String time,
     required String status,
     required String response,
     required this.content,
@@ -150,13 +154,14 @@ class QuestionRescueResponse extends RescueResponse {
           response: response,
         );
 
-  factory QuestionRescueResponse.fromJson(Map<String, dynamic> json) {
+  // factory QuestionRescueResponse.fromJson(Map<String, dynamic> json) {
+  factory QuestionRescueResponse.fromJson(dynamic json) {
     return QuestionRescueResponse(
       id: json['id'],
-      userName: json['user_name'] ?? '',
-      time: DateUtil.parseCustomDate(json['time']), // 共通パーサーを使用
-      status: json['status'] ?? '',
-      response: json['response'] ?? '',
+      userName: json['user_name'],
+      time: json['time'],
+      status: json['status'],
+      response: json['response'],
       content: QuestionContent.fromJson(json['content']),
     );
   }
@@ -166,7 +171,7 @@ class QuestionRescueResponse extends RescueResponse {
         'type': type,
         'id': id,
         'user_name': userName,
-        'time': time.toIso8601String(),
+        'time': time,
         'status': status,
         'response': response,
         'content': content.toJson(),
@@ -185,7 +190,8 @@ class ShorthandedContent {
     required this.place,
   });
 
-  factory ShorthandedContent.fromJson(Map<String, dynamic> json) {
+  // factory ShorthandedContent.fromJson(Map<String, dynamic> json) {
+  factory ShorthandedContent.fromJson(dynamic json) {
     return ShorthandedContent(
       task: json['task'],
       missingNumber: json['missing_number'],
@@ -206,7 +212,7 @@ class ShorthandedRescueResponse extends RescueResponse {
   ShorthandedRescueResponse({
     required int id,
     required String userName,
-    required DateTime time,
+    required String time,
     required String status,
     required String response,
     required this.content,
@@ -219,11 +225,13 @@ class ShorthandedRescueResponse extends RescueResponse {
           response: response,
         );
 
-  factory ShorthandedRescueResponse.fromJson(Map<String, dynamic> json) {
+  // factory ShorthandedRescueResponse.fromJson(Map<String, dynamic> json) {
+  factory ShorthandedRescueResponse.fromJson(dynamic json) {
     return ShorthandedRescueResponse(
       id: json['id'],
       userName: json['user_name'],
-      time: DateUtil.parseCustomDate(json['time']), // 共通パーサーを使用
+      // time: DateUtil.parseCustomDate(json['time']), // 共通パーサーを使用
+      time: json['time'], // 共通パーサーを使用
       status: json['status'],
       response: json['response'],
       content: ShorthandedContent.fromJson(json['content']),
@@ -235,7 +243,7 @@ class ShorthandedRescueResponse extends RescueResponse {
         'type': type,
         'id': id,
         'user_name': userName,
-        'time': time.toIso8601String(),
+        'time': time,
         'status': status,
         'response': response,
         'content': content.toJson(),
@@ -243,26 +251,26 @@ class ShorthandedRescueResponse extends RescueResponse {
 }
 
 
-// 日付のパースを行うユーティリティクラス
-class DateUtil {
-  static DateTime parseCustomDate(String? dateString) {
-    if (dateString == null || dateString.isEmpty) {
-      return DateTime.now();
-    }
+// // 日付のパースを行うユーティリティクラス
+// class DateUtil {
+//   static DateTime parseCustomDate(String? dateString) {
+//     if (dateString == null || dateString.isEmpty) {
+//       return DateTime.now();
+//     }
     
-    try {
-      // 複数の形式に対応
-      if (dateString.contains('/')) {
-        // "2025/08/09 19:31:48" → "2025-08-09 19:31:48"
-        String normalizedDate = dateString.replaceAll('/', '-');
-        return DateTime.parse(normalizedDate);
-      } else {
-        // 通常のISO形式
-        return DateTime.parse(dateString);
-      }
-    } catch (e) {
-      print('Date parsing error: $e for date string: $dateString');
-      return DateTime.now();
-    }
-  }
-}
+//     try {
+//       // 複数の形式に対応
+//       if (dateString.contains('/')) {
+//         // "2025/08/09 19:31:48" → "2025-08-09 19:31:48"
+//         String normalizedDate = dateString.replaceAll('/', '-');
+//         return DateTime.parse(normalizedDate);
+//       } else {
+//         // 通常のISO形式
+//         return DateTime.parse(dateString);
+//       }
+//     } catch (e) {
+//       print('Date parsing error: $e for date string: $dateString');
+//       return DateTime.now();
+//     }
+//   }
+// }
