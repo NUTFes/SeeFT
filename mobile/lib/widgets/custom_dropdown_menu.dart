@@ -18,6 +18,7 @@ class CustomDropdownMenu<T> extends StatelessWidget {
     return DropdownMenu<T>(
       dropdownMenuEntries: dropdownMenuEntries,
       initialSelection: initialSelection,
+      enableFilter: true, // フィルター機能を有効にする
       onSelected: onSelected,
       // 共通のstyleをここで適用
       textStyle: const TextStyle(
