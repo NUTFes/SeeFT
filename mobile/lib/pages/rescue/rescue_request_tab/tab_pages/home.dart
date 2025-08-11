@@ -172,7 +172,7 @@ class RescueRequestTabHome extends StatelessWidget {
                         children: [
                           Text(
                             // 電話番号をハイフンありの形式に変換
-                            "委員長 太閤良樹\n" + chairpersonPhoneNumber.replaceAllMapped(
+                            chairpersonName + "\n" + chairpersonPhoneNumber.replaceAllMapped(
                               RegExp(r'(\d{3})(\d{4})(\d{4})'),
                               (Match m) => '${m[1]}-${m[2]}-${m[3]}',
                             ),
