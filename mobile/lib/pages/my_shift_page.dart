@@ -1,6 +1,8 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/widgets/shift_card.dart';
 import 'package:collection/collection.dart';
+import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
+import 'package:seeft_mobile/widgets/refresh_button.dart';
 
 
 Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
@@ -188,7 +190,7 @@ class _MyShiftPageState extends State<MyShiftPage>
         fetchedData == null
           ? {
             logger.w('フェッチデータが空です。キャッシュを使用します。'),
-            _showErrorSnackbar('データの取得に失敗しました。'), // スナックバーでエラーメッセージを表示
+            showCustomErrorSnackBar(context, 'データの取得に失敗しました。'), // スナックバーでエラーメッセージを表示
           }
           : logger.w('フェッチデータが既に最新です。キャッシュを使用します。');
         setState(() => isLoading = false);   // ロード中フラグをfalseに設定
@@ -206,31 +208,6 @@ class _MyShiftPageState extends State<MyShiftPage>
         isLoading = false; // ロード中フラグをfalseに設定
       });
     });
-  }
-  
-  // スナックバーでエラーメッセージを表示する関数
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.warning, color: AppColors.textWhite, size: 16),
-            const SizedBox(width: 8),
-            Text(
-              message,
-              style: TextStyle(
-                color: AppColors.textWhite,
-                fontSize: AppFontSizes.sm,
-              )),
-          ],
-        ),
-        backgroundColor: AppColors.error,
-        duration: Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   @override
@@ -270,7 +247,10 @@ class _MyShiftPageState extends State<MyShiftPage>
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             // 更新ボタン
-            child: _refreshButton(),
+            child: RefreshButton(
+              onPressed: _handleRefreshPressed, 
+              isLoading: isLoading
+            ),
           ),
           Expanded(
             // タブの内容を表示するTabBarView
@@ -416,40 +396,6 @@ class _MyShiftPageState extends State<MyShiftPage>
           );
         }
       })
-    );
-  }
-  
-  
-  // 更新ボタン
-  Widget _refreshButton() {
-    return ElevatedButton.icon(
-      onPressed: isLoading ? null : _handleRefreshPressed, // ロード中はボタンを無効化
-      icon: Icon(
-        Icons.refresh,
-        color: isLoading? AppColors.grayDark: AppColors.main,
-        size: 16,
-      ),
-      label: Text(
-        isLoading? "読み込み中...": "更新",
-        style: TextStyle(
-          color: isLoading? AppColors.grayDark: AppColors.main,
-          fontSize: AppFontSizes.sm,
-          // fontWeight: FontWeight.bold,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.base,
-        disabledBackgroundColor: AppColors.base,
-        elevation: 0,
-        side: BorderSide(
-          color: isLoading? AppColors.grayDark: AppColors.main,
-          width: 1.0,
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100.0),
-        ),
-      ),
     );
   }
 }
