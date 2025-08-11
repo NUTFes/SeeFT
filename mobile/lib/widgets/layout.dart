@@ -3,8 +3,8 @@ import 'package:seeft_mobile/theme/tokens.dart';
 import 'package:seeft_mobile/widgets/app_bar.dart';
 import 'package:seeft_mobile/pages/my_shift_page.dart';
 import 'package:seeft_mobile/pages/manual_list_page.dart';
-import 'package:seeft_mobile/pages/contact_page.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
+import 'package:seeft_mobile/pages/rescue/rescue_page.dart';
 
 class Layout extends StatefulWidget {
   const Layout({Key? key}) : super(key: key);
@@ -19,15 +19,15 @@ class _LayoutState extends State<Layout> {
   final _pages = <Widget>[
     MyShiftPage(),    // マイシフト
     ManualListPage(), // マニュアル
-    ContactPage(),    // 緊急時対応
+    RescuePage(),     // 緊急時対応
     WaitPage(),       // 仮のページ(後で「その他」に差し替える)
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _currentPageIndex == 0 ? null : CustomAppBar(  // マイシフト以外のページの場合はアプリバーを表示
-        title: _currentPageIndex == 1 ? 'マニュアル' : _currentPageIndex == 2 ? '緊急時対応' : 'その他',
+      appBar: _currentPageIndex == 0 || _currentPageIndex == 2 ? null : CustomAppBar(  // マイシフト以外のページの場合はアプリバーを表示
+        title: _currentPageIndex == 1 ? 'マニュアル' : 'その他',
       ),
       bottomNavigationBar: SizedBox(
         height: 78, // ナビゲーションバーの高さを設定
