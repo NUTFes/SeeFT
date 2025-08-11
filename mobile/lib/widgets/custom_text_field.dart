@@ -7,6 +7,7 @@ class CustomTextField extends StatelessWidget {
   final String? labelText;
   final ValueChanged<String>? onChanged;
   final bool obscureText;
+  final TextInputType? keyboardType;
 
   const CustomTextField({
     super.key,
@@ -15,6 +16,7 @@ class CustomTextField extends StatelessWidget {
     this.labelText,
     this.onChanged,
     this.obscureText = false,
+    this.keyboardType,
   });
 
   @override
@@ -23,7 +25,11 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText, // パスワード入力などで使用
       onChanged: onChanged,
-      
+      keyboardType: keyboardType,
+      // keyboardTypeがTextInputType.numberの場合数字のみの入力に制限する
+      inputFormatters: keyboardType == TextInputType.number ? <TextInputFormatter>[
+        FilteringTextInputFormatter.digitsOnly,
+      ] : null,
       // 共通のスタイルをここで適用
       cursorColor: AppColors.main, 
       style: const TextStyle(
