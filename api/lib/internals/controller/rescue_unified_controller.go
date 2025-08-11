@@ -1,10 +1,9 @@
 package controller
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
@@ -62,6 +61,7 @@ type RescueUnifiedController interface {
 	CreateRescue(echo.Context) error
 	GetAllRescues(echo.Context) error
 	GetRescuesByUserID(echo.Context) error
+	
 }
 
 func NewRescueUnifiedController(
@@ -206,6 +206,7 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 			"grade": commonInfo.Grade,
 			"bureau": commonInfo.Bureau,
 			"answered_at": commonInfo.AnsweredAt,
+			"task_id": contentMap["task_id"],
 			"place": contentMap["place"],
 			"task_name": commonInfo.TaskName,
 			"detail": contentMap["detail"],
@@ -244,6 +245,7 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 			"grade": commonInfo.Grade,
 			"bureau": commonInfo.Bureau,
 			"answered_at": commonInfo.AnsweredAt,
+			"task_id": contentMap["task_id"],
 			"place": contentMap["place"],
 			"task_name": commonInfo.TaskName,
 			"missing_number": contentMap["missing_number"],
@@ -252,38 +254,65 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid rescue type"})
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	var dbErr, sheetErr error
 	var createdRescue interface{}
+	var rescueID int
 
-	// DB保存
-	go func() {
-		defer wg.Done()
-		switch req.Type {
-		case "trouble":
-			dbErr = r.handleTroubleRescue(c, req, userIDStr)
-		case "question":
-			dbErr = r.handleQuestionRescue(c, req, userIDStr)
-		case "shorthanded":
-			dbErr = r.handleShorthandedRescue(c, req, userIDStr)
-		default:
-			dbErr = c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid rescue type"})
+	// DB保存（順次処理）
+	switch req.Type {
+	case "trouble":
+		result, err := r.troubleRescueUseCase.CreateTroubleRescue(
+			c.Request().Context(),
+			userIDStr,
+			fmt.Sprintf("%v", rescueData["task_id"]),
+			rescueData["place"].(string),
+			rescueData["detail"].(string),
+			"todo",
+		)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-	}()
-
-	// スプシ保存
-	go func() {
-		defer wg.Done()
-		sheetErr = r.rescueUnifiedUseCase.SaveRescueToSpreadsheet(rescueData)
-	}()
-
-	wg.Wait()
-
-	if dbErr != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": dbErr.Error()})
+		createdRescue = result
+		if result != nil {
+			rescueID = result.ID
+		}
+		
+	case "question":
+		result, err := r.questionRescueUseCase.CreateQuestionRescue(
+			c.Request().Context(),
+			userIDStr,
+			rescueData["question"].(string),
+			"todo",
+		)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		createdRescue = result
+		if result != nil {
+			rescueID = result.ID
+		}
+	case "shorthanded":
+		result, err := r.shorthandedRescueUseCase.CreateShorthandedRescue(
+			c.Request().Context(),
+			userIDStr,
+			fmt.Sprintf("%v", rescueData["task_id"]),
+			fmt.Sprintf("%v", rescueData["missing_number"]),
+			rescueData["place"].(string),
+			"todo",
+		)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		createdRescue = result
+		if result != nil {
+			rescueID = result.ID
+		}
+	default:
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid rescue type"})
 	}
+
+	// GAS（スプシ）保存
+	rescueData["rescue_id"] = rescueID
+	sheetErr := r.rescueUnifiedUseCase.SaveRescueToSpreadsheet(rescueData)
 	if sheetErr != nil {
 		// スプシ保存失敗は警告として返す
 		return c.JSON(http.StatusOK, map[string]interface{}{
@@ -296,119 +325,6 @@ func (r *rescueUnifiedController) CreateRescue(c echo.Context) error {
 	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"message": "Rescue saved to DB and spreadsheet successfully",
 		"data":    createdRescue,
-	})
-}
-
-func (r *rescueUnifiedController) handleTroubleRescue(c echo.Context, req RescueRequest, userIDStr string) error {
-	// content をTroubleContentに変換
-	contentBytes, err := json.Marshal(req.Content)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid trouble content"})
-	}
-
-	var content TroubleContent
-	if err := json.Unmarshal(contentBytes, &content); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid trouble content format"})
-	}
-
-	// バリデーション
-	if content.TaskID <= 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid task ID"})
-	}
-	if content.Detail == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Detail is required"})
-	}
-
-	taskIDStr := strconv.Itoa(content.TaskID)
-	createdTroubleRescue, err := r.troubleRescueUseCase.CreateTroubleRescue(
-		c.Request().Context(),
-		userIDStr,
-		taskIDStr,
-		content.Place,
-		content.Detail,
-		"todo",
-	)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-
-	return c.JSON(http.StatusCreated, map[string]interface{}{
-		"message": "Trouble rescue created successfully",
-		"data":    createdTroubleRescue,
-	})
-}
-
-func (r *rescueUnifiedController) handleQuestionRescue(c echo.Context, req RescueRequest, userIDStr string) error {
-	// content をQuestionContentに変換
-	contentBytes, err := json.Marshal(req.Content)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid question content"})
-	}
-
-	var content QuestionContent
-	if err := json.Unmarshal(contentBytes, &content); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid question content format"})
-	}
-
-	// バリデーション
-	if content.Question == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Question is required"})
-	}
-
-	createdQuestionRescue, err := r.questionRescueUseCase.CreateQuestionRescue(
-		c.Request().Context(),
-		userIDStr,
-		content.Question,
-		"todo",
-	)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-
-	return c.JSON(http.StatusCreated, map[string]interface{}{
-		"message": "Question rescue created successfully",
-		"data":    createdQuestionRescue,
-	})
-}
-
-func (r *rescueUnifiedController) handleShorthandedRescue(c echo.Context, req RescueRequest, userIDStr string) error {
-	// content をShorthandedContentに変換
-	contentBytes, err := json.Marshal(req.Content)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid shorthanded content"})
-	}
-
-	var content ShorthandedContent
-	if err := json.Unmarshal(contentBytes, &content); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid shorthanded content format"})
-	}
-
-	// バリデーション
-	if content.TaskID <= 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid task ID"})
-	}
-	if content.MissingNumber <= 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing number must be greater than 0"})
-	}
-
-	taskIDStr := strconv.Itoa(content.TaskID)
-	missingNumberStr := strconv.Itoa(content.MissingNumber)
-
-	createdShorthandedRescue, err := r.shorthandedRescueUseCase.CreateShorthandedRescue(
-		c.Request().Context(),
-		userIDStr,
-		taskIDStr,
-		missingNumberStr,
-		content.Place,
-		"todo",
-	)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-
-	return c.JSON(http.StatusCreated, map[string]interface{}{
-		"message": "Shorthanded rescue created successfully",
-		"data":    createdShorthandedRescue,
 	})
 }
 
