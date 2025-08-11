@@ -3,14 +3,21 @@ import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/models/rescue.dart';
 import 'package:seeft_mobile/widgets/refresh_button.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
+import 'package:seeft_mobile/widgets/custom_dropdown_button.dart';
 import 'package:collection/collection.dart';
 
 // レスキューの一覧を取得する関数
-// Future<List<RescueResponse>?> _getRescueResponses(int userID) async {
-Future<List<dynamic>?> _getRescueResponses(int userID) async {
+Future<List<dynamic>?> _getRescueResponses(int? userID) async {
   try {
+    dynamic res;
     // API呼び出し
-    final res = await api.getRescueResponses(userID);
+    if (userID == null) {
+      // userIDがnullの場合は全てのレスキューのレスポンスを取得
+      res = await api.getAllRescueResponses();
+    } else {
+      res = await api.getRescueResponses(userID);
+    }
+    // final res = await api.getRescueResponses(userID);
     if (res == null || res.isEmpty) {
       logger.i('No rescue responses found.');
       return []; // レスキューのレスポンスがない場合は空のリストを返す
@@ -25,11 +32,17 @@ Future<List<dynamic>?> _getRescueResponses(int userID) async {
 }
 
 // キャッシュからデータをロードする関数
-List<dynamic>? _getCashedRescueResponses(int userID) {
-// List<dynamic>? _getCashedRescueResponses(int? userID) {
+List<dynamic>? _getCashedRescueResponses(int? userID) {
   // キャッシュからデータを取得
   logger.i('=== キャッシュからデータを取得します ===');
-  final List<dynamic>? cachedData = rescueBox.get('rescue_responses_by_${userID}');
+  List<dynamic>? cachedData;
+  if (userID == null) {
+    // userIDがnullの場合は全てのレスキューのレスポンスを取得
+    cachedData = rescueBox.get('all_rescue_responses');
+  } else {
+    cachedData = rescueBox.get('rescue_responses_by_${userID}');
+  }
+  // final List<dynamic>? cachedData = rescueBox.get('rescue_responses_by_${userID}');
   logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');
   
   // キャッシュデータがない場合は表示データをnullに設定する
@@ -52,6 +65,7 @@ class RescueResponseTab extends StatefulWidget {
 }
 
 class _RescueResponseTabState extends State<RescueResponseTab> {
+  String _selectedFilter = 'my'; // 選択されたフィルターの値
   bool _isLoading = true; // 読み込み中のフラグ
   List<RescueResponse>? _rescueResponses; // レスキューのレスポンスを格納する変数
   final deepEq = DeepCollectionEquality.unordered().equals; // キャッシュデータとフェッチデータの比較用の関数
@@ -77,7 +91,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
   
   
   // 指定のユーザIDのレスキューのレスポンスを取得する関数
-  Future<void> _loadRescueResponses(int userID) async {
+  Future<void> _loadRescueResponses(int? userID) async {
     setState(() => _isLoading = true);  // ロード中フラグをtrueに設定
     
     // キャッシュからデータを取得
@@ -109,7 +123,14 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
     }
     
     // フェッチデータが新しい場合はキャッシュデータと表示データを更新
-    rescueBox.put('rescue_responses_by_${userID}', fetchedData); // hiveのキャッシュデータをフェッチデータで更新
+    if (userID == null) {
+      // ユーザIDがnullの場合は全てのレスキューのレスポンスを更新
+      rescueBox.put('all_rescue_responses', fetchedData); // hiveのキャッシュデータをフェッチデータで更新
+    } else {
+      // ユーザIDが指定されている場合は、ユーザIDに紐づくキャッシュデータを更新
+      logger.i('Updating cache for user ID: $userID');
+    }
+    // rescueBox.put('rescue_responses_by_${userID}', fetchedData); // hiveのキャッシュデータをフェッチデータで更新
     
     // フェッチデータをList<RescueResponse>に変換
     final List<RescueResponse> fetchedRescueResponses = fetchedData
@@ -125,20 +146,63 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
     return;
   }
   
-  // 更新ボタンが押されたときの処理
-  Future<void> _handleRefreshPressed() async {
+  // データを更新する処理
+  Future<void> _handleRefresh() async {
     // レスキューのレスポンスを再取得
-    await _loadRescueResponses(_userID);
+    if(_selectedFilter == 'my') {
+      // 自分が送信したレスキューのみを取得
+      await _loadRescueResponses(_userID);
+    } else {
+      // 全てのレスキューを取得
+      await _loadRescueResponses(null);
+    }
+    // await _loadRescueResponses(_userID);
   }
   
   
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(top: 32.0, left: 32.0, right: 32.0, bottom: 16.0),
+      padding: EdgeInsets.only(top: 16.0, left: 32.0, right: 32.0, bottom: 16.0),
       child: Column(
         spacing: 8.0,  // 子要素間のスペース
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            spacing: 8.0,
+            children: [
+              Text(
+                "表示範囲",
+                style: TextStyle(
+                  fontSize: AppFontSizes.md,
+                  color: AppColors.grayDark,
+                ),
+              ),
+              Expanded(
+                child: CustomDropdownButton(
+                  value: _selectedFilter,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'my',
+                      child: Text("自分が送信したレスキュー"),
+                    ),
+                    DropdownMenuItem(
+                      value: 'all',
+                      child: Text("全てのレスキュー"),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    // 選択された値に応じて表示データをフィルタリング
+                    setState(() {
+                      _selectedFilter = value ?? 'my';
+                      _handleRefresh(); // フィルター変更時にデータを再取得
+                    });
+                  },
+                  isDense: true, // 高さをコンパクトにする
+                ),
+              ),
+            ],
+          ),
           if (_rescueResponses == null || _rescueResponses!.isEmpty) ...[
             Expanded(
               child: Center(
@@ -199,7 +263,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
           ),
           // 更新ボタン
           RefreshButton(
-            onPressed: _handleRefreshPressed, 
+            onPressed: _handleRefresh, 
             isLoading: _isLoading
           ),
         ],
