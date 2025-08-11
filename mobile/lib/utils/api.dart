@@ -1,6 +1,7 @@
 // import 'package:http/io_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:seeft_mobile/configs/importer.dart';
+// import 'package:seeft_mobile/models/rescue.dart';
 
 final Api api = Api();
 
@@ -331,6 +332,22 @@ class Api {
     } catch (e) {
       logger.e('failed got.');
       throw Exception('Failed GET in Api.getTasksByUserID()');
+    }
+  }
+  
+  // レスキューの一覧を取得する
+  // Future<List<RescueResponse>> getRescueResponses(int userId) async {
+  Future getRescueResponses(int userID) async {
+    var url = constant.apiUrl + "/rescues/users/" + userID.toString();
+    try {
+      logger.i(url);
+      var res = await get(url);
+      logger.i(res);
+      // return (res as List).map((item) => RescueResponse.fromJson(item)).toList();
+      return res;
+    } catch (e) {
+      logger.e('failed got:' + e.toString());
+      throw Exception('Failed GET in Api.getRescueResponses()');
     }
   }
   
