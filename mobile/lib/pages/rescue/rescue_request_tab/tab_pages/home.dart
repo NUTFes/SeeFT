@@ -5,6 +5,9 @@ import 'package:seeft_mobile/pages/rescue/rescue_request_tab/tab_pages/select_ty
 
 // レスキューを送信するタブのホーム画面
 class RescueRequestTabHome extends StatelessWidget {
+  // 環境変数から委員長の名前と電話番号を取得
+  final String chairpersonName = constant.chairpersonName;
+  final String chairpersonPhoneNumber = constant.chairpersonPhoneNumber;
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -168,8 +171,11 @@ class RescueRequestTabHome extends StatelessWidget {
                         spacing: 8.0,  // 子要素間のスペース
                         children: [
                           Text(
-                            //todo: envから読み込むようにする
-                            "委員長 太閤良樹\n000-0000-0000",
+                            // 電話番号をハイフンありの形式に変換
+                            "委員長 太閤良樹\n" + chairpersonPhoneNumber.replaceAllMapped(
+                              RegExp(r'(\d{3})(\d{4})(\d{4})'),
+                              (Match m) => '${m[1]}-${m[2]}-${m[3]}',
+                            ),
                             style: TextStyle(
                               fontSize: AppFontSizes.md,
                               color: AppColors.error,
@@ -177,8 +183,8 @@ class RescueRequestTabHome extends StatelessWidget {
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              //todo: 電話アプリを開く
-                              _openPhoneApp("00000000000");
+                              // 電話アプリを開く
+                              _openPhoneApp(chairpersonPhoneNumber);
                               logger.i("電話が掛けられました");
                             },
                             style: ElevatedButton.styleFrom(
