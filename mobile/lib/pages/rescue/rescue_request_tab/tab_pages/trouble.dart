@@ -1,7 +1,7 @@
 // トラブルのレスキューを送信するページ
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/models/rescue.dart';
-import 'package:seeft_mobile/widgets/custom_dropdown_menu.dart';
+import 'package:seeft_mobile/widgets/custom_dropdown_button.dart';
 import 'package:seeft_mobile/widgets/custom_text_field.dart';
 import 'package:seeft_mobile/widgets/custom_elevated_button.dart';
 import 'package:seeft_mobile/widgets/custom_elevated_button_outlined.dart';
@@ -210,9 +210,10 @@ class RescueRequestTabTroublePage extends StatelessWidget {
           );
         } else {
           final tasks = snapshot.data as List<RescueTaskDropdownMenuItem>;
-          final dropdownMenuEntries = tasks.map((task) => DropdownMenuEntry<String>(
+          // ドロップダウンの選択肢を作成
+          final dropdownMenuItems = tasks.map((task) => DropdownMenuItem<String>(
             value: task.id.toString(),
-            label: task.taskName,
+            child: Text(task.taskName),
           )).toList();
           // トラブルのレスキューを送信する画面
           return Column(
@@ -250,22 +251,24 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                         ),
                         StatefulBuilder(
                           builder: (context, setState) {
-                            return CustomDropdownMenu<String>(
-                              dropdownMenuEntries: dropdownMenuEntries,
-                              initialSelection: _selectedTask.id.toString(),
-                              onSelected: (value) {
+                            return CustomDropdownButton<String>(
+                              value: _selectedTask.id.toString(),
+                              items: dropdownMenuItems,
+                              isDense: true, // 高さをコンパクトにする
+                              onChanged: (value) {
                                 setState(() {
                                   // 選択されたタスクを更新
                                   _selectedTask = tasks.firstWhere(
                                     (task) => task.id.toString() == value,
                                     orElse: () => RescueTaskDropdownMenuItem(
                                       id: 0, // タスク外
-                                      taskName: 'タスク外',
+                                      taskName: 'タスクを選択してください',
                                     ),
                                   );
                                 });
-                                print('Selected: $value');
+                                logger.i("選択されたタスク: ${_selectedTask.taskName}");
                               },
+                              hintText: 'タスクを選択してください',
                             );
                           },
                         ),
