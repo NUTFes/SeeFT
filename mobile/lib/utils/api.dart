@@ -335,8 +335,7 @@ class Api {
     }
   }
   
-  // レスキューの一覧を取得する
-  // Future<List<RescueResponse>> getRescueResponses(int userId) async {
+  // IDで指定したユーザが送信したレスキューの一覧を取得する
   Future getRescueResponses(int userID) async {
     var url = constant.apiUrl + "/rescues/users/" + userID.toString();
     try {
@@ -348,6 +347,20 @@ class Api {
     } catch (e) {
       logger.e('failed got:' + e.toString());
       throw Exception('Failed GET in Api.getRescueResponses()');
+    }
+  }
+  
+  // レスキューの一覧を取得する
+  Future getAllRescueResponses() async {
+    var url = constant.apiUrl + "/rescues";
+    try {
+      logger.i(url);
+      var res = await get(url);
+      logger.i(res);
+      return res;
+    } catch (e) {
+      logger.e('failed got:' + e.toString());
+      throw Exception('Failed GET in Api.getAllRescueResponses()');
     }
   }
   
