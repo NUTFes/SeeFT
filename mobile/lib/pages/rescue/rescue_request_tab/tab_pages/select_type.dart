@@ -90,7 +90,12 @@ class RescueRequestTabSelectTypePage extends StatelessWidget {
                         onTap: () {
                           // 問題の種類が選択されたときの処理
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => _listItems[index]['page']),
+                            // アニメーションなしで画面遷移
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => _listItems[index]['page'],
+                              transitionDuration: Duration.zero,        // 遷移アニメーション時間 0
+                              reverseTransitionDuration: Duration.zero, // 戻るときもアニメーション 0
+                            ),
                           );
                           logger.i("問題の種類が選択されました");
                         },

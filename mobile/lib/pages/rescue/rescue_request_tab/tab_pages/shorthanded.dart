@@ -98,7 +98,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
       return true;
     } catch (e) {
       logger.e('Failed to send shorthanded report: $e');
-      showCustomErrorSnackBar(context, "レスキューを送信できませんでした");
+      showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
       return false;
     }
   }
@@ -150,7 +150,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                   color: AppColors.grayLight,
                   thickness: 1.0,
                 ),
-                SizedBox(height: 16.0), // スペースを追加
+                SizedBox(height: 8.0), // スペースを追加
                 // 戻るボタン
                 CustomElevatedButtonOutlined(
                   onPressed: () {
@@ -198,7 +198,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                   color: AppColors.grayLight,
                   thickness: 1.0,
                 ),
-                SizedBox(height: 16.0), // スペースを追加
+                SizedBox(height: 8.0), // スペースを追加
                 // 戻るボタン
                 CustomElevatedButtonOutlined(
                   onPressed: () {

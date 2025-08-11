@@ -36,7 +36,7 @@ class RescueRequestTabQuestionPage extends StatelessWidget {
       return true;
     } catch (e) {
       logger.e('Failed to send question report: $e');
-      showCustomErrorSnackBar(context, "レスキューを送信できませんでした");
+      showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
       return false;
     }
   }

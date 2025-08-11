@@ -95,7 +95,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
       return true;
     } catch (e) {
       logger.e('Failed to send trouble report: $e');
-      showCustomErrorSnackBar(context, "レスキューを送信できませんでした");
+      showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
       return false;
     }
   }
@@ -147,7 +147,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                   color: AppColors.grayLight,
                   thickness: 1.0,
                 ),
-                SizedBox(height: 16.0), // スペースを追加
+                SizedBox(height: 8.0), // スペースを追加
                 // 戻るボタン
                 CustomElevatedButtonOutlined(
                   onPressed: () {
@@ -195,7 +195,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                   color: AppColors.grayLight,
                   thickness: 1.0,
                 ),
-                SizedBox(height: 16.0), // スペースを追加
+                SizedBox(height: 8.0), // スペースを追加
                 // 戻るボタン
                 CustomElevatedButtonOutlined(
                   onPressed: () {

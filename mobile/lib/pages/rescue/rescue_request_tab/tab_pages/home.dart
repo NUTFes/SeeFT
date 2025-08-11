@@ -74,7 +74,12 @@ class RescueRequestTabHome extends StatelessWidget {
                       onPressed: () {
                         // 問題の種類の選択画面に遷移
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => RescueRequestTabSelectTypePage()),
+                          PageRouteBuilder(
+                            // アニメーションなしで画面遷移
+                            pageBuilder: (context, animation, secondaryAnimation) => RescueRequestTabSelectTypePage(),
+                            transitionDuration: Duration.zero,        // 遷移アニメーション時間 0
+                            reverseTransitionDuration: Duration.zero, // 戻るときもアニメーション 0
+                          ),
                         );
                         logger.i("レスキュー送信ボタンが押されました");
                       },
