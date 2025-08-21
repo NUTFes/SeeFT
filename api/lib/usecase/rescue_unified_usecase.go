@@ -1,8 +1,13 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
 	"sort"
 	"strconv"
 
@@ -22,6 +27,7 @@ type rescueUnifiedUseCase struct {
 type RescueUnifiedUseCase interface {
 	GetAllRescues(context.Context) ([]entity.RescueResponse, error)
 	GetRescuesByUserID(context.Context, string) ([]entity.RescueResponse, error)
+	SaveRescueToSpreadsheet(map[string]interface{}) error
 }
 
 func NewRescueUnifiedUseCase(
@@ -261,4 +267,49 @@ func (ru *rescueUnifiedUseCase) getTaskName(c context.Context, taskID string) (s
 	}
 
 	return task, nil
+}
+
+// スプシ保存用関数（Google Sheets APIのラッパーを想定）
+func (ru *rescueUnifiedUseCase) SaveRescueToSpreadsheet(data map[string]interface{}) error {
+	// Google Sheets APIで保存処理
+	// GAS送信
+	err := ru.SendRescueToGAS(data)
+	if err != nil {
+		fmt.Println("GAS送信失敗:", err)
+		return err
+	}
+	return nil
+}
+
+// GAS送信関数
+func (ru *rescueUnifiedUseCase) SendRescueToGAS(data map[string]interface{}) error {
+	// GASのURLを環境変数から取得
+	gasURL := os.Getenv("RESCUE_GAS_URL")
+	if gasURL == "" {
+		return errors.New("GAS URLが設定されていません (RESCUE_GAS_URL)")
+	}
+
+	// JSONに変換
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "レスキューデータのJSON変換失敗")
+	}
+
+	req, err := http.NewRequest("POST", gasURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return errors.Wrap(err, "GASリクエスト作成失敗")
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "GASへの送信失敗")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("GASが非OKステータスを返しました: %d", resp.StatusCode)
+	}
+	return nil
 }

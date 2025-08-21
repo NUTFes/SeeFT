@@ -130,7 +130,6 @@ func (tu *troubleRescueUseCase) CreateTroubleRescue(c context.Context, userID st
 	if status == "" {
 		status = "todo"
 	}
-
 	// 数値チェック
 	if _, err := strconv.Atoi(userID); err != nil {
 		return nil, errors.New("invalid user ID")
