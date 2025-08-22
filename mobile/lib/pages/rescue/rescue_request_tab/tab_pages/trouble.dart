@@ -111,7 +111,9 @@ class RescueRequestTabTroublePage extends StatelessWidget {
     String _detail = '';
     // 発生場所を格納する変数
     String _place = '';
-    
+    // 送信中かどうかを示す変数
+    bool _isSending = false;
+
     return FutureBuilder<List<dynamic>?>(
       future: fetchData(),
       builder: (context, snapshot) {
@@ -332,22 +334,34 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                 thickness: 1.0,
               ),
               // 送信ボタン
-              CustomElevatedButton(
-                onPressed: () async {
-                  // レスキューを送信する
-                  final isSuccess = await _sendRescueRequest(
-                    context,
-                    _selectedTask,
-                    _place,
-                    _detail
+              StatefulBuilder(
+                builder: (context, setState) {
+                  return CustomElevatedButton(
+                    isDisabled: _isSending,
+                    onPressed: () async {
+                      setState(() {
+                        _isSending = true;
+                      });
+                      // レスキューを送信する
+                      final isSuccess = await _sendRescueRequest(
+                        context,
+                        _selectedTask,
+                        _place,
+                        _detail
+                      );
+                      logger.i("レスキューを送信しました");
+                      if(isSuccess){
+                        // 最初の画面まで戻る
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      }else{
+                        setState(() {
+                          _isSending = false;
+                        });
+                      }
+                    },
+                    label: _isSending ? "送信中..." : "送信",
                   );
-                  logger.i("トラブルを送信しました");
-                  if(isSuccess){
-                    // 最初の画面まで戻る
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  }
-                },
-                label: "送信",
+                }
               ),
               // 戻るボタン
               CustomElevatedButtonOutlined(
