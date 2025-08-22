@@ -5,28 +5,35 @@ class CustomElevatedButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String label;
   final IconData? icon;
+  final bool isDisabled;
 
   const CustomElevatedButton({
     super.key,
     required this.onPressed,
     required this.label,
     this.icon,
+    this.isDisabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: icon != null ? Icon(icon) : null,
+      onPressed: isDisabled? null : onPressed,
+      icon: icon != null
+        ? Icon(
+          icon,
+          color: isDisabled ? AppColors.grayDark : AppColors.textWhite,
+        )
+        : null,
       label: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: AppFontSizes.sm,
-          color: AppColors.textWhite
+          color: isDisabled ? AppColors.grayDark : AppColors.textWhite,
         ),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.main,
+        backgroundColor: isDisabled ? AppColors.grayLight : AppColors.main,
         padding: const EdgeInsets.symmetric(
           vertical: 10.0,
           horizontal: 24.0
