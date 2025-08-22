@@ -371,14 +371,17 @@ class Api {
     String place,
     String detail,
   ) async {
-    final url = constant.apiUrl + "/trouble-rescues";
+    final url = constant.apiUrl + "/rescues";
     final uri = Uri.parse(url);
     logger.i(uri);
     final body = {
+      "type": "trouble",
       "user_id": userID,
-      "task_id": taskID,
-      "place": place,
-      "detail": detail
+      "content": {
+        "task_id": taskID,
+        "place": place,
+        "detail": detail
+      }
     };
     final response = await http.post(
       uri,
@@ -403,12 +406,15 @@ class Api {
     int userID,
     String question,
   ) async {
-    final url = constant.apiUrl + "/question-rescues";
+    final url = constant.apiUrl + "/rescues";
     final uri = Uri.parse(url);
     logger.i(uri);
     final body = {
+      "type": "question",
       "user_id": userID,
-      "question": question
+      "content": {
+        "question": question
+      }
     };
     final response = await http.post(
       uri,
@@ -435,14 +441,17 @@ class Api {
     int missingNumber,
     String place,
   ) async {
-    final url = constant.apiUrl + "/shorthanded-rescues";
+    final url = constant.apiUrl + "/rescues";
     final uri = Uri.parse(url);
     logger.i(uri);
     final body = {
+      "type": "shorthanded",
       "user_id": userID,
-      "task_id": taskID,
-      "missing_number": missingNumber,
-      "place": place,
+      "content": {
+        "task_id": taskID,
+        "missing_number": missingNumber,
+        "place": place
+      }
     };
     final response = await http.post(
       uri,
