@@ -12,7 +12,7 @@ prod-up:
 
 .PHONY: mobile up
 mobile-up:
-	cd mobile && fvm flutter run -d web-server --web-port 45029
+	cd mobile && fvm flutter run -d web-server --web-port 45029 --dart-define-from-file=env/.env
 
 .PHONY: up-db
 up-db:

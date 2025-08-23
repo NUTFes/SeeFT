@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 # Flutter SDKをダウンロードしてパスに追加します。
 ARG FLUTTER_SDK=/flutter
-ENV FLUTTER_VERSION=3.10.6
+ENV FLUTTER_VERSION=3.27.3
 RUN git clone https://github.com/flutter/flutter.git $FLUTTER_SDK
 RUN cd $FLUTTER_SDK && git fetch && git checkout $FLUTTER_VERSION
 ENV PATH="${PATH}:$FLUTTER_SDK/bin:$FLUTTER_SDK/bin/cache/dart-sdk/bin"
@@ -40,7 +40,7 @@ RUN flutter doctor
 RUN flutter pub get
 RUN flutter pub upgrade
 # webや他のプラットフォームに対してビルドする場合、適切なコマンドを使用してください。
-RUN flutter build web
+RUN flutter build web --dart-define-from-file=env/.env
 
 # FROM cirrusci/flutter:2.10.4 AS build
 # WORKDIR /app

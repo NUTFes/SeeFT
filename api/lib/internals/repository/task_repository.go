@@ -24,6 +24,7 @@ type TaskRepository interface {
 	Destroy(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
+	FindByUserID(context.Context, string) (*sql.Rows, error)
 }
 
 func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
@@ -89,6 +90,20 @@ func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
 	query := "SELECT * FROM tasks WHERE task = '" + name + "'"
 	return b.client.DB().QueryRowContext(c, query), nil
+}
+
+// 指定したuserIDの全てのタスクを取得する
+func (b *taskRepository) FindByUserID(c context.Context, userID string) (*sql.Rows, error) {
+	query := `
+	SELECT DISTINCT t.*
+	FROM tasks t
+	JOIN shifts s ON t.id = s.task_id
+	WHERE s.user_id = $1
+	ORDER BY t.task
+	`
+	fmt.Printf("\x1b[36m%s\n", query)
+
+	return b.client.DB().QueryContext(c, query, userID)
 }
 
 // import '../../usecase/repository/task_repository.dart';

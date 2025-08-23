@@ -7,6 +7,8 @@ final PermanentStore store = PermanentStore.getInstance();
 
 // シフトカードのデータを保存するためのHiveのBox
 late final Box shiftCardBox;
+// レスキューのデータを保存するためのHiveのBox
+late final Box rescueBox;
 
 class PermanentStore {
   static PermanentStore _instance = PermanentStore();
@@ -64,5 +66,7 @@ Future<void> initHive() async {
   
   // シフトカードのデータを保存するためのBoxを開く
   shiftCardBox = await Hive.openBox('shiftCardData');
+  // レスキューのデータを保存するためのBoxを開く
+  rescueBox = await Hive.openBox('rescue');
   logger.i('Hiveの初期化が完了しました。');
 }

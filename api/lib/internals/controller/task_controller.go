@@ -16,6 +16,7 @@ type TaskController interface {
 	IndexTask(echo.Context) error
 	ShowTask(echo.Context) error
 	ShowTasksByShift(echo.Context) error
+	ShowTasksByUserID(echo.Context) error
 	CreateTask(echo.Context) error
 	UpdateTask(echo.Context) error
 	DeleteTask(echo.Context) error
@@ -46,6 +47,16 @@ func (b *taskController) ShowTask(c echo.Context) error {
 func (b *taskController) ShowTasksByShift(c echo.Context) error {
 	shift := c.Param("shift")
 	tasks, err := b.u.GetTasksByShift(c.Request().Context(), shift)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, tasks)
+}
+
+// 指定したユーザIDに紐づくタスクを取得
+func (u *taskController) ShowTasksByUserID(c echo.Context) error {
+	userID := c.Param("user_id")
+	tasks, err := u.u.GetTasksByUserID(c.Request().Context(), userID)
 	if err != nil {
 		return err
 	}
