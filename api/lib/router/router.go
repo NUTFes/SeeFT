@@ -21,7 +21,7 @@ type router struct {
 	shorthandedRescueController controller.ShorthandedRescueController
 	troubleRescueController     controller.TroubleRescueController
 	rescueUnifiedController     controller.RescueUnifiedController
-	reviewController                controller.ReviewController
+	reviewController            controller.ReviewController
 }
 
 type Router interface {
