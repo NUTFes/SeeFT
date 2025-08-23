@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"os"
 	"strconv"
 	"strings"
 
@@ -214,6 +215,9 @@ func (u *userUseCase) GetCurrentUser(c context.Context, accessToken string) (ent
 
 // GASからのユーザー変更通知を受けてDBを更新
 func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserChangeRequest) error {
+	// 環境変数からユーザ初期化時のデフォルトパスワード取得
+	userDefaultPassword := os.Getenv("USER_DEFAULT_PASSWORD")
+
 	for _, change := range req.Changes {
 		// 局名からBureauIDを取得
 		var bureauID string
@@ -315,7 +319,7 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			name := change.Name
 			mail := ""
 			roleID := "1"
-			password := "password" // 仮のパスワード（必要に応じて変更）
+			password := userDefaultPassword
 			hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
 			createErr := u.userRep.Create(ctx, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed))
 			if createErr != nil {
