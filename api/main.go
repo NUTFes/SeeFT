@@ -5,7 +5,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
 func main() {
 	client := di.InitializeServer()
 	defer client.CloseDB()

@@ -35,6 +35,9 @@ func InitializeServer() db.Client {
 	yearRepository := repository.NewYearRepository(client, crud)
 	dateRepository := repository.NewDateRepository(client, crud)
 	weatherRepository := repository.NewWeatherRepository(client, crud)
+	questionRescueRepository := repository.NewQuestionRescueRepository(client, crud)
+	shorthandedRescueRepository := repository.NewShorthandedRescueRepository(client, crud)
+	troubleRescueRepository := repository.NewTroubleRescueRepository(client, crud)
 
 	// UseCase
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
@@ -46,7 +49,10 @@ func InitializeServer() db.Client {
 	taskUseCase := usecase.NewTaskUseCase(taskRepository, placeRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
-	rescueUseCase := usecase.NewRescueUseCase()
+	questionRescueUseCase := usecase.NewQuestionRescueUseCase(questionRescueRepository)
+	shorthandedRescueUseCase := usecase.NewShorthandedRescueUseCase(shorthandedRescueRepository)
+	troubleRescueUseCase := usecase.NewTroubleRescueUseCase(troubleRescueRepository)
+	rescueUnifiedUseCase := usecase.NewRescueUnifiedUseCase(questionRescueRepository, shorthandedRescueRepository, troubleRescueRepository, userRepository, taskRepository)
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
@@ -59,7 +65,10 @@ func InitializeServer() db.Client {
 	taskController := controller.NewTaskController(taskUseCase)
 	timeController := controller.NewTimeController(timeUsecase)
 	userController := controller.NewUserController(userUseCase)
-	rescueController := controller.NewRescueController(rescueUseCase)
+	questionRescueController := controller.NewQuestionRescueController(questionRescueUseCase)
+	shorthandedRescueController := controller.NewShorthandedRescueController(shorthandedRescueUseCase)
+	troubleRescueController := controller.NewTroubleRescueController(troubleRescueUseCase)
+	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase, rescueUnifiedUseCase, userUseCase, taskUseCase, gradeUseCase, bureauUseCase)
 
 	// router
 	router := router.NewRouter(
@@ -73,7 +82,10 @@ func InitializeServer() db.Client {
 		taskController,
 		timeController,
 		userController,
-		rescueController,
+		questionRescueController,
+		shorthandedRescueController,
+		troubleRescueController,
+		rescueUnifiedController,
 	)
 
 	// Server
