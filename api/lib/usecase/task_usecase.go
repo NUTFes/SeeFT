@@ -290,8 +290,9 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 		}
 
 		// 3. Task名からTaskID取得
-		taskName := strings.ReplaceAll(change.TaskName, " ", "")
-		taskName = strings.ReplaceAll(taskName, "　", "")
+		taskName := strings.ReplaceAll(change.TaskName, "　", " ") // 全角スペースを半角スペースに変換
+		// taskName := strings.ReplaceAll(change.TaskName, " ", "")
+		// taskName = strings.ReplaceAll(taskName, "　", "")
 		taskRow, _ := u.rep.FindByName(ctx, taskName)
 		var task entity.Task
 		if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err == nil {
