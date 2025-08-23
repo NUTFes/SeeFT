@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/entity"
@@ -91,66 +92,106 @@ func (u *reviewUseCase) GetReviewGASByID(ctx context.Context, id string) (entity
 
 // 作成
 func (u *reviewUseCase) CreateReview(c context.Context, userID string, taskName string, staffingRating string, manualRating string, comment string) (entity.Review, error) {
-	latestReview := entity.Review{}
+       latestReview := entity.Review{}
 
-	row, err := u.taskRep.FindByName(c, taskName)
-	var taskID string
-	row.Scan(&taskID)
+       row, err := u.taskRep.FindByName(c, taskName)
+       if err != nil {
+	       return latestReview, errors.Wrap(err, "taskRep.FindByName")
+       }
+       var taskID string
+       if err := row.Scan(&taskID); err != nil {
+	       if err == sql.ErrNoRows {
+		       return latestReview, errors.New("指定されたtask_nameのタスクが存在しません")
+	       }
+	       return latestReview, errors.Wrap(err, "row.Scan (taskID)")
+       }
 
-	err = u.reviewRep.Create(c, userID, taskID, staffingRating, manualRating, comment)
+       if err := u.reviewRep.Create(c, userID, taskID, staffingRating, manualRating, comment); err != nil {
+	       return latestReview, errors.Wrap(err, "reviewRep.Create")
+       }
 
-	row, err = u.reviewRep.Find(c, userID)
-	err = row.Scan(
-		&latestReview.UserID,
-		&latestReview.TaskID,
-		&latestReview.StaffingRating,
-		&latestReview.ManualRating,
-		&latestReview.Comment,
-	)
-	if err != nil {
-		return latestReview, err
-	}
-	return latestReview, nil
+       row, err = u.reviewRep.Find(c, userID)
+       if err != nil {
+	       return latestReview, errors.Wrap(err, "reviewRep.Find")
+       }
+       if err := row.Scan(
+	       &latestReview.ID,
+	       &latestReview.UserID,
+	       &latestReview.TaskID,
+	       &latestReview.StaffingRating,
+	       &latestReview.ManualRating,
+	       &latestReview.Comment,
+	       &latestReview.CreatedAt,
+	       &latestReview.UpdatedAt,
+       ); err != nil {
+	       if err == sql.ErrNoRows {
+		       return latestReview, errors.New("レビューの作成後、該当データが見つかりません")
+	       }
+	       return latestReview, errors.Wrap(err, "row.Scan (review)")
+       }
+       return latestReview, nil
 }
 
 // 編集
 func (u *reviewUseCase) UpdateReview(c context.Context, ID string, userID string, taskName string, staffingRating string, manualRating string, comment string) (entity.Review, error) {
-	row, err := u.taskRep.FindByName(c, taskName)
-	var taskID string
-	row.Scan(&taskID)
+       row, err := u.taskRep.FindByName(c, taskName)
+       if err != nil {
+	       return entity.Review{}, errors.Wrap(err, "taskRep.FindByName")
+       }
+       var taskID string
+       if err := row.Scan(&taskID); err != nil {
+	       if err == sql.ErrNoRows {
+		       return entity.Review{}, errors.New("指定されたtask_nameのタスクが存在しません")
+	       }
+	       return entity.Review{}, errors.Wrap(err, "row.Scan (taskID)")
+       }
 
-	updatedReview := entity.Review{}
-	var review entity.Review
+       updatedReview := entity.Review{}
+       var review entity.Review
 
-	row, err = u.reviewRep.Find(c, ID)
-	err = row.Scan(
-		&review.ID,
-		&review.UserID,
-		&review.TaskID,
-		&review.StaffingRating,
-		&review.ManualRating,
-		&review.Comment,
-	)
-	if err != nil {
-		return review, err
-	}
+       row, err = u.reviewRep.Find(c, ID)
+       if err != nil {
+	       return review, errors.Wrap(err, "reviewRep.Find (before update)")
+       }
+       if err := row.Scan(
+	       &review.ID,
+	       &review.UserID,
+	       &review.TaskID,
+	       &review.StaffingRating,
+	       &review.ManualRating,
+	       &review.Comment,
+	       &review.CreatedAt,
+	       &review.UpdatedAt,
+       ); err != nil {
+	       if err == sql.ErrNoRows {
+		       return review, errors.New("指定されたIDのレビューが存在しません")
+	       }
+	       return review, errors.Wrap(err, "row.Scan (review before update)")
+       }
 
-	u.reviewRep.Update(c, ID, userID, taskID, staffingRating, manualRating, comment)
-	row, err = u.reviewRep.Find(c, ID)
-	err = row.Scan(
-		&updatedReview.ID,
-		&updatedReview.UserID,
-		&updatedReview.TaskID,
-		&updatedReview.StaffingRating,
-		&updatedReview.ManualRating,
-		&updatedReview.Comment,
-		&updatedReview.CreatedAt,
-		&updatedReview.UpdatedAt,
-	)
-	if err != nil {
-		return updatedReview, err
-	}
-	return updatedReview, nil
+       if err := u.reviewRep.Update(c, ID, userID, taskID, staffingRating, manualRating, comment); err != nil {
+	       return updatedReview, errors.Wrap(err, "reviewRep.Update")
+       }
+       row, err = u.reviewRep.Find(c, ID)
+       if err != nil {
+	       return updatedReview, errors.Wrap(err, "reviewRep.Find (after update)")
+       }
+       if err := row.Scan(
+	       &updatedReview.ID,
+	       &updatedReview.UserID,
+	       &updatedReview.TaskID,
+	       &updatedReview.StaffingRating,
+	       &updatedReview.ManualRating,
+	       &updatedReview.Comment,
+	       &updatedReview.CreatedAt,
+	       &updatedReview.UpdatedAt,
+       ); err != nil {
+	       if err == sql.ErrNoRows {
+		       return updatedReview, errors.New("更新後のレビューが見つかりません")
+	       }
+	       return updatedReview, errors.Wrap(err, "row.Scan (review after update)")
+       }
+       return updatedReview, nil
 }
 
 // 削除

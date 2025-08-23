@@ -87,7 +87,7 @@ func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 
 // タスク名からタスクを取得する
 func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
-	query := "SELECT * FROM tasks WHERE task = '" + name + "'"
+	query := "SELECT id FROM tasks WHERE task = '" + name + "'"
 	return b.client.DB().QueryRowContext(c, query), nil
 }
 

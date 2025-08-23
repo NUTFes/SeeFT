@@ -47,7 +47,7 @@ SELECT
   COALESCE(u.name, 'Unknown') AS user_name,
   COALESCE(b.bureau, 'Unknown') AS user_bureau,
   COALESCE(g.grade, 'Unknown') AS user_grade,
-  COALESCE(u.student_number, '') AS user_studentnumber,
+	COALESCE(u.student_number, 0) AS user_studentnumber,
   COALESCE(t.task, 'Unknown') AS task_name,
   r.staffing_rating,
   r.manual_rating,
@@ -77,7 +77,7 @@ func (r *reviewRepository) FindWithDetails(c context.Context, id string) (*sql.R
 func (r *reviewRepository) Create(c context.Context, userID string, taskID string, staffingRating string, manualRating string, comment string) error {
 	query := `
 		INSERT INTO	reviews (user_id, task_id, staffing_rating, manual_rating, comment)
-			VALUES ('` + userID + "', '" + taskID + "', " + staffingRating + ", " + manualRating + ", " + comment + "')"
+			VALUES (` + userID + ", " + taskID + ", " + staffingRating + ", " + manualRating + ", '" + comment + "')"
 	return r.crud.UpdateDB(c, query)
 }
 
@@ -87,8 +87,8 @@ func (r *reviewRepository) Update(c context.Context, ID string, userID string, t
 		UPDATE
 			reviews
 		SET
-			user_id = '` + userID +
-		"', task_id = " + taskID +
+			user_id = ` + userID +
+		", task_id = " + taskID +
 		", staffing_rating = " + staffing_rating +
 		", manual_rating = " + manual_rating +
 		", comment = '" + comment + "' WHERE id = " + ID

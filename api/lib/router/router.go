@@ -21,6 +21,7 @@ type router struct {
 	shorthandedRescueController     controller.ShorthandedRescueController
 	troubleRescueController         controller.TroubleRescueController
 	rescueUnifiedController         controller.RescueUnifiedController
+	reviewController                controller.ReviewController
 }
 
 type Router interface {
@@ -42,6 +43,7 @@ func NewRouter(
 	shorthandedRescueController controller.ShorthandedRescueController,
 	troubleRescueController controller.TroubleRescueController,
 	rescueUnifiedController controller.RescueUnifiedController,
+	reviewController controller.ReviewController,
 ) Router {
 	return router{
 		healthController,
@@ -58,6 +60,7 @@ func NewRouter(
 		shorthandedRescueController,
 		troubleRescueController,
 		rescueUnifiedController,
+		reviewController,
 	}
 }
 
@@ -163,6 +166,13 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.POST("/trouble-rescues", r.troubleRescueController.CreateTroubleRescue)
 	e.PUT("/trouble-rescues/:id", r.troubleRescueController.UpdateTroubleRescue)
 	e.DELETE("/trouble-rescues", r.troubleRescueController.DeleteTroubleRescue)
+
+	// reviewのRoute
+	e.GET("/reviews", r.reviewController.IndexReview)
+	e.GET("/reviews/:id", r.reviewController.ShowReview)
+	e.POST("/reviews", r.reviewController.CreateReview)
+	e.PUT("/reviews/:id", r.reviewController.UpdateReview)
+	e.DELETE("/reviews/:id", r.reviewController.DeleteReview)
 
 	// shiftの希望日程
 	e.POST("/request_shifts", r.shiftController.SubmitShift)
