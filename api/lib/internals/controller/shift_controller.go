@@ -19,6 +19,7 @@ type ShiftController interface {
 	ShowUsersByShift(echo.Context) error
 	ShowShiftsByUserAndDateAndWeather(echo.Context) error
 	ShowShiftCardsByUserAndDateAndWeather(echo.Context) error
+	PostShiftCards(echo.Context) error
 	IndexShiftAdmin(echo.Context) error
 	ShowShiftAdmin(echo.Context) error
 	CreateShiftAdmin(echo.Context) error
@@ -91,6 +92,28 @@ func (b *shiftController) ShowShiftCardsByUserAndDateAndWeather(c echo.Context) 
 	dateID := c.Param("date_id")
 	weatherID := c.Param("weather_id")
 	shiftCards, err := b.u.GetShiftCardsByUserAndDateAndWeather(c.Request().Context(), userID, dateID, weatherID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, shiftCards)
+}
+
+func (b *shiftController) PostShiftCards(c echo.Context) error {
+	// Accept JSON body: { "userId": "...", "dateId": "...", "weatherId": "..." }
+	var req struct {
+		UserID    string `json:"userId"`
+		DateID    string `json:"dateId"`
+		WeatherID string `json:"weatherId"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "Invalid request body"})
+	}
+	// Required fields validation
+	if req.UserID == "" || req.DateID == "" || req.WeatherID == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "userId, dateId, weatherId are required"})
+	}
+
+	shiftCards, err := b.u.GetShiftCardsByUserAndDateAndWeather(c.Request().Context(), req.UserID, req.DateID, req.WeatherID)
 	if err != nil {
 		return err
 	}

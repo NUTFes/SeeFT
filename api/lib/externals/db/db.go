@@ -6,14 +6,19 @@ import (
 	_ "github.com/lib/pq"
 	// "github.com/joho/godotenv"
 	"os"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type client struct {
 	db *sql.DB
+	gorm *gorm.DB
 }
 
 type Client interface {
 	DB() *sql.DB
+	GormDB() *gorm.DB
 	CloseDB()
 }
 
@@ -49,7 +54,14 @@ func ConnectMySQL() (client, error) {
 		return client{}, err
 	} else {
 		fmt.Println("[Success] Connect to PostgreSQL") // 成功
-		return client{db}, nil
+		// initialize GORM using the existing *sql.DB connection (keep existing comments)
+		gormDB, err := gorm.Open(postgres.New(postgres.Config{
+			Conn: db,
+		}), &gorm.Config{})
+		if err != nil {
+			return client{}, err
+		}
+		return client{db: db, gorm: gormDB}, nil
 	}
 }
 
@@ -61,4 +73,8 @@ func (c client) CloseDB() {
 
 func (c client) DB() *sql.DB {
 	return c.db
+}
+
+func (c client) GormDB() *gorm.DB {
+	return c.gorm
 }

@@ -1,6 +1,7 @@
-import 'package:http/io_client.dart';
+// import 'package:http/io_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:seeft_mobile/configs/importer.dart';
+// import 'package:seeft_mobile/models/rescue.dart';
 
 final Api api = Api();
 
@@ -31,8 +32,8 @@ class Api {
       },
     );
 
-    if (response.statusCode == 200) {
-      logger.e('success posted.');
+    if (response.statusCode == 201) {
+      logger.i('success posted.');
       return json.decode(response.body);
     } else {
       logger.e('failed posted.');
@@ -305,22 +306,6 @@ class Api {
       throw Exception('Failed GET in Api.workDetail()');
     }
   }
-
-  Future postRescue() async {
-    var url = constant.apiUrl + "/rescue";
-    var body = {
-      "task_id": "100",
-    };
-    final response = await post(url, body);
-
-    if (response.statusCode == 200) {
-      logger.i('success posted.');
-      return json.decode(response.body);
-    } else {
-      logger.e('failed posted.');
-      throw Exception('Failed POST in Api.post()');
-    }
-  }
   
   // シフトカードの情報を取得する
   Future getShiftCardsByUserAndDateAndWeather(int userId, int dateId, int weatherId) async {
@@ -333,6 +318,156 @@ class Api {
     } catch (e) {
       logger.e('failed got.');
       throw Exception('Failed GET in Api.getShiftCardsByUserAndDateAndWeather()');
+    }
+  }
+  
+  // 指定したユーザIDに紐づくタスクを取得
+  Future getTasksByUserID(String userId) async {
+    var url = constant.apiUrl + "/tasks/users/" + userId;
+    try {
+      logger.i(url);
+      var res = await get(url);
+      // logger.i(res);
+      return res;
+    } catch (e) {
+      logger.e('failed got.');
+      throw Exception('Failed GET in Api.getTasksByUserID()');
+    }
+  }
+  
+  // IDで指定したユーザが送信したレスキューの一覧を取得する
+  Future getRescueResponses(int userID) async {
+    var url = constant.apiUrl + "/rescues/users/" + userID.toString();
+    try {
+      logger.i(url);
+      var res = await get(url);
+      logger.i(res);
+      // return (res as List).map((item) => RescueResponse.fromJson(item)).toList();
+      return res;
+    } catch (e) {
+      logger.e('failed got:' + e.toString());
+      throw Exception('Failed GET in Api.getRescueResponses()');
+    }
+  }
+  
+  // レスキューの一覧を取得する
+  Future getAllRescueResponses() async {
+    var url = constant.apiUrl + "/rescues";
+    try {
+      logger.i(url);
+      var res = await get(url);
+      logger.i(res);
+      return res;
+    } catch (e) {
+      logger.e('failed got:' + e.toString());
+      throw Exception('Failed GET in Api.getAllRescueResponses()');
+    }
+  }
+  
+  // トラブルのレスキューを送信する
+  Future postTroubleRescue(
+    int userID,
+    int taskID,
+    String place,
+    String detail,
+  ) async {
+    final url = constant.apiUrl + "/rescues";
+    final uri = Uri.parse(url);
+    logger.i(uri);
+    final body = {
+      "type": "trouble",
+      "user_id": userID,
+      "content": {
+        "task_id": taskID,
+        "place": place,
+        "detail": detail
+      }
+    };
+    final response = await http.post(
+      uri,
+      body: json.encode(body),
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 201) {
+      logger.i('success posted.');
+      return json.decode(response.body);
+    } else {
+      logger.e('failed posted.');
+      throw Exception('Failed POST in Api.post()');
+    }
+  }
+  
+  // 質問のレスキューを送信する
+  Future postQuestionRescue(
+    int userID,
+    String question,
+  ) async {
+    final url = constant.apiUrl + "/rescues";
+    final uri = Uri.parse(url);
+    logger.i(uri);
+    final body = {
+      "type": "question",
+      "user_id": userID,
+      "content": {
+        "question": question
+      }
+    };
+    final response = await http.post(
+      uri,
+      body: json.encode(body),
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 201) {
+      logger.i('success posted.');
+      return json.decode(response.body);
+    } else {
+      logger.e('failed posted.');
+      throw Exception('Failed POST in Api.post()');
+    }
+  }
+  
+  // 人が来ないのレスキューを送信する
+  Future postShorthandedRescue(
+    int userID,
+    int taskID,
+    int missingNumber,
+    String place,
+  ) async {
+    final url = constant.apiUrl + "/rescues";
+    final uri = Uri.parse(url);
+    logger.i(uri);
+    final body = {
+      "type": "shorthanded",
+      "user_id": userID,
+      "content": {
+        "task_id": taskID,
+        "missing_number": missingNumber,
+        "place": place
+      }
+    };
+    final response = await http.post(
+      uri,
+      body: json.encode(body),
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 201) {
+      logger.i('success posted.');
+      return json.decode(response.body);
+    } else {
+      logger.e('failed posted.');
+      throw Exception('Failed POST in Api.post()');
     }
   }
 }
