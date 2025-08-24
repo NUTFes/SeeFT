@@ -85,8 +85,32 @@ mac-seed:
 	sleep 15
 	docker compose -f docker-compose.mac.yml run --rm api go run /app/seeds/seeds.go
 
-# .PHONY: seed
+# mobile/lib/assetsに512*512のアイコンを用意しておくこと(コマンドのファイル名も変更する)
+# リサイズ用にImageMagickをインストールする（`sudo apt-get install imagemagick` or `brew install imagemagick`）
+.PHONY: mobile-icons-init
+mobile-icons-init:
+	cp mobile/lib/assets/44th_app-icon.png mobile/web/icons/Icon-512.png
+	cp mobile/lib/assets/44th_app-icon.png mobile/web/icons/Icon-maskable-512.png
+	if command -v convert >/dev/null 2>&1; then \
+		convert mobile/lib/assets/44th_app-icon.png -resize 192x192 mobile/web/icons/Icon-192.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 192x192 mobile/web/icons/Icon-maskable-192.png; \
+		echo "[INFO] Resized 44th_app-icon.png to Icon-192.png (192x192)"; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 192x192 mobile/web/splash/img/light-1x.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 384x384 mobile/web/splash/img/light-2x.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 512x512 mobile/web/splash/img/light-3x.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 768x768 mobile/web/splash/img/light-4x.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 192x192 mobile/web/splash/img/dark-1x.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 384x384 mobile/web/splash/img/dark-2x.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 512x512 mobile/web/splash/img/dark-3x.png; \
+		convert mobile/lib/assets/44th_app-icon.png -resize 768x768 mobile/web/splash/img/dark-4x.png; \
+		echo "[INFO] splash/img 各種サイズも変換しました"; \
+	else \
+		echo "[ERROR] ImageMagick (convert) が必要です。インストールしてください。"; \
+		exit 1; \
+	fi
+	cd mobile && fvm flutter build web
 
+# .PHONY: seed
 # seed:
 # 	docker compose run --rm server dart run ./sql/sql.dart seed
 # 	docker compose run --rm server dart run ./sql/sql.dart user --csv ./sql/user.csv
