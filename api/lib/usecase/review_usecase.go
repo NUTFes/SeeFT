@@ -97,50 +97,51 @@ func (u *reviewUseCase) CreateReview(c context.Context, userID string, taskName 
 
 	row, err := u.taskRep.FindByName(c, taskName)
 	if err != nil {
-					return latestReview, errors.Wrap(err, "taskRep.FindByName")
+		return latestReview, errors.Wrap(err, "taskRep.FindByName")
 	}
 	var task entity.Task
 	if err := row.Scan(
-					&task.ID,
-					&task.Task,
-					&task.PlaceID,
-					&task.Url,
-					&task.BureauID,
-					&task.MaxMember,
-					&task.Color,
-					&task.Remark,
-					&task.YearID,
-					&task.CreatedAt,
-					&task.UpdatedAt,
+		&task.ID,
+		&task.Task,
+		&task.PlaceID,
+		&task.Url,
+		&task.BureauID,
+		&task.MaxMember,
+		&task.Color,
+		&task.Remark,
+		&task.YearID,
+		&task.CreatedAt,
+		&task.UpdatedAt,
 	); err != nil {
-					if err == sql.ErrNoRows {
-									return latestReview, errors.New("指定されたtask_nameのタスクが存在しません")
-					}
-					return latestReview, errors.Wrap(err, "row.Scan (task entity)")
+		if err == sql.ErrNoRows {
+			return latestReview, errors.New("指定されたtask_nameのタスクが存在しません")
+		}
+		return latestReview, errors.Wrap(err, "row.Scan (task entity)")
 	}
 
 	if err := u.reviewRep.Create(c, userID, fmt.Sprintf("%d", task.ID), staffingRating, manualRating, comment); err != nil {
-					return latestReview, errors.Wrap(err, "reviewRep.Create")
+		return latestReview, errors.Wrap(err, "reviewRep.Create")
 	}
 
-	row, err = u.reviewRep.Find(c, userID)
+	// 作成直後の最新レビューを取得して返す
+	row, err = u.reviewRep.FindNewRecord(c)
 	if err != nil {
-					return latestReview, errors.Wrap(err, "reviewRep.Find")
+		return latestReview, errors.Wrap(err, "reviewRep.FindNewRecord")
 	}
 	if err := row.Scan(
-					&latestReview.ID,
-					&latestReview.UserID,
-					&latestReview.TaskID,
-					&latestReview.StaffingRating,
-					&latestReview.ManualRating,
-					&latestReview.Comment,
-					&latestReview.CreatedAt,
-					&latestReview.UpdatedAt,
+		&latestReview.ID,
+		&latestReview.UserID,
+		&latestReview.TaskID,
+		&latestReview.StaffingRating,
+		&latestReview.ManualRating,
+		&latestReview.Comment,
+		&latestReview.CreatedAt,
+		&latestReview.UpdatedAt,
 	); err != nil {
-					if err == sql.ErrNoRows {
-									return latestReview, errors.New("レビューの作成後、該当データが見つかりません")
-					}
-					return latestReview, errors.Wrap(err, "row.Scan (review)")
+		if err == sql.ErrNoRows {
+			return latestReview, errors.New("レビューの作成後、該当データが見つかりません")
+		}
+		return latestReview, errors.Wrap(err, "row.Scan (review)")
 	}
 	return latestReview, nil
 }
@@ -155,22 +156,22 @@ func (u *reviewUseCase) UpdateReview(c context.Context, ID string, userID string
 	}
 	var task entity.Task
 	if err := row.Scan(
-					&task.ID,
-					&task.Task,
-					&task.PlaceID,
-					&task.Url,
-					&task.BureauID,
-					&task.MaxMember,
-					&task.Color,
-					&task.Remark,
-					&task.YearID,
-					&task.CreatedAt,
-					&task.UpdatedAt,
+		&task.ID,
+		&task.Task,
+		&task.PlaceID,
+		&task.Url,
+		&task.BureauID,
+		&task.MaxMember,
+		&task.Color,
+		&task.Remark,
+		&task.YearID,
+		&task.CreatedAt,
+		&task.UpdatedAt,
 	); err != nil {
-					if err == sql.ErrNoRows {
-									return updatedReview, errors.New("指定されたtask_nameのタスクが存在しません")
-					}
-					return updatedReview, errors.Wrap(err, "row.Scan (task entity)")
+		if err == sql.ErrNoRows {
+			return updatedReview, errors.New("指定されたtask_nameのタスクが存在しません")
+		}
+		return updatedReview, errors.Wrap(err, "row.Scan (task entity)")
 	}
 
 	var review entity.Review
