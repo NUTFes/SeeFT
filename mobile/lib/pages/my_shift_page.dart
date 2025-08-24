@@ -165,8 +165,13 @@ class _MyShiftPageState extends State<MyShiftPage>
   
   // 指定のユーザID、日付ID、天気IDのシフトカードデータリストをロードする関数
   Future<void> _loadShiftCardDataList(int userID, int dayID, int weatherID) async {
-    _debounceTimer?.cancel();  // 既存のデバウンスタイマーをキャンセル
+    _debounceTimer?.cancel();           // 既存のデバウンスタイマーをキャンセル
     setState(() => isLoading = true);   // ロード中フラグをtrueに設定
+    
+    // 日付が準備日と片付け日であれば天気を1(晴れ)に固定
+    if (dayID == 1 || dayID == 4) {
+      weatherID = 1;
+    }
     
     // キャッシュからデータを取得
     final List<dynamic>? cachedData = _getCashedShiftCardDataList(dayID, weatherID);
@@ -351,7 +356,7 @@ class _MyShiftPageState extends State<MyShiftPage>
           '\n'
           'Has data: ${shiftCardDataList != null}'
         );
-        if (shiftCardDataList == null) {
+        if (shiftCardDataList == null || shiftCardDataList!.data.length == 0) {
           logger.i('タブ ${index + 1}: データがありません');
           // データがない場合は「データがありません」のメッセージを表示
           return Center(
@@ -370,7 +375,7 @@ class _MyShiftPageState extends State<MyShiftPage>
               ],
             ),
           );
-        }else {
+        } else {
           logger.i('Tab ${index + 1}: Data available with ${shiftCardDataList!.data.length} items'
             '\n'
             'First item: ${shiftCardDataList!.data.isNotEmpty ? shiftCardDataList!.data[0].taskName : "No items"}'
