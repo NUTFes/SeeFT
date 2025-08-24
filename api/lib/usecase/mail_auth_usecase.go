@@ -2,20 +2,20 @@ package usecase
 
 import (
 	"context"
-	"fmt"
-	"strings"
-	"strconv"
 	"crypto/rand"
+	"fmt"
+	"strconv"
+	"strings"
 
-	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
-	"golang.org/x/crypto/bcrypt"
+	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type mailAuthUseCase struct {
-	userRep rep.UserRepository
-	sessionRep  rep.SessionRepository
+	userRep    rep.UserRepository
+	sessionRep rep.SessionRepository
 }
 
 type MailAuthUseCase interface {
@@ -32,7 +32,7 @@ func NewAuthUseCase(userRep rep.UserRepository, sessionRep rep.SessionRepository
 
 func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, password string) (entity.LoginUser, error) {
 	var user = entity.User{}
-	
+
 	// メールアドレスの存在確認
 	row := u.userRep.FindByStudentNumber(c, studentNumber)
 	err := row.Scan(
@@ -108,7 +108,7 @@ func (u *mailAuthUseCase) WebSignUp(c context.Context, name string, mail string,
 func (u *mailAuthUseCase) WebSignIn(c context.Context, studentNumber string, password string) (entity.Token, error) {
 	var token entity.Token
 	var user entity.User
-	
+
 	// メールアドレスの存在確認
 	row := u.userRep.FindByStudentNumber(c, studentNumber)
 	err := row.Scan(
@@ -191,23 +191,3 @@ func _makeRandomStr(digit uint32) (string, error) {
 	}
 	return result, nil
 }
-
-
-// import '../entity/entity.dart';
-// import './repository/repository.dart';
-
-// abstract class AuthUsecase {
-//   Future<User> signIn(ctx, User req);
-// }
-
-// class AuthUsecaseImpl implements AuthUsecase {
-//   UserRepository userRepository;
-
-//   AuthUsecaseImpl(this.userRepository);
-
-//   @override
-//   Future<User> signIn(ctx, User req) async {
-//     final user = await userRepository.getUserByMail(ctx, req);
-//     return user;
-//   }
-// }

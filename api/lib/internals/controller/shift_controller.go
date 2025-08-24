@@ -204,7 +204,6 @@ func (b *shiftController) ShowShiftAdminByDateAndWeatherAndTime(c echo.Context) 
 	return c.JSON(http.StatusOK, shifts)
 }
 
-
 func (b *shiftController) SerachMaxID(c echo.Context) error {
 	id, err := b.u.GetMaxID(c.Request().Context())
 	if err != nil {
@@ -214,29 +213,29 @@ func (b *shiftController) SerachMaxID(c echo.Context) error {
 }
 
 func (sc *shiftController) SubmitShift(c echo.Context) error {
-    var req entity.ShiftRequest
-    if err := c.Bind(&req); err != nil {
-        return c.JSON(http.StatusBadRequest, "Invalid request")
-    }
+	var req entity.ShiftRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request")
+	}
 
-    // DBに保存
+	// DBに保存
 	if err := sc.u.SaveShiftData(c.Request().Context(), req); err != nil {
-        return c.JSON(http.StatusInternalServerError, "Failed to save shift data")
-    }
+		return c.JSON(http.StatusInternalServerError, "Failed to save shift data")
+	}
 
-    // GASに送信
-    if err := sc.u.SendToGAS(c.Request().Context(), req); err != nil {
-        return c.JSON(http.StatusInternalServerError, "Failed to send data to GAS")
-    }
+	// GASに送信
+	if err := sc.u.SendToGAS(c.Request().Context(), req); err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to send data to GAS")
+	}
 
-    return c.JSON(http.StatusOK, "Shift data submitted successfully")
+	return c.JSON(http.StatusOK, "Shift data submitted successfully")
 }
 
 // GASからのシフト変更通知を受け取るエンドポイント
 func (sc *shiftController) UpdateShiftsFromGAS(c echo.Context) error {
 	var req entity.ShiftChangeRequest
 	if err := c.Bind(&req); err != nil {
-			return c.JSON(http.StatusBadRequest, "Invalid request")
+		return c.JSON(http.StatusBadRequest, "Invalid request")
 	}
 
 	// 必要に応じてユースケース層へ処理を委譲
@@ -246,65 +245,3 @@ func (sc *shiftController) UpdateShiftsFromGAS(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, "Shifts updated successfully")
 }
-
-// import 'dart:convert';
-// import 'package:shelf/shelf.dart';
-
-// import '../../config/config.dart';
-// import '../../entity/entity.dart';
-// import '../../usecase/usecase.dart';
-
-// class ShiftController {
-//   final StatusResponse statusResponse;
-//   final ShiftUsecase shiftUsecase;
-
-//   ShiftController(
-//     this.statusResponse,
-//     this.shiftUsecase,
-//   );
-
-//   Future<Response> getShiftsByUser(Request request, String id) async {
-//     try {
-//       final req = User(id: int.parse(id));
-//       final res = await shiftUsecase.getShiftsByUser(request.context, req);
-
-//       return statusResponse.responseOK(jsonEncode(res));
-//     } catch (e) {
-//       Log.severe('shiftContoller.getShiftsByUser: ${e.toString()}');
-//       var json = jsonEncode({'message': e.toString()});
-//       return statusResponse.responseBadRequest(json);
-//     }
-//   }
-
-//   Future<Response> getShiftsByUserAndDateAndWeather(
-//       Request request, String userId, String dateId, String weatherId) async {
-//     try {
-//       final req = Shift(
-//           user: User(id: int.parse(userId)),
-//           date: Date(id: int.parse(dateId)),
-//           weather: Weather(id: int.parse(weatherId)));
-//       final res = await shiftUsecase.getShiftsByUserAndDateAndWeather(request.context, req);
-//       return statusResponse.responseOK(jsonEncode(res));
-//     } catch (e) {
-//       Log.severe('shiftController.getShiftsByUserAndDateAndWeather: ${e.toString()}');
-//       var json = jsonEncode({'message': e.toString()});
-//       return statusResponse.responseBadRequest(json);
-//     }
-//   }
-
-//   Future<Response> getShiftsByYearAndDateAndWeather(
-//       Request request, String yearId, String dateId, String weatherId) async {
-//     try {
-//       final req = Shift(
-//           year: Year(id: int.parse(yearId)),
-//           date: Date(id: int.parse(dateId)),
-//           weather: Weather(id: int.parse(weatherId)));
-//       final res = await shiftUsecase.getShiftsByYearAndDateAndWeather(request.context, req);
-//       return statusResponse.responseOK(jsonEncode(res));
-//     } catch (e) {
-//       Log.severe('shiftController.getShiftsByYearAndDateAndWeather: ${e.toString()}');
-//       var json = jsonEncode({'message': e.toString()});
-//       return statusResponse.responseBadRequest(json);
-//     }
-//   }
-// }
