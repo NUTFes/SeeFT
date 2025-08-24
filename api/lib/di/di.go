@@ -39,6 +39,7 @@ func InitializeServer() db.Client {
 	questionRescueRepository := repository.NewQuestionRescueRepository(client, crud)
 	shorthandedRescueRepository := repository.NewShorthandedRescueRepository(client, crud)
 	troubleRescueRepository := repository.NewTroubleRescueRepository(client, crud)
+	reviewRepository := repository.NewReviewRepository(client, crud)
 
 	// UseCase
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
@@ -54,6 +55,7 @@ func InitializeServer() db.Client {
 	shorthandedRescueUseCase := usecase.NewShorthandedRescueUseCase(shorthandedRescueRepository)
 	troubleRescueUseCase := usecase.NewTroubleRescueUseCase(troubleRescueRepository)
 	rescueUnifiedUseCase := usecase.NewRescueUnifiedUseCase(questionRescueRepository, shorthandedRescueRepository, troubleRescueRepository, userRepository, taskRepository)
+	reviewUseCase := usecase.NewReviewUseCase(reviewRepository, taskRepository)
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
@@ -70,6 +72,7 @@ func InitializeServer() db.Client {
 	shorthandedRescueController := controller.NewShorthandedRescueController(shorthandedRescueUseCase)
 	troubleRescueController := controller.NewTroubleRescueController(troubleRescueUseCase)
 	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase, rescueUnifiedUseCase, userUseCase, taskUseCase, gradeUseCase, bureauUseCase)
+	reviewController := controller.NewReviewController(reviewUseCase)
 
 	// router
 	router := router.NewRouter(
@@ -87,6 +90,7 @@ func InitializeServer() db.Client {
 		shorthandedRescueController,
 		troubleRescueController,
 		rescueUnifiedController,
+		reviewController,
 	)
 
 	// Server
