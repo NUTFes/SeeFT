@@ -12,6 +12,7 @@ class AppColors {
   static const Color black = Color(0xFF000000);     // 黒色
   static const Color textWhite = Color(0xFFFFFFFF); // 明るい文字色
   static const Color textBlack = Color(0xFF000000); // 暗い文字色
+  static const Color link = Color(0xFF1264A3);      // 青色のリンク
 }
 
 // フォントサイズ
