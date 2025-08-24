@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"os"
 	"strconv"
 	"strings"
 
@@ -214,6 +215,9 @@ func (u *userUseCase) GetCurrentUser(c context.Context, accessToken string) (ent
 
 // GASからのユーザー変更通知を受けてDBを更新
 func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserChangeRequest) error {
+	// 環境変数からユーザ初期化時のデフォルトパスワード取得
+	userDefaultPassword := os.Getenv("USER_DEFAULT_PASSWORD")
+
 	for _, change := range req.Changes {
 		// 局名からBureauIDを取得
 		var bureauID string
@@ -315,7 +319,7 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			name := change.Name
 			mail := ""
 			roleID := "1"
-			password := "password" // 仮のパスワード（必要に応じて変更）
+			password := userDefaultPassword
 			hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
 			createErr := u.userRep.Create(ctx, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed))
 			if createErr != nil {
@@ -332,57 +336,3 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 	}
 	return nil
 }
-
-// import '../entity/entity.dart';
-// import './repository/repository.dart';
-
-// abstract class UserUsecase {
-//   Future<List<User>> getUsers(ctx);
-//   Future<User> getUser(ctx, int id);
-//   Future<User> insertUser(ctx, User req);
-//   Future<User> updateUser(ctx, User req);
-//   Future<User> deleteUser(ctx, User req);
-// }
-
-// class UserUsecaseImpl implements UserUsecase {
-//   UserRepository userRepository;
-
-//   UserUsecaseImpl(this.userRepository);
-
-//   @override
-//   Future<List<User>> getUsers(ctx) async {
-//     List<User> users = await userRepository.getUsers(ctx);
-//     return users;
-//   }
-
-//   @override
-//   Future<User> getUser(ctx, int id) async {
-//     User user = await userRepository.getUser(ctx, id);
-//     return user;
-//   }
-
-//   @override
-//   Future<User> insertUser(ctx, User req) async {
-//     User user = await userRepository.insertUser(ctx, req);
-//     return user;
-//   }
-
-//   @override
-//   Future<User> updateUser(ctx, User req) async {
-//     User test = await userRepository.getUser(ctx, req.id);
-//     if (req.name == test.name) {
-//       throw Exception('request name is same.');
-//     }
-//     User user = await userRepository.updateUser(ctx, req);
-//     if (test.updatedAt == user.updatedAt) {
-//       throw Exception('cant updated because request same response');
-//     }
-//     return user;
-//   }
-
-//   @override
-//   Future<User> deleteUser(ctx, User req) async {
-//     User user = await userRepository.deleteUser(ctx, req);
-//     return user;
-//   }
-// }

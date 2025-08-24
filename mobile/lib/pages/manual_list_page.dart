@@ -1,8 +1,8 @@
-import 'dart:developer';
+// import 'dart:developer';
 
 import 'package:seeft_mobile/configs/importer.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:http/http.dart' as http;
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 
@@ -25,14 +25,8 @@ class _ManualListPageState extends State<ManualListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('マニュアル一覧'),
-        actions: <Widget>[],
-        // debug
-      ),
-      drawer: drawer.applicationDrawer(context),
+      backgroundColor: AppColors.base,
       body: FutureBuilder(
         future: getData(),
         builder: (ctx, snapshot) {
@@ -43,9 +37,8 @@ class _ManualListPageState extends State<ManualListPage> {
             // 待機画面を表示
             return WaitPage();
           }
-          var manualList = snapshot.data;
           return Container(
-            padding: const EdgeInsets.all(40.0),
+            padding: const EdgeInsets.all(32.0),
             child: Column(
               children: <Widget>[
                 Flexible(
@@ -53,8 +46,8 @@ class _ManualListPageState extends State<ManualListPage> {
                     itemCount: manualLength,
                     itemBuilder: (BuildContext context, int index) {
                       return Container(
-                          height: 40,
-                          child: _manualItem(snapshot.data, index, context));
+                        height: 40,
+                        child: _manualItem(snapshot.data, index, context));
                     },
                   ),
                 ),
@@ -68,13 +61,19 @@ class _ManualListPageState extends State<ManualListPage> {
 
   Widget _manualItem(var manuals, index, context) {
     return Container(
-      decoration: new BoxDecoration(
-          border:
-              new Border(bottom: BorderSide(width: 1.0, color: Colors.grey))),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(
+          width: 1.0,
+          color: AppColors.grayLight,
+        )),
+      ),
       child: ListTile(
         title: Text(
           manuals[index]["task"].toString(),
-          style: TextStyle(color: Colors.black, fontSize: 14.0),
+          style: TextStyle(
+            color: AppColors.textBlack, 
+            fontSize: AppFontSizes.md
+          ),
         ),
         onTap: () async {
           if (await canLaunch(manuals[index]["url"].toString())) {
