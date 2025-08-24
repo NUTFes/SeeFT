@@ -3,7 +3,8 @@ import 'package:seeft_mobile/theme/tokens.dart';
 import 'package:seeft_mobile/widgets/app_bar.dart';
 import 'package:seeft_mobile/pages/my_shift_page.dart';
 import 'package:seeft_mobile/pages/manual_list_page.dart';
-import 'package:seeft_mobile/pages/wait_page.dart';
+import 'package:seeft_mobile/pages/etc_page.dart';
+// import 'package:seeft_mobile/pages/wait_page.dart';
 import 'package:seeft_mobile/pages/rescue/rescue_page.dart';
 
 class Layout extends StatefulWidget {
@@ -20,7 +21,7 @@ class _LayoutState extends State<Layout> {
     MyShiftPage(),    // マイシフト
     ManualListPage(), // マニュアル
     RescuePage(),     // 緊急時対応
-    WaitPage(),       // 仮のページ(後で「その他」に差し替える)
+    EtcPage(),        // その他
   ];
 
   @override
