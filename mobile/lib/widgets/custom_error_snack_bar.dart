@@ -20,7 +20,9 @@ void showCustomErrorSnackBar(BuildContext context, String message) {
       duration: Duration(seconds: 2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       margin: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-      behavior: SnackBarBehavior.floating,
+      behavior: SnackBarBehavior.floating,  // スナックバーの表示位置を調整
+      showCloseIcon: true,  // 閉じるアイコンを表示
+      closeIconColor: AppColors.textWhite,
     ),
   );
 }

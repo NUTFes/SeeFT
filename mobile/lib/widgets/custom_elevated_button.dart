@@ -6,6 +6,7 @@ class CustomElevatedButton extends StatelessWidget {
   final String label;
   final IconData? icon;
   final bool isDisabled;
+  final bool isExpanded;  // 横幅を広げるかどうか
 
   const CustomElevatedButton({
     super.key,
@@ -13,6 +14,7 @@ class CustomElevatedButton extends StatelessWidget {
     required this.label,
     this.icon,
     this.isDisabled = false,
+    this.isExpanded = false,
   });
 
   @override
@@ -43,7 +45,7 @@ class CustomElevatedButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(100.0),
         ),
         // 横幅を広げるための設定
-        // minimumSize: Size(double.infinity, 40),
+        minimumSize: isExpanded ? const Size(double.infinity, 40) : null,
       ),
     );
   }

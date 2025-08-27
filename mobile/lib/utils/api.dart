@@ -470,4 +470,40 @@ class Api {
       throw Exception('Failed POST in Api.post()');
     }
   }
+  
+  // レビューを送信する
+  Future postReview(
+    int userID,
+    String taskName,
+    int staffingRating,
+    int manualRating,
+    String comment,
+  ) async {
+    final url = constant.apiUrl + "/reviews";
+    final uri = Uri.parse(url);
+    logger.i(uri);
+    final body = {
+      "user_id": userID,
+      "task_name": taskName,
+      "staffing_rating": staffingRating,
+      "manual_rating": manualRating,
+      "comment": comment
+    };
+    final response = await http.post(
+      uri,
+      body: json.encode(body),
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 201) {
+      logger.i('success posted.');
+      return json.decode(response.body);
+    } else {
+      logger.e('failed posted.');
+      throw Exception('Failed POST in Api.post()');
+    }
+  }
 }

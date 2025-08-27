@@ -115,7 +115,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
     // 発生場所を格納する変数
     String _place = '';
     // 送信中かどうかを示す変数
-    bool _isSending = false;
+    bool _isSubmitting = false;
 
     return FutureBuilder<List<dynamic>?>(
       future: fetchData(),
@@ -341,10 +341,10 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
               StatefulBuilder(
                 builder: (context, setState) {
                   return CustomElevatedButton(
-                    isDisabled: _isSending,
+                    isDisabled: _isSubmitting,
                     onPressed: () async {
                       setState(() {
-                        _isSending = true;
+                        _isSubmitting = true;
                       });
                       // レスキューを送信する
                       final isSuccess = await _sendRescueRequest(
@@ -359,11 +359,11 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                         Navigator.of(context).popUntil((route) => route.isFirst);
                       }else{
                         setState(() {
-                          _isSending = false;
+                          _isSubmitting = false;
                         });
                       }
                     },
-                    label: _isSending ? "送信中..." : "送信",
+                    label: _isSubmitting ? "送信中..." : "送信",
                   );
                 }
               ),
