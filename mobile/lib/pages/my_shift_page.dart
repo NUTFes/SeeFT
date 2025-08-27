@@ -3,6 +3,7 @@ import 'package:seeft_mobile/widgets/shift_card.dart';
 import 'package:collection/collection.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 import 'package:seeft_mobile/widgets/refresh_button.dart';
+import 'package:seeft_mobile/widgets/review_bottom_sheet.dart';
 
 
 Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
@@ -109,7 +110,8 @@ class _MyShiftPageState extends State<MyShiftPage>
     );
     _tabController.addListener(_handleTabChange); // タブの変更を監視するリスナーを追加
     // ユーザIDを取得
-    _userID = await store.getUserID();
+    // _userID = await store.getUserID();
+    _userID = 1;
     logger.i('User ID: $_userID');
     // 初期タブのデータを初期化
     await _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
@@ -199,6 +201,10 @@ class _MyShiftPageState extends State<MyShiftPage>
           }
           : logger.w('フェッチデータが既に最新です。キャッシュを使用します。');
         setState(() => isLoading = false);   // ロード中フラグをfalseに設定
+        
+        // ここにレビューの処理を挟む
+        _showReviewFormIfNeeded(cashedShiftCardDataList, dayID);
+
         return;
       }
       // フェッチデータが新しい場合はキャッシュデータと表示データを更新
@@ -207,11 +213,69 @@ class _MyShiftPageState extends State<MyShiftPage>
       // フェッチデータをShiftCardDataListに変換
       final ShiftCardDataList? fetchedShiftCardDataList = ShiftCardDataList.fromJson(fetchedData);
       
+      // ここにレビューの処理を挟む
+      _showReviewFormIfNeeded(fetchedShiftCardDataList, dayID);
+
       // 表示データをフェッチデータで更新
       setState(() {
         shiftCardDataList = fetchedShiftCardDataList;
         isLoading = false; // ロード中フラグをfalseに設定
       });
+    });
+  }
+  
+  // レビューを表示する
+  void _showReviewFormIfNeeded(ShiftCardDataList? shiftCardDataList, int dayID) {
+    if(shiftCardDataList == null) {
+      print("シフトカードデータがありません. レビューを表示しません.");
+      return;
+    }
+    
+    // 現在時刻を取得
+    DateTime now = DateTime.now();
+    
+    // dayIDから日付を取得
+    String targetDate = '2025-09-12';
+    switch (dayID) {
+      case 1:
+        targetDate = constant.nutfesPreparationDay;
+        break;
+      case 2:
+        targetDate = constant.nutfesDay1;
+        break;
+      case 3:
+        targetDate = constant.nutfesDay2;
+        break;
+      case 4:
+        targetDate = constant.nutfesTidyingUpDay;
+        break;
+    }
+
+    // 各シフトカードに対するレビュー処理
+    shiftCardDataList.data.forEach((shiftCard) {
+    
+      // シフトカードのタスクが既にレビュー済みかどうかを確認
+      final _isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
+      if(_isReviewed){
+        print("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
+        return;
+      }
+      print("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
+      
+      // シフトカードからタスクの終了時刻を取得
+      DateTime shiftEndTime = DateTime.parse("$targetDate " + shiftCard.endTime);
+      print("現在時刻: $now, シフト終了時刻: $shiftEndTime");
+      
+      // 対象のタスクが終了しているかどうかを判定
+      final _isFinished = now.isAfter(shiftEndTime);
+      if (_isFinished) {
+        // 各シフトカードに対するレビュー処理を実行
+        ReviewBottomSheet.show(
+          context,
+          shiftCard.taskName,
+          _userID
+        );
+      }
     });
   }
 
@@ -230,6 +294,7 @@ class _MyShiftPageState extends State<MyShiftPage>
         centerTitle: false,
         toolbarHeight: 63,
         backgroundColor: AppColors.main,
+        foregroundColor: AppColors.base,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
