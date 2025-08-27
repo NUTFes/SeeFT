@@ -110,8 +110,7 @@ class _MyShiftPageState extends State<MyShiftPage>
     );
     _tabController.addListener(_handleTabChange); // タブの変更を監視するリスナーを追加
     // ユーザIDを取得
-    // _userID = await store.getUserID();
-    _userID = 1;
+    _userID = await store.getUserID();
     logger.i('User ID: $_userID');
     // 初期タブのデータを初期化
     await _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
@@ -253,7 +252,6 @@ class _MyShiftPageState extends State<MyShiftPage>
 
     // 各シフトカードに対するレビュー処理
     shiftCardDataList.data.forEach((shiftCard) {
-    
       // シフトカードのタスクが既にレビュー済みかどうかを確認
       final _isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
       if(_isReviewed){
@@ -263,7 +261,8 @@ class _MyShiftPageState extends State<MyShiftPage>
       print("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
       
       // シフトカードからタスクの終了時刻を取得
-      DateTime shiftEndTime = DateTime.parse("$targetDate " + shiftCard.endTime);
+      final String endTime = shiftCard.endTime.padLeft(5, '0'); // 1桁時間の場合に備えて0埋め
+      DateTime shiftEndTime = DateTime.parse("$targetDate " + endTime);
       print("現在時刻: $now, シフト終了時刻: $shiftEndTime");
       
       // 対象のタスクが終了しているかどうかを判定
