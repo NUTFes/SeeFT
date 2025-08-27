@@ -5,12 +5,14 @@ class CustomElevatedButtonOutlined extends StatelessWidget {
   final VoidCallback onPressed;
   final String label;
   final IconData? icon;
+  final bool isExpanded;  // 横幅を広げるかどうか
 
   const CustomElevatedButtonOutlined({
     super.key,
     required this.onPressed,
     required this.label,
     this.icon,
+    this.isExpanded = false,
   });
 
   @override
@@ -40,7 +42,7 @@ class CustomElevatedButtonOutlined extends StatelessWidget {
           ),
         ),
         // 横幅を広げるための設定
-        // minimumSize: Size(double.infinity, 40),
+        minimumSize: isExpanded ? const Size(double.infinity, 40) : null,
       ),
     );
   }
