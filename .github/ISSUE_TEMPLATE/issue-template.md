@@ -1,7 +1,7 @@
 ---
 name: issue template
 about: issueのテンプレート
-title: "[ tag ] Title"
+title: "【mobile-X-X】Title"
 labels: ''
 assignees: uchida189
 
@@ -14,34 +14,10 @@ assignees: uchida189
 #### 開発期間
 - 開始日：
 - 締切日：
-#### 優先度
-<!-- 0, 1, 2, 3 から選択（数字が小さいほど優先度高い） -->
-- 
-#### カテゴリ/スキル
-<!-- 不要なものを消す -->
-- Meeting
-- Hearing
-- Training
-- Design / Figma
-- Frontend-Mobile / Dart(Flutter)
-- Frontend-Admin / TypeScript, React, NextJS
-- Backend / Go, TypeScript
-- Database / PostgreSQL
-- Docker / Dockerfile, docker-compose.yaml
-- Google-Spread-Sheet / Google Spread Sheet, Google Apps Script
-#### 難易度・規模
-<!-- 不要なものを消す -->
-- XL（25時間以上）
-- L （20時間くらい）
-- M（10時間くらい）
-- S （5時間くらい）
-- XS（3時間くらい）
-#### 担当者
-<!-- @をつけることでメンションができます -->
-- @
 
 # 考えられる開発内容
 <!-- チェックボックスで書くと「todo: △/○」みたいに表示されるので良き -->
+<!-- 編集対象のファイルパスが決まっていれば、なるべく書いておくといいかも -->
 - [ ] 
 
 # 備考

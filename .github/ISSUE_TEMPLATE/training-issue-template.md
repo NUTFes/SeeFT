@@ -2,7 +2,7 @@
 name: Training issue template
 about: 新入生の練習用タスクのテンプレート
 title: "[ Training ] Title"
-labels: 02_Training
+labels: ''
 assignees: uchida189
 
 ---
