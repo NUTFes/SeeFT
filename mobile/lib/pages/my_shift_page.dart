@@ -85,7 +85,7 @@ class _MyShiftPageState extends State<MyShiftPage>
     1: "準備日",
     2: "1日目",
     3: "2日目",
-    4: "片付け日"
+    // 4: "片付け日"
   };
   
   late int _userID; // ユーザIDを格納する変数
