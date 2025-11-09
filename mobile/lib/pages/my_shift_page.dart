@@ -67,7 +67,7 @@ class MyShiftPage extends StatefulWidget {
 class _MyShiftPageState extends State<MyShiftPage>
     with TickerProviderStateMixin {
   int _selectedDayID = shiftCardBox.get('selectedDayID')?? 1;         // 日付の選択状態(1:準備日, 2:1日目, 3:2日目, 4:片付け日), Hiveから最後に見ていた日付を取得
-  int _selectedWeatherID = shiftCardBox.get('selectedWeatherID')?? 1; // 天気の選択状態(1:晴れ, 2:雨), Hiveから最後に見ていた天気を取得
+  // int _selectedWeatherID = shiftCardBox.get('selectedWeatherID')?? 1; // 天気の選択状態(1:晴れ, 2:雨), Hiveから最後に見ていた天気を取得
   ShiftCardDataList? shiftCardDataList; // ShiftCardDataListを格納する変数
   // Map<String, ShiftCardDataList>? allShiftCardDataList; // 全てのシフトカードデータを格納する変数(キーはhiveのキーと同じ)
   bool isLoading = false;       // ロード中かどうかのフラグ
@@ -75,11 +75,11 @@ class _MyShiftPageState extends State<MyShiftPage>
   final int debounceTime = 500; // デバウンス時間を設定
   final deepEq = DeepCollectionEquality.unordered().equals; // シフトカードデータの比較用の関数
   
-  // 天気ごとのweatherID
-  final Map<int, String> _weatherOptions = {
-    1: "晴れ",
-    2: "雨"
-  };
+  // // 天気ごとのweatherID
+  // final Map<int, String> _weatherOptions = {
+  //   1: "晴れ",
+  //   2: "雨"
+  // };
   // 日付ごとのdateID
   final Map<int, String> _dayOptions = {
     1: "準備日",
@@ -113,7 +113,9 @@ class _MyShiftPageState extends State<MyShiftPage>
     _userID = await store.getUserID();
     logger.i('User ID: $_userID');
     // 初期タブのデータを初期化
-    await _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
+    // await _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
+    await _loadShiftCardDataList(_userID, _selectedDayID, 1); // 天気は初期化時に晴れ(1)で固定
+
   }
   
   // ウィジェットが破棄されるときの処理
@@ -128,9 +130,11 @@ class _MyShiftPageState extends State<MyShiftPage>
   Future<void> _dispose() async {  
     logger.i('MyShiftPage is being disposed.');
     // 選択された日付と天気のIDをHiveに保存
+    // await shiftCardBox.put('selectedDayID', _selectedDayID);
+    // await shiftCardBox.put('selectedWeatherID', _selectedWeatherID);
+    // 選択された日付IDをHiveに保存（天気は廃止）
     await shiftCardBox.put('selectedDayID', _selectedDayID);
-    await shiftCardBox.put('selectedWeatherID', _selectedWeatherID);
-    logger.i('Stored Day ID: $_selectedDayID, Stored Weather ID: $_selectedWeatherID');
+    logger.i('Stored Day ID: $_selectedDayID');
     // タブコントローラーのリスナーを削除し、コントローラーを破棄
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
@@ -145,23 +149,25 @@ class _MyShiftPageState extends State<MyShiftPage>
       _selectedDayID = newDayID;  // 選択された日付のインデックスを更新
     });
     // シフトカードのデータを更新
-    _loadShiftCardDataList(_userID, newDayID, _selectedWeatherID);
+    // _loadShiftCardDataList(_userID, newDayID, _selectedWeatherID);
+    _loadShiftCardDataList(_userID, newDayID, 1); // 天気はタブ切り替え時に晴れ(1)で固定
   }
   
   // SegmentedButton(天気)の選択状態が変わったときの処理
-  void _handleWeatherSelectionChanged(Set<Object> newSelection) {
-    final int newWeatherID = (newSelection.first as int);  // 天気の選択状態を取得
-    setState(() {
-      _selectedWeatherID = newWeatherID;  // 選択された天気のインデックスを更新
-    });
-    // シフトカードのデータを更新
-    _loadShiftCardDataList(_userID, _selectedDayID, newWeatherID);
-  }
+  // void _handleWeatherSelectionChanged(Set<Object> newSelection) {
+  //   final int newWeatherID = (newSelection.first as int);  // 天気の選択状態を取得
+  //   setState(() {
+  //     _selectedWeatherID = newWeatherID;  // 選択された天気のインデックスを更新
+  //   });
+  //   // シフトカードのデータを更新
+  //   _loadShiftCardDataList(_userID, _selectedDayID, newWeatherID);
+  // }
   
   // 更新ボタンが押されたときの処理
   void _handleRefreshPressed() {
     // シフトカードのデータを再ロード
-    _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
+    // _loadShiftCardDataList(_userID, _selectedDayID, _selectedWeatherID);
+    _loadShiftCardDataList(_userID, _selectedDayID, 1); // 天気は更新時に晴れ(1)で固定
   }
   
   // 指定のユーザID、日付ID、天気IDのシフトカードデータリストをロードする関数
@@ -170,9 +176,9 @@ class _MyShiftPageState extends State<MyShiftPage>
     setState(() => isLoading = true);   // ロード中フラグをtrueに設定
     
     // 日付が準備日と片付け日であれば天気を1(晴れ)に固定
-    if (dayID == 1 || dayID == 4) {
-      weatherID = 1;
-    }
+    // if (dayID == 1 || dayID == 4) {
+    //   weatherID = 1;
+    // }
     
     // キャッシュからデータを取得
     final List<dynamic>? cachedData = _getCashedShiftCardDataList(dayID, weatherID);
@@ -294,17 +300,18 @@ class _MyShiftPageState extends State<MyShiftPage>
         toolbarHeight: 63,
         backgroundColor: AppColors.main,
         foregroundColor: AppColors.base,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20.0),
-            child: SizedBox(
-              // height: 30,
-              width: 200,
-              // 天気を選択するセグメントボタン
-              child: _weatherSegmentedButton(),
-            ),
-          ),
-        ],
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.only(right: 20.0),
+        //     child: SizedBox(
+        //       // height: 30,
+        //       width: 200,
+        //       // 天気を選択するセグメントボタン
+        //       child: _weatherSegmentedButton(),
+        //     ),
+        //   ),
+        // ],
+        // actions: [], // 天気セグメントボタンは廃止
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(75.0),
           // 日付を選択するタブバー
@@ -331,53 +338,54 @@ class _MyShiftPageState extends State<MyShiftPage>
   }
   
   // 天気を選択するセグメントボタン
-  Widget _weatherSegmentedButton() {
-    return SegmentedButton(
-      selected: {_selectedWeatherID}, // 選択されている天気のインデックスをセット
-      onSelectionChanged: _handleWeatherSelectionChanged,
-      style: SegmentedButton.styleFrom(
-        backgroundColor: AppColors.main,
-        selectedBackgroundColor: AppColors.base,
-        side: BorderSide(
-          color: AppColors.grayLight,
-          width: 1.0,
-        ),
-      ),
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment(
-          label: Text(
-            "晴れ",
-            style: TextStyle(
-              color: _selectedWeatherID == (_weatherOptions["晴れ"] ?? 1) ? AppColors.main : AppColors.grayLight,
-              fontSize: AppFontSizes.sm,
-            ),
-          ),
-          icon: Icon(
-            Icons.sunny,
-            color: _selectedWeatherID == (_weatherOptions["晴れ"] ?? 1) ? AppColors.main : AppColors.grayLight,
-            size: 18,
-          ),
-          value: _weatherOptions["晴れ"] ?? 1, // 晴れのインデックス
-        ),
-        ButtonSegment(
-          label: Text(
-            "雨",
-            style: TextStyle(
-              color: _selectedWeatherID == (_weatherOptions["雨"] ?? 2) ? AppColors.main : AppColors.grayLight,
-              fontSize: AppFontSizes.sm,
-            ),
-          ),
-          icon: Icon(
-            Icons.cloudy_snowing,
-            color: _selectedWeatherID == (_weatherOptions["雨"] ?? 2) ? AppColors.main : AppColors.grayLight,
-            size: 18,
-          ),
-          value: _weatherOptions["雨"] ?? 2, // 雨のインデックス
-        ),
-      ],
-    );
-  }
+  // Widget _weatherSegmentedButton() {
+  //   return SegmentedButton(
+  //     selected: {_selectedWeatherID}, // 選択されている天気のインデックスをセット
+  //     onSelectionChanged: _handleWeatherSelectionChanged,
+  //     style: SegmentedButton.styleFrom(
+  //       backgroundColor: AppColors.main,
+  //       selectedBackgroundColor: AppColors.base,
+  //       side: BorderSide(
+  //         color: AppColors.grayLight,
+  //         width: 1.0,
+  //       ),
+  //     ),
+  //     showSelectedIcon: false,
+  //     segments: [
+  //       ButtonSegment(
+  //         label: Text(
+  //           "晴れ",
+  //           style: TextStyle(
+  //             color: _selectedWeatherID == (_weatherOptions["晴れ"] ?? 1) ? AppColors.main : AppColors.grayLight,
+  //             fontSize: AppFontSizes.sm,
+  //           ),
+  //         ),
+  //         icon: Icon(
+  //           Icons.sunny,
+  //           color: _selectedWeatherID == (_weatherOptions["晴れ"] ?? 1) ? AppColors.main : AppColors.grayLight,
+  //           size: 18,
+  //         ),
+  //         value: _weatherOptions["晴れ"] ?? 1, // 晴れのインデックス
+  //       ),
+  //       ButtonSegment(
+  //         label: Text(
+  //           "雨",
+  //           style: TextStyle(
+  //             color: _selectedWeatherID == (_weatherOptions["雨"] ?? 2) ? AppColors.main : AppColors.grayLight,
+  //             fontSize: AppFontSizes.sm,
+  //           ),
+  //         ),
+  //         icon: Icon(
+  //           Icons.cloudy_snowing,
+  //           color: _selectedWeatherID == (_weatherOptions["雨"] ?? 2) ? AppColors.main : AppColors.grayLight,
+  //           size: 18,
+  //         ),
+  //         value: _weatherOptions["雨"] ?? 2, // 雨のインデックス
+  //       ),
+  //     ],
+  //   );
+  // }
+  // 天気選択UIは削除（常に晴れ=1 を使用）
   
   // 日付を選択するタブバー
   Widget _dayTabBar() {
