@@ -129,8 +129,7 @@ class _MyShiftPageState extends State<MyShiftPage>
   // ウィジェットが破棄されるときの処理(非同期処理は直接disposeで行えないため分離)
   Future<void> _dispose() async {  
     logger.i('MyShiftPage is being disposed.');
-    // 選択された日付と天気のIDをHiveに保存
-    // await shiftCardBox.put('selectedDayID', _selectedDayID);
+    // 選択された天気のIDをHiveに保存
     // await shiftCardBox.put('selectedWeatherID', _selectedWeatherID);
     // 選択された日付IDをHiveに保存（天気は廃止）
     await shiftCardBox.put('selectedDayID', _selectedDayID);
@@ -311,7 +310,6 @@ class _MyShiftPageState extends State<MyShiftPage>
         //     ),
         //   ),
         // ],
-        // actions: [], // 天気セグメントボタンは廃止
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(75.0),
           // 日付を選択するタブバー
