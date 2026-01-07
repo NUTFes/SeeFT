@@ -40,6 +40,19 @@ git submodule update --init
 ### diを編集してからうまく動かないとき
 一度コンテナをdownさせてからupし直してみてください。
 
+## SchemaSpyでDBスキーマを確認する（PostgreSQL）
+- DB初期データは `mysql/db` ディレクトリにありますが、実際のDBはPostgreSQLです。
+- 生成物の出力先: `api/docs/schemaspy`
+
+```fish
+# 標準（docker-compose.yml）
+make schemaspy
+
+# Mac用composeを使う場合
+make mac-schemaspy
+```
+接続先・認証情報は compose の環境変数（`SCHEMASPY_HOST`, `SCHEMASPY_DB` など）で上書きできます。
+
 ## Author
 NUTMEG（技大祭実行委員会情報局）
 mail: nutfes.info [at] gmail

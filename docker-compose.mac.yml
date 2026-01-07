@@ -43,3 +43,36 @@ services:
     tty: true
     depends_on: [api]
 
+  schemaspy:
+    container_name: nutfes-seeft-schemaspy
+    image: schemaspy/schemaspy:latest
+    depends_on:
+      db:
+        condition: service_started
+    environment:
+      SCHEMASPY_HOST: ${SCHEMASPY_HOST:-db}
+      SCHEMASPY_PORT: ${SCHEMASPY_PORT:-5432}
+      SCHEMASPY_DB: ${SCHEMASPY_DB:-seeft_db}
+      SCHEMASPY_USER: ${SCHEMASPY_USER:-seeft}
+      SCHEMASPY_PASSWORD: ${SCHEMASPY_PASSWORD:-password}
+      SCHEMASPY_SCHEMA: ${SCHEMASPY_SCHEMA:-public}
+    volumes:
+      - ./api/docs/schemaspy:/output
+    command:
+      - "-t"
+      - "pgsql"
+      - "-host"
+      - "${SCHEMASPY_HOST:-db}"
+      - "-port"
+      - "${SCHEMASPY_PORT:-5432}"
+      - "-db"
+      - "${SCHEMASPY_DB:-seeft_db}"
+      - "-u"
+      - "${SCHEMASPY_USER:-seeft}"
+      - "-p"
+      - "${SCHEMASPY_PASSWORD:-password}"
+      - "-s"
+      - "${SCHEMASPY_SCHEMA:-public}"
+      - "-o"
+      - "/output"
+
