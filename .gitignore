@@ -30,3 +30,6 @@ api/docs/schemaspy/*
 !api/docs/schemaspy/.gitkeep
 !api/docs/schemaspy/schemaspy.properties
 !api/docs/schemaspy/README.md
+
+# SchemaSpy
+schemaspy/
