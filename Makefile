@@ -88,12 +88,12 @@ mac-seed:
 .PHONY: schemaspy
 schemaspy:
 	mkdir -p api/docs/schemaspy
-	docker compose run --rm schemaspy
+	docker compose run --rm schemaspy $(ARGS)
 
 .PHONY: mac-schemaspy
 mac-schemaspy:
 	mkdir -p api/docs/schemaspy
-	docker compose -f docker-compose.mac.yml run --rm schemaspy
+	docker compose -f docker-compose.mac.yml run --rm schemaspy $(ARGS)
 
 # mobile/lib/assetsに512*512のアイコンを用意しておくこと(コマンドのファイル名も変更する)
 # リサイズ用にImageMagickをインストールする（`sudo apt-get install imagemagick` or `brew install imagemagick`）
