@@ -74,6 +74,8 @@ services:
       SCHEMASPY_SCHEMA: ${SCHEMASPY_SCHEMA:-public}
     volumes:
       - ./api/docs/schemaspy:/output
+    profiles:
+      - tools
     command:
       - "-t"
       - "pgsql"
