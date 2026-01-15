@@ -2,11 +2,19 @@ import 'package:seeft_mobile/configs/importer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // シフトカードのウィジェット
-class ShiftCard extends StatelessWidget {
+class ShiftCard extends StatefulWidget {
   final ShiftCardData data;
 
   const ShiftCard({super.key, required this.data});
-  
+
+  @override
+  State<ShiftCard> createState() => _ShiftCardState();
+}
+
+class _ShiftCardState extends State<ShiftCard> {
+  // モック用：未読管理フラグ（初期値は未読）
+  bool isRead = false;
+
   // リンクを開くための非同期メソッドを定義
   Future<void> _launchManualUrl(String url) async {
     // 開きたいURLをUriオブジェクトに変換
@@ -21,144 +29,179 @@ class ShiftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin:EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0), // 角丸を設定
-        side: BorderSide(
-          color: AppColors.grayLight, // 枠線の色
-          width: 1.0, // 枠線の太さ
-        ),
-      ),
-      elevation: 0.5,
-      shadowColor: null,
-      color: AppColors.base, // 背景色を設定
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 時刻とマニュアルを開くボタン
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // 時刻の表示
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      color: AppColors.textBlack,
-                      size: 16
-                    ),
-                    const SizedBox(width: 2.0),
-                    Text(
-                      data.startTime + "〜" + data.endTime,
-                      style: const TextStyle(
-                        fontSize: AppFontSizes.sm,
-                        color: AppColors.textBlack
-                      ),
-                    ),
-                  ],
-                ),
-                // マニュアルを開くボタン
-                _manualButton(url: data.url),
-              ],
-            ),
-            // タスク名の表示
-            Text(
-              data.taskName.toString(),
-              style: const TextStyle(
-                fontSize: AppFontSizes.md,
-                color: AppColors.textBlack, 
-                fontWeight: FontWeight.bold
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              isRead = true;
+            });
+          },
+          child: Card(
+            margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              side: BorderSide(
+                color: AppColors.grayLight,
+                width: 1.0,
               ),
-              textAlign: TextAlign.left,
             ),
-            const SizedBox(height: 6.0),
-            const Divider(
-              height: 1,
-              color: AppColors.grayLight, // 区切り線の色
-            ),
-            // 集合場所とトグル
-            Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent), // 区切り線の色を透明に
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                iconColor: AppColors.textBlack, // アイコンの色を変更
-                minTileHeight: 0, // タイルの高さを最小に
-                // 集合場所の表示
-                title: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined, 
-                      color: AppColors.textBlack,
-                      size: 16
-                    ),
-                    const SizedBox(width: 2.0),
-                    Text(
-                      data.place,
-                      style: const TextStyle(
-                        fontSize: AppFontSizes.sm,
-                        color: AppColors.textBlack
+            elevation: 0.5,
+            shadowColor: null,
+            color: AppColors.base,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 時刻とマニュアルを開くボタン
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // 時刻の表示
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time,
+                            color: AppColors.textBlack,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 2.0),
+                          Text(
+                            widget.data.startTime + "〜" + widget.data.endTime,
+                            style: const TextStyle(
+                              fontSize: AppFontSizes.sm,
+                              color: AppColors.textBlack,
+                            ),
+                          ),
+                        ],
                       ),
+                      // マニュアルを開くボタン
+                      _manualButton(url: widget.data.url),
+                    ],
+                  ),
+                  // タスク名の表示
+                  Text(
+                    widget.data.taskName.toString(),
+                    style: const TextStyle(
+                      fontSize: AppFontSizes.md,
+                      color: AppColors.textBlack,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-                // トグルが展開されたときの内容
-                children: <Widget>[
-                  _buildSection(
-                    title: '【集合場所】',
-                    content: [data.place]
+                    textAlign: TextAlign.left,
                   ),
-                  _buildManualSection(
-                    title: '【マニュアル】',
-                    url: data.url != '' ? data.url : null
+                  const SizedBox(height: 6.0),
+                  const Divider(
+                    height: 1,
+                    color: AppColors.grayLight,
                   ),
-                  _buildSection(
-                    title: '【困った時は】',
-                    content: [
-                      '以下の順に対応してください。',
-                      '1. マニュアルを確認してください。',
-                      '2. 近くの人や近くの先輩に相談してください。',
-                      '3. 「緊急事対応」ページから本部に連絡してください。',
-                    ],
-                  ),
-                  _buildSection(
-                    title: '【担当者の一覧】',
-                    content: [
-                      for (var member in data.shiftMembers)
-                        '${member.s_time}〜${member.e_time}\n' +
-                        member.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', '),
-                    ],
-                  ),
-                  _buildSection(
-                    title: '【前の時間の担当者の一覧】',
-                    content: [
-                      if (data.beforeMembers.members.isNotEmpty)
-                        '${data.beforeMembers.s_time}〜${data.beforeMembers.e_time}\n' +
-                        data.beforeMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')
-                      else
-                        '前の時間の担当者はいません',
-                    ],
-                  ),
-                  _buildSection(
-                    title: '【次の時間の担当者の一覧】',
-                    content: [
-                      if (data.afterMembers.members.isNotEmpty)
-                        '${data.afterMembers.s_time}〜${data.afterMembers.e_time}\n' +
-                        data.afterMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')
-                      else
-                        '次の時間の担当者はいません',
-                    ],
+                  // 集合場所とトグル
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      iconColor: AppColors.textBlack,
+                      minTileHeight: 0,
+                      // 集合場所の表示
+                      title: Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                            color: AppColors.textBlack,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 2.0),
+                          Text(
+                            widget.data.place,
+                            style: const TextStyle(
+                              fontSize: AppFontSizes.sm,
+                              color: AppColors.textBlack,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // トグルが展開されたときの内容
+                      children: <Widget>[
+                        _buildSection(
+                          title: '【集合場所】',
+                          content: [widget.data.place],
+                        ),
+                        _buildManualSection(
+                          title: '【マニュアル】',
+                          url: widget.data.url != '' ? widget.data.url : null,
+                        ),
+                        _buildSection(
+                          title: '【困った時は】',
+                          content: [
+                            '以下の順に対応してください。',
+                            '1. マニュアルを確認してください。',
+                            '2. 近くの人や近くの先輩に相談してください。',
+                            '3. 「緊急事対応」ページから本部に連絡してください。',
+                          ],
+                        ),
+                        _buildSection(
+                          title: '【担当者の一覧】',
+                          content: [
+                            for (var member in widget.data.shiftMembers)
+                              '${member.s_time}〜${member.e_time}\n' +
+                              member.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', '),
+                          ],
+                        ),
+                        _buildSection(
+                          title: '【前の時間の担当者の一覧】',
+                          content: [
+                            if (widget.data.beforeMembers.members.isNotEmpty)
+                              '${widget.data.beforeMembers.s_time}〜${widget.data.beforeMembers.e_time}\n' +
+                              widget.data.beforeMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')
+                            else
+                              '前の時間の担当者はいません',
+                          ],
+                        ),
+                        _buildSection(
+                          title: '【次の時間の担当者の一覧】',
+                          content: [
+                            if (widget.data.afterMembers.members.isNotEmpty)
+                              '${widget.data.afterMembers.s_time}〜${widget.data.afterMembers.e_time}\n' +
+                              widget.data.afterMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')
+                            else
+                              '次の時間の担当者はいません',
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        // 「New!」バッジ（未読の場合のみ表示）
+        if (!isRead)
+          Positioned(
+            top: 4.0,
+            right: 4.0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6.0,
+                vertical: 2.0,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: const Text(
+                'New!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
   // マニュアルボタン

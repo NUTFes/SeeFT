@@ -1,10 +1,76 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/widgets/shift_card.dart';
 import 'package:collection/collection.dart';
-import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 import 'package:seeft_mobile/widgets/refresh_button.dart';
 import 'package:seeft_mobile/widgets/review_bottom_sheet.dart';
 
+// モック用のシフトデータを生成する関数
+ShiftCardDataList _getMockShiftCardDataList() {
+  return ShiftCardDataList([
+    ShiftCardData(
+      taskName: '受付',
+      startTime: '09:00',
+      endTime: '12:00',
+      place: '本部テント',
+      url: 'https://example.com/manual1',
+      shiftMembers: [
+        ShiftMembers(
+          s_time: '09:00',
+          e_time: '12:00',
+          members: [
+            ShiftMember(name: '山田太郎', grade: '3年', bureau: '総務'),
+            ShiftMember(name: '佐藤花子', grade: '2年', bureau: '総務'),
+          ],
+        ),
+      ],
+      beforeMembers: ShiftMembers(
+        s_time: '06:00',
+        e_time: '09:00',
+        members: [
+          ShiftMember(name: '鈴木一郎', grade: '4年', bureau: '総務'),
+        ],
+      ),
+      afterMembers: ShiftMembers(
+        s_time: '12:00',
+        e_time: '15:00',
+        members: [
+          ShiftMember(name: '田中次郎', grade: '3年', bureau: '総務'),
+        ],
+      ),
+    ),
+    ShiftCardData(
+      taskName: '案内',
+      startTime: '13:00',
+      endTime: '16:00',
+      place: '正門',
+      url: 'https://example.com/manual2',
+      shiftMembers: [
+        ShiftMembers(
+          s_time: '13:00',
+          e_time: '16:00',
+          members: [
+            ShiftMember(name: '高橋三郎', grade: '2年', bureau: '企画'),
+            ShiftMember(name: '伊藤四郎', grade: '1年', bureau: '企画'),
+          ],
+        ),
+      ],
+      beforeMembers: ShiftMembers(
+        s_time: '10:00',
+        e_time: '13:00',
+        members: [
+          ShiftMember(name: '渡辺五郎', grade: '3年', bureau: '企画'),
+        ],
+      ),
+      afterMembers: ShiftMembers(
+        s_time: '16:00',
+        e_time: '19:00',
+        members: [
+          ShiftMember(name: '中村六郎', grade: '4年', bureau: '企画'),
+        ],
+      ),
+    ),
+  ]);
+}
 
 Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
   logger.i('=== API Call Started ===' 
@@ -40,15 +106,24 @@ Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherI
   }
 }
 
+// モックデータを常に使用するフラグ（開発用）
+const bool _useMockDataAlways = true; // 開発中はtrueに設定
+
 // キャッシュからデータをロードする関数
 List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
+  // モックデータを常に使用する場合はnullを返す
+  if (_useMockDataAlways) {
+    logger.i('開発モード: モックデータを使用します。');
+    return null;
+  }
+  
   // キャッシュからデータを取得
   logger.i('=== キャッシュからデータを取得します ===');
   final List<dynamic>? cachedData = shiftCardBox.get('${dayID}_${weatherID}');
   logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');
   
-  // キャッシュデータがない場合は表示データをnullに設定する
-  if (cachedData == null) {
+  // キャッシュデータがない、または空の場合はnullを返す
+  if (cachedData == null || cachedData.isEmpty) {
     logger.e('$dayID, $weatherID のキャッシュデータがありません。');
     return null;
   }
@@ -183,7 +258,17 @@ class _MyShiftPageState extends State<MyShiftPage>
     final List<dynamic>? cachedData = _getCashedShiftCardDataList(dayID, weatherID);
     // キャッシュデータをShiftCardDataListに変換
     final ShiftCardDataList? cashedShiftCardDataList = 
-      cachedData != null ? ShiftCardDataList.fromJson(cachedData) : null;
+      cachedData != null && cachedData.isNotEmpty ? ShiftCardDataList.fromJson(cachedData) : null;
+    
+    // キャッシュデータがない、または空の場合はモックデータを使用
+    if (cashedShiftCardDataList == null || cashedShiftCardDataList.data.isEmpty) {
+      logger.i('キャッシュデータがないため、モックデータを使用します。');
+      setState(() {
+        shiftCardDataList = _getMockShiftCardDataList();
+        isLoading = false;
+      });
+      return;
+    }
     
     // 表示データをキャッシュデータで更新
     setState(() {
@@ -195,15 +280,20 @@ class _MyShiftPageState extends State<MyShiftPage>
       // サーバーからデータを取得
       final List<dynamic>? fetchedData = await _getShiftCardDataList(userID, dayID, weatherID);
       
+      // フェッチデータがnullまたは空の場合はモックデータを使用
+      if (fetchedData == null || fetchedData.isEmpty) {
+        logger.w('フェッチデータが空です。モックデータを使用します。');
+        setState(() {
+          shiftCardDataList = _getMockShiftCardDataList();
+          isLoading = false;
+        });
+        return;
+      }
+      
       // キャッシュデータとフェッチデータを比較
-      if (fetchedData == null || deepEq(fetchedData, cachedData)) {
-        // フェッチデータがnullまたはキャッシュデータと同じ場合は、キャッシュデータを使用
-        fetchedData == null
-          ? {
-            logger.w('フェッチデータが空です。キャッシュを使用します。'),
-            showCustomErrorSnackBar(context, 'データの取得に失敗しました。'), // スナックバーでエラーメッセージを表示
-          }
-          : logger.w('フェッチデータが既に最新です。キャッシュを使用します。');
+      if (deepEq(fetchedData, cachedData)) {
+        // フェッチデータがキャッシュデータと同じ場合は、キャッシュデータを使用
+        logger.w('フェッチデータが既に最新です。キャッシュを使用します。');
         setState(() => isLoading = false);   // ロード中フラグをfalseに設定
         
         // ここにレビューの処理を挟む
