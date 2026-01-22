@@ -17,17 +17,18 @@ import (
 )
 
 type shiftUseCase struct {
-	rep          rep.ShiftRepository
-	shiftCardRep rep.ShiftCardRepository
-	taskRep      rep.TaskRepository
-	userRep      rep.UserRepository
-	yearRep      rep.YearRepository
-	dateRep      rep.DateRepository
-	timeRep      rep.TimeRepository
-	weatherRep   rep.WeatherRepository
-	placeRep     rep.PlaceRepository
-	gradeRep     rep.GradeRepository
-	bureauRep    rep.BureauRepository
+	rep           rep.ShiftRepository
+	shiftCardRep  rep.ShiftCardRepository
+	taskRep       rep.TaskRepository
+	userRep       rep.UserRepository
+	yearRep       rep.YearRepository
+	dateRep       rep.DateRepository
+	timeRep       rep.TimeRepository
+	weatherRep    rep.WeatherRepository
+	placeRep      rep.PlaceRepository
+	gradeRep      rep.GradeRepository
+	bureauRep     rep.BureauRepository
+	actionLogRepo rep.ActionLogRepository
 }
 
 type ShiftUseCase interface {
@@ -61,8 +62,9 @@ func NewShiftUseCase(
 	weatherRep rep.WeatherRepository,
 	placeRep rep.PlaceRepository,
 	gradeRep rep.GradeRepository,
-	bureauRep rep.BureauRepository) ShiftUseCase {
-	return &shiftUseCase{rep, shiftCardRep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep, gradeRep, bureauRep}
+	bureauRep rep.BureauRepository,
+	actionLogRepo rep.ActionLogRepository) ShiftUseCase {
+	return &shiftUseCase{rep, shiftCardRep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep, gradeRep, bureauRep, actionLogRepo}
 }
 
 var TaskID, UserID, YearID, DateID, TimeID, WeatherID, PlaceID string
@@ -1450,14 +1452,61 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		// 4. 既存シフトがあるか確認
 		existRow, _ := u.rep.FindByUnique(ctx, taskID, userID, dateID, timeID, weatherID)
 		var existShift entity.ShiftAdmin
+		dateIDInt, _ := strconv.Atoi(dateID)
 		if err := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt); err == nil && existShift.ID != 0 {
-			// 既存があれば更新
+			// 既存があれば更新（タスクが変更された場合のみaction_logに記録）
+			oldTaskID := existShift.TaskID
+			newTaskID, _ := strconv.Atoi(taskID)
+			if oldTaskID != newTaskID {
+				// タスクが変更された場合
+				oldTaskRow, _ := u.taskRep.Find(ctx, strconv.Itoa(oldTaskID))
+				var oldTask entity.Task
+				oldTaskName := "（不明）"
+				if oldTaskRow != nil {
+					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil {
+						oldTaskName = oldTask.Task
+					}
+				}
+
+				newTaskName := task.Task
+				if newTaskName == "" {
+					newTaskName = "（不明）"
+				}
+
+				// action_logに記録
+				diffPayload := map[string]interface{}{
+					"changes": []map[string]string{
+						{"field": "task_name", "old": oldTaskName, "new": newTaskName},
+					},
+				}
+				if u.actionLogRepo != nil {
+					u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload)
+				}
+			}
 			isAttendance := false
 			u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
 		} else {
 			// なければ新規作成
 			isAttendance := false
 			u.rep.Create(ctx, taskID, userID, yearID, dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
+			// 最新のシフトIDを取得
+			latestRow, err := u.rep.FindLatestRecord(ctx)
+			if err == nil {
+				var newShift entity.ShiftAdmin
+				if err := latestRow.Scan(&newShift.ID, &newShift.TaskID, &newShift.UserID, &newShift.YearID, &newShift.DateID, &newShift.TimeID, &newShift.WeatherID, &newShift.IsAttendance, &newShift.CreatedAt, &newShift.UpdatedAt); err == nil {
+					// action_logに記録
+					newTaskName := task.Task
+					if newTaskName == "" {
+						newTaskName = "（新規）"
+					}
+					diffPayload := map[string]interface{}{
+						"new_task": newTaskName,
+					}
+					if u.actionLogRepo != nil {
+						u.actionLogRepo.Create(ctx, newShift.ID, user.ID, dateIDInt, "CREATE", diffPayload)
+					}
+				}
+			}
 		}
 	}
 	return nil
