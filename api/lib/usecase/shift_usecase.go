@@ -1500,7 +1500,9 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 						newTaskName = "（新規）"
 					}
 					diffPayload := map[string]interface{}{
-						"new_task": newTaskName,
+						"changes": []map[string]string{
+							{"field": "task_name", "old": "なし", "new": newTaskName},
+						},
 					}
 					if u.actionLogRepo != nil {
 						u.actionLogRepo.Create(ctx, newShift.ID, user.ID, dateIDInt, "CREATE", diffPayload)
