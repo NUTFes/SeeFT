@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
 )
 
@@ -21,6 +22,14 @@ const (
 
 // NewSlackService SlackServiceを初期化
 func NewSlackService() (*SlackService, error) {
+	// 環境変数が既に設定されている場合は.envファイルの読み込みをスキップ
+	// docker-compose.ymlなどでenv_fileが設定されている場合は不要
+	goEnv := os.Getenv("GO_ENV")
+	if goEnv != "" {
+		_ = godotenv.Load(fmt.Sprintf("../%s.env", goEnv))
+		// エラーは無視（環境変数が既に設定されている場合があるため）
+	}
+
 	botToken := os.Getenv("SLACK_BOT_TOKEN")
 	if botToken == "" {
 		return nil, fmt.Errorf("SLACK_BOT_TOKEN environment variable is not set")
@@ -65,20 +74,20 @@ func (s *SlackService) SendMessage(blocks []slack.Block, slackUserID string) err
 
 // BuildMessageBlocks リッチなメッセージを作成
 func (s *SlackService) BuildMessageBlocks(title, userName, date, weather, timeRange, changes string) []slack.Block {
-	headerText := fmt.Sprintf("✨ %s", title)
+	headerText := fmt.Sprintf("🔔 %s", title)
 	headerBlock := slack.NewHeaderBlock(slack.NewTextBlockObject("plain_text", headerText, false, false))
 
 	// 基本情報
 	fields := []*slack.TextBlockObject{
-		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*ユーザー:*\n%s", userName), false, false),
-		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*日付:*\n%s", date), false, false),
-		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*天気:*\n%s", weather), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("ユーザー: %s", userName), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("日付: %s", date), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("天気: %s", weather), false, false),
 	}
 
 	// 時間範囲がある場合は追加
 	if timeRange != "" {
 		fields = append(fields,
-			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*時間:*\n%s", timeRange), false, false),
+			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("時間: %s", timeRange), false, false),
 		)
 	}
 
@@ -89,7 +98,7 @@ func (s *SlackService) BuildMessageBlocks(title, userName, date, weather, timeRa
 	// 変更内容がある場合は追加
 	if changes != "" {
 		changesBlock := slack.NewSectionBlock(
-			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*変更内容:*\n%s", changes), false, false),
+			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*変更内容*\n%s", changes), false, false),
 			nil,
 			nil,
 		)

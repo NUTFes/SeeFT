@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	logpkg "log"
@@ -141,13 +142,17 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 		return errors.Wrapf(err, "failed to find user")
 	}
 	var user entity.User
+	var slackUserID sql.NullString
 	err = userRow.Scan(
 		&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID,
 		&user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel,
-		&user.Password, &user.CreatedAt, &user.UpdatedAt, &user.SlackUserID,
+		&user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID,
 	)
 	if err != nil {
 		return errors.Wrapf(err, "failed to scan user")
+	}
+	if slackUserID.Valid {
+		user.SlackUserID = slackUserID.String
 	}
 
 	// 日付情報を取得
@@ -434,7 +439,7 @@ func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entit
 		var changeText string
 		switch log.ActionType {
 		case "CREATE":
-			changeText = fmt.Sprintf("  - %s: %s（新規）", time.Time, task.Task)
+			changeText = fmt.Sprintf("%s（新規）", task.Task)
 		case "UPDATE":
 			// diff_payloadからold/newを取得
 			oldTask := "（不明）"
@@ -449,15 +454,15 @@ func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entit
 					}
 				}
 			}
-			changeText = fmt.Sprintf("  - %s: %s → %s", time.Time, oldTask, newTask)
+			changeText = fmt.Sprintf("%s → %s", oldTask, newTask)
 		case "DELETE":
 			oldTask := "（不明）"
 			if deleted, ok := payload["deleted_task"].(string); ok {
 				oldTask = deleted
 			}
-			changeText = fmt.Sprintf("  - %s: %s（削除）", time.Time, oldTask)
+			changeText = fmt.Sprintf("%s（削除）", oldTask)
 		default:
-			changeText = fmt.Sprintf("  - %s: %s", time.Time, task.Task)
+			changeText = fmt.Sprintf("%s", task.Task)
 		}
 
 		changes = append(changes, changeText)
