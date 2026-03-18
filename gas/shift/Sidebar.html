@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .row{
+        display: flex;
+        flex-direction: row;
+      }
+      .caption{
+        font: 16px;
+        font-weight: 900;
+      }
+      .label{
+        font: 10px "Roboto";
+        color: #3b3b3b;
+      }
+      .container{
+        border: solid 0.5px;
+        padding: 8px;
+      }
+      /* button{
+        display: flex;
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+      } */
+    </style>
+    <!-- <script>
+      const isVisualizeSwapArea = document.getElementById("is-visualize-swap-area");
+      function updateCellInfo() {
+        google.script.run.withSuccessHandler(function(cellInfo) {
+          document.getElementById("cell-info").innerText = cellInfo;
+        }).getSelectedCellValue();
+        google.script.run.withSuccessHandler(function(shiftMemberCount) {
+          document.getElementById("shift-member-count").innerText = shiftMemberCount;
+        }).getShiftMemberCount();
+      }
+      
+      setInterval(updateCellInfo, 300); // 0.3秒ごとに更新
+    </script> -->
+    <script>
+      // document.load()
+      // document.getElementById("swapping-range").innerText = google.script.run.getSwappingRange();
+      // const selectedRange = document.getElementById("selected-range");
+
+      // 起動時に実行
+      window.onload = function() {
+        // サイドバーで登録されたセル範囲を表示する
+        google.script.run.withSuccessHandler(function(swappingRange) {
+          document.getElementById("swapping-range").innerText = swappingRange;  
+        }).getSwappingRange();
+      }
+
+      // 選択中のセル範囲をサイドバーに表示する関数
+      function getSelectedRange(){
+        // 選択中のセル範囲をサイドバーに表示する
+        google.script.run.withSuccessHandler(function(selectedRange) {
+          document.getElementById("selected-range").innerText = selectedRange;
+        }).getSelectedRangeAndSheetName();
+        // // チェックボックスがONの場合、入れ替え対象のセル範囲を視覚化する
+        // if(isVisualizeSwapArea.value == true){
+        //   console.log(isVisualizeSwapArea.value);
+        //   google.script.run.visualizingSwapArea();
+        // }
+      }
+
+      // 選択中のセル範囲をストアに登録する関数
+      function setSwappingRange() {
+        // プロパティストアにセル範囲とシート名を登録
+        google.script.run.withSuccessHandler(function(swappingRange) {
+          document.getElementById("swapping-range").innerText = swappingRange;  // サイドバーで登録されたセル範囲を表示
+        }).setSwappingRange();
+      }
+
+      // 選択中のセル範囲と登録したセル範囲の値を入れ替える関数
+      function swappingValues(){
+        google.script.run.swappingValues();
+      }
+
+      setInterval(getSelectedRange, 300); // 0.3秒ごとに更新
+    </script>
+  </head>
+  <body>
+    <!-- <h2>選択セルの情報</h2>
+    <p id="cell-info">セルを選択してください...</p>
+    <p id="shift-member-count">シフトを選択してください...</p>
+    <hr> -->
+    <p class="caption">セル範囲の入れ替え</p>
+    <div class="container">
+      <div class="label">選択中のセル範囲</div>
+      <p id="selected-range">:</p>
+      <button id="set-swapping-range" onclick="setSwappingRange()">選択中のセル範囲を登録する</button>
+      <hr>
+      <div class="label">登録中のセル範囲</div>
+      <p id="swapping-range">:</p>
+      <button id="swapping-values" onclick="swappingValues()">選択中のセル範囲と値を入れ替える</button>
+      <input type="checkbox" id="is-visualize-swap-area">
+    </div>
+    <div class="label">
+      <使い方><br>
+      1. 入れ替えたい範囲を選択して「選択中のセル範囲を登録する」をクリック<br>
+      2. 入れ替え先を範囲選択して「選択中のセル範囲と値を入れ替える」をクリック<br>
+      3. 「選択中のセル範囲」と「登録中のセル範囲」の値が入れ替わります<br>
+      ※ 「選択中のセル範囲」の一番左上のセルを始点として、「登録中のセル範囲」の列数と行数分の範囲が全て入れ替わります
+    </div>
+    <p>メモ欄</p>
+    <textarea rows="10" cols="30"></textarea>
+  </body>
+</html>
