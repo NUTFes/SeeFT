@@ -88,12 +88,22 @@ mac-seed:
 .PHONY: schemaspy
 schemaspy:
 	mkdir -p api/docs/schemaspy
-	docker compose run --rm schemaspy $(ARGS)
+	- docker compose run --rm schemaspy
+	@echo "Extracting ER diagrams..."
+	mkdir -p api/docs/er-diagrams
+	find api/docs/schemaspy/diagrams -name '*.png' -exec cp {} api/docs/er-diagrams/ \;
+	rm -rf api/docs/schemaspy
+	@echo "ER diagrams saved to api/docs/er-diagrams/"
 
 .PHONY: mac-schemaspy
 mac-schemaspy:
 	mkdir -p api/docs/schemaspy
-	docker compose -f docker-compose.mac.yml run --rm schemaspy $(ARGS)
+	- docker compose run --rm schemaspy
+	@echo "Extracting ER diagrams..."
+	mkdir -p api/docs/er-diagrams
+	find api/docs/schemaspy/diagrams -name '*.png' -exec cp {} api/docs/er-diagrams/ \;
+	rm -rf api/docs/schemaspy
+	@echo "ER diagrams saved to api/docs/er-diagrams/"
 
 # mobile/lib/assetsに512*512のアイコンを用意しておくこと(コマンドのファイル名も変更する)
 # リサイズ用にImageMagickをインストールする（`sudo apt-get install imagemagick` or `brew install imagemagick`）
