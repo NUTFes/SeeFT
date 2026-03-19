@@ -75,6 +75,10 @@ class _MyShiftPageState extends State<MyShiftPage>
   final int debounceTime = 500; // デバウンス時間を設定
   final deepEq = DeepCollectionEquality.unordered().equals; // シフトカードデータの比較用の関数
   
+  // New表示管理用の状態変数
+  Set<String> _newCardKeys = {};        // New対象のカードキー集合
+  Set<String> _openedCardKeys = {};     // 既に開かれたカードキー集合（永続化）
+  
   // // 天気ごとのweatherID
   // final Map<int, String> _weatherOptions = {
   //   1: "晴れ",
@@ -102,6 +106,14 @@ class _MyShiftPageState extends State<MyShiftPage>
   // ウィジェットを初期化する関数(非同期処理は直接initStateで行えないため分離)
   Future<void> _initialize() async {
     logger.i('MyShiftPage is being initialized.');
+    
+    // Hiveから開封済みカードキーを読み込み
+    final List<dynamic>? storedKeys = openedCardKeysBox.get('opened_keys');
+    if (storedKeys != null) {
+      _openedCardKeys = storedKeys.cast<String>().toSet();
+      logger.i('Loaded ${_openedCardKeys.length} opened card keys from Hive');
+    }
+    
     // タブのコントローラーを初期化
     _tabController = TabController(
       length: _dayOptions.length,
@@ -204,7 +216,9 @@ class _MyShiftPageState extends State<MyShiftPage>
             showCustomErrorSnackBar(context, 'データの取得に失敗しました。'), // スナックバーでエラーメッセージを表示
           }
           : logger.w('フェッチデータが既に最新です。キャッシュを使用します。');
-        setState(() => isLoading = false);   // ロード中フラグをfalseに設定
+        if (mounted) {
+          setState(() => isLoading = false);   // ロード中フラグをfalseに設定
+        }
         
         // ここにレビューの処理を挟む
         _showReviewFormIfNeeded(cashedShiftCardDataList, dayID);
@@ -212,19 +226,36 @@ class _MyShiftPageState extends State<MyShiftPage>
         return;
       }
       // フェッチデータが新しい場合はキャッシュデータと表示データを更新
-      shiftCardBox.put('${dayID}_${weatherID}', fetchedData); // hiveのキャッシュデータをフェッチデータで更新
       
       // フェッチデータをShiftCardDataListに変換
       final ShiftCardDataList? fetchedShiftCardDataList = ShiftCardDataList.fromJson(fetchedData);
       
+      // New対象カードの検出
+      Set<String> detectedNewKeys = {};
+      if (fetchedShiftCardDataList != null) {
+        detectedNewKeys = _detectNewOrUpdatedCardKeys(
+          dayID,
+          cashedShiftCardDataList,
+          fetchedShiftCardDataList,
+        );
+        // 既に開かれたカードを除外
+        detectedNewKeys = _filterAlreadyOpened(detectedNewKeys);
+      }
+      
+      // hiveのキャッシュデータをフェッチデータで更新
+      shiftCardBox.put('${dayID}_${weatherID}', fetchedData);
+      
       // ここにレビューの処理を挟む
       _showReviewFormIfNeeded(fetchedShiftCardDataList, dayID);
 
-      // 表示データをフェッチデータで更新
-      setState(() {
-        shiftCardDataList = fetchedShiftCardDataList;
-        isLoading = false; // ロード中フラグをfalseに設定
-      });
+      // 表示データとNew状態をフェッチデータで更新
+      if (mounted) {
+        setState(() {
+          shiftCardDataList = fetchedShiftCardDataList;
+          _newCardKeys = detectedNewKeys;
+          isLoading = false; // ロード中フラグをfalseに設定
+        });
+      }
     });
   }
   
@@ -281,6 +312,88 @@ class _MyShiftPageState extends State<MyShiftPage>
         );
       }
     });
+  }
+
+  // ========== New表示のためのヘルパー関数 ==========
+  
+  // カードの一意キーを生成（日付＋タスク名＋開始／終了＋集合場所）
+  String _cardKeyFromShiftCardData(int dayID, ShiftCardData card) {
+    return '$dayID|${card.taskName}|${card.startTime}|${card.endTime}|${card.place}';
+  }
+  
+  // ShiftCardDataListをMap<カードキー, ShiftCardData>に変換
+  Map<String, ShiftCardData> _buildCardMap(
+    int dayID,
+    ShiftCardDataList? list,
+  ) {
+    final map = <String, ShiftCardData>{};
+    if (list == null) return map;
+
+    for (final card in list.data) {
+      final key = _cardKeyFromShiftCardData(dayID, card);
+      map[key] = card;
+    }
+    return map;
+  }
+  
+  // カードの変更判定（taskName / startTime / endTime / place のいずれかが変わったか）
+  bool _isCardChanged(ShiftCardData oldCard, ShiftCardData newCard) {
+    return oldCard.taskName != newCard.taskName ||
+           oldCard.startTime != newCard.startTime ||
+           oldCard.endTime != newCard.endTime ||
+           oldCard.place != newCard.place;
+  }
+  
+  // New対象カードキーの検出
+  Set<String> _detectNewOrUpdatedCardKeys(
+    int dayID,
+    ShiftCardDataList? oldList,
+    ShiftCardDataList newList,
+  ) {
+    final newKeys = <String>{};
+
+    final oldMap = _buildCardMap(dayID, oldList);
+    final newMap = _buildCardMap(dayID, newList);
+
+    // 初回（oldList == null）の場合は全カードをNewとみなす
+    if (oldList == null) {
+      newKeys.addAll(newMap.keys);
+      logger.i('Initial load: All ${newKeys.length} cards marked as new');
+      return newKeys;
+    }
+
+    // 各カードをチェック
+    for (final entry in newMap.entries) {
+      final key = entry.key;
+      final newCard = entry.value;
+      final oldCard = oldMap[key];
+
+      // 1) 前回に存在しない → 新規カード
+      if (oldCard == null) {
+        newKeys.add(key);
+        logger.i('New card detected: ${newCard.taskName}');
+        continue;
+      }
+
+      // 2) 4項目のいずれかが変わった → 変更カード
+      if (_isCardChanged(oldCard, newCard)) {
+        newKeys.add(key);
+        logger.i('Changed card detected: ${newCard.taskName}');
+      }
+    }
+    
+    logger.i('Detected ${newKeys.length} new or updated cards');
+    return newKeys;
+  }
+  
+  // 既に開かれたカードを除外
+  Set<String> _filterAlreadyOpened(Set<String> newKeys) {
+    final filtered = newKeys.where((key) => !_openedCardKeys.contains(key)).toSet();
+    final excludedCount = newKeys.length - filtered.length;
+    if (excludedCount > 0) {
+      logger.i('Filtered out $excludedCount already opened cards');
+    }
+    return filtered;
   }
 
   @override
@@ -458,10 +571,29 @@ class _MyShiftPageState extends State<MyShiftPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: shiftCardDataList!.data.map((data) {
+                  // カードキーを生成
+                  final cardKey = _cardKeyFromShiftCardData(_selectedDayID, data);
+                  // このカードがNewかどうかを判定
+                  final isNew = _newCardKeys.contains(cardKey);
+                  
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ShiftCard(data: data),
+                      ShiftCard(
+                        data: data,
+                        isNew: isNew,
+                        onOpened: () {
+                          // トグルを開いたときの処理
+                          if (mounted) {
+                            setState(() {
+                              _newCardKeys.remove(cardKey);
+                            });
+                          }
+                          _openedCardKeys.add(cardKey);
+                          openedCardKeysBox.put('opened_keys', _openedCardKeys.toList());
+                          logger.i('Card opened and marked as read: ${data.taskName}');
+                        },
+                      ),
                       const SizedBox(height: 16.0),
                     ],
                   );
