@@ -25,6 +25,7 @@ type TaskRepository interface {
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
 	FindByUserID(context.Context, string) (*sql.Rows, error)
+	FindByNames(context.Context, []string) (*sql.Rows, error)
 }
 
 func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
@@ -90,6 +91,33 @@ func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
 	query := "SELECT * FROM tasks WHERE task = '" + name + "'"
 	return b.client.DB().QueryRowContext(c, query), nil
+}
+
+// 複数のタスク名から一括でタスクを取得する（N+1問題対策）
+func (b *taskRepository) FindByNames(c context.Context, names []string) (*sql.Rows, error) {
+	if len(names) == 0 {
+		// 空の結果を返す
+		query := "SELECT * FROM tasks WHERE 1=0"
+		return b.client.DB().QueryContext(c, query)
+	}
+
+	// IN句用のプレースホルダーを作成
+	placeholders := make([]interface{}, len(names))
+	for i, name := range names {
+		placeholders[i] = name
+	}
+
+	// IN句を動的に構築
+	query := "SELECT * FROM tasks WHERE task IN ("
+	for i := range names {
+		if i > 0 {
+			query += ", "
+		}
+		query += "?"
+	}
+	query += ")"
+
+	return b.client.DB().QueryContext(c, query, placeholders...)
 }
 
 // 指定したuserIDの全てのタスクを取得する
