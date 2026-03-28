@@ -29,3 +29,5 @@ web/prod/*
 
 docs/manuals/*
 docs/test_images/*
+
+scripts/docx_images/*
