@@ -26,3 +26,6 @@ api/lib/interface
 api/env/*
 api/seeds/*
 web/prod/*
+
+docs/manuals/*
+docs/test_images/*
