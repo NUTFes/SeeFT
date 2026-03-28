@@ -4,7 +4,7 @@ import 'dart:ui_web' as ui;
 import 'package:flutter/material.dart';
 import 'package:seeft_mobile/theme/tokens.dart';
 
-// Google Docs / Google Slides の URL を埋め込み用に変換する
+// URL を埋め込み用に変換する
 String _toEmbeddableUrl(String url) {
   final uri = Uri.tryParse(url);
   if (uri == null) return url;
@@ -15,6 +15,12 @@ String _toEmbeddableUrl(String url) {
         .replaceFirst(RegExp(r'/edit$'), '/preview')
         .replaceFirst(RegExp(r'/view$'), '/preview');
     return uri.replace(path: newPath, queryParameters: {}).toString();
+  }
+
+  // PDF は pdf.js viewer 経由で表示する（モバイルブラウザ対応）
+  if (url.toLowerCase().endsWith('.pdf')) {
+    final encodedPdfUrl = Uri.encodeComponent(url);
+    return '/pdfjs/viewer.html?file=$encodedPdfUrl';
   }
 
   return url;
