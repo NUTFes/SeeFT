@@ -516,12 +516,8 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	defer rows.Close()
 
 	for rows.Next() {
+		// JOINで取得したユーザー情報を直接Scan（個別SQLは不要）
 		err := rows.Scan(
-			&UserID,
-		)
-
-		row, err := a.userRep.Find(c, UserID)
-		err = row.Scan(
 			&users.ID,
 			&users.Name,
 			&users.Mail,
