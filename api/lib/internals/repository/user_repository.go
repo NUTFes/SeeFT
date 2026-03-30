@@ -23,6 +23,7 @@ type UserRepository interface {
 	Delete(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
+	FindByNames(context.Context, []string) (*sql.Rows, error)
 }
 
 func NewUserRepository(c db.Client, ac abstract.Crud) UserRepository {
@@ -92,4 +93,31 @@ func (ur *userRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 func (b *userRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
 	query := "SELECT * FROM users WHERE name = '" + name + "'"
 	return b.client.DB().QueryRowContext(c, query), nil
+}
+
+// 複数のユーザー名から一括でユーザーを取得する（N+1問題対策）
+func (b *userRepository) FindByNames(c context.Context, names []string) (*sql.Rows, error) {
+	if len(names) == 0 {
+		// 空の結果を返す
+		query := "SELECT * FROM users WHERE 1=0"
+		return b.client.DB().QueryContext(c, query)
+	}
+
+	// IN句用のプレースホルダーを作成
+	placeholders := make([]interface{}, len(names))
+	for i, name := range names {
+		placeholders[i] = name
+	}
+
+	// IN句を動的に構築
+	query := "SELECT * FROM users WHERE name IN ("
+	for i := range names {
+		if i > 0 {
+			query += ", "
+		}
+		query += "?"
+	}
+	query += ")"
+
+	return b.client.DB().QueryContext(c, query, placeholders...)
 }
