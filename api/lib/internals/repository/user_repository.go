@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
 )
+
+var userDebugSQL = os.Getenv("DEBUG_SQL") != "0"
 
 type userRepository struct {
 	client db.Client
@@ -46,7 +49,9 @@ func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
 func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber string) *sql.Row {
 	query := "SELECT * FROM users WHERE student_number = " + studentNumber
 	row := ur.client.DB().QueryRowContext(c, query)
-	fmt.Printf("\x1b[36m%s\n", query)
+	if userDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return row
 }
 

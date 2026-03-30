@@ -4,11 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
 	"github.com/pkg/errors"
 )
+
+var taskDebugSQL = os.Getenv("DEBUG_SQL") != "0"
 
 type taskRepository struct {
 	client db.Client
@@ -51,7 +54,9 @@ func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
 	}
-	fmt.Printf("\x1b[36m%s\n", query)
+	if taskDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return rows, nil
 }
 
@@ -129,7 +134,9 @@ func (b *taskRepository) FindByUserID(c context.Context, userID string) (*sql.Ro
 	WHERE s.user_id = $1
 	ORDER BY t.task
 	`
-	fmt.Printf("\x1b[36m%s\n", query)
+	if taskDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 
 	return b.client.DB().QueryContext(c, query, userID)
 }
