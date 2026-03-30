@@ -58,9 +58,9 @@ func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) 
 	return rows, nil
 }
 
-// 特定のタスクのユーザ取得
+// 特定のタスクのユーザ取得（JOINでユーザー情報も一括取得）
 func (b *shiftRepository) Users(c context.Context, task string, year string, date string, time string, weather string) (*sql.Rows, error) {
-	query := "SELECT user_id FROM shifts WHERE task_id = " + task + " AND year_id = " + year + " AND date_id = " + date + " AND time_id = " + time + " AND weather_id = " + weather
+	query := "SELECT u.id, u.name, u.mail, u.grade_id, u.department_id, u.bureau_id, u.role_id, u.student_number, u.tel, u.password, u.created_at, u.updated_at FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.task_id = " + task + " AND s.year_id = " + year + " AND s.date_id = " + date + " AND s.time_id = " + time + " AND s.weather_id = " + weather
 	rows, err := b.client.DB().QueryContext(c, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
