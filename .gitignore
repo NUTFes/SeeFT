@@ -27,7 +27,9 @@ api/env/*
 api/seeds/*
 web/prod/*
 
-docs/manuals/*
+docs/manuals/*/images/
+docs/manuals/*/*.html
+!docs/manuals/*/slide_api.html
 docs/test_images/*
 
 scripts/docx_images/*
