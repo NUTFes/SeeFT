@@ -106,8 +106,11 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 			logpkg.Printf("Invalid group key: %s", key)
 			continue
 		}
-		userID, _ := strconv.Atoi(parts[0])
-		dateID, _ := strconv.Atoi(parts[1])
+		userID, err1 := strconv.Atoi(parts[0])
+		dateID, err2 := strconv.Atoi(parts[1])
+		if err1 != nil || err2 != nil {
+			continue
+		}
 
 		// メッセージを生成して送信
 		if err := n.processGroup(ctx, group, userID, dateID, timeMap); err != nil {
