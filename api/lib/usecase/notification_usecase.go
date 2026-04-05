@@ -261,10 +261,10 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 	}
 
 	// ログを時間順にソート（mapから取得）
-	sortedLogs := n.sortLogsByTime(ctx, logs, shiftMap)
+	sortedLogs := n.sortLogsByTime(logs, shiftMap)
 
 	// 連続時間を計算してメッセージを生成
-	timeRange, changes := n.buildGroupedMessage(ctx, sortedLogs, shiftMap, taskMap, timeMap)
+	timeRange, changes := n.buildGroupedMessage(sortedLogs, shiftMap, taskMap, timeMap)
 
 	// 天気情報を取得（mapから取得）
 	weather := "不明"
@@ -302,7 +302,7 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 }
 
 // sortLogsByTime ログを時間順にソート（shiftMapから取得）
-func (n *notificationUseCase) sortLogsByTime(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin) []entity.ActionLog {
+func (n *notificationUseCase) sortLogsByTime(logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin) []entity.ActionLog {
 	type logWithTime struct {
 		log    entity.ActionLog
 		timeID int
@@ -335,7 +335,7 @@ func (n *notificationUseCase) sortLogsByTime(ctx context.Context, logs []entity.
 }
 
 // buildGroupedMessage グルーピング済みメッセージを生成
-func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) (string, string) {
+func (n *notificationUseCase) buildGroupedMessage(logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) (string, string) {
 	if len(logs) == 0 {
 		return "", ""
 	}
@@ -359,7 +359,7 @@ func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []en
 	timeRanges := n.CalculateTimeRanges(timeMap, timeIDs)
 
 	// 変更内容を構築
-	changes := n.buildChangesList(ctx, logs, shiftMap, taskMap, timeMap)
+	changes := n.buildChangesList(logs, shiftMap, taskMap)
 
 	return timeRanges, changes
 }
@@ -408,7 +408,7 @@ func (n *notificationUseCase) formatTimeRange(timeMap map[int]entity.Time, start
 }
 
 // buildChangesList 変更内容のリストを構築
-func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) string {
+func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task) string {
 	var changes []string
 
 	for _, log := range logs {
