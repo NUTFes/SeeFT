@@ -159,6 +159,56 @@ func (n *notificationUseCase) loadShiftMap(ctx context.Context, logs []entity.Ac
 	return shiftMap, nil
 }
 
+// loadTaskMap shiftMapからタスク情報をまとめて取得しmapで返す
+func (n *notificationUseCase) loadTaskMap(ctx context.Context, shiftMap map[int]entity.ShiftAdmin) (map[int]entity.Task, error) {
+	taskMap := make(map[int]entity.Task)
+	for _, shift := range shiftMap {
+		// 既に取得済みならスキップ（重複クエリを防ぐ）
+		if _, ok := taskMap[shift.TaskID]; ok {
+			continue
+		}
+		// DBから1件取得
+		taskRow, err := n.taskRep.Find(ctx, strconv.Itoa(shift.TaskID))
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to find task %d", shift.TaskID)
+		}
+		// DBの行データをTaskに変換
+		var task entity.Task
+		err = taskRow.Scan(
+			&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID,
+			&task.MaxMember, &task.Color, &task.Remark, &task.YearID,
+			&task.CreatedAt, &task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to scan task %d", shift.TaskID)
+		}
+		// mapに保存
+		taskMap[shift.TaskID] = task
+	}
+	return taskMap, nil
+}
+
+// loadTimeMap 全時刻情報を取得しmapで返す（96件固定）
+func (n *notificationUseCase) loadTimeMap(ctx context.Context) (map[int]entity.Time, error) {
+	timeMap := make(map[int]entity.Time)
+	timeRow, err := n.timeRep.All(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get all times")
+	}
+
+	for timeRow.Next() {
+		var time entity.Time
+		err := timeRow.Scan(&time.ID, &time.Time, &time.CreatedAt, &time.UpdatedAt)
+
+		if err != nil {
+			logpkg.Printf("Failed to scan time: %v", err)
+			continue
+		}
+		timeMap[time.ID] = time
+	}
+	return timeMap, nil
+}
+
 // processGroup グループ化されたログを処理してSlackに送信
 func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.ActionLog, userID, dateID int) error {
 	// ユーザー情報を取得
@@ -200,11 +250,21 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 		return errors.Wrapf(err, "failed to load shift map")
 	}
 
+	taskMap, err := n.loadTaskMap(ctx, shiftMap)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load task map")
+	}
+
+	timeMap, err := n.loadTimeMap(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load time map")
+	}
+
 	// ログを時間順にソート（mapから取得）
 	sortedLogs := n.sortLogsByTime(ctx, logs, shiftMap)
 
 	// 連続時間を計算してメッセージを生成
-	timeRange, changes := n.buildGroupedMessage(ctx, sortedLogs, shiftMap)
+	timeRange, changes := n.buildGroupedMessage(ctx, sortedLogs, shiftMap, taskMap, timeMap)
 
 	// 天気情報を取得（mapから取得）
 	weather := "不明"
@@ -275,7 +335,7 @@ func (n *notificationUseCase) sortLogsByTime(ctx context.Context, logs []entity.
 }
 
 // buildGroupedMessage グルーピング済みメッセージを生成
-func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin) (string, string) {
+func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) (string, string) {
 	if len(logs) == 0 {
 		return "", ""
 	}
@@ -296,16 +356,16 @@ func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []en
 	}
 
 	// 連続時間を計算
-	timeRanges := n.CalculateTimeRanges(ctx, timeIDs)
+	timeRanges := n.CalculateTimeRanges(timeMap, timeIDs)
 
 	// 変更内容を構築
-	changes := n.buildChangesList(ctx, logs, shiftMap)
+	changes := n.buildChangesList(ctx, logs, shiftMap, taskMap, timeMap)
 
 	return timeRanges, changes
 }
 
 // CalculateTimeRanges 連続するTimeIDから時間範囲を計算
-func (n *notificationUseCase) CalculateTimeRanges(ctx context.Context, timeIDs []int) string {
+func (n *notificationUseCase) CalculateTimeRanges(timeMap map[int]entity.Time, timeIDs []int) string {
 	if len(timeIDs) == 0 {
 		return ""
 	}
@@ -323,50 +383,32 @@ func (n *notificationUseCase) CalculateTimeRanges(ctx context.Context, timeIDs [
 			end = timeIDs[i]
 		} else {
 			// 連続が途切れた
-			ranges = append(ranges, n.formatTimeRange(ctx, start, end))
+			ranges = append(ranges, n.formatTimeRange(timeMap, start, end))
 			start = timeIDs[i]
 			end = timeIDs[i]
 		}
 	}
 	// 最後の範囲を追加
-	ranges = append(ranges, n.formatTimeRange(ctx, start, end))
+	ranges = append(ranges, n.formatTimeRange(timeMap, start, end))
 
 	return strings.Join(ranges, ", ")
 }
 
 // formatTimeRange 時間範囲をフォーマット
-func (n *notificationUseCase) formatTimeRange(ctx context.Context, startTimeID, endTimeID int) string {
-	// 開始時刻を取得
-	startRow, err := n.timeRep.Find(ctx, strconv.Itoa(startTimeID))
-	if err != nil {
-		return ""
-	}
-	var startTime entity.Time
-	err = startRow.Scan(&startTime.ID, &startTime.Time, &startTime.CreatedAt, &startTime.UpdatedAt)
-	if err != nil {
-		return ""
-	}
+func (n *notificationUseCase) formatTimeRange(timeMap map[int]entity.Time, startTimeID, endTimeID int) string {
 
-	// 終了時刻を取得（endTimeID+1の時刻）
-	endRow, err := n.timeRep.Find(ctx, strconv.Itoa(endTimeID+1))
-	if err != nil {
-		// 次の時刻がない場合は、endTimeIDの時刻を使用
-		endRow, err = n.timeRep.Find(ctx, strconv.Itoa(endTimeID))
-		if err != nil {
-			return startTime.Time
-		}
-	}
-	var endTime entity.Time
-	err = endRow.Scan(&endTime.ID, &endTime.Time, &endTime.CreatedAt, &endTime.UpdatedAt)
-	if err != nil {
-		return startTime.Time
+	startTime := timeMap[startTimeID]
+
+	endTime, ok := timeMap[endTimeID+1]
+	if !ok {
+		endTime = entity.Time{Time: "0:00"}
 	}
 
 	return fmt.Sprintf("%s 〜 %s", startTime.Time, endTime.Time)
 }
 
 // buildChangesList 変更内容のリストを構築
-func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin) string {
+func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) string {
 	var changes []string
 
 	for _, log := range logs {
@@ -383,29 +425,8 @@ func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entit
 			continue
 		}
 
-		// タスク情報を取得
-		taskRow, err := n.taskRep.Find(ctx, strconv.Itoa(shift.TaskID))
-		if err != nil {
-			continue
-		}
-		var task entity.Task
-		err = taskRow.Scan(
-			&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID,
-			&task.MaxMember, &task.Color, &task.Remark, &task.YearID,
-			&task.CreatedAt, &task.UpdatedAt,
-		)
-		if err != nil {
-			continue
-		}
-
-		// 時刻を取得
-		timeRow, err := n.timeRep.Find(ctx, strconv.Itoa(shift.TimeID))
-		if err != nil {
-			continue
-		}
-		var time entity.Time
-		err = timeRow.Scan(&time.ID, &time.Time, &time.CreatedAt, &time.UpdatedAt)
-		if err != nil {
+		task, ok := taskMap[shift.TaskID]
+		if !ok {
 			continue
 		}
 
