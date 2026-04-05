@@ -1,9 +1,11 @@
 package slack
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
@@ -58,7 +60,22 @@ func (s *SlackService) SendMessage(blocks []slack.Block, slackUserID string) err
 		slack.MsgOptionBlocks(blocks...),
 	)
 	if err != nil {
-		return fmt.Errorf("channel send error: %w", err)
+		// TODO(human): 429エラー（レート制限）の場合、RetryAfterだけ待って再送信する
+		// ヒント: errors.As(err, &rateErr) で判定、time.Sleep(rateErr.RetryAfter) で待機
+		var rateErr *slack.RateLimitedError
+		if errors.As(err, &rateErr) {
+			time.Sleep(rateErr.RetryAfter)
+			// もう一度PostMessageを呼ぶ
+			_, _, err = s.client.PostMessage(
+				s.channelID,
+				slack.MsgOptionBlocks(blocks...),
+			)
+			if err != nil {
+				return fmt.Errorf("channel send error after retry: %w", err)
+			}
+		} else {
+			return fmt.Errorf("channel send error: %w", err)
+		}
 	}
 
 	// 2. 本人にDM送信 (IDがある場合のみ)
