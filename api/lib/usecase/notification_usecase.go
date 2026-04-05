@@ -134,6 +134,34 @@ func (n *notificationUseCase) GroupNotificationsByUserAndDate(logs []entity.Acti
 	return grouped
 }
 
+// loadShiftMap ログからshift情報をまとめて取得しmapで返す
+func (n *notificationUseCase) loadShiftMap(ctx context.Context, logs []entity.ActionLog) (map[int]entity.ShiftAdmin, error) {
+	shiftMap := make(map[int]entity.ShiftAdmin)
+	for _, log := range logs {
+		// 既に取得済みならスキップ（重複クエリを防ぐ）
+		if _, ok := shiftMap[log.ShiftID]; ok {
+			continue
+		}
+		// DBから1件取得
+		shiftRow, err := n.shiftRep.Find(ctx, strconv.Itoa(log.ShiftID))
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to find shift %d", log.ShiftID)
+		}
+		// DBの行データをShiftAdminに変換
+		var shift entity.ShiftAdmin
+		err = shiftRow.Scan(
+			&shift.ID, &shift.TaskID, &shift.UserID, &shift.YearID, &shift.DateID,
+			&shift.TimeID, &shift.WeatherID, &shift.IsAttendance, &shift.CreatedAt, &shift.UpdatedAt,
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to scan shift %d", log.ShiftID)
+		}
+		// mapに保存
+		shiftMap[log.ShiftID] = shift
+	}
+	return shiftMap, nil
+}
+
 // processGroup グループ化されたログを処理してSlackに送信
 func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.ActionLog, userID, dateID int) error {
 	// ユーザー情報を取得
@@ -169,47 +197,31 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 		return errors.Wrapf(err, "failed to scan date")
 	}
 
-	// 天気情報を取得（最初のログから取得）
-	// weatherID := 0
-	// if len(logs) > 0 {
-	// 	// shift_idから天気情報を取得する必要がある
-	// 	// ここでは簡略化のため、diff_payloadから取得を試みる
-	// 	// 実際にはshiftテーブルから取得する必要がある
-	// }
-
-	// ログを時間順にソート（shift_idからtime_idを取得してソート）
-	sortedLogs, err := n.sortLogsByTime(ctx, logs)
+	// shift情報をまとめて取得（N+1クエリ対策）
+	shiftMap, err := n.loadShiftMap(ctx, logs)
 	if err != nil {
-		return errors.Wrapf(err, "failed to sort logs by time")
+		return errors.Wrapf(err, "failed to load shift map")
 	}
 
-	// 連続時間を計算してメッセージを生成
-	timeRange, changes := n.buildGroupedMessage(ctx, sortedLogs)
+	// ログを時間順にソート（mapから取得）
+	sortedLogs := n.sortLogsByTime(ctx, logs, shiftMap)
 
-	// 天気情報を取得（最初のシフトから）
+	// 連続時間を計算してメッセージを生成
+	timeRange, changes := n.buildGroupedMessage(ctx, sortedLogs, shiftMap)
+
+	// 天気情報を取得（mapから取得）
 	weather := "不明"
 	if len(sortedLogs) > 0 {
-		shiftRow, err := n.shiftRep.Find(ctx, strconv.Itoa(sortedLogs[0].ShiftID))
+		shift := shiftMap[sortedLogs[0].ShiftID]
+		weatherRow, err := n.weatherRep.Find(ctx, strconv.Itoa(shift.WeatherID))
 		if err == nil {
-			var shiftID, taskID, shiftUserID, yearID, shiftDateID, timeID, shiftWeatherID int
-			var isAttendance bool
-			var createdAt, updatedAt interface{}
-			err = shiftRow.Scan(
-				&shiftID, &taskID, &shiftUserID, &yearID, &shiftDateID,
-				&timeID, &shiftWeatherID, &isAttendance, &createdAt, &updatedAt,
+			var weatherEntity entity.Weather
+			err = weatherRow.Scan(
+				&weatherEntity.ID, &weatherEntity.Weather,
+				&weatherEntity.CreatedAt, &weatherEntity.UpdatedAt,
 			)
 			if err == nil {
-				weatherRow, err := n.weatherRep.Find(ctx, strconv.Itoa(shiftWeatherID))
-				if err == nil {
-					var weatherEntity entity.Weather
-					err = weatherRow.Scan(
-						&weatherEntity.ID, &weatherEntity.Weather,
-						&weatherEntity.CreatedAt, &weatherEntity.UpdatedAt,
-					)
-					if err == nil {
-						weather = weatherEntity.Weather
-					}
-				}
+				weather = weatherEntity.Weather
 			}
 		}
 	}
@@ -232,9 +244,8 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 	return nil
 }
 
-// sortLogsByTime ログを時間順にソート
-func (n *notificationUseCase) sortLogsByTime(ctx context.Context, logs []entity.ActionLog) ([]entity.ActionLog, error) {
-	// 各ログのshift_idからtime_idを取得してソート
+// sortLogsByTime ログを時間順にソート（shiftMapから取得）
+func (n *notificationUseCase) sortLogsByTime(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin) []entity.ActionLog {
 	type logWithTime struct {
 		log    entity.ActionLog
 		timeID int
@@ -242,25 +253,13 @@ func (n *notificationUseCase) sortLogsByTime(ctx context.Context, logs []entity.
 
 	logsWithTime := make([]logWithTime, 0, len(logs))
 	for _, log := range logs {
-		shiftRow, err := n.shiftRep.Find(ctx, strconv.Itoa(log.ShiftID))
-		if err != nil {
+		shift, ok := shiftMap[log.ShiftID]
+		if !ok {
 			continue
 		}
-
-		var shiftID, taskID, userID, yearID, dateID, timeID, weatherID int
-		var isAttendance bool
-		var createdAt, updatedAt interface{}
-		err = shiftRow.Scan(
-			&shiftID, &taskID, &userID, &yearID, &dateID,
-			&timeID, &weatherID, &isAttendance, &createdAt, &updatedAt,
-		)
-		if err != nil {
-			continue
-		}
-
 		logsWithTime = append(logsWithTime, logWithTime{
 			log:    log,
-			timeID: timeID,
+			timeID: shift.TimeID,
 		})
 	}
 
@@ -275,11 +274,11 @@ func (n *notificationUseCase) sortLogsByTime(ctx context.Context, logs []entity.
 		sortedLogs[i] = lwt.log
 	}
 
-	return sortedLogs, nil
+	return sortedLogs
 }
 
 // buildGroupedMessage グルーピング済みメッセージを生成
-func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []entity.ActionLog) (string, string) {
+func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin) (string, string) {
 	if len(logs) == 0 {
 		return "", ""
 	}
@@ -287,23 +286,12 @@ func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []en
 	// 各ログのtime_idを取得
 	timeIDs := make([]int, 0, len(logs))
 	for _, log := range logs {
-		shiftRow, err := n.shiftRep.Find(ctx, strconv.Itoa(log.ShiftID))
-		if err != nil {
+		shift, ok := shiftMap[log.ShiftID]
+		if !ok {
 			continue
 		}
 
-		var shiftID, taskID, userID, yearID, dateID, timeID, weatherID int
-		var isAttendance bool
-		var createdAt, updatedAt interface{}
-		err = shiftRow.Scan(
-			&shiftID, &taskID, &userID, &yearID, &dateID,
-			&timeID, &weatherID, &isAttendance, &createdAt, &updatedAt,
-		)
-		if err != nil {
-			continue
-		}
-
-		timeIDs = append(timeIDs, timeID)
+		timeIDs = append(timeIDs, shift.TimeID)
 	}
 
 	if len(timeIDs) == 0 {
@@ -314,7 +302,7 @@ func (n *notificationUseCase) buildGroupedMessage(ctx context.Context, logs []en
 	timeRanges := n.CalculateTimeRanges(ctx, timeIDs)
 
 	// 変更内容を構築
-	changes := n.buildChangesList(ctx, logs)
+	changes := n.buildChangesList(ctx, logs, shiftMap)
 
 	return timeRanges, changes
 }
@@ -381,7 +369,7 @@ func (n *notificationUseCase) formatTimeRange(ctx context.Context, startTimeID, 
 }
 
 // buildChangesList 変更内容のリストを構築
-func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entity.ActionLog) string {
+func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin) string {
 	var changes []string
 
 	for _, log := range logs {
@@ -392,24 +380,14 @@ func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entit
 		}
 
 		// シフト情報を取得
-		shiftRow, err := n.shiftRep.Find(ctx, strconv.Itoa(log.ShiftID))
-		if err != nil {
-			continue
-		}
+		shift, ok := shiftMap[log.ShiftID]
 
-		var shiftID, taskID, userID, yearID, dateID, timeID, weatherID int
-		var isAttendance bool
-		var createdAt, updatedAt interface{}
-		err = shiftRow.Scan(
-			&shiftID, &taskID, &userID, &yearID, &dateID,
-			&timeID, &weatherID, &isAttendance, &createdAt, &updatedAt,
-		)
-		if err != nil {
+		if !ok {
 			continue
 		}
 
 		// タスク情報を取得
-		taskRow, err := n.taskRep.Find(ctx, strconv.Itoa(taskID))
+		taskRow, err := n.taskRep.Find(ctx, strconv.Itoa(shift.TaskID))
 		if err != nil {
 			continue
 		}
@@ -424,7 +402,7 @@ func (n *notificationUseCase) buildChangesList(ctx context.Context, logs []entit
 		}
 
 		// 時刻を取得
-		timeRow, err := n.timeRep.Find(ctx, strconv.Itoa(timeID))
+		timeRow, err := n.timeRep.Find(ctx, strconv.Itoa(shift.TimeID))
 		if err != nil {
 			continue
 		}
