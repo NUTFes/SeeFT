@@ -14,11 +14,15 @@ type SlackService struct {
 	channelID string
 }
 
-const (
-	BaseTimeID  = 25
-	BaseHour    = 6
-	MinutesStep = 30
-)
+// MessageParams BuildMessageBlocksに渡すメッセージパラメータ
+type MessageParams struct {
+	Title     string
+	UserName  string
+	Date      string
+	Weather   string
+	TimeRange string
+	Changes   string
+}
 
 // NewSlackService SlackServiceを初期化
 func NewSlackService() (*SlackService, error) {
@@ -73,21 +77,21 @@ func (s *SlackService) SendMessage(blocks []slack.Block, slackUserID string) err
 }
 
 // BuildMessageBlocks リッチなメッセージを作成
-func (s *SlackService) BuildMessageBlocks(title, userName, date, weather, timeRange, changes string) []slack.Block {
-	headerText := fmt.Sprintf("🔔 %s", title)
+func (s *SlackService) BuildMessageBlocks(params MessageParams) []slack.Block {
+	headerText := fmt.Sprintf("🔔 %s", params.Title)
 	headerBlock := slack.NewHeaderBlock(slack.NewTextBlockObject("plain_text", headerText, false, false))
 
 	// 基本情報
 	fields := []*slack.TextBlockObject{
-		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("ユーザー: %s", userName), false, false),
-		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("日付: %s", date), false, false),
-		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("天気: %s", weather), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("ユーザー: %s", params.UserName), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("日付: %s", params.Date), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("天気: %s", params.Weather), false, false),
 	}
 
 	// 時間範囲がある場合は追加
-	if timeRange != "" {
+	if params.TimeRange != "" {
 		fields = append(fields,
-			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("時間: %s", timeRange), false, false),
+			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("時間: %s", params.TimeRange), false, false),
 		)
 	}
 
@@ -96,9 +100,9 @@ func (s *SlackService) BuildMessageBlocks(title, userName, date, weather, timeRa
 	blocks := []slack.Block{headerBlock, sectionBlock}
 
 	// 変更内容がある場合は追加
-	if changes != "" {
+	if params.Changes != "" {
 		changesBlock := slack.NewSectionBlock(
-			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*変更内容*\n%s", changes), false, false),
+			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*変更内容*\n%s", params.Changes), false, false),
 			nil,
 			nil,
 		)
@@ -109,13 +113,4 @@ func (s *SlackService) BuildMessageBlocks(title, userName, date, weather, timeRa
 	blocks = append(blocks, dividerBlock)
 
 	return blocks
-}
-
-// TimeIDToTimeString TimeIDを時刻文字列に変換
-func (s *SlackService) TimeIDToTimeString(timeID int) string {
-	hoursFromBase := (timeID - BaseTimeID) / 2
-	minutesFromBase := ((timeID - BaseTimeID) % 2) * 30
-	hours := BaseHour + hoursFromBase
-	minutes := minutesFromBase
-	return fmt.Sprintf("%02d:%02d", hours, minutes)
 }

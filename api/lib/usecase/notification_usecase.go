@@ -215,15 +215,14 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 	}
 
 	// Slackメッセージを構築
-	title := "シフト変更通知"
-	blocks := n.slackService.BuildMessageBlocks(
-		title,
-		user.Name,
-		date.Name,
-		weather,
-		timeRange,
-		changes,
-	)
+	blocks := n.slackService.BuildMessageBlocks(slack.MessageParams{
+		Title:     "シフト変更通知",
+		UserName:  user.Name,
+		Date:      date.Name,
+		Weather:   weather,
+		TimeRange: timeRange,
+		Changes:   changes,
+	})
 
 	// Slackに送信
 	if err := n.slackService.SendMessage(blocks, user.SlackUserID); err != nil {
