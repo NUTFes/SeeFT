@@ -87,10 +87,16 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 		return nil // 未送信ログがない場合は何もしない
 	}
 
-	// 3. ユーザーIDと日付IDでグルーピング
+	// 3. 時刻情報を取得（全グループ共通、1回だけ）
+	timeMap, err := n.loadTimeMap(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load time map")
+	}
+
+	// 4. ユーザーIDと日付IDでグルーピング
 	grouped := n.GroupNotificationsByUserAndDate(logs)
 
-	// 4. 各グループを処理
+	// 5. 各グループを処理
 
 	for key, group := range grouped {
 		// keyは "userID_dateID" 形式
@@ -104,7 +110,7 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 		dateID, _ := strconv.Atoi(parts[1])
 
 		// メッセージを生成して送信
-		if err := n.processGroup(ctx, group, userID, dateID); err != nil {
+		if err := n.processGroup(ctx, group, userID, dateID, timeMap); err != nil {
 			logpkg.Printf("Failed to process group %s: %v", key, err)
 			continue
 		}
@@ -210,7 +216,7 @@ func (n *notificationUseCase) loadTimeMap(ctx context.Context) (map[int]entity.T
 }
 
 // processGroup グループ化されたログを処理してSlackに送信
-func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.ActionLog, userID, dateID int) error {
+func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.ActionLog, userID, dateID int, timeMap map[int]entity.Time) error {
 	// ユーザー情報を取得
 	userRow, err := n.userRep.Find(ctx, strconv.Itoa(userID))
 	if err != nil {
@@ -253,11 +259,6 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 	taskMap, err := n.loadTaskMap(ctx, shiftMap)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load task map")
-	}
-
-	timeMap, err := n.loadTimeMap(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "failed to load time map")
 	}
 
 	// ログを時間順にソート（mapから取得）
