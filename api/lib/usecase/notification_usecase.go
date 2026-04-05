@@ -91,9 +91,10 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 	grouped := n.GroupNotificationsByUserAndDate(logs)
 
 	// 4. 各グループを処理
-	var sentLogIDs []int
+
 	for key, group := range grouped {
 		// keyは "userID_dateID" 形式
+		var logIDs []int
 		parts := strings.Split(key, "_")
 		if len(parts) != 2 {
 			logpkg.Printf("Invalid group key: %s", key)
@@ -108,15 +109,11 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 			continue
 		}
 
-		// 送信済みログIDを収集
 		for _, log := range group {
-			sentLogIDs = append(sentLogIDs, log.ID)
+			logIDs = append(logIDs, log.ID)
 		}
-	}
 
-	// 5. 送信済みフラグを更新
-	if len(sentLogIDs) > 0 {
-		if err := n.actionLogRepo.MarkAsSent(ctx, sentLogIDs); err != nil {
+		if err := n.actionLogRepo.MarkAsSent(ctx, logIDs); err != nil {
 			return errors.Wrapf(err, "failed to mark logs as sent")
 		}
 	}
