@@ -91,10 +91,10 @@ func (s *SlackService) SendMessage(blocks []slack.Block, slackUserID string) err
 					slack.MsgOptionBlocks(blocks...),
 				)
 				if err != nil {
-					return fmt.Errorf("channel send error after retry: %w", err)
+					return fmt.Errorf("dm send error after retry: %w", err)
 				}
 			} else {
-				return fmt.Errorf("channel send error: %w", err)
+				return fmt.Errorf("dm send error: %w", err)
 			}
 		}
 	}
