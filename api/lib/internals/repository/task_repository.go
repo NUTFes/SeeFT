@@ -8,6 +8,7 @@ import (
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
@@ -106,23 +107,8 @@ func (b *taskRepository) FindByNames(c context.Context, names []string) (*sql.Ro
 		return b.client.DB().QueryContext(c, query)
 	}
 
-	// IN句用のプレースホルダーを作成
-	placeholders := make([]interface{}, len(names))
-	for i, name := range names {
-		placeholders[i] = name
-	}
-
-	// IN句を動的に構築
-	query := "SELECT * FROM tasks WHERE task IN ("
-	for i := range names {
-		if i > 0 {
-			query += ", "
-		}
-		query += "?"
-	}
-	query += ")"
-
-	return b.client.DB().QueryContext(c, query, placeholders...)
+	query := "SELECT * FROM tasks WHERE task = ANY($1::text[])"
+	return b.client.DB().QueryContext(c, query, pq.Array(names))
 }
 
 // 指定したuserIDの全てのタスクを取得する

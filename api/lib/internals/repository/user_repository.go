@@ -8,6 +8,7 @@ import (
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
+	"github.com/lib/pq"
 )
 
 var userDebugSQL = os.Getenv("DEBUG_SQL") != "0"
@@ -108,21 +109,6 @@ func (b *userRepository) FindByNames(c context.Context, names []string) (*sql.Ro
 		return b.client.DB().QueryContext(c, query)
 	}
 
-	// IN句用のプレースホルダーを作成
-	placeholders := make([]interface{}, len(names))
-	for i, name := range names {
-		placeholders[i] = name
-	}
-
-	// IN句を動的に構築
-	query := "SELECT * FROM users WHERE name IN ("
-	for i := range names {
-		if i > 0 {
-			query += ", "
-		}
-		query += "?"
-	}
-	query += ")"
-
-	return b.client.DB().QueryContext(c, query, placeholders...)
+	query := "SELECT * FROM users WHERE name = ANY($1::text[])"
+	return b.client.DB().QueryContext(c, query, pq.Array(names))
 }
