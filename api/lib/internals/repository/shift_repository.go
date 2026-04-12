@@ -29,6 +29,7 @@ type ShiftRepository interface {
 	FindLatestRecord(context.Context) (*sql.Row, error)
 	MaxID(context.Context) (*sql.Row, error)
 	FindByUnique(context.Context, string, string, string, string, string) (*sql.Row, error)
+	CreateAndReturnID(context.Context, string, string, string, string, string, string, string) (int, error)
 }
 
 func NewShiftRepository(c db.Client, ac abstract.Crud) ShiftRepository {
@@ -106,6 +107,18 @@ func (b *shiftRepository) DateAndWeatherAndTime(c context.Context, date string, 
 func (b *shiftRepository) Create(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) error {
 	query := "INSERT INTO shifts (task_id, user_id, year_id, date_id, time_id, weather_id, is_attendance) VALUES (" + taskID + ", " + userID + ", " + yearID + ", " + dateID + ", " + timeID + ", " + weatherID + ", " + isAttendance + ")"
 	return b.crud.UpdateDB(c, query)
+}
+
+// 作成してIDを返す
+func (b *shiftRepository) CreateAndReturnID(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (int, error) {
+	query := "INSERT INTO shifts (task_id, user_id, year_id, date_id, time_id, weather_id, is_attendance) VALUES (" + taskID + ", " + userID + ", " + yearID + ", " + dateID + ", " + timeID + ", " + weatherID + ", " + isAttendance + ") RETURNING id"
+	var id int
+	err := b.client.DB().QueryRowContext(c, query).Scan(&id)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to create shift and return id")
+	}
+	fmt.Printf("\x1b[36m%s\n", query)
+	return id, nil
 }
 
 // 編集

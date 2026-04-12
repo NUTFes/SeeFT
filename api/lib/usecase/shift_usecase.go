@@ -1496,28 +1496,24 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			isAttendance := false
 			u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
 		} else {
-			// なければ新規作成
+			// なければ新規作成（RETURNING idで確実にIDを取得）
 			isAttendance := false
-			u.rep.Create(ctx, taskID, userID, yearID, dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
-			// 最新のシフトIDを取得
-			latestRow, err := u.rep.FindLatestRecord(ctx)
-			if err == nil {
-				var newShift entity.ShiftAdmin
-				if err := latestRow.Scan(&newShift.ID, &newShift.TaskID, &newShift.UserID, &newShift.YearID, &newShift.DateID, &newShift.TimeID, &newShift.WeatherID, &newShift.IsAttendance, &newShift.CreatedAt, &newShift.UpdatedAt); err == nil {
-					// action_logに記録
-					newTaskName := task.Task
-					if newTaskName == "" {
-						newTaskName = "（新規）"
-					}
-					diffPayload := map[string]interface{}{
-						"changes": []map[string]string{
-							{"field": "task_name", "old": "なし", "new": newTaskName},
-						},
-					}
-					if u.actionLogRepo != nil {
-						u.actionLogRepo.Create(ctx, newShift.ID, user.ID, dateIDInt, "CREATE", diffPayload)
-					}
-				}
+			newShiftID, err := u.rep.CreateAndReturnID(ctx, taskID, userID, yearID, dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
+			if err != nil {
+				return errors.Wrapf(err, "シフト新規作成失敗: user=%s, date=%s", user.Name, dateID)
+			}
+			// action_logに記録
+			newTaskName := task.Task
+			if newTaskName == "" {
+				newTaskName = "（新規）"
+			}
+			diffPayload := map[string]interface{}{
+				"changes": []map[string]string{
+					{"field": "task_name", "old": "なし", "new": newTaskName},
+				},
+			}
+			if u.actionLogRepo != nil {
+				u.actionLogRepo.Create(ctx, newShiftID, user.ID, dateIDInt, "CREATE", diffPayload)
 			}
 		}
 	}
