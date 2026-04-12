@@ -28,7 +28,7 @@ type ShiftRepository interface {
 	Destroy(context.Context, string) error
 	FindLatestRecord(context.Context) (*sql.Row, error)
 	MaxID(context.Context) (*sql.Row, error)
-	FindByUnique(context.Context, string, string, string, string, string) (*sql.Row, error)
+	FindByUnique(context.Context, string, string, string, string) (*sql.Row, error)
 	CreateAndReturnID(context.Context, string, string, string, string, string, string, string) (int, error)
 }
 
@@ -169,7 +169,7 @@ func (b *shiftRepository) MaxID(c context.Context) (*sql.Row, error) {
 	return b.crud.ReadByID(c, query)
 }
 
-func (b *shiftRepository) FindByUnique(c context.Context, taskID, userID, dateID, timeID, weatherID string) (*sql.Row, error) {
+func (b *shiftRepository) FindByUnique(c context.Context, userID, dateID, timeID, weatherID string) (*sql.Row, error) {
 	query := "SELECT * FROM shifts WHERE user_id = " + userID + " AND date_id = " + dateID + " AND time_id = " + timeID + " AND weather_id = " + weatherID
 	return b.client.DB().QueryRowContext(c, query), nil
 }

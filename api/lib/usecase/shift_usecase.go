@@ -1481,7 +1481,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		taskID := strconv.Itoa(task.ID)
 
 		// 4. 既存シフトがあるか確認
-		existRow, _ := u.rep.FindByUnique(ctx, taskID, userID, dateID, timeID, weatherID)
+		existRow, _ := u.rep.FindByUnique(ctx, userID, dateID, timeID, weatherID)
 		var existShift entity.ShiftAdmin
 		dateIDInt, _ := strconv.Atoi(dateID)
 		if err := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt); err == nil && existShift.ID != 0 {
