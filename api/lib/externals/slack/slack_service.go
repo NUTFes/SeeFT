@@ -51,31 +51,16 @@ func NewSlackService() (*SlackService, error) {
 	}, nil
 }
 
-// SendMessage チャンネルとDMにメッセージを送信
+// SendMessage DMにメッセージを送信
 func (s *SlackService) SendMessage(blocks []slack.Block, slackUserID string) error {
-	// 1. チャンネルに送信
-	_, _, err := s.client.PostMessage(
-		s.channelID,
-		slack.MsgOptionBlocks(blocks...),
-	)
-	if err != nil {
-		var rateErr *slack.RateLimitedError
-		if errors.As(err, &rateErr) {
-			time.Sleep(rateErr.RetryAfter)
-			// もう一度PostMessageを呼ぶ
-			_, _, err = s.client.PostMessage(
-				s.channelID,
-				slack.MsgOptionBlocks(blocks...),
-			)
-			if err != nil {
-				return fmt.Errorf("channel send error after retry: %w", err)
-			}
-		} else {
-			return fmt.Errorf("channel send error: %w", err)
-		}
-	}
+	// MTの議論により、チャンネルへのシフト変更通知は導入しない方針
+	// チャンネル送信が必要になった場合はここを有効化する
+	// _, _, err := s.client.PostMessage(
+	// 	s.channelID,
+	// 	slack.MsgOptionBlocks(blocks...),
+	// )
 
-	// 2. 本人にDM送信 (IDがある場合のみ)
+	// 本人にDM送信 (IDがある場合のみ)
 	if slackUserID != "" {
 		_, _, err := s.client.PostMessage(
 			slackUserID,
