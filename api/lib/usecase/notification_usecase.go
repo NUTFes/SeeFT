@@ -423,6 +423,16 @@ func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap
 			continue
 		}
 
+		// DELETEの場合はshift_idがNULLの可能性があるので、diff_payloadだけで処理
+		if log.ActionType == "DELETE" {
+			oldTask := "（不明）"
+			if deleted, ok := payload["deleted_task"].(string); ok {
+				oldTask = deleted
+			}
+			changes = append(changes, fmt.Sprintf("%s（削除）", oldTask))
+			continue
+		}
+
 		// シフト情報を取得
 		shift, ok := shiftMap[log.ShiftID]
 
@@ -464,12 +474,6 @@ func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap
 				}
 			}
 			changeText = fmt.Sprintf("%s → %s", oldTask, newTask)
-		case "DELETE":
-			oldTask := "（不明）"
-			if deleted, ok := payload["deleted_task"].(string); ok {
-				oldTask = deleted
-			}
-			changeText = fmt.Sprintf("%s（削除）", oldTask)
 		default:
 			changeText = fmt.Sprintf("%s", task.Task)
 		}

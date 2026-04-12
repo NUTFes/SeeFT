@@ -706,7 +706,28 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 }
 
 func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
-	err := u.rep.Destroy(c, id)
+	// 削除前にシフト情報を取得してaction_logに記録
+	shift, err := u.GetShiftAdminByID(c, id)
+	if err == nil {
+		// タスク名を取得
+		taskName := "（不明）"
+		taskRow, taskErr := u.taskRep.Find(c, strconv.Itoa(shift.TaskID))
+		if taskErr == nil {
+			var task entity.Task
+			if scanErr := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); scanErr == nil {
+				taskName = task.Task
+			}
+		}
+
+		diffPayload := map[string]interface{}{
+			"deleted_task": taskName,
+		}
+		if u.actionLogRepo != nil {
+			u.actionLogRepo.Create(c, shift.ID, shift.UserID, shift.DateID, "DELETE", diffPayload)
+		}
+	}
+
+	err = u.rep.Destroy(c, id)
 	return err
 }
 
