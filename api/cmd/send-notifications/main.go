@@ -3,25 +3,24 @@
 //
 // 実行方法（api ディレクトリで）:
 //
-//   # ホストから実行する場合（DB が localhost:5432 のとき）
-//   NUTMEG_DB_HOST=localhost go run ./cmd/send-notifications
+//	# ホストから実行する場合（DB が localhost:5432 のとき）
+//	NUTMEG_DB_HOST=localhost go run ./cmd/send-notifications
 //
-//   # 環境変数は api/env/dev.env を読み込む。未読み込みなら事前に export する。
-//   # または API コンテナ内で実行（そのまま DB に接続できる）:
-//   docker exec -it nutfes-seeft-api sh -c "cd /app && go run ./cmd/send-notifications"
+//	# 環境変数は api/env/dev.env を読み込む。未読み込みなら事前に export する。
+//	# または API コンテナ内で実行（そのまま DB に接続できる）:
+//	docker exec -it nutfes-seeft-api sh -c "cd /app && go run ./cmd/send-notifications"
 package main
 
 import (
 	"context"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/externals/slack"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -64,5 +63,4 @@ func main() {
 	}
 
 	log.Println("Done. Check Slack.")
-	os.Exit(0)
 }
