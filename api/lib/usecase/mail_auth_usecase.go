@@ -48,6 +48,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.SlackUserID,
 	)
 	// パスワードがあっているか確認
 	password = strings.ReplaceAll(password, " ", "")
@@ -86,6 +87,7 @@ func (u *mailAuthUseCase) WebSignUp(c context.Context, name string, mail string,
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.SlackUserID,
 	)
 	if err != nil {
 		return token, err
@@ -124,6 +126,7 @@ func (u *mailAuthUseCase) WebSignIn(c context.Context, studentNumber string, pas
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.SlackUserID,
 	)
 	u.sessionRep.DeleteByUserID(c, strconv.Itoa(int(user.ID)))
 

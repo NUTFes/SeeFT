@@ -59,6 +59,7 @@ func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
 			&user.Password,
 			&user.CreatedAt,
 			&user.UpdatedAt,
+			&user.SlackUserID,
 		)
 
 		if err != nil {
@@ -87,6 +88,7 @@ func (u *userUseCase) GetUserByID(c context.Context, id string) (entity.User, er
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.SlackUserID,
 	)
 
 	if err != nil {
@@ -116,6 +118,7 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 		&latastUser.Password,
 		&latastUser.CreatedAt,
 		&latastUser.UpdatedAt,
+		&latastUser.SlackUserID,
 	)
 	if err != nil {
 		return latastUser, err
@@ -141,6 +144,7 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.SlackUserID,
 	)
 	if err != nil {
 		return user, err
@@ -161,6 +165,7 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 		&updatedUser.Password,
 		&updatedUser.CreatedAt,
 		&updatedUser.UpdatedAt,
+		&updatedUser.SlackUserID,
 	)
 	if err != nil {
 		return updatedUser, err
@@ -206,6 +211,7 @@ func (u *userUseCase) GetCurrentUser(c context.Context, accessToken string) (ent
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.SlackUserID,
 	)
 	if err != nil {
 		return user, err
@@ -311,7 +317,7 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 		userName = strings.ReplaceAll(userName, "　", "")
 		userRow, _ := u.userRep.FindByName(ctx, userName) // Rowはユーザー名が入っている前提
 		var user entity.User
-		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err == nil {
+		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.SlackUserID); err == nil {
 			// ユーザーが存在すれば更新
 			u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password)
 		} else if err.Error() == "sql: no rows in result set" {
@@ -327,7 +333,7 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			}
 			// 再取得
 			userRow, _ = u.userRep.FindByName(ctx, change.Name)
-			if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.SlackUserID); err != nil {
 				return errors.Wrapf(err, "ユーザー再取得失敗: %v", change.Name)
 			}
 		} else {

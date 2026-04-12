@@ -141,6 +141,7 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 			&shift.User.Password,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
+			&shift.User.SlackUserID,
 		)
 
 		row, err = a.yearRep.Find(c, YearID)
@@ -242,6 +243,7 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 		&shift.User.Password,
 		&shift.User.CreatedAt,
 		&shift.User.UpdatedAt,
+		&shift.User.SlackUserID,
 	)
 
 	row, err = a.yearRep.Find(c, YearID)
@@ -349,6 +351,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 			&shift.User.Password,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
+			&shift.User.SlackUserID,
 		)
 
 		row, err = a.yearRep.Find(c, YearID)
@@ -460,6 +463,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&shift.User.Password,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
+			&shift.User.SlackUserID,
 		)
 
 		row, err = a.yearRep.Find(c, YearID)
@@ -532,6 +536,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 			&users.Tel,
 			&users.CreatedAt,
 			&users.UpdatedAt,
+			&users.SlackUserID,
 		)
 
 		if err != nil {
