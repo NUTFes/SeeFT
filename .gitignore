@@ -23,7 +23,6 @@ api/seeds
 api/tmp
 api/lib/interface
 
-api/env/*
 api/seeds/*
 web/prod/*
 
