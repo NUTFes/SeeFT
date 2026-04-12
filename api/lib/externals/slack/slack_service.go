@@ -40,10 +40,8 @@ func NewSlackService() (*SlackService, error) {
 		return nil, fmt.Errorf("SLACK_BOT_TOKEN environment variable is not set")
 	}
 
+	// チャンネル送信は現在無効のため、SLACK_CHANNEL_IDのバリデーションは不要
 	channelID := os.Getenv("SLACK_CHANNEL_ID")
-	if channelID == "" {
-		return nil, fmt.Errorf("SLACK_CHANNEL_ID environment variable is not set")
-	}
 
 	return &SlackService{
 		client:    slack.New(botToken),
