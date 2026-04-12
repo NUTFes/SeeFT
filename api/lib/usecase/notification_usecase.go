@@ -439,11 +439,20 @@ func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap
 		var changeText string
 		switch log.ActionType {
 		case "CREATE":
-			changeText = fmt.Sprintf("%s（新規）", task.Task)
+			// diff_payloadから新規タスク名を取得
+			newTask := task.Task // フォールバック: DB現在値
+			if items, ok := payload["changes"].([]interface{}); ok && len(items) > 0 {
+				if change, ok := items[0].(map[string]interface{}); ok {
+					if name, ok := change["new"].(string); ok {
+						newTask = name
+					}
+				}
+			}
+			changeText = fmt.Sprintf("%s（新規）", newTask)
 		case "UPDATE":
 			// diff_payloadからold/newを取得
 			oldTask := "（不明）"
-			newTask := task.Task
+			newTask := task.Task // フォールバック: DB現在値
 			if changes, ok := payload["changes"].([]interface{}); ok && len(changes) > 0 {
 				if change, ok := changes[0].(map[string]interface{}); ok {
 					if old, ok := change["old"].(string); ok {
