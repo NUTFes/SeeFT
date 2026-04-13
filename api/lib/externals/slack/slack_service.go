@@ -17,12 +17,11 @@ type SlackService struct {
 
 // MessageParams BuildMessageBlocksに渡すメッセージパラメータ
 type MessageParams struct {
-	Title     string
-	UserName  string
-	Date      string
-	Weather   string
-	TimeRange string
-	Changes   string
+	Title    string
+	UserName string
+	Date     string
+	Weather  string
+	Changes  string
 }
 
 // NewSlackService SlackServiceを初期化
@@ -95,13 +94,6 @@ func (s *SlackService) BuildMessageBlocks(params MessageParams) []slack.Block {
 		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("ユーザー: %s", params.UserName), false, false),
 		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("日付: %s", params.Date), false, false),
 		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("天気: %s", params.Weather), false, false),
-	}
-
-	// 時間範囲がある場合は追加
-	if params.TimeRange != "" {
-		fields = append(fields,
-			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("時間: %s", params.TimeRange), false, false),
-		)
 	}
 
 	sectionBlock := slack.NewSectionBlock(nil, fields, nil)

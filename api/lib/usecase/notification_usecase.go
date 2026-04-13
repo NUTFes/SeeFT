@@ -268,8 +268,8 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 	// ログを時間順にソート（mapから取得）
 	sortedLogs := n.sortLogsByTime(logs, shiftMap)
 
-	// 連続時間を計算してメッセージを生成
-	timeRange, changes := n.buildGroupedMessage(sortedLogs, shiftMap, taskMap, timeMap)
+	// 時間付き変更内容を生成
+	changes := n.buildGroupedMessage(sortedLogs, shiftMap, taskMap, timeMap)
 
 	// 天気情報を取得（mapから取得）
 	weather := "不明"
@@ -290,12 +290,11 @@ func (n *notificationUseCase) processGroup(ctx context.Context, logs []entity.Ac
 
 	// Slackメッセージを構築
 	blocks := n.slackService.BuildMessageBlocks(slack.MessageParams{
-		Title:     "シフト変更通知",
-		UserName:  user.Name,
-		Date:      date.Name,
-		Weather:   weather,
-		TimeRange: timeRange,
-		Changes:   changes,
+		Title:    "シフト変更通知",
+		UserName: user.Name,
+		Date:     date.Name,
+		Weather:  weather,
+		Changes:  changes,
 	})
 
 	// Slackに送信
@@ -339,64 +338,13 @@ func (n *notificationUseCase) sortLogsByTime(logs []entity.ActionLog, shiftMap m
 	return sortedLogs
 }
 
-// buildGroupedMessage グルーピング済みメッセージを生成
-func (n *notificationUseCase) buildGroupedMessage(logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) (string, string) {
+// buildGroupedMessage グルーピング済みメッセージを生成（時間情報は各変更行に含まれる）
+func (n *notificationUseCase) buildGroupedMessage(logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) string {
 	if len(logs) == 0 {
-		return "", ""
-	}
-
-	// 各ログのtime_idを取得
-	timeIDs := make([]int, 0, len(logs))
-	for _, log := range logs {
-		shift, ok := shiftMap[log.ShiftID]
-		if !ok {
-			continue
-		}
-
-		timeIDs = append(timeIDs, shift.TimeID)
-	}
-
-	if len(timeIDs) == 0 {
-		return "", ""
-	}
-
-	// 連続時間を計算
-	timeRanges := n.CalculateTimeRanges(timeMap, timeIDs)
-
-	// 変更内容を構築
-	changes := n.buildChangesList(logs, shiftMap, taskMap)
-
-	return timeRanges, changes
-}
-
-// CalculateTimeRanges 連続するTimeIDから時間範囲を計算
-func (n *notificationUseCase) CalculateTimeRanges(timeMap map[int]entity.Time, timeIDs []int) string {
-	if len(timeIDs) == 0 {
 		return ""
 	}
 
-	// ソート済みと仮定
-	sort.Ints(timeIDs)
-
-	var ranges []string
-	start := timeIDs[0]
-	end := timeIDs[0]
-
-	for i := 1; i < len(timeIDs); i++ {
-		if timeIDs[i] == end+1 {
-			// 連続している
-			end = timeIDs[i]
-		} else {
-			// 連続が途切れた
-			ranges = append(ranges, n.formatTimeRange(timeMap, start, end))
-			start = timeIDs[i]
-			end = timeIDs[i]
-		}
-	}
-	// 最後の範囲を追加
-	ranges = append(ranges, n.formatTimeRange(timeMap, start, end))
-
-	return strings.Join(ranges, ", ")
+	return n.buildChangesWithTime(logs, shiftMap, taskMap, timeMap)
 }
 
 // formatTimeRange 時間範囲をフォーマット
@@ -412,8 +360,8 @@ func (n *notificationUseCase) formatTimeRange(timeMap map[int]entity.Time, start
 	return fmt.Sprintf("%s 〜 %s", startTime.Time, endTime.Time)
 }
 
-// buildChangesList 変更内容のリストを構築
-func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task) string {
+// buildChangesWithTime 変更内容と時間情報を1行にまとめて構築
+func (n *notificationUseCase) buildChangesWithTime(logs []entity.ActionLog, shiftMap map[int]entity.ShiftAdmin, taskMap map[int]entity.Task, timeMap map[int]entity.Time) string {
 	var changes []string
 
 	for _, log := range logs {
@@ -423,19 +371,24 @@ func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap
 			continue
 		}
 
+		// 時間範囲を取得（シフト情報がある場合）
+		timePrefix := ""
+		if shift, ok := shiftMap[log.ShiftID]; ok {
+			timePrefix = n.formatTimeRange(timeMap, shift.TimeID, shift.TimeID) + "："
+		}
+
 		// DELETEの場合はshift_idがNULLの可能性があるので、diff_payloadだけで処理
 		if log.ActionType == "DELETE" {
 			oldTask := "（不明）"
 			if deleted, ok := payload["deleted_task"].(string); ok {
 				oldTask = deleted
 			}
-			changes = append(changes, fmt.Sprintf("%s（削除）", oldTask))
+			changes = append(changes, fmt.Sprintf("%s%s（削除）", timePrefix, oldTask))
 			continue
 		}
 
 		// シフト情報を取得
 		shift, ok := shiftMap[log.ShiftID]
-
 		if !ok {
 			continue
 		}
@@ -458,7 +411,7 @@ func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap
 					}
 				}
 			}
-			changeText = fmt.Sprintf("%s（新規）", newTask)
+			changeText = fmt.Sprintf("%s%s（新規）", timePrefix, newTask)
 		case "UPDATE":
 			// diff_payloadからold/newを取得
 			oldTask := "（不明）"
@@ -473,9 +426,9 @@ func (n *notificationUseCase) buildChangesList(logs []entity.ActionLog, shiftMap
 					}
 				}
 			}
-			changeText = fmt.Sprintf("%s → %s", oldTask, newTask)
+			changeText = fmt.Sprintf("%s%s → %s", timePrefix, oldTask, newTask)
 		default:
-			changeText = fmt.Sprintf("%s", task.Task)
+			changeText = fmt.Sprintf("%s%s", timePrefix, task.Task)
 		}
 
 		changes = append(changes, changeText)
