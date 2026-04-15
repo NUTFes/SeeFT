@@ -277,6 +277,10 @@ class _MyShiftPageState extends State<MyShiftPage>
       
       // hiveのキャッシュデータをフェッチデータで更新
       shiftCardBox.put('${dayID}_${weatherID}', fetchedData);
+      // 最新データに存在しない既読キーを掃除
+      if (fetchedShiftCardDataList != null) {
+        _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
+      }
       
       // ここにレビューの処理を挟む
       _showReviewFormIfNeeded(fetchedShiftCardDataList, dayID);
@@ -414,11 +418,21 @@ class _MyShiftPageState extends State<MyShiftPage>
   }
   
   // カードの変更判定（taskName / startTime / endTime / place のいずれかが変わったか）
+  // _cardKeyFromShiftCardData()と同じ正規化ロジックを使用して、フォーマット違いだけの変更を除外
   bool _isCardChanged(ShiftCardData oldCard, ShiftCardData newCard) {
-    return oldCard.taskName != newCard.taskName ||
-           oldCard.startTime != newCard.startTime ||
-           oldCard.endTime != newCard.endTime ||
-           oldCard.place != newCard.place;
+    final oldTaskName = _normalizeTextForKey(oldCard.taskName);
+    final newTaskName = _normalizeTextForKey(newCard.taskName);
+    final oldStartTime = _normalizeTimeForKey(oldCard.startTime);
+    final newStartTime = _normalizeTimeForKey(newCard.startTime);
+    final oldEndTime = _normalizeTimeForKey(oldCard.endTime);
+    final newEndTime = _normalizeTimeForKey(newCard.endTime);
+    final oldPlace = _normalizeTextForKey(oldCard.place);
+    final newPlace = _normalizeTextForKey(newCard.place);
+    
+    return oldTaskName != newTaskName ||
+           oldStartTime != newStartTime ||
+           oldEndTime != newEndTime ||
+           oldPlace != newPlace;
   }
   
   // New対象カードキーの検出
@@ -471,6 +485,25 @@ class _MyShiftPageState extends State<MyShiftPage>
       logger.i('Filtered out $excludedCount already opened cards');
     }
     return filtered;
+  }
+
+  // 最新カードに存在しない既読キーを日付単位で削除
+  void _cleanupStaleOpenedKeys(int dayID, ShiftCardDataList latestList) {
+    final latestKeys = latestList.data
+        .map((card) => _cardKeyFromShiftCardData(dayID, card))
+        .toSet();
+
+    final staleKeys = _openedCardKeys
+        .where((key) => key.startsWith('$dayID|') && !latestKeys.contains(key))
+        .toList();
+
+    if (staleKeys.isEmpty) {
+      return;
+    }
+
+    _openedCardKeys.removeAll(staleKeys);
+    openedCardKeysBox.put(_openedKeysStorageKey, _openedCardKeys.toList());
+    logger.i('Cleaned ${staleKeys.length} stale opened keys for day $dayID');
   }
 
   @override
