@@ -42,7 +42,8 @@ git submodule update --init
 
 ## SchemaSpyでDBスキーマを確認する（PostgreSQL）
 - DB初期データは `mysql/db` ディレクトリにありますが、実際のDBはPostgreSQLです。
-- 生成物の出力先: `api/docs/schemaspy`
+- 最終生成物の出力先: `api/docs/er-diagrams/`
+- 一時出力先: `api/docs/schemaspy`（処理後に削除）
 
 ```fish
 # 標準（docker-compose.yml）
