@@ -516,7 +516,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	defer rows.Close()
 
 	for rows.Next() {
-		// JOINで取得したユーザー情報を直接Scan（個別SQLは不要）
+		// JOINで取得したユーザー情報を直接Scan（個別SQLは不要、passwordは取得しない）
 		err := rows.Scan(
 			&users.ID,
 			&users.Name,
@@ -527,7 +527,6 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 			&users.RoleID,
 			&users.StudentNumber,
 			&users.Tel,
-			&users.Password,
 			&users.CreatedAt,
 			&users.UpdatedAt,
 		)
