@@ -1,6 +1,6 @@
 language: ja-JP
 reviews:
-  profile: concise
+  profile: chill
   auto_review:
     enabled: true
 chat:
