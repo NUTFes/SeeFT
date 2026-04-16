@@ -1,3 +1,7 @@
-language: "ja-JP"
+language: ja-JP
 reviews:
-  profile: "concise"
+  profile: concise
+  auto_review:
+    enabled: true
+chat:
+  auto_reply: true
