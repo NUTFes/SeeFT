@@ -12,6 +12,11 @@ services:
       POSTGRES_USER: seeft
       POSTGRES_PASSWORD: password
       TZ: 'Asia/Tokyo'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     ports:
       - 5432:5432
 
@@ -64,7 +69,7 @@ services:
     image: schemaspy/schemaspy:latest
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
     environment:
       SCHEMASPY_HOST: ${SCHEMASPY_HOST:-db}
       SCHEMASPY_PORT: ${SCHEMASPY_PORT:-5432}
