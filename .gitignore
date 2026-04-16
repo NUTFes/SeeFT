@@ -29,4 +29,4 @@ web/prod/*
 api/docs/er-diagrams/*
 
 # SchemaSpy
-schemaspy/
+api/docs/schemaspy/
