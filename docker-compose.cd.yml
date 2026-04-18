@@ -1,0 +1,44 @@
+version: "3"
+services:
+  cloudflare:
+    image: "cloudflare/cloudflared:latest"
+    container_name: "nutfes-seeft-web"
+    volumes: ["./web/prod:/home/nonroot/.cloudflared"]
+    command: tunnel run
+
+  mobile:
+    image: ${HARBOR_REG}/seeft/mobile:latest
+    container_name: "nutfes-seeft-mobile"
+    command: "python3 ./python/server.py"
+    ports: ["45029:45029"]
+    environment:
+      NEXT_PUBLIC_APP_ENV: "production"
+    depends_on: ["api"]
+    restart: always
+
+  api:
+    image: ${HARBOR_REG}/seeft/api:latest
+    container_name: "nutfes-seeft-api"
+    volumes: ["./api:/env/app"]
+    command: sh -c "go build -o main main.go && ./main"
+    env_file: ["./api/env/seeft.env"]
+    ports: ["1234:1234"]
+    restart: always
+
+  admin:
+    image: ${HARBOR_REG}/seeft/admin:latest
+    container_name: "nutfes-seeft-admin"
+    command: sh -c "npm install && npm run build && npm run start"
+    ports:
+      - "5000:3000"
+    environment:
+      NEXT_PUBLIC_APP_ENV: "production"
+    stdin_open: true
+    tty: true
+    depends_on: [api]
+    restart: always
+
+networks:
+  default:
+    name: seeft-default
+    external: true
