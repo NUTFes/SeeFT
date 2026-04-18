@@ -49,7 +49,7 @@ jobs:
       - name: Create .env file
         run: |
           mkdir -p mobile/env
-          echo "${{ secrets.SEEFT_MOBILE_ENVS }}" > mobile/env/.env
+          printf '%s' "${{ secrets.SEEFT_MOBILE_ENVS }}" > mobile/env/.env
 
       - name: Build and Push API
         uses: docker/build-push-action@v5
