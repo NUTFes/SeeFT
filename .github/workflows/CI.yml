@@ -34,7 +34,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: network=host
-          config-inline: |
+          buildkitd-config-inline: |
             [registry."${{ secrets.HARBOR_REG }}"]
               http = true
               insecure = true
