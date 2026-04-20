@@ -30,6 +30,13 @@ web/prod/*
 docs/manuals/*/images/
 docs/manuals/*/*.html
 !docs/manuals/*/slide_api.html
+!docs/manuals/*/manual_with_videos.html
 docs/test_images/*
+
+# 動画生成パイプラインの中間成果物
+docs/manuals/*/audio/
+docs/manuals/*/videos/_work_*/
+docs/manuals/*/videos/preview.html
+scripts/_debug_*.json
 
 scripts/docx_images/*
