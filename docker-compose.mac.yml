@@ -3,7 +3,7 @@ version: "3.8"
 services:
   db:
     container_name: nutfes-seeft-db
-    image: postgres
+    image: postgres:18
     volumes:
       - ./mysql/db:/docker-entrypoint-initdb.d/ # 初期データ
       - ./my.cnf:/etc/mysql/conf.d/my.cnf
