@@ -1,11 +1,19 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:seeft_mobile/widgets/new_badge.dart';
 
 // シフトカードのウィジェット
 class ShiftCard extends StatelessWidget {
   final ShiftCardData data;
+  final bool isNew;
+  final VoidCallback? onOpened;
 
-  const ShiftCard({super.key, required this.data});
+  const ShiftCard({
+    super.key,
+    required this.data,
+    this.isNew = false,
+    this.onOpened,
+  });
   
   // リンクを開くための非同期メソッドを定義
   Future<void> _launchManualUrl(String url) async {
@@ -66,15 +74,25 @@ class ShiftCard extends StatelessWidget {
                 _manualButton(url: data.url),
               ],
             ),
-            // タスク名の表示
-            Text(
-              data.taskName.toString(),
-              style: const TextStyle(
-                fontSize: AppFontSizes.md,
-                color: AppColors.textBlack, 
-                fontWeight: FontWeight.bold
-              ),
-              textAlign: TextAlign.left,
+            // タスク名とNewバッジの表示
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    data.taskName.toString(),
+                    style: const TextStyle(
+                      fontSize: AppFontSizes.md,
+                      color: AppColors.textBlack, 
+                      fontWeight: FontWeight.bold
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+                if (isNew) ...[
+                  const SizedBox(width: 8.0),
+                  const NewBadge(),
+                ],
+              ],
             ),
             const SizedBox(height: 6.0),
             const Divider(
@@ -88,6 +106,12 @@ class ShiftCard extends StatelessWidget {
                 tilePadding: EdgeInsets.zero,
                 iconColor: AppColors.textBlack, // アイコンの色を変更
                 minTileHeight: 0, // タイルの高さを最小に
+                onExpansionChanged: (expanded) {
+                  // トグルを開いたときにコールバックを呼ぶ
+                  if (expanded && isNew && onOpened != null) {
+                    onOpened!();
+                  }
+                },
                 // 集合場所の表示
                 title: Row(
                   children: [

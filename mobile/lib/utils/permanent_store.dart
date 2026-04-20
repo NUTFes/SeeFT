@@ -11,6 +11,8 @@ late final Box shiftCardBox;
 late final Box rescueBox;
 // レビューで送信したタスク名を保存するためのHiveのBox
 late final Box reviewedTaskNameBox;
+// 開封済みカードキーを保存するためのHiveのBox
+late final Box openedCardKeysBox;
 
 class PermanentStore {
   static PermanentStore _instance = PermanentStore();
@@ -72,5 +74,7 @@ Future<void> initHive() async {
   rescueBox = await Hive.openBox('rescue');
   // レビュー済みのタスク名を保存するためのBoxを開く
   reviewedTaskNameBox = await Hive.openBox('reviewedTaskName');
+  // 開封済みカードキーを保存するためのBoxを開く
+  openedCardKeysBox = await Hive.openBox('openedCardKeys');
   logger.i('Hiveの初期化が完了しました。');
 }
