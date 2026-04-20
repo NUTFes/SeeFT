@@ -1,0 +1,615 @@
+{
+  "manual_name": "01_44th_配線マニュアル",
+  "sections": [
+    {
+      "section_title": "集合とチーム編成 ― 配線という仕事の全体像",
+      "estimated_duration_sec": 180,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "配線は、技大祭を電気で動かすための心臓の部分。準々備日の夜に、一気に仕込みます。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "つまり、この日に電気が通らないと、当日動かないってことですか？",
+          "image": null,
+          "tags": [
+            "short pause"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "そのとおり。ここでしくじると翌日の本番が止まる。だから一番集中して欲しい仕事の一つです。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "集合場所と時間を教えてください。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "B講義室に、17時50分集合。18時きっかりに開始で、終了は22時を目安にしています。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "うわ、四時間も配線だけやるんですね。",
+          "image": null,
+          "tags": [
+            "uhm"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "四時間で構内全体に電気を通す、一本勝負のイメージ。晴天時はAからGの七班、雨天時は屋内中心の四班体制に組み替えます。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "雨だと屋外は一切やらない、ということですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "基本は屋内のみ。ただし作業中に地面が乾いてきたら、総指揮の判断で屋外も順次追加します。",
+          "image": null,
+          "tags": [
+            "medium pause"
+          ]
+        },
+        {
+          "speaker": "Novice",
+          "text": "なるほど、乾き待ちと並行して動くんですね。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "班ごとの配線指揮者とサブリーダーは、マニュアル内の表で必ず確認しておいてください。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "section_title": "タイムスケジュールと必要物品",
+      "estimated_duration_sec": 210,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "四時間の使い方を、先に頭に入れておくと動きやすい。",
+          "image": "image2.png",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "最初は何をするんですか？",
+          "image": "image2.png",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "最初の十分でチーム分けと現場への移動。次の二十分は、現場に着いてから指揮者による配線方法のレクチャーです。",
+          "image": "image2.png",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "つまり、いきなりテープを貼り始めるわけじゃない。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そう、段取りを共有してから。実作業は18時半から22時までの、およそ三時間半です。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "持っていく物はだいたい決まってますか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "大きく三種類。一つ目が電工ドラム。30メートル版と50メートル版があって、どちらも116倉庫から出します。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "二つ目がブレーカータップで、こちらはEGGから。三つ目が固定用のテープとゴミ袋です。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "テープって、一種類じゃないんですね。",
+          "image": null,
+          "tags": [
+            "short pause"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "屋外の床にはガムテープ、屋内の床には養生テープ。貼って剥がす場所の材質で使い分けます。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "屋内で普通のガムテープを貼ると、床が剥がれちゃうんですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そう、タイルの表面まで持っていかれることがある。ここは譲れないポイント。班ごとの必要数は必要物品の表を見てください。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "section_title": "配線エリアと配線計画の読み方",
+      "estimated_duration_sec": 200,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "今日は、長岡技大の構内を七つのエリアに区切って、並行で電気を流していきます。",
+          "image": "image20.png",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "講義棟とか、電気棟とかってことですか？",
+          "image": "image22.png",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そう。A班が講義棟、B班が物材棟、C班が図書館棟、D班が電気棟を担当します。",
+          "image": "image5.png",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "E班は屋外ステージと機建棟の一部、F班が機建棟、G班が体育館周りの屋外ステージまで。",
+          "image": "image14.png",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "雨の日はこの区分けが変わるんでしたよね。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "雨天時は屋内中心の四班体制に圧縮します。雨天用の配線図は、AからDのチーム別で別冊になっています。",
+          "image": "image1.png",
+          "tags": [
+            "medium pause"
+          ]
+        },
+        {
+          "speaker": "Novice",
+          "text": "詳細な配線図はどこで見ればいいんですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "エリア別のPDFがDriveに上がっています。ただ当日は通信が細くなる前提で、必ず事前ダウンロードしておくこと。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "つまり、現場で圏外になっても手元で見られるように、ですね。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そのとおり。現場で図が開けない、というのが一番怖い。軽量版PDFも用意してあるので、容量が厳しい端末はそちらで。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "section_title": "電源側の処理 ― プラグを抜けないコンセントに変える",
+      "estimated_duration_sec": 180,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "ここから実作業の話。まず電源側、コンセントのプラグ処理からです。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "えっと、コンセントにさすだけじゃダメなんですか？",
+          "image": null,
+          "tags": [
+            "uhm"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "本番中、お客さんの足が一度引っ掛かれば、それで抜けます。抜けたら模擬店の照明も音響も全部落ちる。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "だからガムテープで、プラグの付け根から周囲の壁ごと、コンセントと一体化するように貼る。",
+          "image": "image17.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "こんなふうに、プラグの根元までベタッと覆っちゃうんですね。",
+          "image": "image17.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そう、少し汚く見えるくらいでちょうどいい。貼ったら、必ず軽く引っ張って抜けないか確認してください。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "つまり、見た目より安全優先、ということですね。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "ここで一つ厳守事項。ドラムをコンセントに差すときは、必ず配線指揮者が立ち会う。",
+          "image": null,
+          "tags": [
+            "short pause"
+          ]
+        },
+        {
+          "speaker": "Novice",
+          "text": "勝手に差しちゃダメ、ですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "ダメです。ブレーカータップを必ず間に挟むルールとセットで、指揮者の前でやる。これは感電と漏電を防ぐための最後の砦。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "section_title": "コードの固定処理 ― 三枚のガムテープの順序",
+      "estimated_duration_sec": 260,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "プラグ側を決めたら、ここから長いコードを床に這わせていきます。",
+          "image": "image15.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "そのまま上からペタッと貼るんですか？",
+          "image": "image15.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "ここが今日一番覚えて欲しいところ。50センチくらいに切ったガムテープを、三枚に分けて使います。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "三枚？ どうして一枚じゃダメなんですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "引っ張られた力を分散させるため。一枚だと端から順に剥がれて、最後に全部一気に浮きます。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "まず一枚目。コードの片側の端を押さえる。水色の点線がコードの位置、赤枠が一枚目のテープです。",
+          "image": "image9.png",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "端っこを先に留めるんですね。",
+          "image": "image9.png",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "次に二枚目。反対側の端を留める。黄色枠が二枚目で、一枚目とコードが重なる位置まで届かせます。",
+          "image": "image19.png",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "つまり、まず両端をピンと固定してから、中を埋める順番ですか？",
+          "image": "image19.png",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そのとおり。最後に三枚目、緑枠。中央を留めて、コードがテープの中に完全に埋まるようにします。",
+          "image": "image18.png",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "なるほど、端、端、真ん中の順ですね。",
+          "image": "image18.png",
+          "tags": [
+            "laughing"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "合言葉は、どの箇所もコードが裸で見えないように。黒いコードが少しでも覗いていたら、追加で貼ってください。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "お客さんがつまずいたら大事故ですもんね。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "section_title": "コードを貼る場所 ― 壁側と床側の二段がけ",
+      "estimated_duration_sec": 210,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "次は、どこに貼るかという話。原則は、通路の邪魔にならないよう壁際に沿わせます。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "屋内だと、壁の下の黒い幅木の部分ですね。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そう。一枚目は、コードと幅木の境目に貼って、壁と一体化させる。",
+          "image": "image7.png",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "ただそれだけだと、コードが床側に浮いて足が引っ掛かる。だから二枚目は床側に貼る。",
+          "image": "image3.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "つまり、壁と床の二方向からコードを挟み込む感じですか？",
+          "image": "image3.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "ちょうど三角形に閉じ込めるイメージ。コードが動く余地をなくすのが目的です。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "曲がり角って、どうやって処理するんですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "壁の角に沿わせて、コードを自然にカーブさせながら貼ります。",
+          "image": "image12.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "無理に直角に折り曲げちゃダメなんですか？",
+          "image": "image12.jpg",
+          "tags": [
+            "uhm"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "絶対ダメ。中の銅線が傷んで、そこから発熱や断線が起きる。カーブは大きく、優しく、が鉄則です。",
+          "image": null,
+          "tags": [
+            "medium pause"
+          ]
+        },
+        {
+          "speaker": "Novice",
+          "text": "ホースと一緒ですね。折れるとそこで詰まる。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "section_title": "自動ドアと屋外 ― 特殊な場所の扱い",
+      "estimated_duration_sec": 220,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "建物の出入り口には、ちょっと厄介な相手、自動ドアがあります。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "センサーで勝手に開くドアですよね。当日も動かすんですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "動かします。だからドアのレールに沿ってテープで固定すると、ドアが引っ掛かって故障の原因になる。",
+          "image": "image16.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "コードはレールの中心を通し、レール上にはテープを貼らない。前後の床だけで固定します。",
+          "image": "image16.jpg",
+          "tags": [
+            "short pause"
+          ]
+        },
+        {
+          "speaker": "Novice",
+          "text": "ドアの中では、コードが自由に動けるようにしておくんですね。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そう。もし三本以上のコードが同じドアを通るときは、ピラミッド状に積みます。下に二本、上に一本。",
+          "image": "image13.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "つまり、高さを足してでも、床に広がる幅は抑える、ということですか？",
+          "image": "image10.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そのとおり。ドアの隙間に収めるための工夫です。屋外も基本は壁沿いですが、タイルの溝を利用できるなら壁側のくぼみを選ぶ。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "入り口の足ふきマットがあるときはどうしますか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "一度マットをめくって、下にコードを固定してから、上にマットを被せ直す。隠せるところは隠す。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "見た目もきれいになるし、誰もコードを踏んでる意識がなくなりますね。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "section_title": "模擬店テント側の終端処理 ― ドラムの余りを残さない",
+      "estimated_duration_sec": 180,
+      "turns": [
+        {
+          "speaker": "Expert",
+          "text": "最後は、コードの行き先、模擬店テント側の処理です。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "届いたら、ドラムをその場に置くだけじゃダメなんですか？",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "ダメ。天候に関係なく、テントに到達したらドラムに巻き残ったケーブルは、全部引き出してください。",
+          "image": "image25.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "ん、余ってるのに引き出すんですか？",
+          "image": "image25.jpg",
+          "tags": [
+            "uhm"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "巻いたまま電気を流すと、コイルになって熱を持つ。最悪発火します。",
+          "image": null,
+          "tags": [
+            "medium pause"
+          ]
+        },
+        {
+          "speaker": "Novice",
+          "text": "ドラムってそんなに怖いものなんですね。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "正しく全部出せば安全です。巻き癖を伸ばすつもりで、気持ち多めに引っ張り出す、と覚えておいてください。",
+          "image": null,
+          "tags": [
+            "shouting"
+          ]
+        },
+        {
+          "speaker": "Expert",
+          "text": "雨天時や、テントがまだ立っていない場所では、ドラムと余ったケーブルを一緒にゴミ袋に入れる。",
+          "image": "image11.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "袋で、雨と砂から守るんですね。",
+          "image": "image24.jpg",
+          "tags": []
+        },
+        {
+          "speaker": "Expert",
+          "text": "そう、これで電源側から供給先までが完成。不明点は自己判断せず、必ず指揮担当者に確認すること。",
+          "image": null,
+          "tags": []
+        },
+        {
+          "speaker": "Novice",
+          "text": "了解です。詳細はマニュアルの連絡先欄を参照します。",
+          "image": null,
+          "tags": []
+        }
+      ]
+    }
+  ]
+}
