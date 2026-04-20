@@ -1,4 +1,0 @@
-# gas/.gitignore
-node_modules/
-# スクリプトIDが含まれるため（チームで共有するなら管理してもOK）
-.clasp.json
