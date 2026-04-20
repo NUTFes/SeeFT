@@ -9,7 +9,7 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 )
 
-var sessionDebugSQL = os.Getenv("DEBUG_SQL") != "0"
+var sessionDebugSQL = os.Getenv("DEBUG_SQL") == "1"
 
 
 type sessionRepository struct {

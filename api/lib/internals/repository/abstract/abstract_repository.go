@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var debugSQL = os.Getenv("DEBUG_SQL") != "0"
+var debugSQL = os.Getenv("DEBUG_SQL") == "1"
 
 type abstractRepository struct {
 	client db.Client
