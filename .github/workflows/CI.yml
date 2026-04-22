@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/mitomen/261/CI-CD-Pipeline
   workflow_call:
   workflow_dispatch:
 
