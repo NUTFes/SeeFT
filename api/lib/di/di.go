@@ -1,10 +1,9 @@
 package di
 
 import (
-
+	"log"
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/externals/server"
-	"github.com/NUTFes/SeeFT/api/lib/externals/slack"
 	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
@@ -41,13 +40,6 @@ func InitializeServer() db.Client {
 	troubleRescueRepository := repository.NewTroubleRescueRepository(client, crud)
 	reviewRepository := repository.NewReviewRepository(client, crud)
 	actionLogRepository := repository.NewActionLogRepository(client)
-
-	// SlackService
-	slackService, err := slack.NewSlackService()
-	if err != nil {
-		log.Printf("Warning: Failed to initialize SlackService: %v. Notifications will not be sent.", err)
-		slackService = nil
-	}
 
 	// UseCase
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
