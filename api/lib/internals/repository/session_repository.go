@@ -3,9 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"fmt"
+	"os"
+
+	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 )
+
+var sessionDebugSQL = os.Getenv("DEBUG_SQL") == "1"
 
 
 type sessionRepository struct {
@@ -30,7 +34,9 @@ func (r *sessionRepository) Create(c context.Context, userID string, accessToken
 	if err != nil {
 		return err
 	}
-	fmt.Printf("\x1b[36m%s\n", query)
+	if sessionDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return nil
 }
 
@@ -42,7 +48,9 @@ func (r *sessionRepository) Delete(c context.Context, accessToken string) error 
 	if err != nil {
 		return err
 	}
-	fmt.Printf("\x1b[36m%s\n", query)
+	if sessionDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return nil
 }
 
@@ -50,7 +58,9 @@ func (r *sessionRepository) Delete(c context.Context, accessToken string) error 
 func (r *sessionRepository) FindSessionByAccessToken(c context.Context, accessToken string) *sql.Row {
 	query := "select * from session where access_token = '" + accessToken + "'"
 	row := r.client.DB().QueryRowContext(c, query)
-	fmt.Printf("\x1b[36m%s\n", query)
+	if sessionDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return row
 }
 
@@ -61,6 +71,8 @@ func (r *sessionRepository) DeleteByUserID(c context.Context, userID string) err
 	if err != nil {
 		return err
 	}
-	fmt.Printf("\x1b[36m%s\n", query)
+	if sessionDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return nil
 }

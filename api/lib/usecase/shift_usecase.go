@@ -516,12 +516,8 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	defer rows.Close()
 
 	for rows.Next() {
+		// JOINで取得したユーザー情報を直接Scan（個別SQLは不要、passwordは取得しない）
 		err := rows.Scan(
-			&UserID,
-		)
-
-		row, err := a.userRep.Find(c, UserID)
-		err = row.Scan(
 			&users.ID,
 			&users.Name,
 			&users.Mail,
@@ -531,7 +527,6 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 			&users.RoleID,
 			&users.StudentNumber,
 			&users.Tel,
-			&users.Password,
 			&users.CreatedAt,
 			&users.UpdatedAt,
 		)
@@ -777,6 +772,16 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 	// グローバル変数を使わずローカル変数で処理
 	shiftCards := make([]entity.ShiftCard, 0)
 
+	// N+1問題対策: Grade/Bureauのマップを事前取得
+	gradeMap, err := a.loadGradeMap(c)
+	if err != nil {
+		return nil, err
+	}
+	bureauMap, err := a.loadBureauMap(c)
+	if err != nil {
+		return nil, err
+	}
+
 	// 新規ShiftCardリポジトリを使用してデータ取得
 	shiftData, err := a.shiftCardRep.GetOptimizedShiftData(c, userID, dateID, weatherID)
 	if err != nil {
@@ -815,7 +820,7 @@ func (a *shiftUseCase) GetShiftCardsByUserAndDateAndWeather(c context.Context, u
 				continue
 			}
 
-			card := a.createShiftCardFromGroup(c, group)
+			card := a.createShiftCardFromGroup(c, group, gradeMap, bureauMap)
 			shiftCards = append(shiftCards, card)
 		}
 	}
@@ -930,7 +935,7 @@ func (a *shiftUseCase) compareTimeStrings(time1, time2 string) int {
 	return 0
 }
 
-func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entity.Shift) entity.ShiftCard {
+func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entity.Shift, gradeMap map[int]string, bureauMap map[int]string) entity.ShiftCard {
 	if len(group) == 0 {
 		// 空の場合でも必ず配列を初期化
 		return entity.ShiftCard{
@@ -975,7 +980,7 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 	// ShiftMembersを生成（15分ごと）
 	var shiftMembers []entity.ShiftMembers
 	for i, shift := range group {
-		members := a.getShiftMembersForTime(c, shift)
+		members := a.getShiftMembersForTime(c, shift, gradeMap, bureauMap)
 
 		// メンバーがnilの場合は空配列を設定
 		if members == nil {
@@ -1006,14 +1011,14 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 	shiftCard.ShiftMembers = shiftMembers
 
 	// BeforeMembersを取得（nilチェック付き）
-	beforeMembers := a.getBeforeMembers(c, first)
+	beforeMembers := a.getBeforeMembers(c, first, gradeMap, bureauMap)
 	if beforeMembers.Members == nil {
 		beforeMembers.Members = []entity.ShiftMember{}
 	}
 	shiftCard.BeforeMembers = beforeMembers
 
 	// AfterMembersを取得（nilチェック付き）
-	afterMembers := a.getAfterMembers(c, last)
+	afterMembers := a.getAfterMembers(c, last, gradeMap, bureauMap)
 	if afterMembers.Members == nil {
 		afterMembers.Members = []entity.ShiftMember{}
 	}
@@ -1023,7 +1028,7 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 }
 
 // getShiftMembersForTime は指定時間のメンバーを取得
-func (a *shiftUseCase) getShiftMembersForTime(c context.Context, shift entity.Shift) []entity.ShiftMember {
+func (a *shiftUseCase) getShiftMembersForTime(c context.Context, shift entity.Shift, gradeMap map[int]string, bureauMap map[int]string) []entity.ShiftMember {
 	shiftUsers, err := a.GetUsersByShift(c,
 		strconv.Itoa(shift.Task.ID),
 		strconv.Itoa(shift.Year.ID),
@@ -1037,30 +1042,14 @@ func (a *shiftUseCase) getShiftMembersForTime(c context.Context, shift entity.Sh
 
 	var members []entity.ShiftMember
 	for _, user := range shiftUsers.Users {
-		// Grade情報を取得
-		var grade entity.Grade
-		gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
-		if err == nil {
-			err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
-		}
-		if err != nil {
-			grade.Grade = ""
-		}
-
-		// Bureau情報を取得
-		var bureau entity.Bureau
-		bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
-		if err == nil {
-			err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
-		}
-		if err != nil {
-			bureau.Bureau = ""
-		}
+		// マップからGrade/Bureau情報を取得（N+1問題を回避）
+		grade := gradeMap[user.GradeID]
+		bureau := bureauMap[user.BureauID]
 
 		member := entity.ShiftMember{
 			Name:   user.Name,
-			Grade:  grade.Grade,
-			Bureau: bureau.Bureau,
+			Grade:  grade,
+			Bureau: bureau,
 		}
 		members = append(members, member)
 	}
@@ -1073,7 +1062,7 @@ func (a *shiftUseCase) getShiftMembersForTime(c context.Context, shift entity.Sh
 }
 
 // getBeforeMembers は前の時間のメンバーを取得
-func (a *shiftUseCase) getBeforeMembers(c context.Context, firstShift entity.Shift) entity.ShiftMembers {
+func (a *shiftUseCase) getBeforeMembers(c context.Context, firstShift entity.Shift, gradeMap map[int]string, bureauMap map[int]string) entity.ShiftMembers {
 	// 初期化（空配列を保証）
 	result := entity.ShiftMembers{
 		STime:   "",
@@ -1107,30 +1096,14 @@ func (a *shiftUseCase) getBeforeMembers(c context.Context, firstShift entity.Shi
 
 	var members []entity.ShiftMember
 	for _, user := range prevUsers.Users {
-		// Grade情報を取得
-		var grade entity.Grade
-		gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
-		if err == nil {
-			err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
-		}
-		if err != nil {
-			grade.Grade = ""
-		}
-
-		// Bureau情報を取得
-		var bureau entity.Bureau
-		bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
-		if err == nil {
-			err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
-		}
-		if err != nil {
-			bureau.Bureau = ""
-		}
+		// マップからGrade/Bureau情報を取得（N+1問題を回避）
+		grade := gradeMap[user.GradeID]
+		bureau := bureauMap[user.BureauID]
 
 		member := entity.ShiftMember{
 			Name:   user.Name,
-			Grade:  grade.Grade,
-			Bureau: bureau.Bureau,
+			Grade:  grade,
+			Bureau: bureau,
 		}
 		members = append(members, member)
 	}
@@ -1147,7 +1120,7 @@ func (a *shiftUseCase) getBeforeMembers(c context.Context, firstShift entity.Shi
 }
 
 // getAfterMembers は後の時間のメンバーを取得（同様の実装）
-func (a *shiftUseCase) getAfterMembers(c context.Context, lastShift entity.Shift) entity.ShiftMembers {
+func (a *shiftUseCase) getAfterMembers(c context.Context, lastShift entity.Shift, gradeMap map[int]string, bureauMap map[int]string) entity.ShiftMembers {
 	// 次の時間帯情報（空配列は保証）
 	result := entity.ShiftMembers{
 		STime:   "",
@@ -1187,30 +1160,14 @@ func (a *shiftUseCase) getAfterMembers(c context.Context, lastShift entity.Shift
 
 	var members []entity.ShiftMember
 	for _, user := range nextUsers.Users {
-		// Grade情報を取得
-		var grade entity.Grade
-		gradeRow, err := a.gradeRep.Find(c, strconv.Itoa(user.GradeID))
-		if err == nil {
-			err = gradeRow.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt)
-		}
-		if err != nil {
-			grade.Grade = ""
-		}
-
-		// Bureau情報を取得
-		var bureau entity.Bureau
-		bureauRow, err := a.bureauRep.Find(c, strconv.Itoa(user.BureauID))
-		if err == nil {
-			err = bureauRow.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt)
-		}
-		if err != nil {
-			bureau.Bureau = ""
-		}
+		// マップからGrade/Bureau情報を取得（N+1問題を回避）
+		grade := gradeMap[user.GradeID]
+		bureau := bureauMap[user.BureauID]
 
 		member := entity.ShiftMember{
 			Name:   user.Name,
-			Grade:  grade.Grade,
-			Bureau: bureau.Bureau,
+			Grade:  grade,
+			Bureau: bureau,
 		}
 		members = append(members, member)
 	}
@@ -1359,6 +1316,64 @@ func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) e
 
 // GASからのシフト変更通知を受けてDBを更新
 func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.ShiftChangeRequest) error {
+	// N+1問題対策: 事前に必要なユーザー名とタスク名を収集
+	userNameSet := make(map[string]bool)
+	taskNameSet := make(map[string]bool)
+	
+	for _, change := range req.Changes {
+		userNameSet[change.UserName] = true
+		taskName := strings.ReplaceAll(change.TaskName, "　", " ")
+		taskNameSet[taskName] = true
+	}
+	
+	// ユーザー名のリストを作成
+	userNames := make([]string, 0, len(userNameSet))
+	for name := range userNameSet {
+		userNames = append(userNames, name)
+	}
+	
+	// タスク名のリストを作成
+	taskNames := make([]string, 0, len(taskNameSet))
+	for name := range taskNameSet {
+		taskNames = append(taskNames, name)
+	}
+	
+	// 一括でユーザーを取得してマップ化
+	userMap := make(map[string]entity.User)
+	if len(userNames) > 0 {
+		userRows, err := u.userRep.FindByNames(ctx, userNames)
+		if err != nil {
+			return errors.Wrap(err, "ユーザー一括取得失敗")
+		}
+		defer userRows.Close()
+		
+		for userRows.Next() {
+			var user entity.User
+			if err := userRows.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+				continue
+			}
+			userMap[user.Name] = user
+		}
+	}
+	
+	// 一括でタスクを取得してマップ化
+	taskMap := make(map[string]entity.Task)
+	if len(taskNames) > 0 {
+		taskRows, err := u.taskRep.FindByNames(ctx, taskNames)
+		if err != nil {
+			return errors.Wrap(err, "タスク一括取得失敗")
+		}
+		defer taskRows.Close()
+		
+		for taskRows.Next() {
+			var task entity.Task
+			if err := taskRows.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
+				continue
+			}
+			taskMap[task.Task] = task
+		}
+	}
+
 	for _, change := range req.Changes {
 		// 年からYearIDを取得
 		yearID := strings.ReplaceAll(strconv.Itoa(change.YearID), " ", "")
@@ -1400,42 +1415,35 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			return errors.New("不正な天気: " + change.Weather)
 		}
 
-		// ユーザー名からUserID取得
-		userRow, _ := u.userRep.FindByName(ctx, change.UserName)
-		var user entity.User
-		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
-			// ユーザーが存在しない場合はエラーを返す
-			return errors.Wrapf(err, "ユーザーが存在しません: %v", change.UserName)
+		// マップからユーザーを取得（N+1問題を回避）
+		user, exists := userMap[change.UserName]
+		if !exists {
+			return errors.Errorf("ユーザーが存在しません: %v", change.UserName)
 		}
 		userID := strconv.Itoa(user.ID)
 
-		// タスク名からTaskID取得
-		taskName := strings.ReplaceAll(change.TaskName, "　", " ") // 全角スペースを半角スペースに変換
-		taskRow, _ := u.taskRep.FindByName(ctx, taskName)
-		var task entity.Task
-		if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
-			if err.Error() == "sql: no rows in result set" {
-				// タスクが存在しない場合は新規作成
-				name := change.TaskName
-				placeID := "1"
-				url := ""
-				bureauID := "1"
-				maxMember := "1"
-				color := "000000"
-				remark := ""
-				yearID := yearID
-				createErr := u.taskRep.Create(ctx, name, placeID, url, bureauID, maxMember, color, remark, yearID)
-				if createErr != nil {
-					return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.TaskName)
-				}
-				// 再取得
-				taskRow, _ = u.taskRep.FindByName(ctx, change.TaskName)
-				if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
-					return errors.Wrapf(err, "タスク再取得失敗: %v", change.TaskName)
-				}
-			} else {
-				return errors.Wrapf(err, "タスク取得失敗: %v", change.TaskName)
+		// マップからタスクを取得（N+1問題を回避）
+		taskName := strings.ReplaceAll(change.TaskName, "　", " ")
+		task, exists := taskMap[taskName]
+		if !exists {
+			// タスクが存在しない場合は新規作成
+			name := change.TaskName
+			placeID := "1"
+			url := ""
+			bureauID := "1"
+			maxMember := "1"
+			color := "000000"
+			remark := ""
+			createErr := u.taskRep.Create(ctx, name, placeID, url, bureauID, maxMember, color, remark, yearID)
+			if createErr != nil {
+				return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.TaskName)
 			}
+			// 新規作成したタスクを再取得してマップに追加
+			taskRow, _ := u.taskRep.FindByName(ctx, change.TaskName)
+			if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
+				return errors.Wrapf(err, "タスク再取得失敗: %v", change.TaskName)
+			}
+			taskMap[task.Task] = task
 		}
 		taskID := strconv.Itoa(task.ID)
 
@@ -1453,4 +1461,42 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		}
 	}
 	return nil
+}
+
+// loadGradeMap は全Gradeを取得してマップ化（N+1問題対策）
+func (a *shiftUseCase) loadGradeMap(ctx context.Context) (map[int]string, error) {
+	gradeMap := make(map[int]string)
+	rows, err := a.gradeRep.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var grade entity.Grade
+		if err := rows.Scan(&grade.ID, &grade.Grade, &grade.CreatedAt, &grade.UpdatedAt); err != nil {
+			continue
+		}
+		gradeMap[grade.ID] = grade.Grade
+	}
+	return gradeMap, nil
+}
+
+// loadBureauMap は全Bureauを取得してマップ化（N+1問題対策）
+func (a *shiftUseCase) loadBureauMap(ctx context.Context) (map[int]string, error) {
+	bureauMap := make(map[int]string)
+	rows, err := a.bureauRep.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var bureau entity.Bureau
+		if err := rows.Scan(&bureau.ID, &bureau.Bureau, &bureau.Color, &bureau.CreatedAt, &bureau.UpdatedAt); err != nil {
+			continue
+		}
+		bureauMap[bureau.ID] = bureau.Bureau
+	}
+	return bureauMap, nil
 }

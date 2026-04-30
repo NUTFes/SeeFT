@@ -4,11 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
+
+var taskDebugSQL = os.Getenv("DEBUG_SQL") != "0"
 
 type taskRepository struct {
 	client db.Client
@@ -25,6 +29,7 @@ type TaskRepository interface {
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
 	FindByUserID(context.Context, string) (*sql.Rows, error)
+	FindByNames(context.Context, []string) (*sql.Rows, error)
 }
 
 func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
@@ -50,7 +55,9 @@ func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
 	}
-	fmt.Printf("\x1b[36m%s\n", query)
+	if taskDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return rows, nil
 }
 
@@ -92,6 +99,18 @@ func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, e
 	return b.client.DB().QueryRowContext(c, query), nil
 }
 
+// 複数のタスク名から一括でタスクを取得する（N+1問題対策）
+func (b *taskRepository) FindByNames(c context.Context, names []string) (*sql.Rows, error) {
+	if len(names) == 0 {
+		// 空の結果を返す
+		query := "SELECT * FROM tasks WHERE 1=0"
+		return b.client.DB().QueryContext(c, query)
+	}
+
+	query := "SELECT * FROM tasks WHERE task = ANY($1::text[])"
+	return b.client.DB().QueryContext(c, query, pq.Array(names))
+}
+
 // 指定したuserIDの全てのタスクを取得する
 func (b *taskRepository) FindByUserID(c context.Context, userID string) (*sql.Rows, error) {
 	query := `
@@ -101,7 +120,9 @@ func (b *taskRepository) FindByUserID(c context.Context, userID string) (*sql.Ro
 	WHERE s.user_id = $1
 	ORDER BY t.task
 	`
-	fmt.Printf("\x1b[36m%s\n", query)
+	if taskDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 
 	return b.client.DB().QueryContext(c, query, userID)
 }

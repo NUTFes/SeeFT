@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/pkg/errors"
 )
+
+var debugSQL = os.Getenv("DEBUG_SQL") == "1"
 
 type abstractRepository struct {
 	client db.Client
@@ -28,13 +31,17 @@ func (a abstractRepository) Read(ctx context.Context, query string) (*sql.Rows, 
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
 	}
-	fmt.Printf("\x1b[36m%s\n", query)
+	if debugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return rows, nil
 }
 
 func (a abstractRepository) ReadByID(ctx context.Context, query string) (*sql.Row, error) {
 	row := a.client.DB().QueryRowContext(ctx, query)
-	fmt.Printf("\x1b[36m%s\n", query)
+	if debugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return row, nil
 }
 
@@ -43,7 +50,9 @@ func (a abstractRepository) UpdateDB(ctx context.Context, query string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("\x1b[36m%s\n", query)
+	if debugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return err
 }
 

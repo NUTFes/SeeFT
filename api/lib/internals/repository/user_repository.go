@@ -4,10 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
+	"github.com/lib/pq"
 )
+
+var userDebugSQL = os.Getenv("DEBUG_SQL") != "0"
 
 type userRepository struct {
 	client db.Client
@@ -23,6 +27,7 @@ type UserRepository interface {
 	Delete(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
+	FindByNames(context.Context, []string) (*sql.Rows, error)
 }
 
 func NewUserRepository(c db.Client, ac abstract.Crud) UserRepository {
@@ -45,7 +50,9 @@ func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
 func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber string) *sql.Row {
 	query := "SELECT * FROM users WHERE student_number = " + studentNumber
 	row := ur.client.DB().QueryRowContext(c, query)
-	fmt.Printf("\x1b[36m%s\n", query)
+	if userDebugSQL {
+		fmt.Printf("\x1b[36m%s\n", query)
+	}
 	return row
 }
 
@@ -92,4 +99,16 @@ func (ur *userRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 func (b *userRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
 	query := "SELECT * FROM users WHERE name = '" + name + "'"
 	return b.client.DB().QueryRowContext(c, query), nil
+}
+
+// 複数のユーザー名から一括でユーザーを取得する（N+1問題対策）
+func (b *userRepository) FindByNames(c context.Context, names []string) (*sql.Rows, error) {
+	if len(names) == 0 {
+		// 空の結果を返す
+		query := "SELECT * FROM users WHERE 1=0"
+		return b.client.DB().QueryContext(c, query)
+	}
+
+	query := "SELECT * FROM users WHERE name = ANY($1::text[])"
+	return b.client.DB().QueryContext(c, query, pq.Array(names))
 }
