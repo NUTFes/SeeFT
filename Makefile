@@ -99,7 +99,7 @@ schemaspy:
 .PHONY: mac-schemaspy
 mac-schemaspy:
 	mkdir -p api/docs/schemaspy
-	docker compose run --rm schemaspy
+	docker compose -f docker-compose.mac.yml run --rm schemaspy
 	mkdir -p api/docs/er-diagrams/summary
 	find api/docs/schemaspy/diagrams -name '*.png' ! -name 'relationships.real.*' -exec cp {} api/docs/er-diagrams/ \;
 	cp api/docs/schemaspy/diagrams/summary/relationships.real.compact.png api/docs/er-diagrams/summary/
