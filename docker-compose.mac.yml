@@ -78,6 +78,4 @@ services:
       - "${SCHEMASPY_PASSWORD:-password}"
       - "-s"
       - "${SCHEMASPY_SCHEMA:-public}"
-      - "-o"
-      - "/output"
 
