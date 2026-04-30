@@ -16,17 +16,20 @@ mariadb/
 
 sql/
 
-.env
+*.env
+!dev.env
 
 api/seeds
 !api/seeds/seeds.go
 api/tmp
 api/lib/interface
 
-api/env/*
 api/seeds/*
 web/prod/*
 api/docs/er-diagrams/*
 
 # SchemaSpy
 api/docs/schemaspy/
+
+# Claude Code working files
+.claude/

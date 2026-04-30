@@ -2,7 +2,6 @@ package di
 
 import (
 	"log"
-
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/externals/server"
 	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
@@ -40,6 +39,7 @@ func InitializeServer() db.Client {
 	shorthandedRescueRepository := repository.NewShorthandedRescueRepository(client, crud)
 	troubleRescueRepository := repository.NewTroubleRescueRepository(client, crud)
 	reviewRepository := repository.NewReviewRepository(client, crud)
+	actionLogRepository := repository.NewActionLogRepository(client)
 
 	// UseCase
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
@@ -47,7 +47,7 @@ func InitializeServer() db.Client {
 	gradeUseCase := usecase.NewGradeUseCase(gradeRepository)
 	placeUseCase := usecase.NewPlaceUseCase(placeRepository)
 	departmentUseCase := usecase.NewDepartmentUseCase(departmentRepository)
-	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, shiftCardRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository, placeRepository, gradeRepository, bureauRepository)
+	shiftUseCase := usecase.NewShiftUseCase(shiftRepository, shiftCardRepository, taskRepository, userRepository, yearRepository, dateRepository, timeRepository, weatherRepository, placeRepository, gradeRepository, bureauRepository, actionLogRepository)
 	taskUseCase := usecase.NewTaskUseCase(taskRepository, placeRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)

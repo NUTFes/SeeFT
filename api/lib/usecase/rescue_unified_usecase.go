@@ -242,7 +242,8 @@ func (ru *rescueUnifiedUseCase) getUserName(c context.Context, userID string) (s
 	var name, mail, studentNumber, tel, password string
 	var gradeID, departmentID, bureauID, roleID int
 	var createdAt, updatedAt string
-	err = row.Scan(&id, &name, &mail, &gradeID, &departmentID, &bureauID, &roleID, &studentNumber, &tel, &password, &createdAt, &updatedAt)
+	var slackUserID sql.NullString
+	err = row.Scan(&id, &name, &mail, &gradeID, &departmentID, &bureauID, &roleID, &studentNumber, &tel, &password, &createdAt, &updatedAt, &slackUserID)
 	if err != nil {
 		return "", err
 	}

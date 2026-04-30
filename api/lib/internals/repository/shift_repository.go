@@ -28,7 +28,8 @@ type ShiftRepository interface {
 	Destroy(context.Context, string) error
 	FindLatestRecord(context.Context) (*sql.Row, error)
 	MaxID(context.Context) (*sql.Row, error)
-	FindByUnique(context.Context, string, string, string, string, string) (*sql.Row, error)
+	FindByUnique(context.Context, string, string, string, string) (*sql.Row, error)
+	CreateAndReturnID(context.Context, string, string, string, string, string, string, string) (int, error)
 }
 
 func NewShiftRepository(c db.Client, ac abstract.Crud) ShiftRepository {
@@ -58,10 +59,10 @@ func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) 
 	return rows, nil
 }
 
-// 特定のタスクのユーザ取得
+// 特定のタスクのユーザ取得（JOINでユーザー情報も一括取得）
 func (b *shiftRepository) Users(c context.Context, task string, year string, date string, time string, weather string) (*sql.Rows, error) {
-	query := "SELECT user_id FROM shifts WHERE task_id = " + task + " AND year_id = " + year + " AND date_id = " + date + " AND time_id = " + time + " AND weather_id = " + weather
-	rows, err := b.client.DB().QueryContext(c, query)
+	query := "SELECT u.id, u.name, u.mail, u.grade_id, u.department_id, u.bureau_id, u.role_id, u.student_number, u.tel, u.created_at, u.updated_at FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.task_id = $1 AND s.year_id = $2 AND s.date_id = $3 AND s.time_id = $4 AND s.weather_id = $5"
+	rows, err := b.client.DB().QueryContext(c, query, task, year, date, time, weather)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
 	}
@@ -106,6 +107,18 @@ func (b *shiftRepository) DateAndWeatherAndTime(c context.Context, date string, 
 func (b *shiftRepository) Create(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) error {
 	query := "INSERT INTO shifts (task_id, user_id, year_id, date_id, time_id, weather_id, is_attendance) VALUES (" + taskID + ", " + userID + ", " + yearID + ", " + dateID + ", " + timeID + ", " + weatherID + ", " + isAttendance + ")"
 	return b.crud.UpdateDB(c, query)
+}
+
+// 作成してIDを返す
+func (b *shiftRepository) CreateAndReturnID(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (int, error) {
+	query := "INSERT INTO shifts (task_id, user_id, year_id, date_id, time_id, weather_id, is_attendance) VALUES (" + taskID + ", " + userID + ", " + yearID + ", " + dateID + ", " + timeID + ", " + weatherID + ", " + isAttendance + ") RETURNING id"
+	var id int
+	err := b.client.DB().QueryRowContext(c, query).Scan(&id)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to create shift and return id")
+	}
+	fmt.Printf("\x1b[36m%s\n", query)
+	return id, nil
 }
 
 // 編集
@@ -156,7 +169,7 @@ func (b *shiftRepository) MaxID(c context.Context) (*sql.Row, error) {
 	return b.crud.ReadByID(c, query)
 }
 
-func (b *shiftRepository) FindByUnique(c context.Context, taskID, userID, dateID, timeID, weatherID string) (*sql.Row, error) {
+func (b *shiftRepository) FindByUnique(c context.Context, userID, dateID, timeID, weatherID string) (*sql.Row, error) {
 	query := "SELECT * FROM shifts WHERE user_id = " + userID + " AND date_id = " + dateID + " AND time_id = " + timeID + " AND weather_id = " + weatherID
 	return b.client.DB().QueryRowContext(c, query), nil
 }

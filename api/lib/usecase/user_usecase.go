@@ -46,6 +46,7 @@ func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
+		var slackUserID sql.NullString
 		err := rows.Scan(
 			&user.ID,
 			&user.Name,
@@ -59,12 +60,18 @@ func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
 			&user.Password,
 			&user.CreatedAt,
 			&user.UpdatedAt,
+			&slackUserID,
 		)
 
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot connect SQL")
 		}
 
+		if slackUserID.Valid {
+			user.SlackUserID = slackUserID.String
+		} else {
+			user.SlackUserID = ""
+		}
 		users = append(users, user)
 	}
 	return users, nil
@@ -72,6 +79,7 @@ func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
 
 func (u *userUseCase) GetUserByID(c context.Context, id string) (entity.User, error) {
 	var user entity.User
+	var slackUserID sql.NullString
 
 	row, err := u.userRep.Find(c, id)
 	err = row.Scan(
@@ -87,17 +95,22 @@ func (u *userUseCase) GetUserByID(c context.Context, id string) (entity.User, er
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&slackUserID,
 	)
 
 	if err != nil {
 		return user, err
 	}
 
+	if slackUserID.Valid {
+		user.SlackUserID = slackUserID.String
+	}
 	return user, nil
 }
 
 func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string) (entity.User, error) {
 	latastUser := entity.User{}
+	var slackUserID sql.NullString
 	password = strings.ReplaceAll(password, " ", "")
 	password = strings.ReplaceAll(password, "　", "")
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
@@ -116,9 +129,13 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 		&latastUser.Password,
 		&latastUser.CreatedAt,
 		&latastUser.UpdatedAt,
+		&slackUserID,
 	)
 	if err != nil {
 		return latastUser, err
+	}
+	if slackUserID.Valid {
+		latastUser.SlackUserID = slackUserID.String
 	}
 	return latastUser, err
 }
@@ -126,6 +143,7 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string) (entity.User, error) {
 	updatedUser := entity.User{}
 	var user entity.User
+	var slackUserID sql.NullString
 
 	row, err := u.userRep.Find(c, id)
 	err = row.Scan(
@@ -141,9 +159,13 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&slackUserID,
 	)
 	if err != nil {
 		return user, err
+	}
+	if slackUserID.Valid {
+		user.SlackUserID = slackUserID.String
 	}
 
 	u.userRep.Update(c, id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, user.Password)
@@ -161,9 +183,13 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 		&updatedUser.Password,
 		&updatedUser.CreatedAt,
 		&updatedUser.UpdatedAt,
+		&slackUserID,
 	)
 	if err != nil {
 		return updatedUser, err
+	}
+	if slackUserID.Valid {
+		updatedUser.SlackUserID = slackUserID.String
 	}
 	return updatedUser, nil
 }
@@ -192,6 +218,7 @@ func (u *userUseCase) GetCurrentUser(c context.Context, accessToken string) (ent
 	}
 
 	// userIDの該当するuserを取得
+	var slackUserID sql.NullString
 	row, err = u.userRep.Find(c, strconv.Itoa(session.UserID))
 	err = row.Scan(
 		&user.ID,
@@ -206,9 +233,13 @@ func (u *userUseCase) GetCurrentUser(c context.Context, accessToken string) (ent
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&slackUserID,
 	)
 	if err != nil {
 		return user, err
+	}
+	if slackUserID.Valid {
+		user.SlackUserID = slackUserID.String
 	}
 	return user, nil
 }
@@ -311,7 +342,11 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 		userName = strings.ReplaceAll(userName, "　", "")
 		userRow, _ := u.userRep.FindByName(ctx, userName) // Rowはユーザー名が入っている前提
 		var user entity.User
-		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err == nil {
+		var slackUserID sql.NullString
+		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID); err == nil {
+			if slackUserID.Valid {
+				user.SlackUserID = slackUserID.String
+			}
 			// ユーザーが存在すれば更新
 			u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password)
 		} else if err.Error() == "sql: no rows in result set" {
@@ -327,7 +362,7 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			}
 			// 再取得
 			userRow, _ = u.userRep.FindByName(ctx, change.Name)
-			if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID); err != nil {
 				return errors.Wrapf(err, "ユーザー再取得失敗: %v", change.Name)
 			}
 		} else {
