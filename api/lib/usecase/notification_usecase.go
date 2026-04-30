@@ -66,9 +66,10 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 	var logs []entity.ActionLog
 	for rows.Next() {
 		var actionLog entity.ActionLog
+		var shiftID sql.NullInt64
 		err := rows.Scan(
 			&actionLog.ID,
-			&actionLog.ShiftID,
+			&shiftID,
 			&actionLog.UserID,
 			&actionLog.DateID,
 			&actionLog.ActionType,
@@ -76,6 +77,9 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 			&actionLog.IsSent,
 			&actionLog.CreatedAt,
 		)
+		if shiftID.Valid {
+			actionLog.ShiftID = int(shiftID.Int64)
+		}
 		if err != nil {
 			logpkg.Printf("Failed to scan action log: %v", err)
 			continue
@@ -144,6 +148,10 @@ func (n *notificationUseCase) GroupNotificationsByUserAndDate(logs []entity.Acti
 func (n *notificationUseCase) loadShiftMap(ctx context.Context, logs []entity.ActionLog) (map[int]entity.ShiftAdmin, error) {
 	shiftMap := make(map[int]entity.ShiftAdmin)
 	for _, log := range logs {
+		// shift_idがNULL（=0）のログはスキップ（DELETE等でshift削除済みの場合）
+		if log.ShiftID == 0 {
+			continue
+		}
 		// 既に取得済みならスキップ（重複クエリを防ぐ）
 		if _, ok := shiftMap[log.ShiftID]; ok {
 			continue
