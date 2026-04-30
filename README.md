@@ -45,7 +45,7 @@ git submodule update --init
 - 最終生成物の出力先: `api/docs/er-diagrams/`
 - 一時出力先: `api/docs/schemaspy`（処理後に削除）
 
-```fish
+```bash
 # 標準（docker-compose.yml）
 make schemaspy
 
