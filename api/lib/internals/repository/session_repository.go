@@ -29,8 +29,8 @@ func NewSessionRepository(client db.Client) SessionRepository {
 
 // 作成
 func (r *sessionRepository) Create(c context.Context, userID string, accessToken string) error {
-	query := "insert into session (user_id, access_token) values (" + userID + ", '" + accessToken + "')"
-	_, err := r.client.DB().ExecContext(c, query)
+	query := "insert into session (user_id, access_token) values ($1, $2)"
+	_, err := r.client.DB().ExecContext(c, query, userID, accessToken)
 	if err != nil {
 		return err
 	}
@@ -43,8 +43,8 @@ func (r *sessionRepository) Create(c context.Context, userID string, accessToken
 // 削除
 func (r *sessionRepository) Delete(c context.Context, accessToken string) error {
 	// access tokenで該当のsessionを削除
-	query := "delete from session where access_token = '" + accessToken + "'"
-	_, err := r.client.DB().ExecContext(c, query)
+	query := "delete from session where access_token = $1"
+	_, err := r.client.DB().ExecContext(c, query, accessToken)
 	if err != nil {
 		return err
 	}
@@ -56,8 +56,8 @@ func (r *sessionRepository) Delete(c context.Context, accessToken string) error 
 
 // アクセストークンからセッションを取得
 func (r *sessionRepository) FindSessionByAccessToken(c context.Context, accessToken string) *sql.Row {
-	query := "select * from session where access_token = '" + accessToken + "'"
-	row := r.client.DB().QueryRowContext(c, query)
+	query := "select * from session where access_token = $1"
+	row := r.client.DB().QueryRowContext(c, query, accessToken)
 	if sessionDebugSQL {
 		fmt.Printf("\x1b[36m%s\n", query)
 	}
@@ -66,8 +66,8 @@ func (r *sessionRepository) FindSessionByAccessToken(c context.Context, accessTo
 
 // user_idからsessionを削除する
 func (r *sessionRepository) DeleteByUserID(c context.Context, userID string) error {
-	query := "delete from session where user_id = " + userID
-	_, err := r.client.DB().ExecContext(c, query)
+	query := "delete from session where user_id = $1"
+	_, err := r.client.DB().ExecContext(c, query, userID)
 	if err != nil {
 		return err
 	}

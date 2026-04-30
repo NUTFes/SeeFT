@@ -42,14 +42,14 @@ func (ur *userRepository) All(c context.Context) (*sql.Rows, error) {
 
 // 1件取得
 func (ur *userRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT * FROM users WHERE id = " + id
-	return ur.crud.ReadByID(c, query)
+	query := "SELECT * FROM users WHERE id = $1"
+	return ur.crud.ReadByID(c, query, id)
 }
 
 // 学籍番号から取得
 func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber string) *sql.Row {
-	query := "SELECT * FROM users WHERE student_number = " + studentNumber
-	row := ur.client.DB().QueryRowContext(c, query)
+	query := "SELECT * FROM users WHERE student_number = $1"
+	row := ur.client.DB().QueryRowContext(c, query, studentNumber)
 	if userDebugSQL {
 		fmt.Printf("\x1b[36m%s\n", query)
 	}
@@ -61,8 +61,8 @@ func (ur *userRepository) Create(c context.Context, name string, mail string, gr
 	query := `
 		INSERT INTO
 			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, password)
-		VALUES ('` + name + "', '" + mail + "', " + gradeID + ", " + departmentID + ", " + bureauID + ", " + roleID + ", " + studentNumber + ", '" + tel + "', '" + password + "')"
-	return ur.crud.UpdateDB(c, query)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	return ur.crud.UpdateDB(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
 }
 
 // 編集
@@ -71,23 +71,23 @@ func (ur *userRepository) Update(c context.Context, id string, name string, mail
 		UPDATE
 			users
 		SET
-			name = '` + name +
-		"', mail = '" + mail +
-		"', grade_id = " + gradeID +
-		", department_id = " + departmentID +
-		", bureau_id = " + bureauID +
-		", role_id = " + roleID +
-		", student_number = " + studentNumber +
-		", tel = '" + tel +
-		"', password = '" + password +
-		"' WHERE id = " + id
-	return ur.crud.UpdateDB(c, query)
+			name = $1,
+			mail = $2,
+			grade_id = $3,
+			department_id = $4,
+			bureau_id = $5,
+			role_id = $6,
+			student_number = $7,
+			tel = $8,
+			password = $9
+		WHERE id = $10`
+	return ur.crud.UpdateDB(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password, id)
 }
 
 // 削除
 func (ur *userRepository) Delete(c context.Context, id string) error {
-	query := "DELETE FROM users WHERE id = " + id
-	return ur.crud.UpdateDB(c, query)
+	query := "DELETE FROM users WHERE id = $1"
+	return ur.crud.UpdateDB(c, query, id)
 }
 
 func (ur *userRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
@@ -97,8 +97,8 @@ func (ur *userRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 
 // ユーザ名からユーザを取得する
 func (b *userRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
-	query := "SELECT * FROM users WHERE name = '" + name + "'"
-	return b.client.DB().QueryRowContext(c, query), nil
+	query := "SELECT * FROM users WHERE name = $1"
+	return b.client.DB().QueryRowContext(c, query, name), nil
 }
 
 // 複数のユーザー名から一括でユーザーを取得する（N+1問題対策）

@@ -17,17 +17,17 @@ type abstractRepository struct {
 }
 
 type Crud interface {
-	Read(context.Context, string) (*sql.Rows, error)
-	ReadByID(context.Context, string) (*sql.Row, error)
-	UpdateDB(context.Context, string) error
+	Read(context.Context, string, ...interface{}) (*sql.Rows, error)
+	ReadByID(context.Context, string, ...interface{}) (*sql.Row, error)
+	UpdateDB(context.Context, string, ...interface{}) error
 }
 
 func NewCrud(client db.Client) Crud {
 	return &abstractRepository{client}
 }
 
-func (a abstractRepository) Read(ctx context.Context, query string) (*sql.Rows, error) {
-	rows, err := a.client.DB().QueryContext(ctx, query)
+func (a abstractRepository) Read(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	rows, err := a.client.DB().QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
 	}
@@ -37,16 +37,16 @@ func (a abstractRepository) Read(ctx context.Context, query string) (*sql.Rows, 
 	return rows, nil
 }
 
-func (a abstractRepository) ReadByID(ctx context.Context, query string) (*sql.Row, error) {
-	row := a.client.DB().QueryRowContext(ctx, query)
+func (a abstractRepository) ReadByID(ctx context.Context, query string, args ...interface{}) (*sql.Row, error) {
+	row := a.client.DB().QueryRowContext(ctx, query, args...)
 	if debugSQL {
 		fmt.Printf("\x1b[36m%s\n", query)
 	}
 	return row, nil
 }
 
-func (a abstractRepository) UpdateDB(ctx context.Context, query string) error {
-	_, err := a.client.DB().ExecContext(ctx, query)
+func (a abstractRepository) UpdateDB(ctx context.Context, query string, args ...interface{}) error {
+	_, err := a.client.DB().ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
