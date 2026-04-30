@@ -28,7 +28,8 @@ type ShiftRepository interface {
 	Destroy(context.Context, string) error
 	FindLatestRecord(context.Context) (*sql.Row, error)
 	MaxID(context.Context) (*sql.Row, error)
-	FindByUnique(context.Context, string, string, string, string, string) (*sql.Row, error)
+	FindByUnique(context.Context, string, string, string, string) (*sql.Row, error)
+	CreateAndReturnID(context.Context, string, string, string, string, string, string, string) (int, error)
 }
 
 func NewShiftRepository(c db.Client, ac abstract.Crud) ShiftRepository {
@@ -108,6 +109,18 @@ func (b *shiftRepository) Create(c context.Context, taskID string, userID string
 	return b.crud.UpdateDB(c, query)
 }
 
+// 作成してIDを返す
+func (b *shiftRepository) CreateAndReturnID(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (int, error) {
+	query := "INSERT INTO shifts (task_id, user_id, year_id, date_id, time_id, weather_id, is_attendance) VALUES (" + taskID + ", " + userID + ", " + yearID + ", " + dateID + ", " + timeID + ", " + weatherID + ", " + isAttendance + ") RETURNING id"
+	var id int
+	err := b.client.DB().QueryRowContext(c, query).Scan(&id)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to create shift and return id")
+	}
+	fmt.Printf("\x1b[36m%s\n", query)
+	return id, nil
+}
+
 // 編集
 func (b *shiftRepository) Update(c context.Context, id string, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) error {
 	query := `
@@ -156,7 +169,7 @@ func (b *shiftRepository) MaxID(c context.Context) (*sql.Row, error) {
 	return b.crud.ReadByID(c, query)
 }
 
-func (b *shiftRepository) FindByUnique(c context.Context, taskID, userID, dateID, timeID, weatherID string) (*sql.Row, error) {
+func (b *shiftRepository) FindByUnique(c context.Context, userID, dateID, timeID, weatherID string) (*sql.Row, error) {
 	query := "SELECT * FROM shifts WHERE user_id = " + userID + " AND date_id = " + dateID + " AND time_id = " + timeID + " AND weather_id = " + weatherID
 	return b.client.DB().QueryRowContext(c, query), nil
 }

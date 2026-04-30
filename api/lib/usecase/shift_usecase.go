@@ -3,6 +3,7 @@ package usecase
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,17 +18,18 @@ import (
 )
 
 type shiftUseCase struct {
-	rep          rep.ShiftRepository
-	shiftCardRep rep.ShiftCardRepository
-	taskRep      rep.TaskRepository
-	userRep      rep.UserRepository
-	yearRep      rep.YearRepository
-	dateRep      rep.DateRepository
-	timeRep      rep.TimeRepository
-	weatherRep   rep.WeatherRepository
-	placeRep     rep.PlaceRepository
-	gradeRep     rep.GradeRepository
-	bureauRep    rep.BureauRepository
+	rep           rep.ShiftRepository
+	shiftCardRep  rep.ShiftCardRepository
+	taskRep       rep.TaskRepository
+	userRep       rep.UserRepository
+	yearRep       rep.YearRepository
+	dateRep       rep.DateRepository
+	timeRep       rep.TimeRepository
+	weatherRep    rep.WeatherRepository
+	placeRep      rep.PlaceRepository
+	gradeRep      rep.GradeRepository
+	bureauRep     rep.BureauRepository
+	actionLogRepo rep.ActionLogRepository
 }
 
 type ShiftUseCase interface {
@@ -61,8 +63,9 @@ func NewShiftUseCase(
 	weatherRep rep.WeatherRepository,
 	placeRep rep.PlaceRepository,
 	gradeRep rep.GradeRepository,
-	bureauRep rep.BureauRepository) ShiftUseCase {
-	return &shiftUseCase{rep, shiftCardRep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep, gradeRep, bureauRep}
+	bureauRep rep.BureauRepository,
+	actionLogRepo rep.ActionLogRepository) ShiftUseCase {
+	return &shiftUseCase{rep, shiftCardRep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep, gradeRep, bureauRep, actionLogRepo}
 }
 
 var TaskID, UserID, YearID, DateID, TimeID, WeatherID, PlaceID string
@@ -138,6 +141,7 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 			&shift.User.Password,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
+			&shift.User.SlackUserID,
 		)
 
 		row, err = a.yearRep.Find(c, YearID)
@@ -239,6 +243,7 @@ func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift,
 		&shift.User.Password,
 		&shift.User.CreatedAt,
 		&shift.User.UpdatedAt,
+		&shift.User.SlackUserID,
 	)
 
 	row, err = a.yearRep.Find(c, YearID)
@@ -346,6 +351,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 			&shift.User.Password,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
+			&shift.User.SlackUserID,
 		)
 
 		row, err = a.yearRep.Find(c, YearID)
@@ -457,6 +463,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 			&shift.User.Password,
 			&shift.User.CreatedAt,
 			&shift.User.UpdatedAt,
+			&shift.User.SlackUserID,
 		)
 
 		row, err = a.yearRep.Find(c, YearID)
@@ -529,6 +536,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 			&users.Tel,
 			&users.CreatedAt,
 			&users.UpdatedAt,
+			&users.SlackUserID,
 		)
 
 		if err != nil {
@@ -698,7 +706,28 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 }
 
 func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
-	err := u.rep.Destroy(c, id)
+	// 削除前にシフト情報を取得してaction_logに記録
+	shift, err := u.GetShiftAdminByID(c, id)
+	if err == nil {
+		// タスク名を取得
+		taskName := "（不明）"
+		taskRow, taskErr := u.taskRep.Find(c, strconv.Itoa(shift.TaskID))
+		if taskErr == nil {
+			var task entity.Task
+			if scanErr := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); scanErr == nil {
+				taskName = task.Task
+			}
+		}
+
+		diffPayload := map[string]interface{}{
+			"deleted_task": taskName,
+		}
+		if u.actionLogRepo != nil {
+			u.actionLogRepo.Create(c, shift.ID, shift.UserID, shift.DateID, "DELETE", diffPayload)
+		}
+	}
+
+	err = u.rep.Destroy(c, id)
 	return err
 }
 
@@ -1349,8 +1378,12 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		
 		for userRows.Next() {
 			var user entity.User
-			if err := userRows.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			var slackUserID sql.NullString
+			if err := userRows.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID); err != nil {
 				continue
+			}
+			if slackUserID.Valid {
+				user.SlackUserID = slackUserID.String
 			}
 			userMap[user.Name] = user
 		}
@@ -1448,16 +1481,61 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		taskID := strconv.Itoa(task.ID)
 
 		// 4. 既存シフトがあるか確認
-		existRow, _ := u.rep.FindByUnique(ctx, taskID, userID, dateID, timeID, weatherID)
+		existRow, _ := u.rep.FindByUnique(ctx, userID, dateID, timeID, weatherID)
 		var existShift entity.ShiftAdmin
+		dateIDInt, _ := strconv.Atoi(dateID)
 		if err := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt); err == nil && existShift.ID != 0 {
-			// 既存があれば更新
+			// 既存があれば更新（タスクが変更された場合のみaction_logに記録）
+			oldTaskID := existShift.TaskID
+			newTaskID, _ := strconv.Atoi(taskID)
+			if oldTaskID != newTaskID {
+				// タスクが変更された場合
+				oldTaskRow, _ := u.taskRep.Find(ctx, strconv.Itoa(oldTaskID))
+				var oldTask entity.Task
+				oldTaskName := "（不明）"
+				if oldTaskRow != nil {
+					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil {
+						oldTaskName = oldTask.Task
+					}
+				}
+
+				newTaskName := task.Task
+				if newTaskName == "" {
+					newTaskName = "（不明）"
+				}
+
+				// action_logに記録
+				diffPayload := map[string]interface{}{
+					"changes": []map[string]string{
+						{"field": "task_name", "old": oldTaskName, "new": newTaskName},
+					},
+				}
+				if u.actionLogRepo != nil {
+					u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload)
+				}
+			}
 			isAttendance := false
 			u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
 		} else {
-			// なければ新規作成
+			// なければ新規作成（RETURNING idで確実にIDを取得）
 			isAttendance := false
-			u.rep.Create(ctx, taskID, userID, yearID, dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
+			newShiftID, err := u.rep.CreateAndReturnID(ctx, taskID, userID, yearID, dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
+			if err != nil {
+				return errors.Wrapf(err, "シフト新規作成失敗: user=%s, date=%s", user.Name, dateID)
+			}
+			// action_logに記録
+			newTaskName := task.Task
+			if newTaskName == "" {
+				newTaskName = "（新規）"
+			}
+			diffPayload := map[string]interface{}{
+				"changes": []map[string]string{
+					{"field": "task_name", "old": "なし", "new": newTaskName},
+				},
+			}
+			if u.actionLogRepo != nil {
+				u.actionLogRepo.Create(ctx, newShiftID, user.ID, dateIDInt, "CREATE", diffPayload)
+			}
 		}
 	}
 	return nil
