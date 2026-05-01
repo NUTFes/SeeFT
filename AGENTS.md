@@ -12,7 +12,7 @@ SeeFT は技大祭（NUTFes）のシフト管理システムです。
 
 ## Commands
 
-```
+```bash
 make up           # docker compose up（API + DB + admin）
 make up-db        # DB のみ起動
 make up-api       # DB → API の順で起動
@@ -28,7 +28,7 @@ Mac 環境は `mac-up` / `mac-build` / `mac-seed`、本番は `prod-up` / `prod-
 
 ## Architecture
 
-```
+```text
 api/lib/
 ├── di/                # 依存性注入（di.InitializeServer）
 ├── entity/            # ビジネスエンティティ
