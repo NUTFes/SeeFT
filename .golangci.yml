@@ -10,8 +10,6 @@ linters:
     revive:
       severity: warning
     gosec:
-      excludes:
-        - G104
 
 run:
   timeout: 5m
