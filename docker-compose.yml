@@ -66,7 +66,7 @@ services:
 
   schemaspy:
     container_name: nutfes-seeft-schemaspy
-    image: schemaspy/schemaspy:latest
+    image: schemaspy/schemaspy:6.2.4 
     depends_on:
       db:
         condition: service_healthy
