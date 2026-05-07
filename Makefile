@@ -88,6 +88,7 @@ mac-seed:
 .PHONY: schemaspy
 schemaspy:
 	mkdir -p api/docs/schemaspy
+	chmod 777 api/docs/schemaspy
 	docker compose run --rm schemaspy
 	mkdir -p api/docs/er-diagrams/summary
 	find api/docs/schemaspy/diagrams -name '*.png' ! -name 'relationships.real.*' -exec cp {} api/docs/er-diagrams/ \;
