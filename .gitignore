@@ -26,6 +26,10 @@ api/lib/interface
 
 api/seeds/*
 web/prod/*
+api/docs/er-diagrams/*
+
+# SchemaSpy
+api/docs/schemaspy/
 
 # Claude Code working files
 .claude/

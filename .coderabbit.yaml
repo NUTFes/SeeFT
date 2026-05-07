@@ -1,0 +1,7 @@
+language: ja-JP
+reviews:
+  profile: chill
+  auto_review:
+    enabled: true
+chat:
+  auto_reply: true

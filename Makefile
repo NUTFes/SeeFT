@@ -85,6 +85,30 @@ mac-seed:
 	sleep 15
 	docker compose -f docker-compose.mac.yml run --rm api go run /app/seeds/seeds.go
 
+.PHONY: schemaspy
+schemaspy:
+	mkdir -p api/docs/schemaspy
+	chmod 777 api/docs/schemaspy
+	docker compose run --rm schemaspy
+	mkdir -p api/docs/er-diagrams/summary
+	find api/docs/schemaspy/diagrams -name '*.png' ! -name 'relationships.real.*' -exec cp {} api/docs/er-diagrams/ \;
+	cp api/docs/schemaspy/diagrams/summary/relationships.real.compact.png api/docs/er-diagrams/summary/
+	cp api/docs/schemaspy/diagrams/summary/relationships.real.large.png api/docs/er-diagrams/summary/
+	rm -rf api/docs/schemaspy
+	@echo "ER diagrams saved to api/docs/er-diagrams/"
+
+.PHONY: mac-schemaspy
+mac-schemaspy:
+	mkdir -p api/docs/schemaspy
+	docker compose -f docker-compose.mac.yml run --rm schemaspy
+	mkdir -p api/docs/er-diagrams/summary
+	find api/docs/schemaspy/diagrams -name '*.png' ! -name 'relationships.real.*' -exec cp {} api/docs/er-diagrams/ \;
+	cp api/docs/schemaspy/diagrams/summary/relationships.real.compact.png api/docs/er-diagrams/summary/
+	cp api/docs/schemaspy/diagrams/summary/relationships.real.large.png api/docs/er-diagrams/summary/
+	rm -rf api/docs/schemaspy
+	@echo "ER diagrams saved to api/docs/er-diagrams/"
+
+
 # mobile/lib/assetsに512*512のアイコンを用意しておくこと(コマンドのファイル名も変更する)
 # リサイズ用にImageMagickをインストールする（`sudo apt-get install imagemagick` or `brew install imagemagick`）
 .PHONY: mobile-icons-init
