@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>解説マニュアル自動生成ツール - 引き継ぎ資料</title>
+<style>
+:root {
+  --teal: #009688;
+  --teal-dark: #00796B;
+  --teal-light: #F4FBF8;
+  --teal-medium: #CCE8E2;
+  --gold: #C9A227;
+  --gold-light: #FBF6E1;
+  --gray: #D9D9D9;
+  --gray-light: #F5F5F5;
+  --link: #1264A3;
+  --warning: #F3AE56;
+  --warning-bg: #FFF8E7;
+  --warning-text: #B66700;
+  --text: #1a1a1a;
+  --text-secondary: #666;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  background: var(--gray-light);
+  color: var(--text);
+  font-size: clamp(15px, 4vw, 16px);
+  line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+  padding-bottom: 5rem;
+}
+section {
+  padding: clamp(0.85rem, 3vw, 1.1rem) clamp(0.75rem, 3vw, 1.25rem);
+  display: flex;
+  justify-content: center;
+}
+section#cover { align-items: flex-start; }
+.section-body {
+  background: #fff;
+  border: 2px solid var(--gold);
+  border-radius: 14px;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  width: 100%;
+  max-width: 820px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+details.chapter { margin: 0; }
+details.chapter > summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: clamp(20px, 5.5vw, 24px);
+  font-weight: 700;
+  color: var(--teal);
+  padding: 0 0 0.5rem 0;
+  border-bottom: 3px solid var(--teal);
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+details.chapter > summary::-webkit-details-marker { display: none; }
+details.chapter > summary::after {
+  content: "▾";
+  font-size: 18px;
+  color: var(--teal);
+  transition: transform 0.2s;
+}
+details.chapter[open] > summary::after { transform: rotate(180deg); }
+.subtitle {
+  font-size: clamp(15px, 4.2vw, 17px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 1.25rem 0 0.5rem;
+  padding-left: 0.5rem;
+  border-left: 4px solid var(--gold);
+}
+.lead { margin: 0 0 0.75rem; font-size: 15px; }
+
+/* Cover */
+.cover-body {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  width: 100%;
+  max-width: 820px;
+}
+.cover-body h1 { font-size: 17px; margin: 0; font-weight: 700; color: var(--teal); }
+.cover-body .ev { font-size: 13px; color: var(--text-secondary); margin: 2px 0 0; }
+.cover-body .ev strong { color: var(--text); font-weight: 600; }
+.cover-body .meta { margin-top: 0.5rem; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--gray); padding-top: 0.4rem; }
+
+/* TOC */
+.toc { background: var(--teal-light); padding: 1rem 1.25rem; border-radius: 10px; }
+.toc ol { margin: 0; padding: 0; list-style: none; counter-reset: toc; display: flex; flex-direction: column; gap: 0.45rem; }
+.toc li { counter-increment: toc; margin: 0; }
+.toc a {
+  display: flex; align-items: center;
+  padding: 0.7rem 0.85rem;
+  background: #fff; border: 1px solid var(--teal-medium); border-radius: 8px;
+  color: var(--teal); text-decoration: none;
+  font-weight: 600; font-size: 14px; line-height: 1.35;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.toc a::before {
+  content: counter(toc);
+  display: inline-flex; width: 26px; height: 26px;
+  border-radius: 50%; background: var(--teal); color: #fff;
+  font-size: 12px; align-items: center; justify-content: center;
+  margin-right: 0.7rem; flex-shrink: 0; font-weight: 700;
+}
+.toc a::after { content: "›"; margin-left: auto; color: var(--teal); font-weight: 700; font-size: 22px; padding-left: 0.5rem; line-height: 1; flex-shrink: 0; }
+.toc a:hover, .toc a:focus { background: var(--teal-light); border-color: var(--teal); }
+.toc a:active { background: var(--teal); color: #fff; border-color: var(--teal); transform: scale(0.98); }
+.toc a:active::before { background: #fff; color: var(--teal); }
+.toc a:active::after { color: #fff; }
+
+/* Item list */
+.item-list { background: #fff; border: 1px solid var(--gold); border-radius: 8px; padding: 0.7rem 1.1rem; margin: 0.6rem 0; }
+.item-list ul { margin: 0; padding-left: 1.4rem; }
+.item-list li { margin: 0.4rem 0; font-size: 14px; line-height: 1.6; }
+.item-list li code { font-family: ui-monospace, "SF Mono", "Menlo", monospace; font-size: 12px; background: var(--gold-light); padding: 1px 4px; border-radius: 3px; }
+
+/* Backend comparison table */
+.cmp-table-wrap { margin: 0.75rem 0; overflow-x: auto; }
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border: 1px solid var(--gold); border-radius: 8px; overflow: hidden; }
+.cmp-table th, .cmp-table td { padding: 8px 10px; border-bottom: 1px solid var(--gold-light); text-align: left; vertical-align: top; }
+.cmp-table th { background: var(--gold-light); color: var(--warning-text); font-weight: 600; font-size: 12px; }
+.cmp-table tbody tr:last-child td { border-bottom: none; }
+.cmp-table .highlight { background: var(--teal-light); }
+.cmp-table .highlight td { font-weight: 600; }
+
+/* Code block */
+.code-block {
+  background: #1e293b; color: #e2e8f0;
+  padding: 0.75rem 1rem; border-radius: 6px;
+  font-family: ui-monospace, "SF Mono", "Menlo", monospace;
+  font-size: 12px; overflow-x: auto;
+  margin: 0.5rem 0; white-space: pre; line-height: 1.6;
+}
+
+/* Notes */
+.notes { background: var(--warning-bg); border-left: 4px solid var(--warning); padding: 0.75rem 1rem; border-radius: 6px; margin: 0.75rem 0; }
+.notes h4 { margin: 0 0 0.5rem; color: var(--warning-text); font-size: 13px; letter-spacing: 0.02em; }
+.notes p { margin: 0; font-size: 14px; line-height: 1.6; }
+.notes ul { margin: 0; padding-left: 1.25rem; }
+.notes li { margin: 0.3rem 0; font-size: 14px; line-height: 1.55; }
+
+/* Step kanban (for v2 roadmap) */
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1em;
+  margin: 0.75rem 0;
+}
+.roadmap-card {
+  background: #fff; border: 2px solid var(--gold); border-radius: 10px;
+  padding: 0.85rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.roadmap-card h4 { margin: 0 0 0.5rem; font-size: 15px; font-weight: 700; color: var(--teal); border-bottom: 1px solid var(--gold); padding-bottom: 0.3rem; }
+.roadmap-card .priority { font-size: 11px; color: var(--text-secondary); margin-bottom: 0.4rem; }
+.roadmap-card ul { margin: 0; padding-left: 1.1rem; font-size: 13px; }
+.roadmap-card li { margin: 0.25rem 0; line-height: 1.55; }
+
+/* Checklist */
+.checklist {
+  background: #fff; border: 1px solid var(--gold); border-radius: 8px;
+  padding: 0.85rem 1.1rem; margin: 0.6rem 0;
+}
+.checklist h4 { margin: 0 0 0.5rem; font-size: 14px; color: var(--teal); }
+.checklist ol { margin: 0; padding-left: 1.4rem; }
+.checklist li { margin: 0.4rem 0; font-size: 14px; line-height: 1.6; }
+
+/* Section end nav */
+.section-end-nav { display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--gray); font-size: 13px; flex-wrap: wrap; gap: 0.5rem; }
+.section-end-nav a { color: var(--teal); text-decoration: none; padding: 0.4rem 0.85rem; border: 1px solid var(--teal-medium); border-radius: 6px; background: var(--teal-light); font-weight: 600; }
+.section-end-nav a:hover { background: var(--teal); color: #fff; }
+.section-end-nav a.back { color: var(--text-secondary); border-color: var(--gray); background: #fff; }
+
+/* FAB */
+.fab-toc { position: fixed; bottom: 1.25rem; right: 1.25rem; width: 52px; height: 52px; border-radius: 50%; background: var(--teal); color: #fff; border: 2px solid var(--gold); box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-size: 24px; text-decoration: none; z-index: 100; font-weight: 700; line-height: 1; transition: transform 0.15s; }
+.fab-toc:hover, .fab-toc:focus { transform: scale(1.1); }
+.fab-toc:active { transform: scale(0.95); }
+
+a { color: var(--link); }
+
+/* TOC overlay (FAB tap to open inline) */
+.toc-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: flex-start; justify-content: center;
+  z-index: 99;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+.toc-overlay.show { display: flex; }
+.toc-panel {
+  background: #fff;
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  max-width: 480px; width: 100%;
+  position: relative;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+.toc-panel h3 {
+  margin: 0 0 0.75rem;
+  color: var(--teal);
+  font-size: 18px;
+  border-bottom: 2px solid var(--teal);
+  padding-bottom: 0.4rem;
+}
+.toc-close {
+  position: absolute;
+  top: 0.5rem; right: 0.6rem;
+  background: var(--gray-light);
+  border: 1px solid var(--gray);
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+.toc-close:hover { background: var(--gray); }
+
+/* Button element compatibility for FAB (button has UA default styles to override) */
+button.fab, button.fab-toc {
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  outline: none;
+}
+button.fab:focus, button.fab-toc:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+.toc-close { cursor: pointer; font-family: inherit; outline: none; }
+</style>
+</head>
+<body>
+
+<!-- ===== Cover ===== -->
+<section id="cover">
+  <div class="cover-body">
+    <h1>解説マニュアル自動生成ツール — 引き継ぎ資料</h1>
+    <p class="ev"><strong>第45回 → 第46回 技大祭運営</strong></p>
+    <p class="ev">新 PM 向け技術ドキュメント</p>
+    <div class="meta">作成: 上林（前 PM）　／　2026-05-11　／　引き継ぎ予定: 2026-08月</div>
+  </div>
+</section>
+
+<!-- ===== TOC ===== -->
+<section id="toc">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>目次</summary>
+      <nav class="toc">
+        <ol>
+          <li><a href="#section-purpose">このドキュメントについて</a></li>
+          <li><a href="#section-setup">引き継ぎ前に揃えるもの</a></li>
+          <li><a href="#section-architecture">パイプライン技術構成</a></li>
+          <li><a href="#section-backends">3バックエンド比較</a></li>
+          <li><a href="#section-prompt">共通プロンプト設計</a></li>
+          <li><a href="#section-commands">運用コマンド</a></li>
+          <li><a href="#section-known">既知の挙動・対処</a></li>
+          <li><a href="#section-troubleshoot">トラブルシューティング</a></li>
+          <li><a href="#section-roadmap">残課題と進化方針（v2 候補）</a></li>
+          <li><a href="#section-files">関連ファイル一覧</a></li>
+        </ol>
+      </nav>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 1. このドキュメントについて ===== -->
+<section id="section-purpose">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>このドキュメントについて</summary>
+
+      <p class="lead">本ドキュメントは <strong>解説マニュアル自動生成パイプライン</strong> の運用を引き継ぐ新 PM 向けの技術リファレンス。</p>
+
+      <div class="item-list">
+        <ul>
+          <li>対象読者: 次期 PM（前任 PM = 上林 から引き継ぎ予定の人）</li>
+          <li>前提知識: Mac/Linux のターミナル操作、Homebrew、Git、簡単な Python の存在認識程度</li>
+          <li>執行部向けの非技術的な提案資料は別 HTML（<code>manual-slide-pipeline.html</code>）を参照</li>
+        </ul>
+      </div>
+
+      <div class="notes">
+        <h4>このドキュメントの位置付け</h4>
+        <p>「執行部向け説明資料」は <strong>なぜ・何をしたいか</strong> にフォーカス、こちらは <strong>どう動かして何に注意するか</strong> にフォーカス。両者は読者層も目的も異なる。</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 2. セットアップ ===== -->
+<section id="section-setup">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>引き継ぎ前に揃えるもの</summary>
+
+      <h3 class="subtitle">必須環境</h3>
+      <div class="item-list">
+        <ul>
+          <li>macOS または Linux マシン</li>
+          <li>Homebrew インストール済</li>
+          <li>本リポジトリのクローン (<code>git clone</code> 済)</li>
+          <li>Claude Pro または Max のサブスク契約（個人または経費精算）</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">セットアップ手順（初回のみ）</h3>
+      <div class="code-block">brew install pandoc uv
+# Claude Code CLI のインストールとログイン
+claude login   # ブラウザが開いて OAuth フロー、サブスク認証</div>
+
+      <h3 class="subtitle">依存パッケージのセットアップ</h3>
+      <p class="lead">各バックエンドは <code>uv</code> で独立した Python 環境を持つ。初回のみ自動セットアップされる。</p>
+      <div class="code-block"># 各バックエンドの依存セットアップ（初回のみ）
+cd scripts/sakura-slide && uv sync
+cd scripts/claude-slide && uv sync</div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 3. アーキテクチャ ===== -->
+<section id="section-architecture">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>パイプライン技術構成</summary>
+
+      <h3 class="subtitle">データフロー</h3>
+      <div class="code-block">[ Google Doc ]
+       │ Drive で「HTML エクスポート」（手動）
+       ▼
+[ ソース HTML + images/ ]                  ← docs/manuals/&lt;name&gt;/ に保存
+       │
+       │ Step 1: pandoc で HTML → Markdown
+       │         + regex で Google Docs ノイズ除去（{style="..."}, {.cN}）
+       │
+       ▼
+[ Markdown text + 画像ファイル名リスト ]   ← ディスク保存なし、メモリ上
+       │
+       │ Step 2: LLM 呼び出し（3バックエンドから選択）
+       │         system_prompt = .claude/manual-prompt-card.md
+       │         user_prompt = MD content + 画像ファイル名
+       │
+       ▼
+[ HTML with {{filename}} プレースホルダー ]
+       │
+       │ Step 3: replace_placeholders() で画像を base64 化して埋め込み
+       │
+       ▼
+[ slide_xxx.card.html ]                    ← 自己完結、画像内蔵</div>
+
+      <h3 class="subtitle">設計上のポイント</h3>
+      <div class="item-list">
+        <ul>
+          <li><strong>3バックエンドが同じプロンプトを参照</strong>: プロンプト改善が全バックエンドに自動で波及</li>
+          <li><strong>画像配置は LLM、base64 化は後処理</strong>: LLM の責務最小化、画像処理は決定的</li>
+          <li><strong>中間 Markdown はディスクに残らない</strong>: デバッグ時に確認したければ別途保存ロジック追加要</li>
+          <li><strong>CSS/JS は LLM 生成</strong>: プロンプトの指示で <code>&lt;style&gt;</code> 内に組み立てる</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 4. 3バックエンド比較 ===== -->
+<section id="section-backends">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>3バックエンド比較</summary>
+
+      <p class="lead">同じプロンプトを使う3種類の LLM バックエンドを用意し、状況に応じて使い分ける。</p>
+
+      <div class="cmp-table-wrap">
+        <table class="cmp-table">
+          <thead>
+            <tr><th>バックエンド</th><th>スクリプト</th><th>認証</th><th>画像入力</th><th>モデル</th><th>コスト</th><th>主用途</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Anthropic API</td>
+              <td><code>scripts/generate_manual_slide.py</code></td>
+              <td><code>ANTHROPIC_API_KEY</code> 環境変数</td>
+              <td>vision あり（base64 inline）</td>
+              <td>Claude Opus 4.7</td>
+              <td>従量課金（$0.5〜1/本）</td>
+              <td>組織で API 契約済の保険</td>
+            </tr>
+            <tr>
+              <td>Sakura AI Engine</td>
+              <td><code>scripts/sakura-slide/generate_slide.py</code></td>
+              <td><code>SAKURA_API_KEY</code> 環境変数</td>
+              <td>vision なし（モデル制限）</td>
+              <td>gpt-oss-120b</td>
+              <td>従量（API より安）</td>
+              <td>バルク・コスト最優先時</td>
+            </tr>
+            <tr class="highlight">
+              <td>Claude Agent SDK</td>
+              <td><code>scripts/claude-slide/generate_slide.py</code></td>
+              <td><code>claude login</code> サブスク認証</td>
+              <td>vision なし（v1）</td>
+              <td>Claude Opus 4.7</td>
+              <td>サブスク枠（追加 0 円）</td>
+              <td>メイン運用</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="subtitle">なぜ Claude Agent SDK 版がメインか</h3>
+      <div class="item-list">
+        <ul>
+          <li><strong>固定費</strong>: 月額 $20 (Pro) または $100 (Max 5x) で予算予測可</li>
+          <li><strong>API 課金回避</strong>: 1本あたり $0.5〜1 相当が、サブスクの月額に含まれる</li>
+          <li><strong>品質</strong>: Opus 4.7 を使えるため、Anthropic API 版と同等出力</li>
+          <li><strong>レート制限内</strong>: Pro でも 5h あたり ~190 本生成可能</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 5. 共通プロンプト ===== -->
+<section id="section-prompt">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>共通プロンプト設計</summary>
+
+      <p class="lead">場所: <code>.claude/manual-prompt-card.md</code></p>
+      <p class="lead">同ファイルには2つのコードブロックがあり、1つ目が SYSTEM_PROMPT、2つ目が USER_PROMPT_TEMPLATE。</p>
+
+      <h3 class="subtitle">プロンプトに記述している要件（要約）</h3>
+      <div class="item-list">
+        <ul>
+          <li>SeeFT デザインシステムのカラー（teal #009688、ゴールド枠線 #C9A227 等）</li>
+          <li>目次セクション + 章ごとの折りたたみ + ライトボックス + フローティング目次ボタン</li>
+          <li>カンバン形式の役割分担カード（1枚で完結する情報密度）</li>
+          <li>TOC ボタンカード、章末ナビ、サブ目次（pillナビ）</li>
+          <li>スマホ縦持ち最適化、本文 15px 以上、補助 12px 以上</li>
+          <li>元 Markdown にない情報を絶対に追加しない（メタ説明文・略称・UI ヒント等を禁止）</li>
+          <li>元 Markdown のコンテンツを絶対に省略しない</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">プロンプト更新時の注意</h3>
+      <div class="notes">
+        <h4>プロンプトの構造を壊さないこと</h4>
+        <ul>
+          <li>コードブロック数 (` ``` ` で区切られたブロック) は<strong>必ず2つ</strong>。1つ目=SYSTEM、2つ目=USER。スクリプトの <code>_load_prompt_from_md()</code> はこれを位置で判定する</li>
+          <li>3つ目以降のコードブロックを書く場合、別ファイルか、コードブロック外（テキスト）に書く</li>
+          <li>USER_PROMPT_TEMPLATE は <code>{image_list}</code> と <code>{html_content}</code> プレースホルダーが必須</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 6. 運用コマンド ===== -->
+<section id="section-commands">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>運用コマンド</summary>
+
+      <h3 class="subtitle">単一マニュアル生成（メイン: Claude Agent SDK）</h3>
+      <div class="code-block">uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide.py --prompt card --model claude-opus-4-7 docs/manuals/01_44th_配線マニュアル</div>
+
+      <h3 class="subtitle">全マニュアル一括生成</h3>
+      <div class="code-block">for d in docs/manuals/*/; do name=$(basename "$d"); echo "===== $name ====="; uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide.py --prompt card --model claude-opus-4-7 "$d" || echo "FAIL: $name"; done</div>
+      <p class="lead" style="font-size:13px;color:var(--text-secondary)">8マニュアル合計 30-40 分、サブスク 8 メッセージ消費（Pro の 5h 枠の 18% 程度）。</p>
+
+      <h3 class="subtitle">Sakura 版（フォールバック）</h3>
+      <div class="code-block">export SAKURA_API_KEY=...
+uv run --project scripts/sakura-slide python scripts/sakura-slide/generate_slide.py --prompt card docs/manuals/01_44th_配線マニュアル</div>
+
+      <h3 class="subtitle">Anthropic API 版（保険）</h3>
+      <div class="code-block">export ANTHROPIC_API_KEY=sk-ant-...
+python3 scripts/generate_manual_slide.py --prompt card docs/manuals/01_44th_配線マニュアル</div>
+
+      <h3 class="subtitle">出力の確認</h3>
+      <div class="code-block">ls -lh docs/manuals/*/slide_claude.card.html</div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 7. 既知の挙動・対処 ===== -->
+<section id="section-known">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>既知の挙動・対処</summary>
+
+      <h3 class="subtitle">max_turns=10 の安全マージン</h3>
+      <p class="lead">Claude Agent SDK 版は <code>max_turns=10</code> に設定済。</p>
+      <div class="notes">
+        <h4>背景</h4>
+        <p>大入力（28KB+ markdown）で Claude が稀に内部的にツール試行する挙動があり、<code>max_turns=1</code> だと「Reached maximum number of turns (1)」エラーで失敗するケースがあった。<code>max_turns=10</code> で安全マージンを確保。実際の <code>num_turns</code> は 1 で済むことが多い。</p>
+      </div>
+
+      <h3 class="subtitle">エラー表示が紛らわしい問題</h3>
+      <p class="lead">SDK のエラーメッセージ <code>"Claude Code returned an error result: success"</code> は誤解を生む表示。実体は内部 turn 上限超過などの別エラー。<code>max_turns</code> 拡大で回避できる。</p>
+
+      <h3 class="subtitle">画像配置の精度</h3>
+      <p class="lead">LLM はファイル名と figcaption の順序から推測して画像を配置する。</p>
+      <div class="item-list">
+        <ul>
+          <li>Opus 4.7 はこの推論が強く、配線マニュアル 25 枚で全配置成功</li>
+          <li>ファイル名が完全に非記述的（<code>image1.png</code> 等）でも、figcaption が明確なら正確に配置される</li>
+          <li>失敗するなら原因は元 Markdown の図キャプションが曖昧</li>
+          <li>vision 化（画像も LLM に渡す版）の検討は <code>manual-slide-vision-todo.md</code> 参照</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">プロンプト遵守のクセ</h3>
+      <div class="notes">
+        <h4>LLM が犯しがちなルール違反（プロンプトで明示的に禁止済）</h4>
+        <ul>
+          <li>「カードだけ見れば動ける構成」のような UI 設計の自己言及をマニュアル本文に書く</li>
+          <li>「タップで発信」のような UI ヒントを書く</li>
+          <li>「BTタップ」のように勝手に略称を作る</li>
+          <li>章タイトルから自明な lead 文を追加する</li>
+          <li>元 Markdown の「該当シフト」のような短い節を省略する</li>
+        </ul>
+        <p>生成物を見て上記が混入していたら、プロンプトの「厳守事項」セクションを強化して再生成する。</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 8. トラブルシューティング ===== -->
+<section id="section-troubleshoot">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>トラブルシューティング</summary>
+
+      <h3 class="subtitle">「Reached maximum number of turns」エラー</h3>
+      <div class="item-list">
+        <ul>
+          <li>原因: 大きい入力で Claude が tool 試行 → <code>max_turns</code> 超過</li>
+          <li>対処: <code>scripts/claude-slide/generate_slide.py</code> の <code>max_turns</code> 値を増やす（既定 10、最大 20 程度まで増やしても OK）</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">サブスクのレート制限に当たった</h3>
+      <div class="item-list">
+        <ul>
+          <li>原因: 短時間に多数の生成 → Pro の 5h あたり ~190 本制限突破</li>
+          <li>対処1: 5h 経過後に再実行</li>
+          <li>対処2: Max プランへ一時的にアップグレード</li>
+          <li>対処3: 失敗したマニュアルだけ Sakura または Anthropic API 版で生成</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">画像配置が崩れる</h3>
+      <div class="item-list">
+        <ul>
+          <li>原因1: 元 Markdown の figcaption が曖昧</li>
+          <li>対処1: Google Doc 側の図キャプションを明確にして再生成</li>
+          <li>原因2: 画像ファイル名と内容のミスマッチ</li>
+          <li>対処2: vision 化の検討（<code>manual-slide-vision-todo.md</code> 参照）</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">pandoc がない / インストールできない</h3>
+      <div class="item-list">
+        <ul>
+          <li>Homebrew で <code>brew install pandoc</code></li>
+          <li>Linux なら <code>apt install pandoc</code></li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">サブスクの認証が切れた</h3>
+      <div class="item-list">
+        <ul>
+          <li><code>claude login</code> を実行して再認証</li>
+          <li>サブスクが切れている場合は契約更新、または別バックエンド（Sakura / API 鍵）に切り替え</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 9. 残課題 ===== -->
+<section id="section-roadmap">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>残課題と進化方針（v2 候補）</summary>
+
+      <p class="lead">v1 として 8マニュアル安定生成までは到達済。以下は新 PM の判断で実装するかどうか決める候補。</p>
+
+      <div class="roadmap-grid">
+
+        <div class="roadmap-card">
+          <h4>vision 化</h4>
+          <div class="priority">優先度: 中</div>
+          <ul>
+            <li>LLM に画像も渡して配置精度向上</li>
+            <li>コスト +27% ($0.97 → $1.19/本)</li>
+            <li>Pro でも 5h あたり 190 本維持可</li>
+            <li>判断軸: 配置失敗が実運用で出てから着手</li>
+            <li>詳細: <code>manual-slide-vision-todo.md</code></li>
+          </ul>
+        </div>
+
+        <div class="roadmap-card">
+          <h4>自己レビューループ</h4>
+          <div class="priority">優先度: 中</div>
+          <ul>
+            <li>生成 → プロンプト準拠チェック → 修正の自動化</li>
+            <li>Claude Agent SDK の max_turns を拡張して実装可能</li>
+            <li>品質の下振れを抑える</li>
+            <li>サブスク消費は増える（チェック分の1メッセージ追加）</li>
+          </ul>
+        </div>
+
+        <div class="roadmap-card">
+          <h4>compare スクリプト3バックエンド化</h4>
+          <div class="priority">優先度: 低</div>
+          <ul>
+            <li>現状 <code>scripts/compare_manual_versions.sh</code> は Sakura 専用</li>
+            <li><code>--backend</code> オプションで切替できるよう拡張</li>
+            <li>品質比較が必要なフェーズで着手</li>
+          </ul>
+        </div>
+
+        <div class="roadmap-card">
+          <h4>中間 Markdown の永続化</h4>
+          <div class="priority">優先度: 低</div>
+          <ul>
+            <li>pandoc 変換結果がメモリ上のみなのでデバッグ時に再現できない</li>
+            <li><code>--save-md</code> フラグで <code>preview.md</code> 出力できるように</li>
+            <li>配線マニュアルだけ手動で残してある</li>
+          </ul>
+        </div>
+
+        <div class="roadmap-card">
+          <h4>カスタムフォント・テーマ</h4>
+          <div class="priority">優先度: 低</div>
+          <ul>
+            <li>現状は system-ui + teal/gold</li>
+            <li>SeeFT 公式デザインシステムが固まったら反映</li>
+            <li>プロンプトの「カラースキーム」セクションだけ更新</li>
+          </ul>
+        </div>
+
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 10. 関連ファイル ===== -->
+<section id="section-files">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>関連ファイル一覧</summary>
+
+      <h3 class="subtitle">プロンプト</h3>
+      <div class="item-list">
+        <ul>
+          <li><code>.claude/manual-prompt-card.md</code> — 現行のカード形式プロンプト（メイン運用）</li>
+          <li><code>.claude/manual-prompt.md</code> — 初代スライド形式プロンプト（参考）</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">スクリプト</h3>
+      <div class="item-list">
+        <ul>
+          <li><code>scripts/claude-slide/generate_slide.py</code> — Claude Agent SDK 版（メイン）</li>
+          <li><code>scripts/sakura-slide/generate_slide.py</code> — Sakura 版（フォールバック）</li>
+          <li><code>scripts/generate_manual_slide.py</code> — Anthropic API 版（保険）</li>
+          <li><code>scripts/compare_manual_versions.sh</code> — 新旧プロンプト比較（Sakura 版で動く）</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">ドキュメント</h3>
+      <div class="item-list">
+        <ul>
+          <li><code>docs/proposals/manual-slide-pipeline.html</code> — 執行部発表用スライド</li>
+          <li><code>docs/proposals/manual-slide-pipeline.md</code> — 技術リファレンス Markdown 版</li>
+          <li><code>docs/proposals/manual-slide-handover.html</code> — 本ファイル（引き継ぎ資料）</li>
+          <li><code>docs/proposals/manual-slide-vision-todo.md</code> — vision 化検討の保留事項</li>
+          <li><code>.claude/manual-pipeline.md</code> — 設計検討の経緯（古いログ）</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">生成された解説マニュアル（v1 動作確認済）</h3>
+      <div class="item-list">
+        <ul>
+          <li><code>docs/manuals/01_44th_配線マニュアル/slide_claude.card.html</code></li>
+          <li><code>docs/manuals/01_44th_本部設営マニュアル/slide_claude.card.html</code></li>
+          <li><code>docs/manuals/01_44th_のぼり広告設置マニュアル/slide_claude.card.html</code></li>
+          <li><code>docs/manuals/01_44th_駐車場設営・撤収マニュアル/slide_claude.card.html</code></li>
+          <li><code>docs/manuals/02_44th_案内所準備・片付けマニュアル/slide_claude.card.html</code></li>
+          <li><code>docs/manuals/44th_07_技大祭物販テント設営・撤収マニュアル/slide_claude.card.html</code></li>
+          <li><code>docs/manuals/44th_企画マニュアル_お化け屋敷/slide_claude.card.html</code></li>
+          <li><code>docs/manuals/44th_幼稚園WARSコラボブース当日マニュアル/slide_claude.card.html</code></li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">引き継ぎ完了チェックリスト</h3>
+      <div class="checklist">
+        <h4>新 PM 向け確認項目</h4>
+        <ol>
+          <li>環境セットアップ（pandoc, uv, claude login）完了</li>
+          <li>1マニュアル手動生成成功</li>
+          <li>全マニュアル一括生成成功</li>
+          <li>共通プロンプトの場所と構造を理解</li>
+          <li>サブスク契約の引き継ぎ完了（前 PM 個人契約からの移行 or 新規契約）</li>
+          <li>各マニュアル担当者との連絡先を把握</li>
+          <li>本ドキュメントを読了</li>
+          <li>困った時の連絡先（前 PM = 上林、または執行部）を把握</li>
+        </ol>
+      </div>
+
+    </details>
+  </div>
+</section>
+
+<!-- FAB -->
+<button class="fab-toc" onclick="toggleTocOverlay()" aria-label="目次を開く" title="目次を開く">≡</button>
+
+<div id="toc-overlay" class="toc-overlay" onclick="closeTocOverlayBackground(event)">
+  <div class="toc-panel">
+    <button class="toc-close" onclick="closeTocOverlay()" aria-label="閉じる">×</button>
+    <h3>目次</h3>
+    <nav class="toc"><ol></ol></nav>
+  </div>
+</div>
+
+<script>
+function toggleTocOverlay() {
+  document.getElementById('toc-overlay').classList.toggle('show');
+}
+function closeTocOverlay() {
+  document.getElementById('toc-overlay').classList.remove('show');
+}
+function closeTocOverlayBackground(e) {
+  if (e.target.id === 'toc-overlay') closeTocOverlay();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const sourceList =
+    document.querySelector('#toc .toc-list') ||
+    document.querySelector('#toc ol') ||
+    document.querySelector('#toc ul') ||
+    document.querySelector('section#toc ol') ||
+    document.querySelector('section#toc ul') ||
+    document.querySelector('nav.toc ol') ||
+    document.querySelector('nav.toc ul');
+  const panelNav = document.querySelector('#toc-overlay .toc');
+  if (sourceList && panelNav) {
+    panelNav.innerHTML = '';
+    const cloned = sourceList.cloneNode(true);
+    // Reset all known TOC counter names so cloned list restarts from 1
+    cloned.style.counterReset = 'toc 0 tocnum 0 tocitem 0';
+    panelNav.appendChild(cloned);
+    cloned.querySelectorAll('a').forEach(a => a.addEventListener('click', closeTocOverlay));
+  }
+});
+</script>
+
+</body>
+</html>

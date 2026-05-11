@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>解説マニュアル自動生成ツールの提案</title>
+<style>
+:root {
+  --teal: #009688;
+  --teal-dark: #00796B;
+  --teal-light: #F4FBF8;
+  --teal-medium: #CCE8E2;
+  --gold: #C9A227;
+  --gold-light: #FBF6E1;
+  --gray: #D9D9D9;
+  --gray-light: #F5F5F5;
+  --link: #1264A3;
+  --warning: #F3AE56;
+  --warning-bg: #FFF8E7;
+  --warning-text: #B66700;
+  --text: #1a1a1a;
+  --text-secondary: #666;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  background: var(--gray-light);
+  color: var(--text);
+  font-size: clamp(15px, 4vw, 16px);
+  line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+  padding-bottom: 5rem;
+}
+section { padding: clamp(0.85rem, 3vw, 1.1rem) clamp(0.75rem, 3vw, 1.25rem); display: flex; justify-content: center; }
+section#cover { align-items: flex-start; }
+.section-body { background: #fff; border: 2px solid var(--gold); border-radius: 14px; padding: clamp(1rem, 4vw, 1.5rem); width: 100%; max-width: 820px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+details.chapter { margin: 0; }
+details.chapter > summary {
+  list-style: none; cursor: pointer;
+  font-size: clamp(20px, 5.5vw, 24px); font-weight: 700; color: var(--teal);
+  padding: 0 0 0.5rem 0; border-bottom: 3px solid var(--teal); margin-bottom: 1rem;
+  display: flex; justify-content: space-between; align-items: center; user-select: none;
+}
+details.chapter > summary::-webkit-details-marker { display: none; }
+details.chapter > summary::after { content: "▾"; font-size: 18px; color: var(--teal); transition: transform 0.2s; }
+details.chapter[open] > summary::after { transform: rotate(180deg); }
+
+.subtitle { font-size: clamp(15px, 4.2vw, 17px); font-weight: 600; color: var(--text); margin: 1.25rem 0 0.5rem; padding-left: 0.5rem; border-left: 4px solid var(--gold); }
+.lead { margin: 0 0 0.75rem; font-size: 15px; }
+
+/* Cover */
+.cover-body { background: #fff; color: var(--text); border: 1px solid var(--gold); border-radius: 10px; padding: 0.85rem 1.1rem; width: 100%; max-width: 820px; }
+.cover-body h1 { font-size: 17px; margin: 0; font-weight: 700; color: var(--teal); }
+.cover-body .ev { font-size: 13px; color: var(--text-secondary); margin: 2px 0 0; }
+.cover-body .ev strong { color: var(--text); font-weight: 600; }
+.cover-body .meta { margin-top: 0.5rem; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--gray); padding-top: 0.4rem; }
+
+/* TOC */
+.toc { background: var(--teal-light); padding: 1rem 1.25rem; border-radius: 10px; }
+.toc ol { margin: 0; padding: 0; list-style: none; counter-reset: toc; display: flex; flex-direction: column; gap: 0.45rem; }
+.toc li { counter-increment: toc; margin: 0; }
+.toc a {
+  display: flex; align-items: center; padding: 0.7rem 0.85rem;
+  background: #fff; border: 1px solid var(--teal-medium); border-radius: 8px;
+  color: var(--teal); text-decoration: none; font-weight: 600; font-size: 14px; line-height: 1.35;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.toc a::before {
+  content: counter(toc);
+  display: inline-flex; width: 26px; height: 26px;
+  border-radius: 50%; background: var(--teal); color: #fff;
+  font-size: 12px; align-items: center; justify-content: center;
+  margin-right: 0.7rem; flex-shrink: 0; font-weight: 700;
+}
+.toc a::after { content: "›"; margin-left: auto; color: var(--teal); font-weight: 700; font-size: 22px; padding-left: 0.5rem; line-height: 1; flex-shrink: 0; }
+.toc a:hover, .toc a:focus { background: var(--teal-light); border-color: var(--teal); }
+.toc a:active { background: var(--teal); color: #fff; border-color: var(--teal); transform: scale(0.98); }
+.toc a:active::before { background: #fff; color: var(--teal); }
+.toc a:active::after { color: #fff; }
+
+/* Flow diagram */
+.flow-diagram {
+  background: #fff; border: 1px solid var(--gold); border-radius: 8px;
+  padding: 1rem 1.25rem; margin: 0.75rem 0;
+  font-family: ui-monospace, "SF Mono", "Menlo", monospace;
+  font-size: 12px; line-height: 1.8; white-space: pre-wrap; overflow-x: auto;
+  color: var(--text);
+}
+.flow-diagram.bad { border-left: 4px solid var(--warning); }
+.flow-diagram.good { border-left: 4px solid var(--teal); }
+.flow-diagram .step-num { display: inline-block; background: var(--teal); color: #fff; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 0.3rem; }
+.flow-diagram .pain { color: var(--warning-text); font-weight: 600; }
+
+/* Comparison table */
+.cmp-table-wrap { margin: 0.75rem 0; overflow-x: auto; }
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border: 1px solid var(--gold); border-radius: 8px; overflow: hidden; }
+.cmp-table th, .cmp-table td { padding: 8px 10px; border-bottom: 1px solid var(--gold-light); text-align: left; vertical-align: top; }
+.cmp-table th { background: var(--gold-light); color: var(--warning-text); font-weight: 600; font-size: 12px; }
+.cmp-table tbody tr:last-child td { border-bottom: none; }
+.cmp-table td.head-col { font-weight: 600; background: var(--gray-light); white-space: nowrap; }
+.cmp-table td.now { color: var(--text-secondary); }
+.cmp-table td.proposal { background: var(--teal-light); }
+
+/* Code-style block */
+.code-block { background: #1e293b; color: #e2e8f0; padding: 0.75rem 1rem; border-radius: 6px; font-family: ui-monospace, "SF Mono", "Menlo", monospace; font-size: 12px; overflow-x: auto; margin: 0.5rem 0; white-space: pre-wrap; line-height: 1.6; }
+
+/* Issue list */
+.issue-list { background: var(--warning-bg); border-left: 4px solid var(--warning); padding: 0.85rem 1.1rem; border-radius: 6px; margin: 0.75rem 0; }
+.issue-list h4 { margin: 0 0 0.6rem; color: var(--warning-text); font-size: 14px; letter-spacing: 0.02em; }
+.issue-list ul { margin: 0; padding-left: 1.4rem; }
+.issue-list li { margin: 0.4rem 0; font-size: 14px; line-height: 1.6; }
+.issue-list li strong { color: var(--warning-text); }
+
+/* Item list */
+.item-list { background: #fff; border: 1px solid var(--gold); border-radius: 8px; padding: 0.7rem 1.1rem; margin: 0.6rem 0; }
+.item-list ul { margin: 0; padding-left: 1.4rem; }
+.item-list li { margin: 0.45rem 0; font-size: 14px; line-height: 1.6; }
+.item-list li strong { color: var(--teal); }
+
+/* Step kanban */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1em; margin: 0.75rem 0; }
+.step-card { background: #fff; border: 2px solid var(--gold); border-radius: 10px; padding: 0.85rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.step-card .step-badge { display: inline-block; background: var(--teal); color: #fff; width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 50%; font-weight: 700; font-size: 16px; margin-bottom: 0.5rem; }
+.step-card h4 { margin: 0 0 0.4rem; font-size: 15px; font-weight: 700; color: var(--teal); }
+.step-card .who { font-size: 12px; color: var(--text-secondary); margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--gold-light); }
+.step-card ul { margin: 0; padding-left: 1.1rem; font-size: 13px; }
+.step-card li { margin: 0.3rem 0; line-height: 1.55; }
+
+/* Benefits */
+.benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1em; margin: 0.75rem 0; }
+.benefit-card { background: var(--teal-light); border: 1px solid var(--teal-medium); border-radius: 10px; padding: 0.85rem 1rem; }
+.benefit-card h4 { margin: 0 0 0.5rem; color: var(--teal); font-size: 14px; padding-bottom: 0.3rem; border-bottom: 1px solid var(--teal-medium); }
+.benefit-card ul { margin: 0; padding-left: 1.2rem; font-size: 13px; }
+.benefit-card li { margin: 0.3rem 0; line-height: 1.55; }
+
+/* Quick info */
+.quick-info { background: var(--teal-light); border: 1px solid var(--teal-medium); border-radius: 10px; padding: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; }
+.quick-info .item { text-align: center; padding: 0.25rem; }
+.quick-info .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 0.2rem; letter-spacing: 0.05em; }
+.quick-info .value { font-size: clamp(15px, 4.2vw, 18px); font-weight: 700; color: var(--teal); }
+
+/* Timeline */
+.timeline-vertical { position: relative; padding-left: 1.75rem; margin: 0.5rem 0; }
+.timeline-vertical::before { content: ""; position: absolute; left: 0.6rem; top: 0.4rem; bottom: 0.4rem; width: 2px; background: var(--teal-medium); }
+.timeline-vertical .event { position: relative; margin-bottom: 1.1rem; }
+.timeline-vertical .event:last-child { margin-bottom: 0; }
+.timeline-vertical .event::before { content: ""; position: absolute; left: -1.5rem; top: 0.3rem; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--teal); }
+.timeline-vertical .time { font-weight: 700; color: var(--teal); font-size: 13px; display: block; letter-spacing: 0.02em; }
+.timeline-vertical .label { font-size: 15px; color: var(--text); }
+.timeline-vertical .desc { font-size: 13px; color: var(--text-secondary); margin-top: 0.15rem; }
+.timeline-vertical .event.deadline::before { background: var(--warning); border-color: var(--warning); }
+.timeline-vertical .event.deadline .time { color: var(--warning-text); }
+
+/* Decision cards */
+.decisions { display: flex; flex-direction: column; gap: 0.65rem; margin: 0.75rem 0; }
+.decision-card { background: #fff; border: 2px solid var(--gold); border-radius: 10px; padding: 0.8rem 1rem; display: flex; gap: 0.8rem; }
+.decision-card .num { flex: 0 0 32px; height: 32px; width: 32px; border-radius: 50%; background: var(--gold); color: #fff; text-align: center; line-height: 32px; font-weight: 700; font-size: 14px; }
+.decision-card h4 { margin: 0 0 0.3rem; font-size: 15px; font-weight: 700; }
+.decision-card p { margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+
+/* Section end nav */
+.section-end-nav { display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--gray); font-size: 13px; flex-wrap: wrap; gap: 0.5rem; }
+.section-end-nav a { color: var(--teal); text-decoration: none; padding: 0.4rem 0.85rem; border: 1px solid var(--teal-medium); border-radius: 6px; background: var(--teal-light); font-weight: 600; }
+.section-end-nav a:hover { background: var(--teal); color: #fff; }
+.section-end-nav a.back { color: var(--text-secondary); border-color: var(--gray); background: #fff; }
+
+/* FAB */
+.fab-toc { position: fixed; bottom: 1.25rem; right: 1.25rem; width: 52px; height: 52px; border-radius: 50%; background: var(--teal); color: #fff; border: 2px solid var(--gold); box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-size: 24px; text-decoration: none; z-index: 100; font-weight: 700; line-height: 1; transition: transform 0.15s; }
+.fab-toc:hover, .fab-toc:focus { transform: scale(1.1); }
+.fab-toc:active { transform: scale(0.95); }
+
+a { code, code { font-family: ui-monospace, "SF Mono", "Menlo", monospace; font-size: 12px; background: var(--gold-light); padding: 1px 4px; border-radius: 3px; } }
+code { font-family: ui-monospace, "SF Mono", "Menlo", monospace; font-size: 12px; background: var(--gold-light); padding: 1px 4px; border-radius: 3px; }
+a { color: var(--link); }
+
+/* TOC overlay (FAB tap to open inline) */
+.toc-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: flex-start; justify-content: center;
+  z-index: 99;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+.toc-overlay.show { display: flex; }
+.toc-panel {
+  background: #fff;
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  max-width: 480px; width: 100%;
+  position: relative;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+.toc-panel h3 {
+  margin: 0 0 0.75rem;
+  color: var(--teal);
+  font-size: 18px;
+  border-bottom: 2px solid var(--teal);
+  padding-bottom: 0.4rem;
+}
+.toc-close {
+  position: absolute;
+  top: 0.5rem; right: 0.6rem;
+  background: var(--gray-light);
+  border: 1px solid var(--gray);
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+.toc-close:hover { background: var(--gray); }
+
+/* Button element compatibility for FAB (button has UA default styles to override) */
+button.fab, button.fab-toc {
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  outline: none;
+}
+button.fab:focus, button.fab-toc:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+.toc-close { cursor: pointer; font-family: inherit; outline: none; }
+</style>
+</head>
+<body>
+
+<!-- ===== Cover ===== -->
+<section id="cover">
+  <div class="cover-body">
+    <h1>解説マニュアル自動生成ツールの提案</h1>
+    <p class="ev"><strong>第45回 技大祭 運営</strong></p>
+    <p class="ev">執行部発表用</p>
+    <div class="meta">提案: 上林（PM）　／　2026-05-11</div>
+  </div>
+</section>
+
+<!-- ===== TOC ===== -->
+<section id="toc">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>目次</summary>
+      <nav class="toc">
+        <ol>
+          <li><a href="#section-current">マニュアルの現状の運用と課題</a></li>
+          <li><a href="#section-proposal">何をしたいか（ビフォーアフター）</a></li>
+          <li><a href="#section-output">完成イメージ</a></li>
+          <li><a href="#section-how">生成のしくみ（パイプライン）</a></li>
+          <li><a href="#section-benefit">何が嬉しいか</a></li>
+          <li><a href="#section-cost">コスト</a></li>
+          <li><a href="#section-schedule">スケジュール</a></li>
+          <li><a href="#section-decision">執行部に確認したいこと</a></li>
+        </ol>
+      </nav>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 1. 現状の運用と課題 ===== -->
+<section id="section-current">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>マニュアルの現状の運用と課題</summary>
+
+      <p class="lead">技大祭のマニュアル類は <strong>Google Document</strong> で作成。配布は <strong>SeeFT のモバイルウェブ（シフトページ）に Google Doc の URL を貼り付け</strong>、当日担当者がそこからリンクをタップして Google Docs で閲覧する運用。</p>
+
+      <h3 class="subtitle">現状の運用フロー</h3>
+      <div class="flow-diagram bad"><span class="step-num">1</span>担当者が <strong>Google Doc</strong> でマニュアルを編集
+              ↓
+<span class="step-num">2</span>PM・担当者が <strong>SeeFT モバイルウェブ</strong>のシフトページに Doc の URL を登録
+              ↓
+<span class="step-num">3</span>当日担当者が <strong>SeeFT モバイルウェブ</strong>を開く
+              ↓
+<span class="step-num">4</span>自分のシフトページに表示された Doc リンクをタップ
+              ↓
+<span class="step-num">5</span>Google Docs（ブラウザ or アプリ）で Doc を閲覧
+              <span class="pain">↑ ここがスマホで読みづらい</span></div>
+
+      <h3 class="subtitle">Google Docs をスマホで開いた時の課題</h3>
+      <div class="issue-list">
+        <h4>閲覧体験の問題</h4>
+        <ul>
+          <li>Google Doc は <strong>PC 想定の縦長レイアウト</strong>。スマホ縦持ちで段落構造が見にくい</li>
+          <li>Doc 内の目次があってもスマホアプリだとジャンプ動作が安定しない</li>
+          <li><strong>緊急連絡先までスクロールが長い</strong>。必要な時に到達に時間がかかる</li>
+          <li>電話番号がプレーンテキストだと <strong>タップで発信できない</strong></li>
+          <li>画像が小さくて、いちいちタップして拡大しないと見えない</li>
+          <li>長尺 Doc はスマホでロード・スクロールが重い</li>
+          <li>「自分のチームのやること」を Doc 全体から探すのに時間がかかる</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">運用上の課題</h3>
+      <div class="issue-list">
+        <h4>マニュアル管理側の困りごと</h4>
+        <ul>
+          <li>各局・部門でフォーマットがバラバラ、見た目が統一されない</li>
+          <li>当日「どこに書いてある?」の問い合わせが発生</li>
+          <li>運用責任が SeeFT 側じゃなく Google Doc 側に流出している（編集権限・閲覧追跡など）</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 2. 提案 ===== -->
+<section id="section-proposal">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>何をしたいか（ビフォーアフター）</summary>
+
+      <p class="lead"><strong>Google Doc</strong> を<strong>「スマホで見やすい解説 Web ページ」に自動変換</strong>するツールを運用したい。シフトページから飛ぶ先を、Doc URL から <strong>生成された Web ページ URL に置き換える</strong>。Doc の編集作業は変わらない。</p>
+
+      <h3 class="subtitle">提案後の運用フロー</h3>
+      <div class="flow-diagram good"><span class="step-num">1</span>担当者が <strong>Google Doc</strong> でマニュアルを編集（変わらず）
+              ↓
+<span class="step-num">2</span>PM が <strong>ツールを実行</strong>して解説 Web ページを生成
+              ↓
+<span class="step-num">3</span>PM が生成された <strong>Web ページの URL</strong> を SeeFT シフトページに登録（Doc URL の置き換え）
+              ↓
+<span class="step-num">4</span>当日担当者が <strong>SeeFT モバイルウェブ</strong>を開く
+              ↓
+<span class="step-num">5</span>自分のシフトページに表示された <strong>Web ページリンク</strong>をタップ
+              ↓
+<span class="step-num">6</span><strong>スマホ最適化された解説ページ</strong>で閲覧（カード形式・タップ操作）</div>
+
+      <h3 class="subtitle">現状と提案後の違い</h3>
+      <div class="cmp-table-wrap">
+        <table class="cmp-table">
+          <thead>
+            <tr><th>項目</th><th>現状</th><th>提案後</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="head-col">マニュアル作成</td><td class="now">Google Doc で書く</td><td class="proposal">Google Doc で書く（変わらず）</td></tr>
+            <tr><td class="head-col">配布チャネル</td><td class="now">SeeFT シフトページに Doc URL</td><td class="proposal">SeeFT シフトページに <strong>Web ページ URL</strong></td></tr>
+            <tr><td class="head-col">タップ先で見る画面</td><td class="now">Google Docs（PC レイアウト）</td><td class="proposal"><strong>カード形式の解説 Web ページ</strong></td></tr>
+            <tr><td class="head-col">操作性</td><td class="now">Doc アプリの制約</td><td class="proposal">タップ・拡大・電話発信が確実</td></tr>
+            <tr><td class="head-col">更新時の流れ</td><td class="now">Doc 編集（リンクは自動反映）</td><td class="proposal">Doc 編集 → 再生成 → URL 入れ替え</td></tr>
+            <tr><td class="head-col">SeeFT 側の作業</td><td class="now">Doc URL を一度登録</td><td class="proposal">Web ページ URL を登録（運用変更要）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 3. 完成イメージ ===== -->
+<section id="section-output">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>完成イメージ</summary>
+
+      <p class="lead">生成される解説 Web ページの主な機能。</p>
+
+      <div class="item-list">
+        <ul>
+          <li><strong>カード形式 UI</strong>: 情報の塊が視覚的に分離、一目で何の情報か分かる</li>
+          <li><strong>役割ごとのカード</strong>: チーム A の担当者は A のカードだけ見れば「担当場所・必要物品・指揮者・関連資料」がすべて揃う（カンバン形式）</li>
+          <li><strong>目次ボタン</strong>: 上部 + 右下のフローティングボタンから、どこからでも目次に戻れる</li>
+          <li><strong>章末「次へ」リンク</strong>: スクロール下方から自然に次章へ進む導線</li>
+          <li><strong>電話番号タップで即発信</strong>: <code>&lt;a href="tel:..."&gt;</code> で確実にリンク化</li>
+          <li><strong>画像タップで拡大</strong>: ライトボックスで全画面表示</li>
+          <li><strong>スマホ縦持ち最適化</strong>: 文字サイズ・余白がスマホで読みやすい</li>
+          <li><strong>1ファイルに完結</strong>: 画像も含めて単一 HTML、URL 1つで配布</li>
+        </ul>
+      </div>
+
+      <h3 class="subtitle">Google Doc 直接閲覧との比較</h3>
+      <div class="cmp-table-wrap">
+        <table class="cmp-table">
+          <thead>
+            <tr><th>項目</th><th>Google Docs で閲覧</th><th>解説 Web ページ</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="head-col">レイアウト</td><td class="now">PC 想定の縦長 Doc</td><td class="proposal">スマホ縦持ち最適化のカード形式</td></tr>
+            <tr><td class="head-col">目次ジャンプ</td><td class="now">Doc 目次（アプリで不安定）</td><td class="proposal">ボタンタップで即移動 + 戻る</td></tr>
+            <tr><td class="head-col">連絡先</td><td class="now">テキストをスクロール検索</td><td class="proposal">カード化 + タップで発信</td></tr>
+            <tr><td class="head-col">画像</td><td class="now">小さく表示、要タップ</td><td class="proposal">カード内に大きく + タップで全画面拡大</td></tr>
+            <tr><td class="head-col">役割別情報</td><td class="now">本文中から探す</td><td class="proposal">カンバンカードで完結</td></tr>
+            <tr><td class="head-col">読み込み</td><td class="now">Docs アプリ経由で重め</td><td class="proposal">単一 HTML、軽量・オフライン可</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="lead" style="margin-top:1rem;font-size:13px;color:var(--text-secondary)">実物が 8 マニュアル分すでに用意されている（配線、案内所、本部設営、駐車場、のぼり広告、お化け屋敷、幼稚園WARS、物販テント）。発表時にスマホで実物を共有して見比べる想定。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 4. しくみ ===== -->
+<section id="section-how">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>生成のしくみ（パイプライン）</summary>
+
+      <p class="lead">担当者・PM・受け取り手の役割を3ステップに分けるとこうなる。</p>
+
+      <div class="steps">
+        <div class="step-card">
+          <span class="step-badge">1</span>
+          <h4>マニュアルを書く</h4>
+          <div class="who">担当者（従来通り）</div>
+          <ul>
+            <li>Google Doc でマニュアル本文を書く</li>
+            <li>手順写真・配置図を貼る</li>
+            <li>連絡先・必要物品を記載</li>
+            <li><strong>作業内容は変わらない</strong></li>
+          </ul>
+        </div>
+        <div class="step-card">
+          <span class="step-badge">2</span>
+          <h4>ツールが Web ページを生成</h4>
+          <div class="who">PM（コマンド1回、3〜6分）</div>
+          <ul>
+            <li>Google Doc を HTML エクスポート</li>
+            <li>ツール（uv で動く Python スクリプト）を実行</li>
+            <li>内部で Claude (Anthropic) を呼び、Doc を解釈・整形</li>
+            <li>画像はプレースホルダーから base64 で埋め込み</li>
+          </ul>
+        </div>
+        <div class="step-card">
+          <span class="step-badge">3</span>
+          <h4>Web ページを SeeFT に登録</h4>
+          <div class="who">PM が登録 → 受信者が閲覧</div>
+          <ul>
+            <li>生成された Web ページをホスティング</li>
+            <li>SeeFT シフトページの URL を Doc → Web ページに更新</li>
+            <li>当日担当者は普段通り SeeFT を開けばリンクが置き換わっている</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="subtitle">内部パイプライン詳細</h3>
+      <div class="flow-diagram"><strong>[Google Doc]</strong>
+    ↓ HTML エクスポート（手動）
+<strong>[ソース HTML + images/]</strong>
+    ↓ pandoc で Markdown 化
+    ↓ 正規表現で Google Docs のノイズ除去
+<strong>[クリーン Markdown + 画像ファイル名リスト]</strong>
+    ↓ system_prompt = .claude/manual-prompt-card.md（カード形式の出力規約）
+    ↓ user_prompt = Markdown + 画像リスト
+    ↓ Claude Opus 4.7 を呼び出し（サブスク認証経由）
+<strong>[HTML（画像は {{filename}} プレースホルダー）]</strong>
+    ↓ 後処理: プレースホルダーを base64 で置換
+<strong>[slide_xxx.card.html（自己完結、画像内蔵）]</strong></div>
+
+      <p class="lead" style="margin-top:0.5rem;font-size:13px;color:var(--text-secondary)">共通プロンプト <code>.claude/manual-prompt-card.md</code> でカラー・章構造・カンバン要件を一元管理。プロンプト改善が全マニュアルに自動波及する設計。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 5. メリット ===== -->
+<section id="section-benefit">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>何が嬉しいか</summary>
+
+      <div class="benefits">
+        <div class="benefit-card">
+          <h4>当日担当者にとって</h4>
+          <ul>
+            <li>スマホ縦持ち最適化で<strong>段落構造がはっきり</strong>見える</li>
+            <li>自分のチーム情報がカード1枚で完結</li>
+            <li>緊急時の連絡がタップ1つで発信</li>
+            <li>画像も大きく拡大して見られる</li>
+            <li>長尺 Doc のロード重さがない（軽量 HTML）</li>
+            <li>事前ダウンロード済ならオフライン閲覧可</li>
+          </ul>
+        </div>
+        <div class="benefit-card">
+          <h4>各局・部門にとって</h4>
+          <ul>
+            <li>担当者の Doc 編集作業は<strong>増えない</strong></li>
+            <li>マニュアル更新時の再配布が再生成→URL 入れ替えで済む</li>
+            <li>配布が1ファイル化、誤共有リスク低減</li>
+            <li>各マニュアルの見た目・操作性が統一される</li>
+          </ul>
+        </div>
+        <div class="benefit-card">
+          <h4>マニュアル管理者・PM にとって</h4>
+          <ul>
+            <li>「どこに書いてある?」問い合わせが減る想定</li>
+            <li>過去マニュアルも同じ仕組みで再生成可能</li>
+            <li>共通プロンプト改善で全体品質を一括引き上げ</li>
+            <li>運用責任を SeeFT 側に取り戻せる（Doc 外部依存の縮小）</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 6. コスト ===== -->
+<section id="section-cost">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>コスト</summary>
+
+      <p class="lead">Claude（Anthropic のサブスク）契約が必要。技大祭規模なら最安プランで十分。</p>
+
+      <h3 class="subtitle">Claude サブスクの料金プラン</h3>
+      <div class="quick-info">
+        <div class="item"><div class="label">Pro</div><div class="value">$20/月<br><small>約 3,000 円</small></div></div>
+        <div class="item"><div class="label">Max 5x</div><div class="value">$100/月<br><small>約 14,000 円</small></div></div>
+        <div class="item"><div class="label">Max 20x</div><div class="value">$200/月<br><small>約 28,000 円</small></div></div>
+        <div class="item"><div class="label">技大祭規模</div><div class="value">Pro で十分</div></div>
+      </div>
+
+      <h3 class="subtitle">想定の支払い方法</h3>
+      <div class="item-list">
+        <ul>
+          <li><strong>PM が個人で契約 → 経費精算</strong>が最もシンプル</li>
+          <li>月額固定なので予算予測しやすい</li>
+          <li>マニュアル本数が増えても・何度作り直しても追加料金なし（プラン内）</li>
+          <li>サブスクは引き継ぎ時に次期 PM へ移管</li>
+        </ul>
+      </div>
+
+      <p class="lead" style="font-size:14px">参考実測: 8 マニュアル生成済み。1本あたり API 換算 約 $0.5〜1 相当の利用だが、Pro サブスクの月額枠内で追加料金は発生していない。</p>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 7. スケジュール ===== -->
+<section id="section-schedule">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>スケジュール</summary>
+
+      <div class="timeline-vertical">
+        <div class="event deadline">
+          <span class="time">2026-05 今週</span>
+          <span class="label">執行部発表（本日）</span>
+          <div class="desc">本資料で説明、フィードバック収集、運用方針合意</div>
+        </div>
+        <div class="event">
+          <span class="time">2026-05 後半</span>
+          <span class="label">8 マニュアル試作品の品質検証</span>
+          <div class="desc">各局担当者にも見てもらってフィードバック反映</div>
+        </div>
+        <div class="event">
+          <span class="time">2026-06 〜 07月</span>
+          <span class="label">本番運用準備、ホスティング整備、SeeFT 側の URL 切り替え</span>
+          <div class="desc">運用ノウハウ確立、各局からの要望を取り込み</div>
+        </div>
+        <div class="event">
+          <span class="time">2026-08月</span>
+          <span class="label">新 PM への引き継ぎ開始</span>
+          <div class="desc">運用ノウハウとサブスクを次の PM へ移譲</div>
+        </div>
+        <div class="event deadline">
+          <span class="time">2026-09月前半</span>
+          <span class="label">45th 技大祭で実運用</span>
+          <div class="desc">本番開幕、各担当者が SeeFT 経由で解説ページを閲覧</div>
+        </div>
+        <div class="event">
+          <span class="time">2026-09月から</span>
+          <span class="label">現 PM 海外実務訓練 → 新 PM が継続運用</span>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ===== 8. 確認したいこと ===== -->
+<section id="section-decision">
+  <div class="section-body">
+    <details class="chapter" open>
+      <summary>執行部に確認したいこと</summary>
+
+      <p class="lead">今後の運用を進めるうえで、執行部に判断してほしい事項。</p>
+
+      <div class="decisions">
+        <div class="decision-card">
+          <div class="num">1</div>
+          <div>
+            <h4>Claude サブスクの経費処理</h4>
+            <p>月額 3,000〜14,000 円程度。PM が個人契約 → 経費精算 で進めて OK か。組織で一括契約する場合は別途相談。</p>
+          </div>
+        </div>
+        <div class="decision-card">
+          <div class="num">2</div>
+          <div>
+            <h4>生成された Web ページのホスティング先</h4>
+            <p>選択肢: GitHub Pages / SeeFT のサーバーに静的ホスト / S3 などの外部ストレージ / その他。各案のメリット・運用負担を比較して決めたい。</p>
+          </div>
+        </div>
+        <div class="decision-card">
+          <div class="num">3</div>
+          <div>
+            <h4>SeeFT シフトページの URL 入れ替え運用</h4>
+            <p>Doc URL から Web ページ URL に切り替えるタイミング・手順・責任者を決めたい。新旧並列期間を設けるかどうかも。</p>
+          </div>
+        </div>
+        <div class="decision-card">
+          <div class="num">4</div>
+          <div>
+            <h4>マニュアル原本（Google Doc）の管理ルール</h4>
+            <p>誰がいつ更新するか、PM が原本を再エクスポートするタイミング、更新通知をどう PM に届けるか。</p>
+          </div>
+        </div>
+        <div class="decision-card">
+          <div class="num">5</div>
+          <div>
+            <h4>次期 PM への接続タイミング</h4>
+            <p>引き継ぎは 2026-08月開始予定。次期 PM 候補は誰で、いつ初回顔合わせするか。</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="lead" style="margin-top:1.25rem;text-align:center;font-size:15px"><strong>質問は随時受け付けます。</strong></p>
+    </details>
+  </div>
+</section>
+
+<button class="fab-toc" onclick="toggleTocOverlay()" aria-label="目次を開く" title="目次を開く">≡</button>
+
+<div id="toc-overlay" class="toc-overlay" onclick="closeTocOverlayBackground(event)">
+  <div class="toc-panel">
+    <button class="toc-close" onclick="closeTocOverlay()" aria-label="閉じる">×</button>
+    <h3>目次</h3>
+    <nav class="toc"><ol></ol></nav>
+  </div>
+</div>
+
+<script>
+function toggleTocOverlay() {
+  document.getElementById('toc-overlay').classList.toggle('show');
+}
+function closeTocOverlay() {
+  document.getElementById('toc-overlay').classList.remove('show');
+}
+function closeTocOverlayBackground(e) {
+  if (e.target.id === 'toc-overlay') closeTocOverlay();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const sourceList =
+    document.querySelector('#toc .toc-list') ||
+    document.querySelector('#toc ol') ||
+    document.querySelector('#toc ul') ||
+    document.querySelector('section#toc ol') ||
+    document.querySelector('section#toc ul') ||
+    document.querySelector('nav.toc ol') ||
+    document.querySelector('nav.toc ul');
+  const panelNav = document.querySelector('#toc-overlay .toc');
+  if (sourceList && panelNav) {
+    panelNav.innerHTML = '';
+    const cloned = sourceList.cloneNode(true);
+    // Reset all known TOC counter names so cloned list restarts from 1
+    cloned.style.counterReset = 'toc 0 tocnum 0 tocitem 0';
+    panelNav.appendChild(cloned);
+    cloned.querySelectorAll('a').forEach(a => a.addEventListener('click', closeTocOverlay));
+  }
+});
+</script>
+
+</body>
+</html>
