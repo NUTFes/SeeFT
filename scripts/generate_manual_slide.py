@@ -12,6 +12,7 @@ Google Doc HTML → 解説スライドHTML 生成スクリプト
 """
 
 import anthropic
+import argparse
 import base64
 import mimetypes
 import os
@@ -23,12 +24,15 @@ import sys
 MODEL = "claude-sonnet-4-20250514"
 MAX_TOKENS = 16000
 
-# ─── プロンプト（.claude/manual-prompt.md から読み込み） ───
-PROMPT_MD_PATH = os.path.join(os.path.dirname(__file__), "..", ".claude", "manual-prompt.md")
+# ─── プロンプトのバリアント（--prompt で切替） ───
+PROMPT_VARIANTS = {
+    "default": "manual-prompt.md",
+    "card": "manual-prompt-card.md",
+}
 
 
 def _load_prompt_from_md(path: str) -> tuple[str, str]:
-    """manual-prompt.md から SYSTEM_PROMPT と USER_PROMPT_TEMPLATE を抽出"""
+    """プロンプト Markdown から SYSTEM_PROMPT と USER_PROMPT_TEMPLATE を抽出"""
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
     # ```...``` で囲まれたコードブロックを順に抽出
@@ -38,7 +42,8 @@ def _load_prompt_from_md(path: str) -> tuple[str, str]:
     return blocks[0].strip(), blocks[1].strip()
 
 
-SYSTEM_PROMPT, USER_PROMPT_TEMPLATE = _load_prompt_from_md(PROMPT_MD_PATH)
+def _resolve_prompt_path(variant: str) -> str:
+    return os.path.join(os.path.dirname(__file__), "..", ".claude", PROMPT_VARIANTS[variant])
 
 
 def load_source(manual_dir: str):
@@ -121,12 +126,18 @@ def build_image_content_blocks(manual_dir: str, image_files: list) -> list:
     return blocks
 
 
-def call_claude_api(html_content: str, image_files: list, image_blocks: list) -> str:
+def call_claude_api(
+    system_prompt: str,
+    user_prompt_template: str,
+    html_content: str,
+    image_files: list,
+    image_blocks: list,
+) -> str:
     """Claude APIを呼び出して解説スライドHTMLを生成"""
     client = anthropic.Anthropic()
 
     image_list = "\n".join(f"- {f}" for f in image_files)
-    user_text = USER_PROMPT_TEMPLATE.format(
+    user_text = user_prompt_template.format(
         image_list=image_list,
         html_content=html_content,
     )
@@ -141,7 +152,7 @@ def call_claude_api(html_content: str, image_files: list, image_blocks: list) ->
     message = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
-        system=SYSTEM_PROMPT,
+        system=system_prompt,
         messages=[{"role": "user", "content": content}],
     )
 
@@ -178,16 +189,33 @@ def extract_html(response: str) -> str:
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 scripts/generate_manual_slide.py <manual_dir>")
-        print("Example: python3 scripts/generate_manual_slide.py docs/manuals/01_44th_配線マニュアル")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Google Doc HTML → 解説スライドHTML 生成",
+    )
+    parser.add_argument(
+        "manual_dir",
+        help="マニュアルディレクトリ（例: docs/manuals/01_44th_配線マニュアル）",
+    )
+    parser.add_argument(
+        "--prompt",
+        choices=list(PROMPT_VARIANTS.keys()),
+        default="default",
+        help="使用するプロンプトのバリアント（default=従来のスライド形式 / card=カード形式）",
+    )
+    args = parser.parse_args()
 
-    manual_dir = sys.argv[1].rstrip("/")
-    output_path = os.path.join(manual_dir, "slide_api.html")
+    manual_dir = args.manual_dir.rstrip("/")
+    variant = args.prompt
+    output_filename = "slide_api.html" if variant == "default" else f"slide_api.{variant}.html"
+    output_path = os.path.join(manual_dir, output_filename)
+
+    prompt_path = _resolve_prompt_path(variant)
+    system_prompt, user_prompt_template = _load_prompt_from_md(prompt_path)
 
     print(f"=== 解説スライド生成 ===")
     print(f"  Source: {manual_dir}")
+    print(f"  Prompt: {variant} ({PROMPT_VARIANTS[variant]})")
+    print(f"  Output: {output_path}")
 
     # 1. ソース読み込み
     html_content, image_files = load_source(manual_dir)
@@ -197,7 +225,13 @@ def main():
     image_blocks = build_image_content_blocks(manual_dir, image_files)
 
     # 3. Claude API 呼び出し
-    response = call_claude_api(html_content, image_files, image_blocks)
+    response = call_claude_api(
+        system_prompt,
+        user_prompt_template,
+        html_content,
+        image_files,
+        image_blocks,
+    )
 
     # 4. HTML抽出
     slide_html = extract_html(response)

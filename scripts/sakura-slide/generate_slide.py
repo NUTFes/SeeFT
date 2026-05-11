@@ -7,10 +7,14 @@
 使い方:
   export SAKURA_API_KEY=...
   uv run --project scripts/sakura-slide python scripts/sakura-slide/generate_slide.py docs/manuals/01_44th_配線マニュアル
+  uv run --project scripts/sakura-slide python scripts/sakura-slide/generate_slide.py --prompt card docs/manuals/01_44th_配線マニュアル
 
-出力: 引数ディレクトリ配下の slide_sakura.html
+出力:
+  default: 引数ディレクトリ配下の slide_sakura.html
+  card   : 引数ディレクトリ配下の slide_sakura.card.html
 """
 
+import argparse
 import base64
 import mimetypes
 import os
@@ -27,7 +31,11 @@ MAX_TOKENS = 16000
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
-PROMPT_MD_PATH = os.path.join(PROJECT_ROOT, ".claude", "manual-prompt.md")
+
+PROMPT_VARIANTS = {
+    "default": "manual-prompt.md",
+    "card": "manual-prompt-card.md",
+}
 
 
 def _load_prompt_from_md(path: str) -> tuple[str, str]:
@@ -39,7 +47,8 @@ def _load_prompt_from_md(path: str) -> tuple[str, str]:
     return blocks[0].strip(), blocks[1].strip()
 
 
-SYSTEM_PROMPT, USER_PROMPT_TEMPLATE = _load_prompt_from_md(PROMPT_MD_PATH)
+def _resolve_prompt_path(variant: str) -> str:
+    return os.path.join(PROJECT_ROOT, ".claude", PROMPT_VARIANTS[variant])
 
 
 def resolve_manual_dir(arg: str) -> str:
@@ -92,7 +101,12 @@ def load_images_base64(manual_dir: str) -> dict[str, str]:
     return images
 
 
-def call_sakura_api(html_content: str, image_files: list[str]) -> tuple[str, dict]:
+def call_sakura_api(
+    system_prompt: str,
+    user_prompt_template: str,
+    html_content: str,
+    image_files: list[str],
+) -> tuple[str, dict]:
     api_key = os.environ.get("SAKURA_API_KEY")
     if not api_key:
         raise RuntimeError("SAKURA_API_KEY が未設定です")
@@ -100,7 +114,7 @@ def call_sakura_api(html_content: str, image_files: list[str]) -> tuple[str, dic
     client = OpenAI(base_url=SAKURA_BASE_URL, api_key=api_key)
 
     image_list = "\n".join(f"- {f}" for f in image_files)
-    user_text = USER_PROMPT_TEMPLATE.format(
+    user_text = user_prompt_template.format(
         image_list=image_list,
         html_content=html_content,
     )
@@ -112,7 +126,7 @@ def call_sakura_api(html_content: str, image_files: list[str]) -> tuple[str, dic
         model=MODEL,
         max_tokens=MAX_TOKENS,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_text},
         ],
     )
@@ -158,21 +172,43 @@ def extract_html(response: str) -> str:
 
 
 def main() -> int:
-    if len(sys.argv) < 2:
-        print("Usage: python generate_slide.py <manual_dir>", file=sys.stderr)
-        print("  manual_dir: 絶対パス or プロジェクトルートからの相対パス", file=sys.stderr)
-        return 1
+    parser = argparse.ArgumentParser(
+        description="Sakura AI Engine 版 解説スライド生成",
+    )
+    parser.add_argument(
+        "manual_dir",
+        help="マニュアルディレクトリ（絶対パス or プロジェクトルートからの相対パス）",
+    )
+    parser.add_argument(
+        "--prompt",
+        choices=list(PROMPT_VARIANTS.keys()),
+        default="default",
+        help="使用するプロンプトのバリアント（default=従来のスライド形式 / card=カード形式）",
+    )
+    args = parser.parse_args()
 
-    manual_dir = resolve_manual_dir(sys.argv[1])
-    output_path = os.path.join(manual_dir, "slide_sakura.html")
+    manual_dir = resolve_manual_dir(args.manual_dir)
+    variant = args.prompt
+    output_filename = "slide_sakura.html" if variant == "default" else f"slide_sakura.{variant}.html"
+    output_path = os.path.join(manual_dir, output_filename)
+
+    prompt_path = _resolve_prompt_path(variant)
+    system_prompt, user_prompt_template = _load_prompt_from_md(prompt_path)
 
     print("=== Sakura AI Engine 版 解説スライド生成 ===")
     print(f"  Source: {manual_dir}")
+    print(f"  Prompt: {variant} ({PROMPT_VARIANTS[variant]})")
+    print(f"  Output: {output_path}")
 
     md_content, image_files = load_source(manual_dir)
     print(f"  Markdown: {len(md_content)//1024}KB, Images: {len(image_files)} files")
 
-    response_text, _usage = call_sakura_api(md_content, image_files)
+    response_text, _usage = call_sakura_api(
+        system_prompt,
+        user_prompt_template,
+        md_content,
+        image_files,
+    )
 
     slide_html = extract_html(response_text)
 
