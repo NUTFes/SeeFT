@@ -1,2 +1,15 @@
-issues:
-  exclude-use-default: false
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - unused
+    - revive
+    - gosec
+  settings:
+    revive:
+      severity: warning
+    gosec:
+
+run:
+  timeout: 5m
