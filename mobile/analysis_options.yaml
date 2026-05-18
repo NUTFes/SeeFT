@@ -1,8 +1,9 @@
-# https://pub.dev/packages/pedantic_mono
-include: package:pedantic_mono/analysis_options.yaml
+# https://pub.dev/packages/flutter_lints
+include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
-    - lib/**/*.g.dart
+    - "build/**"
+
 linter:
   rules:
-    top_level_function_literal_block: false
+    
