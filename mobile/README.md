@@ -4,7 +4,7 @@ A new Flutter project.
 
 ## Requirements
 - fvm
-- Flutter 2.10.4
+- Flutter 3.27.3
 
 ## Getting Started
 
