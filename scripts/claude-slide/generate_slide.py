@@ -39,6 +39,8 @@ PROJECT_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
 PROMPT_VARIANTS = {
     "default": "manual-prompt.md",
     "card": "manual-prompt-card.md",
+    # 文章不変ポリシー版。機械検証 (verify_slide_mechanical.py) と組み合わせて使う前提
+    "card-strict": "manual-prompt-card-strict.md",
 }
 
 # 単発生成: ツール使用は完全に禁止し、テキスト出力のみさせる。
