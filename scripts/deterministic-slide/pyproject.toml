@@ -1,0 +1,6 @@
+[project]
+name = "deterministic-slide"
+version = "0.1.0"
+description = "Deterministic Google Docs HTML → SeeFT card HTML converter via pandoc -t json AST. No generative AI."
+requires-python = ">=3.10"
+dependencies = []
