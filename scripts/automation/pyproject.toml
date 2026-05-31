@@ -1,0 +1,10 @@
+[project]
+name = "seeft-automation"
+version = "0.1.0"
+description = "SeeFT 解説マニュアル生成パイプライン Phase 2: Sheets/Drive 連携の自動化"
+requires-python = ">=3.10"
+dependencies = [
+    "google-api-python-client>=2.0",
+    "google-auth-httplib2>=0.2",
+    "google-auth-oauthlib>=1.2",
+]
