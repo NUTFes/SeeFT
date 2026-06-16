@@ -17,8 +17,7 @@ type Scheduler struct {
 	job      Job
 }
 
-// New はコンストラクタ。Go には __init__ / constructor が無いので、
-// 慣習として New〜 関数でポインタを返す。
+// New はコンストラクタでSchedulerを生成する。
 func New(name string, interval time.Duration, job Job) *Scheduler {
 	return &Scheduler{name: name, interval: interval, job: job}
 }
