@@ -1,9 +1,14 @@
 package di
 
 import (
+	"context"
 	"log"
+	"time"
+
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
+	"github.com/NUTFes/SeeFT/api/lib/externals/scheduler"
 	"github.com/NUTFes/SeeFT/api/lib/externals/server"
+	"github.com/NUTFes/SeeFT/api/lib/externals/slack"
 	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
@@ -92,6 +97,18 @@ func InitializeServer() db.Client {
 		rescueUnifiedController,
 		reviewController,
 	)
+
+	// Scheduler: 5分間隔で未送信通知を flush する（goroutine で起動し即 return）
+	slackService, err := slack.NewSlackService()
+	if err != nil {
+		log.Fatalf("slack init: %v", err)
+	}
+	notificationUseCase := usecase.NewNotificationUseCase(
+		actionLogRepository, slackService,
+		userRepository, dateRepository, timeRepository,
+		taskRepository, shiftRepository, weatherRepository,
+	)
+	scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(context.Background())
 
 	// Server
 	server.RunServer(router)
