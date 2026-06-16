@@ -6,17 +6,11 @@ import (
 	"time"
 )
 
-// Job は定期実行する処理の型。
-//
-//	Go:     type Job func(ctx context.Context) error
-//	Python: Callable[[Context], Awaitable[None]]  （typing の型エイリアス）
-//	TS:     type Job = (ctx: Context) => Promise<void>
-//
-// 関数を「型」として名付けることで、scheduler は usecase を import せずに済む
-// （依存方向が di → scheduler / di → usecase の二股になる）。
+// Job は scheduler が定期実行する処理。usecase を import せず関数型で受け取り、
+// scheduler と業務ロジックを疎結合に保つ。
 type Job func(ctx context.Context) error
 
-// Scheduler は「名前・間隔・実行する処理」を保持するだけの箱。
+// Scheduler は「名前・間隔・実行する処理」を保持する。
 type Scheduler struct {
 	name     string
 	interval time.Duration
