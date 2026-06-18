@@ -93,11 +93,17 @@ _NAV_CHROME_PATTERNS = [
         r'<button\b[^>]*class="[^"]*(?:fab-toc|toc-close)[^"]*"[^>]*>.*?</button>',
         re.DOTALL | re.IGNORECASE,
     ),
+    # 折りたたみ <details> の <summary> ラベル（「○○を表示」「表示／非表示」等）。
+    # プロンプトが付ける開閉ボタンの文言で元 Doc には無い。中身(details 本体)は残す。
+    re.compile(r"<summary\b[^>]*>.*?</summary>", re.DOTALL | re.IGNORECASE),
 ]
 
 # <nav> 除去後にオーバーレイパネルへ残る目次見出し・装飾トークン。
 # これらは単独で本文に現れることはない（目次ラベル・FAB 記号）ので最後に落とす。
 _LEFTOVER_CHROME_TOKENS = re.compile(r"(?<![^\s>])(?:目次|≡|×)(?![^\s<])")
+
+# 折りたたみカードのトグルラベル（「表示／非表示」「表示/非表示」）。UI 部品で本文ではない。
+_TOGGLE_LABEL_RE = re.compile(r"表示\s*[／/]\s*非表示")
 
 
 def preprocess_generated_html(html_path: str) -> str:
@@ -139,6 +145,10 @@ def fold_cosmetic(s: str) -> str:
     内容（可読文字）の追加・削除・置換は畳まれないので、真の改変は検出され続ける。"""
     s = unicodedata.normalize("NFKC", s)
     s = s.replace("〜", "~").replace("～", "~").replace("∼", "~")
+    # 箇条書き記号の差（元 Doc の「・」↔ 生成の「-」「‐」「•」等）は内容ではなく表記。
+    # src/gen 双方に対称適用するので、ダッシュだけ違う文以外を誤って一致させることはない。
+    # カタカナ長音符「ー」は実単語の一部なので除外する。
+    s = re.sub(r"[・•·‐―−\-]", "", s)
     s = re.sub(r"\s+", "", s)
     return s
 
@@ -168,6 +178,9 @@ def html_to_plain(html_path: str, preprocess: bool = False) -> str:
     if preprocess:
         # <nav> 除去後にパネルへ残った目次見出し等の単独トークンを掃除
         out = _LEFTOVER_CHROME_TOKENS.sub(" ", out)
+        # 折りたたみカードのトグルラベル「表示／非表示」はプロンプトが付ける UI 部品で
+        # 元 Doc には無い。本文比較の前に落として誤検出（改変・追加）を防ぐ。
+        out = _TOGGLE_LABEL_RE.sub(" ", out)
     return out
 
 
@@ -410,6 +423,183 @@ def _inline_diff(src: str, gen: str) -> str:
     return "".join(c[2:] if c.startswith("  ") else f"[{c[0]}{c[2:]}]" for c in d)
 
 
+# 部門長向け分類で使う「自動整形トークン」のパターン。
+_SECTION_NUM_RE = re.compile(r"^\s*\d+\s+")  # 見出し先頭に付いた章番号「2 手順」
+_FIGURE_ONLY_RE = re.compile(r"^[\s\[\]]*(?:図|表|画像)\s*\d*\s*[\.．]?\s*$")  # 「図1.」「[] 図3.」
+# 文末に残るリスト連番・図表番号・目次のページ番号。pandoc plain が順序付きリスト・
+# キャプション・目次（「見出し 3 2.」= 見出し+ページ+連番）の数字を文末に落とす副作用で、
+# 本文ではなく採番／ナビの差。連続する数字トークン列をまとめて畳む。
+_TRAILING_NUM_RE = re.compile(r"(?:\s*(?:図|表|画像)?\s*\d+\s*[\.．]?)+\s*$")
+
+# 日本語（ひらがな・カタカナ・漢字）。マニュアル本文は日本語なので、これを一切含まない
+# 断片（Windows の画像パス `C:\Users\...\INetCache` 等、元Doc由来のゴミ）は本文ではない。
+_CJK_RE = re.compile(r"[぀-ヿ㐀-鿿]")
+# キャプション標識「図 」「表 」「画像 」（番号なしの空白付き）。図のラベルを示すだけで本文ではない。
+# 「図4」のように数字直結のインライン参照はマッチしない（本文として温存する）。
+_CAPTION_MARK_RE = re.compile(r"(?:図|表|画像)\s+")
+# 元Docから漏れた画像ファイル名の残骸「jpg]」「JPG]」「png]」等。
+_IMG_EXT_JUNK_RE = re.compile(r"(?:jpe?g|png|gif)\s*\]?", re.IGNORECASE)
+
+
+def _has_cjk(s: str) -> bool:
+    return bool(_CJK_RE.search(s))
+
+
+def _strip_structure(s: str) -> str:
+    """自動整形で入る構造トークン（章番号・角括弧・トグル語・末尾連番・キャプション標識・
+    画像ファイル名残骸）を畳んだ正規化キー。これで src と gen が一致／一方が他方に包含される
+    なら、差は「本文」ではなく「整形」だけ。fold_cosmetic で NFKC・波ダッシュ・空白も吸収する。"""
+    s = _TOGGLE_LABEL_RE.sub("", s)
+    s = _SECTION_NUM_RE.sub("", s)
+    s = _CAPTION_MARK_RE.sub("", s)
+    s = _IMG_EXT_JUNK_RE.sub("", s)
+    s = _TRAILING_NUM_RE.sub("", s)
+    s = s.replace("[", "").replace("]", "")
+    return fold_cosmetic(s)
+
+
+def classify_for_buncho(
+    additions: list[dict],
+    omissions: list[dict],
+    modifications: list[dict],
+    src_sentences: list[str],
+    gen_sentences: list[str],
+) -> dict:
+    """追加・欠落・改変を「本文差（要確認）」と「整形差／図表差（確認不要）」に振り分ける。
+
+    判定の核は 2 つ:
+      1) 構造トークンを畳んだキー (_strip_structure) で src と gen が一致 → 整形差
+      2) 整形キーが反対側の本文全体に substring で存在 → 並べ替え（実在する）= 整形差
+    どちらにも当たらない欠落・追加・改変だけが「本文差」として残る。
+    """
+    src_blob = _strip_structure(" ".join(src_sentences))
+    gen_blob = _strip_structure(" ".join(gen_sentences))
+
+    content_omissions: list[dict] = []
+    content_additions: list[dict] = []
+    content_modifications: list[dict] = []
+    format_notes: list[str] = []
+    figure_notes: list[str] = []
+
+    for o in omissions:
+        src = o["src"]
+        if _FIGURE_ONLY_RE.match(src):
+            figure_notes.append(src)  # 「図1.」等のキャプションのみ
+            continue
+        if not _has_cjk(src):
+            format_notes.append(src)  # 元Doc由来のゴミ（画像パス等）。本文ではない
+            continue
+        key = _strip_structure(src)
+        if key and key in gen_blob:
+            format_notes.append(src)  # 整形・並べ替えで実は生成HTMLに存在
+            continue
+        content_omissions.append(o)
+
+    for a in additions:
+        gen = a["gen"]
+        if _FIGURE_ONLY_RE.match(gen):
+            figure_notes.append(gen)
+            continue
+        if not _has_cjk(gen):
+            format_notes.append(gen)
+            continue
+        key = _strip_structure(gen)
+        if key and key in src_blob:
+            format_notes.append(gen)  # 元Docに存在する文の並べ替え（捏造ではない）
+            continue
+        content_additions.append(a)
+
+    for m in modifications:
+        src_key = _strip_structure(m["src"])
+        # 整形キーが一致、または元の語句が生成HTML全体に実在（並べ替え）なら整形差。
+        if src_key == _strip_structure(m["gen"]) or (src_key and src_key in gen_blob):
+            format_notes.append(m["gen"])  # 章番号付与・角括弧化・キャプション並べ替え等
+            continue
+        content_modifications.append(m)
+
+    return {
+        "content_omissions": content_omissions,
+        "content_additions": content_additions,
+        "content_modifications": content_modifications,
+        "format_notes": format_notes,
+        "figure_notes": figure_notes,
+    }
+
+
+def render_buncho_report(
+    buckets: dict,
+    fidelity: dict | None,
+) -> str:
+    """部門長（非エンジニア）向けの文章チェック結果。Slack スレッドにそのまま貼れる散文。
+    デザインは対象外、文章の欠落・改変・追加だけを日本語で提示する。"""
+    omissions = buckets["content_omissions"]
+    additions = buckets["content_additions"]
+    modifications = buckets["content_modifications"]
+    n_real = len(omissions) + len(additions) + len(modifications)
+    n_format = len(buckets["format_notes"])
+    n_figure = len(buckets["figure_notes"])
+
+    lines: list[str] = []
+    lines.append("解説マニュアル 文章チェック結果")
+    lines.append(
+        "（元の Google ドキュメントの「文章」が解説HTMLに正しく引き継がれているかの"
+        "自動チェックです。デザイン・レイアウトは対象外です。）"
+    )
+    lines.append("")
+
+    lines.append("■ 全体")
+    if fidelity is not None:
+        lines.append(
+            f"元の文章は約 {fidelity['coverage']*100:.0f}% がそのまま引き継がれています。"
+        )
+    if n_real == 0:
+        lines.append("文章の欠落・書き換え・追加は見つかりませんでした。安心して公開できます。")
+    else:
+        lines.append(
+            f"確認してほしい本文差は {n_real} 件です"
+            f"（消えたかも {len(omissions)} / 書き換わったかも {len(modifications)} / 増えたかも {len(additions)}）。"
+        )
+    lines.append(
+        f"このほか、見出し番号やレイアウト上の差が {n_format} 件、"
+        f"図番号の整理が {n_figure} 件ありますが、内容は変わっていないため確認は不要です。"
+    )
+    lines.append("")
+
+    if n_real > 0:
+        lines.append("■ 確認してほしい本文差")
+        if omissions:
+            lines.append("▼ 消えたかもしれない文（元にあって解説HTMLに見当たらない）")
+            for o in omissions:
+                lines.append(f"・元の文: 「{o['src']}」")
+            lines.append("")
+        if modifications:
+            lines.append("▼ 書き換わったかもしれない文")
+            for m in modifications:
+                lines.append(f"・元　: 「{m['src']}」")
+                lines.append(f"  生成: 「{m['gen']}」")
+            lines.append("")
+        if additions:
+            lines.append("▼ 増えたかもしれない文（元になかった文）")
+            for a in additions:
+                lines.append(f"・生成: 「{a['gen']}」")
+            lines.append("")
+    else:
+        lines.append("■ 確認してほしい本文差")
+        lines.append("なし")
+        lines.append("")
+
+    lines.append("■ 確認不要の差（参考）")
+    lines.append(
+        "見出しに番号が付いた／キャプションが […] で囲まれた／折りたたみの「表示／非表示」ボタンが"
+        "付いた、などレイアウト上の差です。本文の内容は変わっていません。"
+    )
+    lines.append(
+        "「図1」「図3」などの図番号ラベルは整理されていますが、画像そのものは解説HTMLに含まれています。"
+    )
+
+    return "\n".join(lines)
+
+
 def render_report(
     additions: list[dict],
     omissions: list[dict],
@@ -544,6 +734,11 @@ def main() -> int:
         action="store_true",
         help="表記ゆれ（〜/~・全半角・括弧・空白差）も VERDICT を NG にする（厳格）",
     )
+    parser.add_argument(
+        "--report-name",
+        default="verify_report.card-strict.md",
+        help="部門長向け文章チェック結果の出力ファイル名（Slack 貼り付け用）",
+    )
     args = parser.parse_args()
 
     manual_dir = resolve_manual_dir(args.manual_dir)
@@ -588,12 +783,26 @@ def main() -> int:
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(report + "\n")
 
+    # 部門長向け（Slack 貼り付け用）: ノイズを畳んで「本文差」だけを日本語で提示する。
+    buckets = classify_for_buncho(
+        additions, omissions, modifications, src_sentences, gen_sentences
+    )
+    buncho_report = render_buncho_report(buckets, fidelity)
+    report_path = os.path.join(manual_dir, args.report_name)
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write(buncho_report + "\n")
+
     print()
-    print("--- 検証レポート ---")
+    print("--- 検証レポート（開発用・詳細）---")
     print(report)
     print("--- ここまで ---")
     print()
-    print(f"  Output: {output_path} ({os.path.getsize(output_path)//1024}KB)")
+    print("--- 部門長向けレポート（Slack 用）---")
+    print(buncho_report)
+    print("--- ここまで ---")
+    print()
+    print(f"  詳細: {output_path} ({os.path.getsize(output_path)//1024}KB)")
+    print(f"  部門長向け: {report_path}")
 
     if is_ok(report):
         print("=== VERDICT: OK (元 Doc と HTML は機械的に一致) ===")
