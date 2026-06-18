@@ -121,9 +121,40 @@ def load_images_base64(manual_dir: str) -> dict[str, str]:
     return images
 
 
+def _resolve_image_src(src: str, images: dict[str, str]) -> str | None:
+    """`<img src="...">` の src 値がローカル画像を指すなら data URI を返す。違えば None。
+
+    card-strict では LLM が `{{fname}}` を守らず、素のファイル名 (`image1.jpg`) や
+    相対パス (`images/image1.png`, `./images/image1.png`) で src を書くことがある。
+    その揺れを決定的に吸収して必ず base64 埋め込みする保険。
+
+    引数:
+      src    : img タグの生の src 値（例: "image1.jpg" / "images/image1.png" /
+               "./images/image1.png" / "data:image/png;base64,..."）
+      images : {ファイル名 -> data URI} の辞書（load_images_base64 の返り値）
+
+    注意: 既に `data:` 化済みの src は再処理しても None を返すこと（冪等性）。
+    """
+    if src.startswith("data:"):
+        return None  # 既に埋め込み済み。再処理しても壊さない（冪等）
+    return images.get(os.path.basename(src))
+
+
 def replace_placeholders(html: str, images: dict[str, str]) -> str:
+    # 1) {{fname}} プレースホルダー（プロンプトが指示する正規ルート）
     for fname, data_uri in images.items():
         html = html.replace(f"{{{{{fname}}}}}", data_uri)
+
+    # 2) 素のファイル名・相対パスで書かれた <img src> も決定的に base64 化する保険。
+    #    LLM が {{}} を守らなかった場合（card-strict で多発）でも画像が必ず埋まる。
+    def _embed(m: "re.Match[str]") -> str:
+        quote = m.group("q")
+        data_uri = _resolve_image_src(m.group("src"), images)
+        if data_uri is None:
+            return m.group(0)
+        return f"src={quote}{data_uri}{quote}"
+
+    html = re.sub(r'src=(?P<q>["\'])(?P<src>[^"\']*)(?P=q)', _embed, html)
     return html
 
 
@@ -209,12 +240,32 @@ def main() -> int:
         default=None,
         help="使用するモデル（例: claude-opus-4-7, claude-sonnet-4-6）。未指定なら Claude Code のデフォルト",
     )
+    parser.add_argument(
+        "--embed-only",
+        action="store_true",
+        help="LLM を呼ばず、既存の出力 HTML に画像を base64 再埋め込みするだけ（決定的・再生成不要）",
+    )
     args = parser.parse_args()
 
     manual_dir = resolve_manual_dir(args.manual_dir)
     variant = args.prompt
     output_filename = "slide_claude.html" if variant == "default" else f"slide_claude.{variant}.html"
     output_path = os.path.join(manual_dir, output_filename)
+
+    # 既存 HTML への画像再埋め込みのみ（壊れた card-strict の決定的な復旧用）
+    if args.embed_only:
+        if not os.path.isfile(output_path):
+            print(f"  ERROR: 出力 HTML が見つかりません: {output_path}", file=sys.stderr)
+            return 1
+        with open(output_path, "r", encoding="utf-8") as f:
+            slide_html = f.read()
+        before = len(slide_html)
+        slide_html = replace_placeholders(slide_html, load_images_base64(manual_dir))
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(slide_html)
+        print(f"=== 画像再埋め込み（--embed-only）===")
+        print(f"  {output_path}: {before//1024}KB → {os.path.getsize(output_path)//1024}KB")
+        return 0
 
     prompt_path = _resolve_prompt_path(variant)
     system_prompt, user_prompt_template = _load_prompt_from_md(prompt_path)
