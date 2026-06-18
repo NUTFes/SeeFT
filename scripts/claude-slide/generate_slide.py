@@ -174,12 +174,20 @@ async def call_claude_sdk(
     md_content: str,
     image_files: list[str],
     model: str | None,
+    extra_instructions: str = "",
 ) -> tuple[str, dict]:
     image_list = "\n".join(f"- {f}" for f in image_files)
     user_text = user_prompt_template.format(
         image_list=image_list,
         html_content=md_content,
     )
+    # 部門長レビューの修正案など、この回だけの追加指示を末尾に注入する。
+    # 共有プロンプトを書き換えずにマニュアル単位で再生成を回すための仕組み。
+    if extra_instructions.strip():
+        user_text += (
+            "\n\n# この回の追加・修正指示（前回レビューの反映。最優先で従うこと）\n"
+            + extra_instructions.strip()
+        )
 
     # max_turns を 20 に: 大きい入力（55KB+ markdown）で Claude が tool 試行する場合に
     # disallowed_tools 拒否で turn が消費されるため、余裕大きめ。
@@ -278,6 +286,14 @@ def main() -> int:
     md_content, image_files = load_source(manual_dir)
     print(f"  Markdown: {len(md_content)//1024}KB, Images: {len(image_files)} files")
 
+    # マニュアルごとの追加・修正指示（部門長レビューの反映用）。あれば末尾に注入する。
+    extra_instructions = ""
+    instr_path = os.path.join(manual_dir, "instructions.md")
+    if os.path.isfile(instr_path):
+        with open(instr_path, "r", encoding="utf-8") as f:
+            extra_instructions = f.read()
+        print(f"  追加指示: {instr_path} ({len(extra_instructions)} chars)")
+
     response_text, _usage = anyio.run(
         call_claude_sdk,
         system_prompt,
@@ -285,6 +301,7 @@ def main() -> int:
         md_content,
         image_files,
         args.model,
+        extra_instructions,
     )
 
     slide_html = extract_html(response_text)
