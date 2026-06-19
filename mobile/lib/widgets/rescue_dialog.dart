@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:seeft_mobile/configs/importer.dart';
-import 'package:flutter/services.dart';
 
 //1ページ目とその表示
 Future<void> openRescueDialog(BuildContext context,) async {

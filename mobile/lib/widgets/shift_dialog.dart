@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
