@@ -1,8 +1,5 @@
-import 'dart:developer';
 
 import 'package:seeft_mobile/configs/importer.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 
