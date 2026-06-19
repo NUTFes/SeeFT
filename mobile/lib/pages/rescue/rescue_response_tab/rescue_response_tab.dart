@@ -40,7 +40,7 @@ List<dynamic>? _getCashedRescueResponses(int? userID) {
     // userIDがnullの場合は全てのレスキューのレスポンスを取得
     cachedData = rescueBox.get('all_rescue_responses');
   } else {
-    cachedData = rescueBox.get('rescue_responses_by_${userID}');
+    cachedData = rescueBox.get('rescue_responses_by_$userID');
   }
   // final List<dynamic>? cachedData = rescueBox.get('rescue_responses_by_${userID}');
   logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');

@@ -26,7 +26,7 @@ class _SignInPageState extends State<SignInPage> {
         // userIdをstoreにset出来てるか確認
         var userID = await store.getUserID();
         setState(() {
-          infoText = "Your ID : ${userID}";
+          infoText = "Your ID : $userID";
         });
         Navigator.pushNamedAndRemoveUntil(
             context,

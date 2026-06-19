@@ -44,7 +44,7 @@ Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherI
 List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
   // キャッシュからデータを取得
   logger.i('=== キャッシュからデータを取得します ===');
-  final List<dynamic>? cachedData = shiftCardBox.get('${dayID}_${weatherID}');
+  final List<dynamic>? cachedData = shiftCardBox.get('${dayID}_$weatherID');
   logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');
   
   // キャッシュデータがない場合は表示データをnullに設定する
@@ -278,7 +278,7 @@ class _MyShiftPageState extends State<MyShiftPage>
       }
       
       // hiveのキャッシュデータをフェッチデータで更新
-      shiftCardBox.put('${dayID}_${weatherID}', fetchedData);
+      shiftCardBox.put('${dayID}_$weatherID', fetchedData);
       // 最新データに存在しない既読キーを掃除
       if (fetchedShiftCardDataList != null) {
         _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
