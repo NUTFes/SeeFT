@@ -27,7 +27,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
       if (res is List) {
         logger.i('Response is List with ${res.length} items');
         if (res.isNotEmpty) {
-          logger.i('First item: ${res}');
+          logger.i('First item: $res');
         }
       } else {
         logger.w('Response is not a List, it is: ${res.runtimeType}');
