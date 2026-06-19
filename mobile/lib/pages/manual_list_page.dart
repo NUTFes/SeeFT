@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 
 class ManualListPage extends StatefulWidget {
+  const ManualListPage({super.key});
+
   @override
   _ManualListPageState createState() => _ManualListPageState();
 }

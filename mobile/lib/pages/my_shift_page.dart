@@ -60,6 +60,8 @@ List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
 }
 
 class MyShiftPage extends StatefulWidget {
+  const MyShiftPage({super.key});
+
   @override
   _MyShiftPageState createState() => _MyShiftPageState();
 }

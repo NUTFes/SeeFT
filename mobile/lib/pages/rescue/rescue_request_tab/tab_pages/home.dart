@@ -8,6 +8,8 @@ class RescueRequestTabHome extends StatelessWidget {
   // 環境変数から委員長の名前と電話番号を取得
   final String chairpersonName = constant.chairpersonName;
   final String chairpersonPhoneNumber = constant.chairpersonPhoneNumber;
+
+  RescueRequestTabHome({super.key});
   @override
   Widget build(BuildContext context) {
     return Center(
