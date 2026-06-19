@@ -7,7 +7,7 @@ import 'package:seeft_mobile/widgets/custom_snack_bar.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 
 class RescueRequestTabQuestionPage extends StatelessWidget {
-  RescueRequestTabQuestionPage({
+  const RescueRequestTabQuestionPage({
     super.key,
   });
   
