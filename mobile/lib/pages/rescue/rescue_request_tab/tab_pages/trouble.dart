@@ -103,16 +103,16 @@ class RescueRequestTabTroublePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 選択されたタスクを格納する変数
-    RescueTaskDropdownMenuItem _selectedTask = RescueTaskDropdownMenuItem(
+    RescueTaskDropdownMenuItem selectedTask = RescueTaskDropdownMenuItem(
       id: 0, // 初期値はタスク外(実際の「タスク外」のidは3だが、DropDown内でのidの重複を避けるために0としている)
       taskName: 'タスク外',
     );
     // トラブルの詳細を格納する変数
-    String _detail = '';
+    String detail = '';
     // 発生場所を格納する変数
-    String _place = '';
+    String place = '';
     // 送信中かどうかを示す変数
-    bool _isSending = false;
+    bool isSending = false;
 
     return FutureBuilder<List<dynamic>?>(
       future: fetchData(),
@@ -254,13 +254,13 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                         StatefulBuilder(
                           builder: (context, setState) {
                             return CustomDropdownButton<String>(
-                              value: _selectedTask.id.toString(),
+                              value: selectedTask.id.toString(),
                               items: dropdownMenuItems,
                               isDense: true, // 高さをコンパクトにする
                               onChanged: (value) {
                                 setState(() {
                                   // 選択されたタスクを更新
-                                  _selectedTask = tasks.firstWhere(
+                                  selectedTask = tasks.firstWhere(
                                     (task) => task.id.toString() == value,
                                     orElse: () => RescueTaskDropdownMenuItem(
                                       id: 0, // タスク外
@@ -268,7 +268,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                                     ),
                                   );
                                 });
-                                logger.i("選択されたタスク: ${_selectedTask.taskName}");
+                                logger.i("選択されたタスク: ${selectedTask.taskName}");
                               },
                               hintText: 'タスクを選択してください',
                             );
@@ -292,7 +292,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                               onChanged: (String value) {
                                 // 入力されたときの処理
                                 setState(() {
-                                  _place = value;
+                                  place = value;
                                 });
                                 logger.i("入力された場所: $value");
                               },
@@ -317,7 +317,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                               onChanged: (String value) {
                                 // 入力されたときの処理
                                 setState(() {
-                                  _detail = value;
+                                  detail = value;
                                 });
                                 logger.i("入力された詳細: $value");
                               },
@@ -337,17 +337,17 @@ class RescueRequestTabTroublePage extends StatelessWidget {
               StatefulBuilder(
                 builder: (context, setState) {
                   return CustomElevatedButton(
-                    isDisabled: _isSending,
+                    isDisabled: isSending,
                     onPressed: () async {
                       setState(() {
-                        _isSending = true;
+                        isSending = true;
                       });
                       // レスキューを送信する
                       final isSuccess = await _sendRescueRequest(
                         context,
-                        _selectedTask,
-                        _place,
-                        _detail
+                        selectedTask,
+                        place,
+                        detail
                       );
                       logger.i("レスキューを送信しました");
                       if(isSuccess){
@@ -355,11 +355,11 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                         Navigator.of(context).popUntil((route) => route.isFirst);
                       }else{
                         setState(() {
-                          _isSending = false;
+                          isSending = false;
                         });
                       }
                     },
-                    label: _isSending ? "送信中..." : "送信",
+                    label: isSending ? "送信中..." : "送信",
                   );
                 }
               ),
