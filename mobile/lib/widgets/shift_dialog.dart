@@ -107,7 +107,7 @@ openShiftDialog(
       return SimpleDialog(
         contentPadding: EdgeInsets.zero,
         titlePadding: EdgeInsets.zero,
-        title: Container(
+        title: SizedBox(
           height: 550,
           child: Scaffold(
             appBar: AppBar(
