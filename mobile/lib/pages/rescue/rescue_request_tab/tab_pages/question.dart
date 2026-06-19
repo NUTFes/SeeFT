@@ -8,8 +8,8 @@ import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 
 class RescueRequestTabQuestionPage extends StatelessWidget {
   RescueRequestTabQuestionPage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
   
   // レスキューを送信する関数
   Future<bool> _sendRescueRequest(

@@ -3,7 +3,7 @@ import 'package:seeft_mobile/pages/rescue/rescue_request_tab/rescue_request_tab.
 import 'package:seeft_mobile/pages/rescue/rescue_response_tab/rescue_response_tab.dart';
 
 class RescuePage extends StatefulWidget {
-  const RescuePage({Key? key}) : super(key: key);
+  const RescuePage({super.key});
   
   @override
   _RescuePageState createState() => _RescuePageState();
