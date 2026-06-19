@@ -2,6 +2,8 @@ import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/widgets/app_bar.dart';
 
 class SignInPage extends StatefulWidget {
+  const SignInPage({super.key});
+
   @override
   _SignInPageState createState() => _SignInPageState();
 }

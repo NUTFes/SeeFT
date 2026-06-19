@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 
 class UsersPage extends StatefulWidget {
+  const UsersPage({super.key});
+
   @override
   _UsersPageState createState() => _UsersPageState();
 }

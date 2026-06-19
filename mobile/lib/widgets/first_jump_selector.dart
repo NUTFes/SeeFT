@@ -3,6 +3,8 @@ import 'package:seeft_mobile/pages/sign_in_page.dart';
 import 'package:seeft_mobile/widgets/layout.dart';
 
 class FirstJumpSelector extends StatefulWidget {
+  const FirstJumpSelector({super.key});
+
   @override
   _FirstJumpSelectorState createState() => new _FirstJumpSelectorState();
 }
