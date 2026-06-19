@@ -77,19 +77,14 @@ class TroubleRescueResponse extends RescueResponse {
   final TroubleContent content;
 
   TroubleRescueResponse({
-    required int id,
-    required String userName,
-    required String time,
-    required String status,
-    required String response,
+    required super.id,
+    required super.userName,
+    required super.time,
+    required super.status,
+    required super.response,
     required this.content,
   }) : super(
           type: 'trouble',
-          id: id,
-          userName: userName,
-          time: time,
-          status: status,
-          response: response,
         );
 
   // factory TroubleRescueResponse.fromJson(Map<String, dynamic> json) {
@@ -139,19 +134,14 @@ class QuestionRescueResponse extends RescueResponse {
   final QuestionContent content;
 
   QuestionRescueResponse({
-    required int id,
-    required String userName,
-    required String time,
-    required String status,
-    required String response,
+    required super.id,
+    required super.userName,
+    required super.time,
+    required super.status,
+    required super.response,
     required this.content,
   }) : super(
           type: 'question',
-          id: id,
-          userName: userName,
-          time: time,
-          status: status,
-          response: response,
         );
 
   // factory QuestionRescueResponse.fromJson(Map<String, dynamic> json) {
@@ -210,19 +200,14 @@ class ShorthandedRescueResponse extends RescueResponse {
   final ShorthandedContent content;
 
   ShorthandedRescueResponse({
-    required int id,
-    required String userName,
-    required String time,
-    required String status,
-    required String response,
+    required super.id,
+    required super.userName,
+    required super.time,
+    required super.status,
+    required super.response,
     required this.content,
   }) : super(
           type: 'shorthanded',
-          id: id,
-          userName: userName,
-          time: time,
-          status: status,
-          response: response,
         );
 
   // factory ShorthandedRescueResponse.fromJson(Map<String, dynamic> json) {

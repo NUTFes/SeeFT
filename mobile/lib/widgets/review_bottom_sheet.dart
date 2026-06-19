@@ -40,7 +40,7 @@ class ReviewForm extends StatefulWidget {
   final String taskName;
   final int userID;
 
-  const ReviewForm({Key? key, required this.taskName, required this.userID}) : super(key: key);
+  const ReviewForm({super.key, required this.taskName, required this.userID});
 
   @override
   State<ReviewForm> createState() => _ReviewFormState();

@@ -58,7 +58,7 @@ List<dynamic>? _getCashedRescueResponses(int? userID) {
 }
 
 class RescueResponseTab extends StatefulWidget {
-  const RescueResponseTab({Key? key}) : super(key: key);
+  const RescueResponseTab({super.key});
 
   @override
   _RescueResponseTabState createState() => _RescueResponseTabState();

@@ -5,8 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 class EtcPage extends StatelessWidget {
 
   EtcPage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
   
   // 環境変数からSeeFTの操作説明と全体シフトのURLを取得
   final String seeftInstructionsUrl = constant.seeftInstructionsUrl;

@@ -8,7 +8,7 @@ import 'package:seeft_mobile/pages/etc_page.dart';
 import 'package:seeft_mobile/pages/rescue/rescue_page.dart';
 
 class Layout extends StatefulWidget {
-  const Layout({Key? key}) : super(key: key);
+  const Layout({super.key});
 
   @override
   State<Layout> createState() => _LayoutState();

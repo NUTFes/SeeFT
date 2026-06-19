@@ -10,8 +10,8 @@ import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 
 class RescueRequestTabTroublePage extends StatelessWidget {
   RescueRequestTabTroublePage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
   
   // ユーザIDに紐づくタスクを取得する関数
   Future<List<RescueTaskDropdownMenuItem>?> fetchData() async {
