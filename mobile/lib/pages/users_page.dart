@@ -80,7 +80,7 @@ class _UsersPageState extends State<UsersPage> {
                     itemCount: usersLength,
                     itemBuilder: (BuildContext context, int index) {
                       if (userList[index]["bureauID"] == isSelectedValue) {
-                        return Container(
+                        return SizedBox(
                             height: 40,
                             child: _manualItem(snapshot.data, index, context));
                       } else {
@@ -140,7 +140,7 @@ class _UsersPageState extends State<UsersPage> {
       context: context,
       builder: (BuildContext context) => new AlertDialog(
         title: new Text('ユーザ情報'),
-        content: new Container(
+        content: new SizedBox(
           height: 200,
           width: 300,
           child: ListView(children: <Widget>[

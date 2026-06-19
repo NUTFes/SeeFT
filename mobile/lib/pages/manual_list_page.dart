@@ -45,7 +45,7 @@ class _ManualListPageState extends State<ManualListPage> {
                   child: ListView.builder(
                     itemCount: manualLength,
                     itemBuilder: (BuildContext context, int index) {
-                      return Container(
+                      return SizedBox(
                         height: 40,
                         child: _manualItem(snapshot.data, index, context));
                     },
