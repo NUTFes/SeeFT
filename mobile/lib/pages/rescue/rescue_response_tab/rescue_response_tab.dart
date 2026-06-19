@@ -341,20 +341,20 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
   
   // レスキューのレスポンスのステータスに応じたアイコンを表示するウィジェット
   Widget _statusIcon(String status) {
-    Color _iconColor = AppColors.error;
-    String _iconText = "未対応";
+    Color iconColor = AppColors.error;
+    String iconText = "未対応";
     switch (status) {
       case 'done':
-        _iconColor = Color(0xFF325c23);
-        _iconText = "対応済";
+        iconColor = Color(0xFF325c23);
+        iconText = "対応済";
         break;
       case 'inProgress':
-        _iconColor = Color(0xFF3A73E6);
-        _iconText = "対応中";
+        iconColor = Color(0xFF3A73E6);
+        iconText = "対応中";
         break;
       case 'todo':
-        _iconColor = AppColors.error;
-        _iconText = "未対応";
+        iconColor = AppColors.error;
+        iconText = "未対応";
         break;
     }
     
@@ -362,12 +362,12 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
       padding: EdgeInsets.all(4.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: _iconColor, width: 2.0),
+        border: Border.all(color: iconColor, width: 2.0),
       ),
       child: Text(
-        _iconText,
+        iconText,
         style: TextStyle(
-          color: _iconColor,
+          color: iconColor,
           fontWeight: FontWeight.bold,
           fontSize: AppFontSizes.sm,
         ),

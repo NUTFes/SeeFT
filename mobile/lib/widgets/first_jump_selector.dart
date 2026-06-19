@@ -16,11 +16,11 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
 
   Future<bool> getPrefRead() async {
     try {
-      final _isUserID = await store.isUserID();
-      final _userID = await store.getUserID();
-      logger.w(_userID);
-      logger.w(_isUserID);
-      return _isUserID;
+      final isUserID = await store.isUserID();
+      final userID = await store.getUserID();
+      logger.w(userID);
+      logger.w(isUserID);
+      return isUserID;
     } catch (e) {
       print(e);
       return false;
@@ -30,7 +30,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
   @override
   Widget build(BuildContext context) {
     logger.i('navigated Splash.');
-    final _materialTheme = MaterialTheme(Typography().black); // Typography() は変更が必要な可能性があります
+    final materialTheme = MaterialTheme(Typography().black); // Typography() は変更が必要な可能性があります
 
     return FutureBuilder(
       future: getPrefRead(),
@@ -52,8 +52,8 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
 
           app = new MaterialApp(
             title: constant.appName,
-            theme: _materialTheme.light(), // ライトモードのテーマ
-              darkTheme: _materialTheme.dark(), // ダークモードのテーマ
+            theme: materialTheme.light(), // ライトモードのテーマ
+              darkTheme: materialTheme.dark(), // ダークモードのテーマ
               themeMode: ThemeMode.light, // ライトモードを適用
             initialRoute: homeWidget,
             routes: {
@@ -64,8 +64,8 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
         } else if (snapshot.hasError) {
           app = new MaterialApp(
             title: constant.appName,
-            theme: _materialTheme.light(), // ライトモードのテーマ
-              darkTheme: _materialTheme.dark(), // ダークモードのテーマ
+            theme: materialTheme.light(), // ライトモードのテーマ
+              darkTheme: materialTheme.dark(), // ダークモードのテーマ
               themeMode: ThemeMode.light, // ライトモードを適用
             home: Scaffold(
               appBar: AppBar(

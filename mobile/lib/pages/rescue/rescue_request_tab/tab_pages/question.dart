@@ -44,9 +44,9 @@ class RescueRequestTabQuestionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 質問内容を格納する変数
-    String _question = '';
+    String question = '';
     // 送信中かどうかを示す変数
-    bool _isSending = false;
+    bool isSending = false;
 
     return Column(
       spacing: 8.0,  // 子要素間のスペース
@@ -89,7 +89,7 @@ class RescueRequestTabQuestionPage extends StatelessWidget {
                         onChanged: (String value) {
                           // 入力されたときの処理
                           setState(() {
-                            _question = value;
+                            question = value;
                           });
                           logger.i("入力された場所: $value");
                         },
@@ -109,15 +109,15 @@ class RescueRequestTabQuestionPage extends StatelessWidget {
         StatefulBuilder(
           builder: (context, setState) {
             return CustomElevatedButton(
-              isDisabled: _isSending,
+              isDisabled: isSending,
               onPressed: () async {
                 setState(() {
-                  _isSending = true;
+                  isSending = true;
                 });
                 // レスキューを送信する
                 final isSuccess = await _sendRescueRequest(
                   context,
-                  _question,
+                  question,
                 );
                 logger.i("レスキューを送信しました");
                 if(isSuccess){
@@ -125,11 +125,11 @@ class RescueRequestTabQuestionPage extends StatelessWidget {
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 }else{
                   setState(() {
-                    _isSending = false;
+                    isSending = false;
                   });
                 }
               },
-              label: _isSending ? "送信中..." : "送信",
+              label: isSending ? "送信中..." : "送信",
             );
           }
         ),

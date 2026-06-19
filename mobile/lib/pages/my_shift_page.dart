@@ -327,8 +327,8 @@ class _MyShiftPageState extends State<MyShiftPage>
     // 各シフトカードに対するレビュー処理
     shiftCardDataList.data.forEach((shiftCard) {
       // シフトカードのタスクが既にレビュー済みかどうかを確認
-      final _isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
-      if(_isReviewed){
+      final isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
+      if(isReviewed){
         print("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
         return;
       }
@@ -340,8 +340,8 @@ class _MyShiftPageState extends State<MyShiftPage>
       print("現在時刻: $now, シフト終了時刻: $shiftEndTime");
       
       // 対象のタスクが終了しているかどうかを判定
-      final _isFinished = now.isAfter(shiftEndTime);
-      if (_isFinished) {
+      final isFinished = now.isAfter(shiftEndTime);
+      if (isFinished) {
         // 各シフトカードに対するレビュー処理を実行
         ReviewBottomSheet.show(
           context,
