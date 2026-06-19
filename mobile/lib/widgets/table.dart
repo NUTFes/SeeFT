@@ -18,25 +18,25 @@ class ShiftTable {
           TableRow(children: [
             TableCell(
                 child: Container(
+              alignment: Alignment.center,
+              color: Colors.orangeAccent,
               child: Text(
                 "日時",
                 style: TextStyle(
                   color: Colors.white,
                 ),
               ),
-              alignment: Alignment.center,
-              color: Colors.orangeAccent,
             )),
             TableCell(
               child: Container(
+                alignment: Alignment.center,
+                color: Colors.orangeAccent,
                 child: Text(
                   "シフト",
                   style: TextStyle(
                     color: Colors.white,
                   ),
                 ),
-                alignment: Alignment.center,
-                color: Colors.orangeAccent,
               ),
             )
           ]),

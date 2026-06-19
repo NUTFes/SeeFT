@@ -160,6 +160,7 @@ class _ReviewFormState extends State<ReviewForm> {
           ),
           const SizedBox(height: 8),
           Visibility(
+            visible: _isFailed,
             child: Text(
               "送信に失敗しました。もう一度お試しください。",
               style: TextStyle(
@@ -167,7 +168,6 @@ class _ReviewFormState extends State<ReviewForm> {
                 fontSize: AppFontSizes.sm,
               )
             ),
-            visible: _isFailed,
           ),
           Row(
             spacing: 8.0,

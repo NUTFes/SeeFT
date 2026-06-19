@@ -270,13 +270,6 @@ class _SignInPageState extends State<SignInPage> {
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         child: ElevatedButton(
-                          child: const Text(
-                            'ログイン',
-                            style: TextStyle(
-                              fontSize: AppFontSizes.sm,
-                              color: AppColors.textWhite,
-                            ),
-                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.main,
                             padding: const EdgeInsets.symmetric(
@@ -287,6 +280,13 @@ class _SignInPageState extends State<SignInPage> {
                           onPressed: () async {
                             _signIn();
                           },
+                          child: const Text(
+                            'ログイン',
+                            style: TextStyle(
+                              fontSize: AppFontSizes.sm,
+                              color: AppColors.textWhite,
+                            ),
+                          ),
                         ),
                       ),
                       Container(
