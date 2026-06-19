@@ -72,7 +72,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -85,7 +85,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -99,7 +99,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -114,7 +114,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -129,7 +129,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -144,7 +144,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -159,7 +159,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -174,7 +174,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -197,7 +197,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -209,7 +209,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -221,7 +221,7 @@ class Api {
     } catch (err) {
       logger.e(err);
       // calling api.get みたいに呼び出し元参照できるようにしたい
-      throw err;
+      rethrow;
     }
   }
 
@@ -232,7 +232,7 @@ class Api {
       return await get(url);
     } catch (err) {
       logger.e(err);
-      throw err;
+      rethrow;
     }
   }
 
