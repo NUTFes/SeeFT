@@ -36,6 +36,11 @@ dependencies:
   url_launcher: ^6.3.1
   hive_flutter: ^1.1.0
 
+  # main.dart / 各ページが直接 import するため依存に明示 (depend_on_referenced_packages)
+  flutter_web_plugins:
+    sdk: flutter
+  collection: ^1.19.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
