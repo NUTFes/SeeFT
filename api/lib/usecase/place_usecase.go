@@ -57,6 +57,9 @@ func (u *placeUseCase) GetPlaces(c context.Context) ([]entity.Place, error) {
 func (u *placeUseCase) GetPlaceByID(c context.Context, id string) (entity.Place, error) {
 	var place entity.Place
 	row, err := u.rep.Find(c, id)
+	if err != nil {
+		return place, err
+	}
 	err = row.Scan(
 		&place.ID,
 		&place.Place,
@@ -97,6 +100,9 @@ func (u *placeUseCase) UpdatePlace(c context.Context, id string, placeName strin
 	var place entity.Place
 
 	row, err := u.rep.Find(c, id)
+	if err != nil {
+		return place, err
+	}
 	err = row.Scan(
 		&place.ID,
 		&place.Place,

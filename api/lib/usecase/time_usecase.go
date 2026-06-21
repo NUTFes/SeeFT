@@ -51,6 +51,9 @@ func (b *timeUseCase) GetTimes(c context.Context) ([]entity.Time, error) {
 func (b *timeUseCase) GetTimeByID(c context.Context, id string) (entity.Time, error) {
 	var time entity.Time
 	row, err := b.rep.Find(c, id)
+	if err != nil {
+		return time, err
+	}
 	err = row.Scan(
 		&time.ID,
 		&time.Time,
