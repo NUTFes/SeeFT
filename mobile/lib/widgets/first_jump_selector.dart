@@ -6,7 +6,7 @@ class FirstJumpSelector extends StatefulWidget {
   const FirstJumpSelector({super.key});
 
   @override
-  _FirstJumpSelectorState createState() => new _FirstJumpSelectorState();
+  State<FirstJumpSelector> createState() => new _FirstJumpSelectorState();
 }
 
 class _FirstJumpSelectorState extends State<FirstJumpSelector> {

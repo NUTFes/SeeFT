@@ -10,7 +10,7 @@ class ManualListPage extends StatefulWidget {
   const ManualListPage({super.key});
 
   @override
-  _ManualListPageState createState() => _ManualListPageState();
+  State<ManualListPage> createState() => _ManualListPageState();
 }
 
 class _ManualListPageState extends State<ManualListPage> {
