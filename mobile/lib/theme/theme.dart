@@ -345,7 +345,7 @@ class MaterialTheme {
       displayColor: colorScheme.onSurface,
     ),
     // textTheme: GoogleFonts.mPlus1pTextTheme(Theme.of(context).textTheme),  
-    scaffoldBackgroundColor: colorScheme.background,
+    scaffoldBackgroundColor: colorScheme.surface,
     canvasColor: colorScheme.surface,
     pageTransitionsTheme: const PageTransitionsTheme( // 画面遷移時のアニメーションをiOS風にする
       builders: <TargetPlatform, PageTransitionsBuilder>{

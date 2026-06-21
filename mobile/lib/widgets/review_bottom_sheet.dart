@@ -17,7 +17,7 @@ class ReviewBottomSheet {
       context: context,
       isScrollControlled: true, // 高さを自由に調整
       backgroundColor: AppColors.base,
-      barrierColor: Colors.black.withOpacity(0.2), // ← デフォルト0.54 → 薄めに調整
+      barrierColor: Colors.black.withValues(alpha: 0.2), // ← デフォルト0.54 → 薄めに調整
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),

@@ -193,8 +193,8 @@ void _openPhoneApp(String telNumber) {
 }
 
 Future<void> _launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
+  if (await canLaunchUrl(Uri.parse(url))) {
+     await launchUrl(Uri.parse(url));
   } else {
     final Error error = ArgumentError('Could not launch $url');
     throw error;

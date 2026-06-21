@@ -24,8 +24,8 @@ class EtcPage extends StatelessWidget {
           logger.i("操作説明が選択されました");
           // SeeFTの操作説明のスライドを開く
           final url = seeftInstructionsUrl;
-          if (await canLaunch(url)) {
-            await launch(url);
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url));
           } else {
             final Error error = ArgumentError('Could not launch $url');
             throw error;
@@ -40,8 +40,8 @@ class EtcPage extends StatelessWidget {
           logger.i("全体シフトが選択されました");
           // 全体シフトのURLを開く
           final url = wholeShiftUrl;
-          if (await canLaunch(url)) {
-            await launch(url);
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url));
           } else {
             final Error error = ArgumentError('Could not launch $url');
             throw error;

@@ -11,8 +11,8 @@ getShiftDetail(workId, userId, date, weather, time) async {
 }
 
 _launchURL(url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
+  if (await canLaunchUrl(Uri.parse(url))) {
+    await launchUrl(Uri.parse(url));
   } else {
     throw 'Unable to launch url $url';
   }
