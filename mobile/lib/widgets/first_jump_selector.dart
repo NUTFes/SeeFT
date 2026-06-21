@@ -39,7 +39,18 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         logger.i('===============================');
         logger.i(snapshot.connectionState);
-        Widget? app;
+        // 読み込み中（waiting）のデフォルト表示。hasData / hasError 時に上書きされる
+        Widget app = MaterialApp(
+          title: constant.appName,
+          theme: materialTheme.light(),
+          darkTheme: materialTheme.dark(),
+          themeMode: ThemeMode.light,
+          home: Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.main),
+            ),
+          ),
+        );
         if (snapshot.hasData) {
           var isUserID = snapshot.data;
           logger.i(snapshot.connectionState);
