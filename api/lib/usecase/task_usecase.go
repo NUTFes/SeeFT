@@ -41,7 +41,7 @@ func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -101,7 +101,7 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -134,7 +134,7 @@ func (b *taskUseCase) GetTasksByUserID(c context.Context, userID string) ([]enti
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(

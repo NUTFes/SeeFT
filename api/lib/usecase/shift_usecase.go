@@ -87,7 +87,7 @@ func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -297,7 +297,7 @@ func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.S
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -409,7 +409,7 @@ func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id st
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -520,7 +520,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	if err != nil {
 		return shiftUsers, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		// JOINで取得したユーザー情報を直接Scan（個別SQLは不要、passwordは取得しない）
@@ -596,7 +596,7 @@ func (a *shiftUseCase) GetShiftsAdmin(c context.Context) ([]entity.ShiftAdmin, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -744,7 +744,7 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeather(c context.Context, date st
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -777,7 +777,7 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeatherAndTime(c context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -1336,7 +1336,7 @@ func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) e
 		log.Printf("failed to send request to GAS: %v", err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("GAS returned non-OK status: %d", resp.StatusCode)
@@ -1378,7 +1378,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		if err != nil {
 			return errors.Wrap(err, "ユーザー一括取得失敗")
 		}
-		defer userRows.Close()
+		defer func() { _ = userRows.Close() }()
 
 		for userRows.Next() {
 			var user entity.User
@@ -1400,7 +1400,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		if err != nil {
 			return errors.Wrap(err, "タスク一括取得失敗")
 		}
-		defer taskRows.Close()
+		defer func() { _ = taskRows.Close() }()
 
 		for taskRows.Next() {
 			var task entity.Task
@@ -1572,7 +1572,7 @@ func (a *shiftUseCase) loadGradeMap(ctx context.Context) (map[int]string, error)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var grade entity.Grade
@@ -1591,7 +1591,7 @@ func (a *shiftUseCase) loadBureauMap(ctx context.Context) (map[int]string, error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var bureau entity.Bureau

@@ -60,7 +60,7 @@ func (n *notificationUseCase) ProcessUnsentNotifications(ctx context.Context) er
 	if err != nil {
 		return errors.Wrapf(err, "failed to get unsent logs")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	// 2. ログを読み込んでエンティティに変換
 	var logs []entity.ActionLog
@@ -212,7 +212,7 @@ func (n *notificationUseCase) loadTimeMap(ctx context.Context) (map[int]entity.T
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get all times")
 	}
-	defer timeRow.Close()
+	defer func() { _ = timeRow.Close() }()
 
 	for timeRow.Next() {
 		var time entity.Time

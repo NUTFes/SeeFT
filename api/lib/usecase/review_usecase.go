@@ -34,7 +34,7 @@ func (u *reviewUseCase) GetReviewsGAS(ctx context.Context) ([]entity.ReviewGAS, 
 	if err != nil {
 		return nil, errors.Wrap(err, "reviewRep.AllWithDetails")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var res []entity.ReviewGAS
 	for rows.Next() {

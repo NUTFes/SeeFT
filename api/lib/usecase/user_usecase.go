@@ -43,7 +43,7 @@ func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var slackUserID sql.NullString

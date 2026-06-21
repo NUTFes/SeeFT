@@ -34,7 +34,7 @@ func (u *placeUseCase) GetPlaces(c context.Context) ([]entity.Place, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(

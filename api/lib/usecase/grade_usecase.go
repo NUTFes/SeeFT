@@ -31,7 +31,7 @@ func (u *gradeUseCase) GetGrades(c context.Context) ([]entity.Grade, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(

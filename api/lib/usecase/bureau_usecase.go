@@ -31,7 +31,7 @@ func (a *bureauUseCase) GetBureaus(c context.Context) ([]entity.Bureau, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
