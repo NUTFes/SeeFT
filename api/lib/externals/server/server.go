@@ -1,13 +1,14 @@
 package server
 
 import (
+	"net/http"
+	"os"
+
 	_ "github.com/NUTFes/SeeFT/api/docs"
 	"github.com/NUTFes/SeeFT/api/lib/router"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"net/http"
-	"os"
 )
 
 func RunServer(router router.Router) {
@@ -39,5 +40,5 @@ func RunServer(router router.Router) {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// サーバー起動
-	e.Start(":1234")
+	e.Logger.Fatal(e.Start(":1234"))
 }
