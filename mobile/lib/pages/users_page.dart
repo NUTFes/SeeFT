@@ -42,8 +42,8 @@ class _UsersPageState extends State<UsersPage> {
       body: FutureBuilder(
         future: getData(),
         builder: (ctx, snapshot) {
-          if (snapshot.connectionState == AsyncSnapshot.waiting()) {
-            logger.w("message");
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            logger.i("Loading user list...");
           }
           if (!snapshot.hasData) {
             // 待機画面を表示
