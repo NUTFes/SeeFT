@@ -7,7 +7,11 @@ linters:
   settings:
     revive:
       severity: warning
-    gosec:
+    gosec: {}
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0
 
 run:
   timeout: 5m
