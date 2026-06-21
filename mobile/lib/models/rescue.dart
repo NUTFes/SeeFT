@@ -1,4 +1,5 @@
 // レスキュー画面のタスクのドロップダウンの選択肢として使用するデータモデル
+import 'package:seeft_mobile/configs/importer.dart';
 class RescueTaskDropdownMenuItem {
   final int id;
   final String taskName;
@@ -89,7 +90,7 @@ class TroubleRescueResponse extends RescueResponse {
 
   // factory TroubleRescueResponse.fromJson(Map<String, dynamic> json) {
   factory TroubleRescueResponse.fromJson(dynamic json) {
-    print(json);
+    logger.d(json); 
     return TroubleRescueResponse(
       id: json['id'],
       userName: json['user_name'],

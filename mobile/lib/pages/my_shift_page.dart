@@ -302,7 +302,7 @@ class _MyShiftPageState extends State<MyShiftPage>
   // レビューを表示する
   void _showReviewFormIfNeeded(ShiftCardDataList? shiftCardDataList, int dayID) {
     if(shiftCardDataList == null) {
-      print("シフトカードデータがありません. レビューを表示しません.");
+      logger.w("シフトカードデータがありません. レビューを表示しません.");
       return;
     }
     
@@ -331,15 +331,15 @@ class _MyShiftPageState extends State<MyShiftPage>
       // シフトカードのタスクが既にレビュー済みかどうかを確認
       final isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
       if(isReviewed){
-        print("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
+        logger.d("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
         return;
       }
-      print("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
+      logger.d("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
       
       // シフトカードからタスクの終了時刻を取得
       final String endTime = shiftCard.endTime.padLeft(5, '0'); // 1桁時間の場合に備えて0埋め
       DateTime shiftEndTime = DateTime.parse("$targetDate $endTime");
-      print("現在時刻: $now, シフト終了時刻: $shiftEndTime");
+      logger.d("現在時刻: $now, シフト終了時刻: $shiftEndTime");
       
       // 対象のタスクが終了しているかどうかを判定
       final isFinished = now.isAfter(shiftEndTime);
