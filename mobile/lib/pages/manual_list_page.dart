@@ -78,9 +78,10 @@ class _ManualListPageState extends State<ManualListPage> {
           ),
         ),
         onTap: () async {
-          if (await canLaunch(manuals[index]["url"].toString())) {
-            await launch((manuals[index]["url"].toString()));
+          if (await canLaunchUrl(Uri.parse(manuals[index]["url"].toString()))) {
+            await launchUrl(Uri.parse((manuals[index]["url"].toString())));
           }
+          
         },
       ),
     );

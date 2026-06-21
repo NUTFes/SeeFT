@@ -5,7 +5,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
   return showDialog<void>(
     context: context,
     barrierDismissible: false, // user must tap button!
-    barrierColor: Colors.black.withOpacity(0.5),
+    barrierColor: Colors.black.withValues(alpha: 0.5),
     builder: (BuildContext context) {
       int rescuePageIndex = 0;
       bool manualChecked = false;

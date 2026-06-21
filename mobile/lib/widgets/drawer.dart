@@ -30,8 +30,8 @@ class ApplicationDrawer {
           onTap: () async {
             var url =
                 "https://docs.google.com/spreadsheets/d/1KVBNRupRBFeL6Ixn9IUXzbM0wr29bpFfuaOsOeaxUQ0/edit?gid=1158066929#gid=1158066929";
-            if (await canLaunch(url)) {
-              await launch(url);
+            if (await canLaunchUrl(Uri.parse(url))) {
+              await launchUrl(Uri.parse(url));
             } else {
               final Error error = ArgumentError('Could not launch $url');
               throw error;
@@ -85,8 +85,8 @@ class ApplicationDrawer {
             var url =
             "https://docs.google.com/presentation/d/1ukPkDkkVSXWmEDY_MBOwEHPtkgm3DL64nDdLQjoTQ_0/edit#slide=id.p1";
                 //"https://docs.google.com/document/d/1zCiz6rcrQuAXdVNg15MWCun2c2Babz0umPJxfJLD-Wg";
-            if (await canLaunch(url)) {
-              await launch(url);
+            if (await canLaunchUrl(Uri.parse(url))) {
+              await launchUrl(Uri.parse(url));
             } else {
               final Error error = ArgumentError('Could not launch $url');
               throw error;

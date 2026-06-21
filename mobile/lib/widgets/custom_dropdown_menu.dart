@@ -26,8 +26,8 @@ class CustomDropdownMenu<T> extends StatelessWidget {
         color: AppColors.textBlack,
       ),
       menuStyle: MenuStyle(
-        backgroundColor: MaterialStatePropertyAll(AppColors.base),
-        elevation: MaterialStatePropertyAll(4),
+        backgroundColor: WidgetStatePropertyAll(AppColors.base),
+        elevation: WidgetStatePropertyAll(4),
       ),
       width: double.infinity, // 横幅を広げる
       inputDecorationTheme: InputDecorationTheme(
