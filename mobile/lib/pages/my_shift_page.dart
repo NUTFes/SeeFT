@@ -338,7 +338,7 @@ class _MyShiftPageState extends State<MyShiftPage>
       
       // シフトカードからタスクの終了時刻を取得
       final String endTime = shiftCard.endTime.padLeft(5, '0'); // 1桁時間の場合に備えて0埋め
-      DateTime shiftEndTime = DateTime.parse("$targetDate " + endTime);
+      DateTime shiftEndTime = DateTime.parse("$targetDate $endTime");
       print("現在時刻: $now, シフト終了時刻: $shiftEndTime");
       
       // 対象のタスクが終了しているかどうかを判定

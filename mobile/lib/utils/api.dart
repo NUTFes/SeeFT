@@ -66,7 +66,7 @@ class Api {
 
 // Example
   Future getMyShift(id) async {
-    String url = constant.apiUrl + '/shifts/users/' + id;
+    String url = '${constant.apiUrl}/shifts/users/$id';
     try {
       return await get(url);
     } catch (err) {
@@ -79,7 +79,7 @@ class Api {
   // 準備日晴れシフト
   Future getMyShiftPreparationDaySunny(id) async {
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
+        '${constant.apiUrl}/shifts/users/$id/dates/1/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -93,7 +93,7 @@ class Api {
   Future getMyShiftPreparationDayRainy(id) async {
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/2';
+        '${constant.apiUrl}/shifts/users/$id/dates/1/weathers/2';
     try {
       return await get(url);
     } catch (err) {
@@ -107,7 +107,7 @@ class Api {
   Future getMyShiftCurrentFirstDaySunny(id) async {
     // 一旦準備日のseedデータを使用
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/1';
+        '${constant.apiUrl}/shifts/users/$id/dates/2/weathers/1';
     //String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
@@ -123,7 +123,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/2/weathers/2';
+        '${constant.apiUrl}/shifts/users/$id/dates/2/weathers/2';
     try {
       return await get(url);
     } catch (err) {
@@ -137,7 +137,7 @@ class Api {
   Future getMyShiftCurrentSecondDaySunny(id) async {
     // 一旦準備日のseedデータを使用
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/1';
+        '${constant.apiUrl}/shifts/users/$id/dates/3/weathers/1';
     //String url = constant.apiUrl + '/shifts/users/' + id + '/dates/1/weathers/1';
     try {
       return await get(url);
@@ -153,7 +153,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/2';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/3/weathers/2';
+        '${constant.apiUrl}/shifts/users/$id/dates/3/weathers/2';
     try {
       return await get(url);
     } catch (err) {
@@ -168,7 +168,7 @@ class Api {
     // 一旦準備日のseedデータを使用
     // String url = constant.apiUrl + '/shifts/users/' + id + '/dates/4/weathers/1';
     String url =
-        constant.apiUrl + '/shifts/users/' + id + '/dates/4/weathers/1';
+        '${constant.apiUrl}/shifts/users/$id/dates/4/weathers/1';
     try {
       return await get(url);
     } catch (err) {
@@ -181,17 +181,7 @@ class Api {
   // シフトのユーザ取得
   Future getUsersByShift(String task, String year, String date, String time,
       String weather) async {
-    String url = constant.apiUrl +
-        '/shifts/tasks/' +
-        task +
-        '/years/' +
-        year +
-        '/dates/' +
-        date +
-        '/times/' +
-        time +
-        '/weathers/' +
-        weather;
+    String url = '${constant.apiUrl}/shifts/tasks/$task/years/$year/dates/$date/times/$time/weathers/$weather';
     try {
       return await get(url);
     } catch (err) {
@@ -203,7 +193,7 @@ class Api {
 
   // マニュアル一覧
   Future getAllManual() async {
-    String url = constant.apiUrl + '/tasks';
+    String url = '${constant.apiUrl}/tasks';
     try {
       return await get(url);
     } catch (err) {
@@ -215,7 +205,7 @@ class Api {
 
   // 局情報
   Future getBureausId() async {
-    String url = constant.apiUrl + '/bureaus';
+    String url = '${constant.apiUrl}/bureaus';
     try {
       return await get(url);
     } catch (err) {
@@ -227,7 +217,7 @@ class Api {
 
   // ユーザ一覧
   Future getUsers() async {
-    String url = constant.apiUrl + '/users';
+    String url = '${constant.apiUrl}/users';
     try {
       return await get(url);
     } catch (err) {
@@ -238,7 +228,7 @@ class Api {
 
   // POST Sign In (リダイレクションエラーが返ってくるため不使用)
   Future postSignIn(request) async {
-    var url = Uri.parse(constant.apiUrl + '/auth');
+    var url = Uri.parse('${constant.apiUrl}/auth');
     var response = await http.post(url,
         body: {'mail': 'y.kugue.nutfes@gmail.com', 'password': 'gidaifes'});
 
@@ -254,11 +244,7 @@ class Api {
   // Get Sign In
   Future signIn(studentNumber, password) async {
     //var url = constant.apiUrl + "/mail_auth/signin?email=" + mail;
-    String url = constant.apiUrl +
-        '/mail_auth/signin?student_number=' +
-        studentNumber +
-        '&password=' +
-        password;
+    String url = '${constant.apiUrl}/mail_auth/signin?student_number=$studentNumber&password=$password';
     // String url = constant.apiUrl + '/mail_auth/signin';
     // var body = {'student_number': studentNumber};
     // logger.i(url);
@@ -295,7 +281,7 @@ class Api {
   // Get Shift Detail
   Future shiftDetail(workId, userId, date, weather, time) async {
     // logger.w(time);
-    var url = constant.apiUrl + "/tasks/shifts/" + workId.toString();
+    var url = "${constant.apiUrl}/tasks/shifts/$workId";
     try {
       logger.i(url);
       var res = await get(url);
@@ -309,7 +295,7 @@ class Api {
   
   // シフトカードの情報を取得する
   Future getShiftCardsByUserAndDateAndWeather(int userId, int dateId, int weatherId) async {
-    var url = constant.apiUrl + "/shift-cards/users/" + userId.toString() + "/dates/" + dateId.toString() + "/weathers/" + weatherId.toString();
+    var url = "${constant.apiUrl}/shift-cards/users/$userId/dates/$dateId/weathers/$weatherId";
     try {
       logger.i(url);
       var res = await get(url);
@@ -323,7 +309,7 @@ class Api {
   
   // 指定したユーザIDに紐づくタスクを取得
   Future getTasksByUserID(String userId) async {
-    var url = constant.apiUrl + "/tasks/users/" + userId;
+    var url = "${constant.apiUrl}/tasks/users/$userId";
     try {
       logger.i(url);
       var res = await get(url);
@@ -337,7 +323,7 @@ class Api {
   
   // IDで指定したユーザが送信したレスキューの一覧を取得する
   Future getRescueResponses(int userID) async {
-    var url = constant.apiUrl + "/rescues/users/" + userID.toString();
+    var url = "${constant.apiUrl}/rescues/users/$userID";
     try {
       logger.i(url);
       var res = await get(url);
@@ -345,21 +331,21 @@ class Api {
       // return (res as List).map((item) => RescueResponse.fromJson(item)).toList();
       return res;
     } catch (e) {
-      logger.e('failed got:' + e.toString());
+      logger.e('failed got:$e');
       throw Exception('Failed GET in Api.getRescueResponses()');
     }
   }
   
   // レスキューの一覧を取得する
   Future getAllRescueResponses() async {
-    var url = constant.apiUrl + "/rescues";
+    var url = "${constant.apiUrl}/rescues";
     try {
       logger.i(url);
       var res = await get(url);
       logger.i(res);
       return res;
     } catch (e) {
-      logger.e('failed got:' + e.toString());
+      logger.e('failed got:$e');
       throw Exception('Failed GET in Api.getAllRescueResponses()');
     }
   }
@@ -371,7 +357,7 @@ class Api {
     String place,
     String detail,
   ) async {
-    final url = constant.apiUrl + "/rescues";
+    final url = "${constant.apiUrl}/rescues";
     final uri = Uri.parse(url);
     logger.i(uri);
     final body = {
@@ -406,7 +392,7 @@ class Api {
     int userID,
     String question,
   ) async {
-    final url = constant.apiUrl + "/rescues";
+    final url = "${constant.apiUrl}/rescues";
     final uri = Uri.parse(url);
     logger.i(uri);
     final body = {
@@ -441,7 +427,7 @@ class Api {
     int missingNumber,
     String place,
   ) async {
-    final url = constant.apiUrl + "/rescues";
+    final url = "${constant.apiUrl}/rescues";
     final uri = Uri.parse(url);
     logger.i(uri);
     final body = {
@@ -479,7 +465,7 @@ class Api {
     int manualRating,
     String comment,
   ) async {
-    final url = constant.apiUrl + "/reviews";
+    final url = "${constant.apiUrl}/reviews";
     final uri = Uri.parse(url);
     logger.i(uri);
     final body = {

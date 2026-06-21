@@ -188,7 +188,7 @@ class _UsersPageState extends State<UsersPage> {
 
 void _openPhoneApp(String tel_number) {
   _launchURL(
-    'tel:' + tel_number,
+    'tel:$tel_number',
   );
 }
 

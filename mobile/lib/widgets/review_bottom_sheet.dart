@@ -136,7 +136,7 @@ class _ReviewFormState extends State<ReviewForm> {
         spacing: 8,
         children: [
           Text(
-            "シフトのレビュー: " + widget.taskName,
+            "シフトのレビュー: ${widget.taskName}",
             style: TextStyle(
               color: AppColors.textBlack,
               fontSize: AppFontSizes.md,

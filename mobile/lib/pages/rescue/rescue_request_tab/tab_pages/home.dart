@@ -174,10 +174,10 @@ class RescueRequestTabHome extends StatelessWidget {
                         children: [
                           Text(
                             // 電話番号をハイフンありの形式に変換
-                            chairpersonName + "\n" + chairpersonPhoneNumber.replaceAllMapped(
+                            "$chairpersonName\n${chairpersonPhoneNumber.replaceAllMapped(
                               RegExp(r'(\d{3})(\d{4})(\d{4})'),
                               (Match m) => '${m[1]}-${m[2]}-${m[3]}',
-                            ),
+                            )}",
                             style: TextStyle(
                               fontSize: AppFontSizes.md,
                               color: AppColors.error,
@@ -228,7 +228,7 @@ class RescueRequestTabHome extends StatelessWidget {
 // 電話アプリを開く関数
 void _openPhoneApp(String phoneNumber) async {
   _launchURL(
-    'tel:' + phoneNumber,
+    'tel:$phoneNumber',
   );
 }
 
