@@ -46,7 +46,7 @@ openShiftDialog(
   var resName = task["task"].toString();
   var resURL = task["url"].toString();
   var resPlace = task["place"].toString();
-  var resPresident = task["superviser"].toString();
+  // var resPresident = task["superviser"].toString();
   var resUsersNumber = res["users"].length;
   List<String> resUsersList = <String>[];
   for (var index = 0; index < resUsersNumber; index++) {
