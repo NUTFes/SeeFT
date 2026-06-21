@@ -265,24 +265,20 @@ class _MyShiftPageState extends State<MyShiftPage>
       
       // New対象カードの検出
       Set<String> detectedNewKeys = {};
-      if (fetchedShiftCardDataList != null) {
-        final existingNewKeys = _filterAlreadyOpened(_loadPersistedNewKeys(dayID));
-        detectedNewKeys = _detectNewOrUpdatedCardKeys(
-          dayID,
-          cashedShiftCardDataList,
-          fetchedShiftCardDataList,
-        );
-        detectedNewKeys = {...existingNewKeys, ...detectedNewKeys};
-        // 既に開かれたカードを除外
-        detectedNewKeys = _filterAlreadyOpened(detectedNewKeys);
-      }
+      final existingNewKeys = _filterAlreadyOpened(_loadPersistedNewKeys(dayID));
+      detectedNewKeys = _detectNewOrUpdatedCardKeys(
+        dayID,
+        cashedShiftCardDataList,
+        fetchedShiftCardDataList,
+      );
+      detectedNewKeys = {...existingNewKeys, ...detectedNewKeys};
+       // 既に開かれたカードを除外
+      detectedNewKeys = _filterAlreadyOpened(detectedNewKeys);
       
       // hiveのキャッシュデータをフェッチデータで更新
       shiftCardBox.put('${dayID}_$weatherID', fetchedData);
       // 最新データに存在しない既読キーを掃除
-      if (fetchedShiftCardDataList != null) {
-        _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
-      }
+      _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
       
       // ここにレビューの処理を挟む
       _showReviewFormIfNeeded(fetchedShiftCardDataList, dayID);
