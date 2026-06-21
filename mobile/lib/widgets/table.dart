@@ -101,7 +101,7 @@ class HexColor extends Color {
     hexColor = hexColor.toUpperCase().replaceAll('0X', '');
     // logger.d(hexColor);
     if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
+      hexColor = 'FF$hexColor';
     }
     // logger.d(hexColor);
     return int.parse(hexColor, radix: 16);

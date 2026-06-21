@@ -274,36 +274,27 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
   // レスキューのレスポンスを表示するウィジェット
   Widget _rescueResponseWidget(RescueResponse response) {
     String titleRescue = "";
-    String titleResponse = response.response == "" ? "本部からの返答はまだありません。" : "本部からの返答: " + response.response;
+    String titleResponse = response.response == "" ? "本部からの返答はまだありません。" : "本部からの返答: ${response.response}";
     String subTitle = "";
     // レスキューのタイプに応じてタイトルとサブタイトルを設定
     switch(response.type) {
       // トラブル
       case 'trouble':
         final res = response as TroubleRescueResponse;
-        titleRescue = "【トラブル】" + res.content.detail;
-        subTitle = "対応番号: T" + res.id.toString() + "\n"
-                  + "送信者: " + res.userName + "\n"
-                  + "発生タスク: " + res.content.task + "\n"
-                  + "発生場所: " + res.content.place + "\n"
-                  + "発生時刻: " + res.time;
+        titleRescue = "【トラブル】${res.content.detail}";
+        subTitle = "対応番号: T${res.id}\n送信者: ${res.userName}\n発生タスク: ${res.content.task}\n発生場所: ${res.content.place}\n発生時刻: ${res.time}";
         break;
       // 質問
       case 'question':
         final res = response as QuestionRescueResponse;
-        titleRescue = "【質問】" + res.content.question;
-        subTitle = "対応番号: Q" + res.id.toString() + "\n"
-                  + "送信者: " + res.userName + "\n"
-                  + "発生時刻: " + res.time;
+        titleRescue = "【質問】${res.content.question}";
+        subTitle = "対応番号: Q${res.id}\n送信者: ${res.userName}\n発生時刻: ${res.time}";
         break;
       // 人が来ない
       case 'shorthanded':
         final res = response as ShorthandedRescueResponse;
-        titleRescue = "【人が来ない】" + res.content.task + "（" + res.content.missingNumber.toString() + "人）";
-        subTitle = "対応番号: S" + res.id.toString() + "\n"
-                  + "送信者: " + res.userName + "\n"
-                  + "送り先の場所: " + res.content.place + "\n"
-                  + "発生時刻: " + res.time;
+        titleRescue = "【人が来ない】${res.content.task}（${res.content.missingNumber}人）";
+        subTitle = "対応番号: S${res.id}\n送信者: ${res.userName}\n送り先の場所: ${res.content.place}\n発生時刻: ${res.time}";
         break;
     }
     return ListTile(
@@ -311,7 +302,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
         TextSpan(
           children: [
             TextSpan(
-              text: titleRescue + "\n",
+              text: "$titleRescue\n",
               style: TextStyle(
                 fontSize: AppFontSizes.md,
                 color: AppColors.textBlack,
