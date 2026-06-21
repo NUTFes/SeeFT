@@ -90,7 +90,7 @@ class TroubleRescueResponse extends RescueResponse {
 
   // factory TroubleRescueResponse.fromJson(Map<String, dynamic> json) {
   factory TroubleRescueResponse.fromJson(dynamic json) {
-    logger.d(json); 
+    logger.d({'id': json['id'], 'status': json['status']});
     return TroubleRescueResponse(
       id: json['id'],
       userName: json['user_name'],
