@@ -9,6 +9,7 @@ getShiftDetail(workId, userId, date, weather, time) async {
     return res;
   } catch (e) {
     logger.e(e);
+    rethrow;
   }
 }
 
