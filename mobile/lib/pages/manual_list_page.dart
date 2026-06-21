@@ -32,8 +32,8 @@ class _ManualListPageState extends State<ManualListPage> {
       body: FutureBuilder(
         future: getData(),
         builder: (ctx, snapshot) {
-          if (snapshot.connectionState == AsyncSnapshot.waiting()) {
-            logger.w("message");
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            logger.i("Loading manual list...");
           }
           if (!snapshot.hasData) {
             // 待機画面を表示
