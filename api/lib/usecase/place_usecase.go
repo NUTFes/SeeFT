@@ -3,33 +3,33 @@ package usecase
 import (
 	"context"
 
-	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/entity"
+	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/pkg/errors"
 )
 
 type placeUseCase struct {
-  rep rep.PlaceRepository
+	rep rep.PlaceRepository
 }
 
 type PlaceUseCase interface {
-  GetPlaces(context.Context) ([]entity.Place, error)
-  GetPlaceByID(context.Context, string) (entity.Place, error) 
+	GetPlaces(context.Context) ([]entity.Place, error)
+	GetPlaceByID(context.Context, string) (entity.Place, error)
 	CreatePlace(context.Context, string, string) (entity.Place, error)
-  UpdatePlace(context.Context, string, string, string) (entity.Place, error)
-  DeletePlace(context.Context, string) error
+	UpdatePlace(context.Context, string, string, string) (entity.Place, error)
+	DeletePlace(context.Context, string) error
 }
 
 func NewPlaceUseCase(rep rep.PlaceRepository) PlaceUseCase {
-  return &placeUseCase{rep}
+	return &placeUseCase{rep}
 }
 
 func (u *placeUseCase) GetPlaces(c context.Context) ([]entity.Place, error) {
 
-  place := entity.Place{}
-  var places []entity.Place
+	place := entity.Place{}
+	var places []entity.Place
 
-  // クエリー実行
+	// クエリー実行
 	rows, err := u.rep.All(c)
 	if err != nil {
 		return nil, err
@@ -72,8 +72,13 @@ func (u *placeUseCase) GetPlaceByID(c context.Context, id string) (entity.Place,
 
 func (u *placeUseCase) CreatePlace(c context.Context, place string, remark string) (entity.Place, error) {
 	latastPlace := entity.Place{}
-	err := u.rep.Create(c, place, remark)
+	if err := u.rep.Create(c, place, remark); err != nil {
+		return latastPlace, err
+	}
 	row, err := u.rep.FindNewRecord(c)
+	if err != nil {
+		return latastPlace, err
+	}
 	err = row.Scan(
 		&latastPlace.ID,
 		&latastPlace.Place,
@@ -103,8 +108,13 @@ func (u *placeUseCase) UpdatePlace(c context.Context, id string, placeName strin
 		return place, err
 	}
 
-	u.rep.Update(c, id, placeName, remark)
+	if err = u.rep.Update(c, id, placeName, remark); err != nil {
+		return place, err
+	}
 	row, err = u.rep.Find(c, id)
+	if err != nil {
+		return updatedPlace, err
+	}
 	err = row.Scan(
 		&updatedPlace.ID,
 		&updatedPlace.Place,

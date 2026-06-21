@@ -685,7 +685,9 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 		return shift, err
 	}
 
-	u.rep.Update(c, id, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
+	if err = u.rep.Update(c, id, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance); err != nil {
+		return updatedShift, err
+	}
 	row, err = u.rep.Find(c, id)
 	err = row.Scan(
 		&updatedShift.ID,
@@ -723,7 +725,9 @@ func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
 			"deleted_task": taskName,
 		}
 		if u.actionLogRepo != nil {
-			u.actionLogRepo.Create(c, shift.ID, shift.UserID, shift.DateID, "DELETE", diffPayload)
+			if logErr := u.actionLogRepo.Create(c, shift.ID, shift.UserID, shift.DateID, "DELETE", diffPayload); logErr != nil {
+				log.Printf("action_log記録失敗(DELETE): %v", logErr)
+			}
 		}
 	}
 
@@ -1348,25 +1352,25 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 	// N+1問題対策: 事前に必要なユーザー名とタスク名を収集
 	userNameSet := make(map[string]bool)
 	taskNameSet := make(map[string]bool)
-	
+
 	for _, change := range req.Changes {
 		userNameSet[change.UserName] = true
 		taskName := strings.ReplaceAll(change.TaskName, "　", " ")
 		taskNameSet[taskName] = true
 	}
-	
+
 	// ユーザー名のリストを作成
 	userNames := make([]string, 0, len(userNameSet))
 	for name := range userNameSet {
 		userNames = append(userNames, name)
 	}
-	
+
 	// タスク名のリストを作成
 	taskNames := make([]string, 0, len(taskNameSet))
 	for name := range taskNameSet {
 		taskNames = append(taskNames, name)
 	}
-	
+
 	// 一括でユーザーを取得してマップ化
 	userMap := make(map[string]entity.User)
 	if len(userNames) > 0 {
@@ -1375,7 +1379,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			return errors.Wrap(err, "ユーザー一括取得失敗")
 		}
 		defer userRows.Close()
-		
+
 		for userRows.Next() {
 			var user entity.User
 			var slackUserID sql.NullString
@@ -1388,7 +1392,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			userMap[user.Name] = user
 		}
 	}
-	
+
 	// 一括でタスクを取得してマップ化
 	taskMap := make(map[string]entity.Task)
 	if len(taskNames) > 0 {
@@ -1397,7 +1401,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			return errors.Wrap(err, "タスク一括取得失敗")
 		}
 		defer taskRows.Close()
-		
+
 		for taskRows.Next() {
 			var task entity.Task
 			if err := taskRows.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
@@ -1481,13 +1485,22 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		taskID := strconv.Itoa(task.ID)
 
 		// 4. 既存シフトがあるか確認
-		existRow, _ := u.rep.FindByUnique(ctx, userID, dateID, timeID, weatherID)
+		existRow, err := u.rep.FindByUnique(ctx, userID, dateID, timeID, weatherID)
+		if err != nil {
+			return errors.Wrapf(err, "シフト検索失敗: user=%s, date=%s", user.Name, dateID)
+		}
 		var existShift entity.ShiftAdmin
-		dateIDInt, _ := strconv.Atoi(dateID)
+		dateIDInt, err := strconv.Atoi(dateID)
+		if err != nil {
+			return errors.Wrapf(err, "dateIDパース失敗: %v", dateID)
+		}
 		if err := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt); err == nil && existShift.ID != 0 {
 			// 既存があれば更新（タスクが変更された場合のみaction_logに記録）
 			oldTaskID := existShift.TaskID
-			newTaskID, _ := strconv.Atoi(taskID)
+			newTaskID, err := strconv.Atoi(taskID)
+			if err != nil {
+				return errors.Wrapf(err, "taskIDパース失敗: %v", taskID)
+			}
 			if oldTaskID != newTaskID {
 				// タスクが変更された場合
 				oldTaskRow, _ := u.taskRep.Find(ctx, strconv.Itoa(oldTaskID))
@@ -1511,11 +1524,15 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 					},
 				}
 				if u.actionLogRepo != nil {
-					u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload)
+					if logErr := u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload); logErr != nil {
+						log.Printf("action_log記録失敗(UPDATE): %v", logErr)
+					}
 				}
 			}
 			isAttendance := false
-			u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
+			if err := u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance)); err != nil {
+				return errors.Wrapf(err, "シフト更新失敗: %v", existShift.ID)
+			}
 		} else {
 			// なければ新規作成（RETURNING idで確実にIDを取得）
 			isAttendance := false
@@ -1534,7 +1551,9 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 				},
 			}
 			if u.actionLogRepo != nil {
-				u.actionLogRepo.Create(ctx, newShiftID, user.ID, dateIDInt, "CREATE", diffPayload)
+				if logErr := u.actionLogRepo.Create(ctx, newShiftID, user.ID, dateIDInt, "CREATE", diffPayload); logErr != nil {
+					log.Printf("action_log記録失敗(CREATE): %v", logErr)
+				}
 			}
 		}
 	}
