@@ -63,7 +63,7 @@ class MyShiftPage extends StatefulWidget {
   const MyShiftPage({super.key});
 
   @override
-  _MyShiftPageState createState() => _MyShiftPageState();
+  State<MyShiftPage> createState() => _MyShiftPageState();
 }
 
 class _MyShiftPageState extends State<MyShiftPage>

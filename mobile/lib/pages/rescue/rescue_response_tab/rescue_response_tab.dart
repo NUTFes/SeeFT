@@ -61,7 +61,7 @@ class RescueResponseTab extends StatefulWidget {
   const RescueResponseTab({super.key});
 
   @override
-  _RescueResponseTabState createState() => _RescueResponseTabState();
+  State<RescueResponseTab> createState() => _RescueResponseTabState();
 }
 
 class _RescueResponseTabState extends State<RescueResponseTab> {

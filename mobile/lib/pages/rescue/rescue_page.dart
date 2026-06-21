@@ -6,7 +6,7 @@ class RescuePage extends StatefulWidget {
   const RescuePage({super.key});
   
   @override
-  _RescuePageState createState() => _RescuePageState();
+  State<RescuePage> createState() => _RescuePageState();
 }
 
 class _RescuePageState extends State<RescuePage>
