@@ -20,7 +20,7 @@ class _UsersPageState extends State<UsersPage> {
   void initState() {
     super.initState();
 
-    var bureauId;
+    List<dynamic> bureauId;
     getBureauData().then((value) async {
       bureauId = await value;
       for (int i = 0; i < bureauId.toString().length; i++) {

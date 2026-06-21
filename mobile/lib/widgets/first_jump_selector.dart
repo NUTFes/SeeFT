@@ -39,11 +39,11 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         logger.i('===============================');
         logger.i(snapshot.connectionState);
-        var app;
+        Widget? app;
         if (snapshot.hasData) {
           var isUserID = snapshot.data;
           logger.i(snapshot.connectionState);
-          var homeWidget;
+          String homeWidget;
           if (isUserID!) {
             logger.i('select Layout.');
             homeWidget = '/layout';
