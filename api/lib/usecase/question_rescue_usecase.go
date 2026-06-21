@@ -33,7 +33,7 @@ func (qu *questionRescueUseCase) GetQuestionRescues(c context.Context) ([]entity
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get question rescues")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var questionRescues []entity.QuestionRescueForGet
 	for rows.Next() {
@@ -72,7 +72,7 @@ func (qu *questionRescueUseCase) GetQuestionRescuesByUserID(c context.Context, u
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get question rescues by user ID")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var questionRescues []entity.QuestionRescueForGet
 	for rows.Next() {

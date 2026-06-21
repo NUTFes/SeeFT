@@ -119,7 +119,7 @@ func (ru *rescueUnifiedUseCase) getQuestionRescues(c context.Context, userID str
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var rescues []entity.RescueResponse
 	for rows.Next() {
@@ -156,7 +156,7 @@ func (ru *rescueUnifiedUseCase) getShorthandedRescues(c context.Context, userID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var rescues []entity.RescueResponse
 	for rows.Next() {
@@ -200,7 +200,7 @@ func (ru *rescueUnifiedUseCase) getTroubleRescues(c context.Context, userID stri
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var rescues []entity.RescueResponse
 	for rows.Next() {
@@ -307,7 +307,7 @@ func (ru *rescueUnifiedUseCase) SendRescueToGAS(data map[string]interface{}) err
 	if err != nil {
 		return errors.Wrap(err, "GASへの送信失敗")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return errors.Errorf("GASが非OKステータスを返しました: %d", resp.StatusCode)
