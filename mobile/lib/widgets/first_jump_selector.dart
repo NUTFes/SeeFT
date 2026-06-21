@@ -24,7 +24,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
       logger.w(isUserID);
       return isUserID;
     } catch (e) {
-      print(e);
+      logger.e(e);
       return false;
     }
   }
