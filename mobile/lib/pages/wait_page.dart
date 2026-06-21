@@ -1,6 +1,5 @@
 import 'package:seeft_mobile/configs/importer.dart';
 
-import 'package:seeft_mobile/configs/importer.dart';
 import 'package:flutter/material.dart';
 
 class WaitPage extends StatefulWidget {

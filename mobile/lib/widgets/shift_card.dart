@@ -153,14 +153,14 @@ class ShiftCard extends StatelessWidget {
                     title: '【担当者の一覧】',
                     content: [
                       for (var member in data.shiftMembers)
-                        '${member.s_time}〜${member.e_time}\n${member.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}',
+                        '${member.sTime}〜${member.eTime}\n${member.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}',
                     ],
                   ),
                   _buildSection(
                     title: '【前の時間の担当者の一覧】',
                     content: [
                       if (data.beforeMembers.members.isNotEmpty)
-                        '${data.beforeMembers.s_time}〜${data.beforeMembers.e_time}\n${data.beforeMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}'
+                        '${data.beforeMembers.sTime}〜${data.beforeMembers.eTime}\n${data.beforeMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}'
                       else
                         '前の時間の担当者はいません',
                     ],
@@ -169,7 +169,7 @@ class ShiftCard extends StatelessWidget {
                     title: '【次の時間の担当者の一覧】',
                     content: [
                       if (data.afterMembers.members.isNotEmpty)
-                        '${data.afterMembers.s_time}〜${data.afterMembers.e_time}\n${data.afterMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}'
+                        '${data.afterMembers.sTime}〜${data.afterMembers.eTime}\n${data.afterMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}'
                       else
                         '次の時間の担当者はいません',
                     ],
