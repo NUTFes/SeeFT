@@ -1,11 +1,6 @@
 version: "2"
 
 linters:
-  default: none
-  enable:
-    - unused
-    - revive
-    - gosec
   settings:
     revive:
       severity: warning
