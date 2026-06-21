@@ -15,7 +15,7 @@ late final Box reviewedTaskNameBox;
 late final Box openedCardKeysBox;
 
 class PermanentStore {
-  static PermanentStore _instance = PermanentStore();
+  static final PermanentStore _instance = PermanentStore();
 
   static getInstance() {
     return _instance;
