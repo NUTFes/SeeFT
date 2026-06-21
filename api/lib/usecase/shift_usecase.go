@@ -1494,7 +1494,12 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		if err != nil {
 			return errors.Wrapf(err, "dateIDパース失敗: %v", dateID)
 		}
-		if err := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt); err == nil && existShift.ID != 0 {
+		scanErr := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt)
+		if scanErr != nil && !errors.Is(scanErr, sql.ErrNoRows) {
+			// 未存在以外のDBエラーを新規作成へフォールバックさせない（重複生成防止）
+			return errors.Wrapf(scanErr, "シフト既存確認失敗: user=%s, date=%s", user.Name, dateID)
+		}
+		if scanErr == nil && existShift.ID != 0 {
 			// 既存があれば更新（タスクが変更された場合のみaction_logに記録）
 			oldTaskID := existShift.TaskID
 			newTaskID, err := strconv.Atoi(taskID)

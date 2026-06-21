@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"strconv"
 	"strings"
 
@@ -293,7 +294,7 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 				if err := u.placeRep.Update(ctx, strconv.Itoa(place.ID), placeName, remark); err != nil {
 					return errors.Wrapf(err, "集合場所更新失敗: %v", placeName)
 				}
-			} else if err.Error() == "sql: no rows in result set" {
+			} else if errors.Is(err, sql.ErrNoRows) {
 				// 集合場所が存在しない場合は新規作成
 				remark := ""
 				createErr := u.placeRep.Create(ctx, placeName, remark)
@@ -331,7 +332,7 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 			if err := u.rep.Update(ctx, strconv.Itoa(task.ID), taskName, placeID, change.Url, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID); err != nil {
 				return errors.Wrapf(err, "タスク更新失敗: %v", taskName)
 			}
-		} else if err.Error() == "sql: no rows in result set" {
+		} else if errors.Is(err, sql.ErrNoRows) {
 			// タスクが存在しない場合は新規作成
 			color := "ffffff"
 			remark := ""

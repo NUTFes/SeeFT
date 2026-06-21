@@ -140,14 +140,15 @@ func (u *mailAuthUseCase) WebSignIn(c context.Context, studentNumber string, pas
 		return token, err
 	}
 
-	if err = u.sessionRep.DeleteByUserID(c, strconv.Itoa(int(user.ID))); err != nil {
-		return token, err
-	}
-
 	// パスワードがあっているか確認
 	password = strings.ReplaceAll(password, " ", "")
 	password = strings.ReplaceAll(password, "　", "")
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return token, err
+	}
+
+	// 認証成功後に既存セッションを削除（認証前に削除すると誤パス試行で強制ログアウトできてしまう）
+	if err = u.sessionRep.DeleteByUserID(c, strconv.Itoa(int(user.ID))); err != nil {
 		return token, err
 	}
 	// トークン発行

@@ -376,7 +376,7 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			if err := u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password); err != nil {
 				return errors.Wrapf(err, "ユーザー更新失敗: %v", change.Name)
 			}
-		} else if err.Error() == "sql: no rows in result set" {
+		} else if errors.Is(err, sql.ErrNoRows) {
 			// ユーザーがいなければ新規作成
 			name := change.Name
 			mail := ""
