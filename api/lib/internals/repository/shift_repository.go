@@ -61,7 +61,7 @@ func (b *shiftRepository) User(c context.Context, id string) (*sql.Rows, error) 
 
 // 特定のタスクのユーザ取得（JOINでユーザー情報も一括取得）
 func (b *shiftRepository) Users(c context.Context, task string, year string, date string, time string, weather string) (*sql.Rows, error) {
-	query := "SELECT u.id, u.name, u.mail, u.grade_id, u.department_id, u.bureau_id, u.role_id, u.student_number, u.tel, u.created_at, u.updated_at, COALECE(u.slack_user_id, '') FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.task_id = $1 AND s.year_id = $2 AND s.date_id = $3 AND s.time_id = $4 AND s.weather_id = $5"
+	query := "SELECT u.id, u.name, u.mail, u.grade_id, u.department_id, u.bureau_id, u.role_id, u.student_number, u.tel, u.created_at, u.updated_at, COALESCE(u.slack_user_id, '') FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.task_id = $1 AND s.year_id = $2 AND s.date_id = $3 AND s.time_id = $4 AND s.weather_id = $5"
 	rows, err := b.client.DB().QueryContext(c, query, task, year, date, time, weather)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
