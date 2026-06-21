@@ -3,5 +3,8 @@ reviews:
   profile: chill
   auto_review:
     enabled: true
+  tools:
+    golangci-lint:
+      config_file: "api/.golangci.yml"
 chat:
   auto_reply: true
