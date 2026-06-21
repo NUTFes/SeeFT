@@ -11,13 +11,13 @@ class ShiftMember {
   });
 }
 class ShiftMembers {
-  final String s_time;
-  final String e_time;
+  final String sTime;
+  final String eTime;
   final List<ShiftMember> members;
 
   ShiftMembers({
-    required this.s_time,
-    required this.e_time,
+    required this.sTime,
+    required this.eTime,
     required this.members,
   });
 }
@@ -60,8 +60,8 @@ class ShiftCardDataList {
       shiftMembers: item['shift_members'] != null?
         (item['shift_members'] as List<dynamic>)
           .map((member) => ShiftMembers(
-                s_time: member['s_time'],
-                e_time: member['e_time'],
+                sTime: member['s_time'],
+                eTime: member['e_time'],
                 members: member['members'] != null?
                   (member['members'] as List<dynamic>)
                     .map((m) => ShiftMember(
@@ -75,8 +75,8 @@ class ShiftCardDataList {
           .toList():
         [],
       beforeMembers: ShiftMembers(
-        s_time: item['before_members']['s_time'],
-        e_time: item['before_members']['e_time'],
+        sTime: item['before_members']['s_time'],
+        eTime: item['before_members']['e_time'],
         members: item['before_members']['members'] != null?
           (item['before_members']['members'] as List<dynamic>)
             .map((m) => ShiftMember(
@@ -88,8 +88,8 @@ class ShiftCardDataList {
           [],
       ),
       afterMembers: ShiftMembers(
-        s_time: item['after_members']['s_time'],
-        e_time: item['after_members']['e_time'],
+        sTime: item['after_members']['s_time'],
+        eTime: item['after_members']['e_time'],
         members: item['after_members']['members'] != null?
           (item['after_members']['members'] as List<dynamic>)
             .map((m) => ShiftMember(
