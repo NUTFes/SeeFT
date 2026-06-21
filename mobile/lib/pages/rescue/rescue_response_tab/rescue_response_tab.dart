@@ -97,9 +97,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
     // キャッシュからデータを取得
     final List<dynamic>? cachedData = _getCashedRescueResponses(userID);
     // キャッシュデータをList<RescueResponse>に変換
-    final List<RescueResponse>? cachedRescueResponses = cachedData != null
-        ? cachedData.map((item) => RescueResponse.fromJson(item)).toList()
-        : null;
+    final List<RescueResponse>? cachedRescueResponses = cachedData?.map((item) => RescueResponse.fromJson(item)).toList();
     
     // 表示データをキャッシュデータで更新
     setState(() {

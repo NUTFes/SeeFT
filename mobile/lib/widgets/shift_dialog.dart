@@ -7,7 +7,10 @@ getShiftDetail(workId, userId, date, weather, time) async {
     logger.w(workId);
     var res = await api.shiftDetail(workId, userId, date, weather, time);
     return res;
-  } catch (e) {}
+  } catch (e) {
+    logger.e(e);
+    rethrow;
+  }
 }
 
 _launchURL(url) async {
@@ -122,8 +125,7 @@ openShiftDialog(
                 ),
               ],
             ),
-            body: Container(
-              child: ListView(
+            body: ListView(
                 children: <Widget>[
                   ListTile(
                     leading: Icon(Icons.place_outlined),
@@ -158,7 +160,6 @@ openShiftDialog(
                   ),
                 ],
               ),
-            ),
             /*
             floatingActionButton: OutlinedButton(
               child: const Text('マニュアルへ'),

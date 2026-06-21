@@ -261,28 +261,24 @@ class _MyShiftPageState extends State<MyShiftPage>
       // フェッチデータが新しい場合はキャッシュデータと表示データを更新
       
       // フェッチデータをShiftCardDataListに変換
-      final ShiftCardDataList? fetchedShiftCardDataList = ShiftCardDataList.fromJson(fetchedData);
+      final ShiftCardDataList fetchedShiftCardDataList = ShiftCardDataList.fromJson(fetchedData);
       
       // New対象カードの検出
       Set<String> detectedNewKeys = {};
-      if (fetchedShiftCardDataList != null) {
-        final existingNewKeys = _filterAlreadyOpened(_loadPersistedNewKeys(dayID));
-        detectedNewKeys = _detectNewOrUpdatedCardKeys(
-          dayID,
-          cashedShiftCardDataList,
-          fetchedShiftCardDataList,
-        );
-        detectedNewKeys = {...existingNewKeys, ...detectedNewKeys};
-        // 既に開かれたカードを除外
-        detectedNewKeys = _filterAlreadyOpened(detectedNewKeys);
-      }
+      final existingNewKeys = _filterAlreadyOpened(_loadPersistedNewKeys(dayID));
+      detectedNewKeys = _detectNewOrUpdatedCardKeys(
+        dayID,
+        cashedShiftCardDataList,
+        fetchedShiftCardDataList,
+      );
+      detectedNewKeys = {...existingNewKeys, ...detectedNewKeys};
+       // 既に開かれたカードを除外
+      detectedNewKeys = _filterAlreadyOpened(detectedNewKeys);
       
       // hiveのキャッシュデータをフェッチデータで更新
       shiftCardBox.put('${dayID}_$weatherID', fetchedData);
       // 最新データに存在しない既読キーを掃除
-      if (fetchedShiftCardDataList != null) {
-        _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
-      }
+      _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
       
       // ここにレビューの処理を挟む
       _showReviewFormIfNeeded(fetchedShiftCardDataList, dayID);
@@ -327,12 +323,12 @@ class _MyShiftPageState extends State<MyShiftPage>
     }
 
     // 各シフトカードに対するレビュー処理
-    shiftCardDataList.data.forEach((shiftCard) {
+    for (var shiftCard in shiftCardDataList.data) {
       // シフトカードのタスクが既にレビュー済みかどうかを確認
       final isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
       if(isReviewed){
         logger.d("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
-        return;
+        continue;
       }
       logger.d("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
       
@@ -351,7 +347,7 @@ class _MyShiftPageState extends State<MyShiftPage>
           _userID
         );
       }
-    });
+    }
   }
 
   // ========== New表示のためのヘルパー関数 ==========
@@ -651,7 +647,7 @@ class _MyShiftPageState extends State<MyShiftPage>
           '\n'
           'Has data: ${shiftCardDataList != null}'
         );
-        if (shiftCardDataList == null || shiftCardDataList!.data.length == 0) {
+        if (shiftCardDataList == null || shiftCardDataList!.data.isEmpty) {
           logger.i('タブ ${index + 1}: データがありません');
           // データがない場合は「データがありません」のメッセージを表示
           return Center(

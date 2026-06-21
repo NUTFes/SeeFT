@@ -82,14 +82,13 @@ class ShiftTable {
                           }
                         },
                         //child: Center(child: new Text(shifts[index]["Work"].toString())),
-                        child: Container(
-                          child: Center(
+                        child: Center(
                               child: new Text(
                                   shifts[index]["task"]["task"].toString())),
                         ),
                       ),
                     ),
-                  ))
+                  )
                 ]),
         ]);
   }
