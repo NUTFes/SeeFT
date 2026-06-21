@@ -14,15 +14,11 @@ Future<void> openRescueDialog(BuildContext context,) async {
 
       bool taskChecked = false;
       bool locateChecked = false;
-      bool contentChecked = false;
       bool confirmError2 = false;
       TextEditingController rescueContent = TextEditingController(); 
       TextEditingController rescueNumberofPeople = TextEditingController(); 
       String? rescuePostLevel;
       String? rescuePostLeve2;
-
-      bool isChecked = false;
-
 
       return StatefulBuilder(
         builder: (context, setState){
