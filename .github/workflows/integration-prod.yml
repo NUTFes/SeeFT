@@ -87,8 +87,37 @@ jobs:
           push: true
           tags: ${{ secrets.HARBOR_REG }}/seeft/mobile:${{ steps.vars.outputs.image_tag }}
           cache-from: type=gha
+      
+      - name: Check out k8s manifests repo
+        uses: actions/checkout@v6
+        with:
+          repository: NUTFes/k8s-manifests
+          ref: main
+          path: k8s-manifests
+          token: ${{ secrets.K8S_MANIFESTS_PAT }}
+      
+      - name: Update SeeFT image tag
+        run: |
+          cd k8s-manifests
 
-  trigger-cd:
-    needs: build-and-push
-    uses: ./.github/workflows/deployment-prod.yml
-    secrets: inherit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          sed -i "s|image: reg.nutmeg.cloud/seeft/api:.*|image: reg.nutmeg.cloud/seeft/api:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: reg.nutmeg.cloud/seeft/admin:.*|image: reg.nutmeg.cloud/seeft/admin:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: reg.nutmeg.cloud/seeft/mobile:.*|image: reg.nutmeg.cloud/seeft/mobile:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+
+          git add seeft/deployment.yml
+
+          if git diff --cached --quiet; then
+            echo "No manifest changes"
+            exit 0
+          fi
+
+          git commit -m "chore(seeft): update image tag to ${{ steps.vars.outputs.image_tag }}"
+          git push origin main
+
+#  trigger-cd:
+#    needs: build-and-push
+#    uses: ./.github/workflows/deployment-prod.yml
+#    secrets: inherit
