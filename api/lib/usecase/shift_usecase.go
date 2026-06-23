@@ -35,7 +35,6 @@ type shiftUseCase struct {
 type ShiftUseCase interface {
 	GetShiftCardsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.ShiftCard, error)
 	GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error)
-	GetShiftsAdmin(context.Context) ([]entity.ShiftAdmin, error)
 	GetShiftAdminByID(context.Context, string) (entity.ShiftAdmin, error)
 	CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
 	UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
@@ -149,39 +148,6 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 }
 
 // Webアプリ用API
-
-func (a *shiftUseCase) GetShiftsAdmin(c context.Context) ([]entity.ShiftAdmin, error) {
-	shift := entity.ShiftAdmin{}
-	var shifts []entity.ShiftAdmin
-
-	// クエリー実行
-	rows, err := a.rep.All(c)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	for rows.Next() {
-		err := rows.Scan(
-			&shift.ID,
-			&shift.TaskID,
-			&shift.UserID,
-			&shift.YearID,
-			&shift.DateID,
-			&shift.TimeID,
-			&shift.WeatherID,
-			&shift.IsAttendance,
-			&shift.CreatedAt,
-			&shift.UpdatedAt,
-		)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-
-		shifts = append(shifts, shift)
-	}
-	return shifts, nil
-}
 
 func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.ShiftAdmin, error) {
 	var shift entity.ShiftAdmin

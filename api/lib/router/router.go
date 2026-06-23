@@ -102,7 +102,6 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.POST("/shift-cards", r.shiftController.PostShiftCards)
 
 	// shift(Web)のRoute
-	e.GET("/shifts-admin", r.shiftController.IndexShiftAdmin)
 	e.GET("/shifts-admin/:id", r.shiftController.ShowShiftAdmin)
 	e.POST("/shifts-admin", r.shiftController.CreateShiftAdmin)
 	e.PUT("/shifts-admin/:id", r.shiftController.UpdateShiftAdmin)
