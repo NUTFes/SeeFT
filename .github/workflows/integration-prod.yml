@@ -11,12 +11,21 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+
     steps:
       - name: Check out the repo
         uses: actions/checkout@v6
         with:
           submodules: recursive
           token: ${{ secrets.GH_PAT || github.token }}
+      
+      - name: Set image tag
+        id: vars
+        run: |
+          echo "image_tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
@@ -58,7 +67,7 @@ jobs:
           context: ./api
           file: ./api/prod.Dockerfile
           push: true
-          tags: ${{ secrets.HARBOR_REG }}/seeft/api:latest
+          tags: ${{ secrets.HARBOR_REG }}/seeft/api:${{ steps.vars.outputs.image_tag }}
           cache-from: type=gha
 
       - name: Build and Push Admin
@@ -67,7 +76,7 @@ jobs:
           context: ./admin
           file: ./admin/prod.Dockerfile
           push: true
-          tags: ${{ secrets.HARBOR_REG }}/seeft/admin:latest
+          tags: ${{ secrets.HARBOR_REG }}/seeft/admin:${{ steps.vars.outputs.image_tag }}
           cache-from: type=gha
 
       - name: Build and Push Mobile
@@ -76,7 +85,7 @@ jobs:
           context: ./mobile
           file: ./mobile/Dockerfile
           push: true
-          tags: ${{ secrets.HARBOR_REG }}/seeft/mobile:latest
+          tags: ${{ secrets.HARBOR_REG }}/seeft/mobile:${{ steps.vars.outputs.image_tag }}
           cache-from: type=gha
 
   trigger-cd:
