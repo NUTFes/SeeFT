@@ -97,7 +97,6 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/departments/:id", r.departmentController.ShowDepartment)
 
 	// shift(スマホ)のRoute
-	e.GET("/shifts/:id", r.shiftController.ShowShift)
 	e.GET("/shifts/users/:user_id", r.shiftController.ShowShiftsByUser)
 	e.GET("/shifts/tasks/:task_id/years/:year_id/dates/:date_id/times/:time_id/weathers/:weather_id", r.shiftController.ShowUsersByShift)
 	e.GET("/shifts/users/:user_id/dates/:date/weathers/:weather", r.shiftController.ShowShiftsByUserAndDateAndWeather)
