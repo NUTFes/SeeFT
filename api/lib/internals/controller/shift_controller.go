@@ -13,7 +13,6 @@ type shiftController struct {
 }
 
 type ShiftController interface {
-	IndexShift(echo.Context) error
 	ShowShift(echo.Context) error
 	ShowShiftsByUser(echo.Context) error
 	ShowUsersByShift(echo.Context) error
@@ -34,15 +33,6 @@ type ShiftController interface {
 
 func NewShiftController(u usecase.ShiftUseCase) ShiftController {
 	return &shiftController{u}
-}
-
-// スマホ用API
-func (b *shiftController) IndexShift(c echo.Context) error {
-	shifts, err := b.u.GetShifts(c.Request().Context())
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shifts)
 }
 
 func (b *shiftController) ShowShift(c echo.Context) error {
