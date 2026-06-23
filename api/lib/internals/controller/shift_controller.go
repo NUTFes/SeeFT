@@ -13,15 +13,9 @@ type shiftController struct {
 }
 
 type ShiftController interface {
-	IndexShift(echo.Context) error
-	ShowShift(echo.Context) error
-	ShowShiftsByUser(echo.Context) error
 	ShowUsersByShift(echo.Context) error
-	ShowShiftsByUserAndDateAndWeather(echo.Context) error
 	ShowShiftCardsByUserAndDateAndWeather(echo.Context) error
 	PostShiftCards(echo.Context) error
-	IndexShiftAdmin(echo.Context) error
-	ShowShiftAdmin(echo.Context) error
 	CreateShiftAdmin(echo.Context) error
 	UpdateShiftAdmin(echo.Context) error
 	DeleteShiftAdmin(echo.Context) error
@@ -36,33 +30,6 @@ func NewShiftController(u usecase.ShiftUseCase) ShiftController {
 	return &shiftController{u}
 }
 
-// スマホ用API
-func (b *shiftController) IndexShift(c echo.Context) error {
-	shifts, err := b.u.GetShifts(c.Request().Context())
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shifts)
-}
-
-func (b *shiftController) ShowShift(c echo.Context) error {
-	id := c.Param("id")
-	shift, err := b.u.GetShiftByID(c.Request().Context(), id)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shift)
-}
-
-func (b *shiftController) ShowShiftsByUser(c echo.Context) error {
-	id := c.Param("user_id")
-	shifts, err := b.u.GetShiftsByUser(c.Request().Context(), id)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shifts)
-}
-
 func (b *shiftController) ShowUsersByShift(c echo.Context) error {
 	task := c.Param("task_id")
 	year := c.Param("year_id")
@@ -74,17 +41,6 @@ func (b *shiftController) ShowUsersByShift(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, shiftUsers)
-}
-
-func (b *shiftController) ShowShiftsByUserAndDateAndWeather(c echo.Context) error {
-	id := c.Param("user_id")
-	date := c.Param("date")
-	weather := c.Param("weather")
-	shifts, err := b.u.GetShiftsByUserAndDateAndWeather(c.Request().Context(), id, date, weather)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shifts)
 }
 
 func (b *shiftController) ShowShiftCardsByUserAndDateAndWeather(c echo.Context) error {
@@ -121,23 +77,6 @@ func (b *shiftController) PostShiftCards(c echo.Context) error {
 }
 
 // Webアプリ用API
-
-func (b *shiftController) IndexShiftAdmin(c echo.Context) error {
-	shifts, err := b.u.GetShiftsAdmin(c.Request().Context())
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shifts)
-}
-
-func (b *shiftController) ShowShiftAdmin(c echo.Context) error {
-	id := c.Param("id")
-	shift, err := b.u.GetShiftAdminByID(c.Request().Context(), id)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shift)
-}
 
 // Create
 func (u *shiftController) CreateShiftAdmin(c echo.Context) error {

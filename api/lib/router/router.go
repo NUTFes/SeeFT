@@ -97,17 +97,11 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	e.GET("/departments/:id", r.departmentController.ShowDepartment)
 
 	// shift(スマホ)のRoute
-	e.GET("/shifts", r.shiftController.IndexShift)
-	e.GET("/shifts/:id", r.shiftController.ShowShift)
-	e.GET("/shifts/users/:user_id", r.shiftController.ShowShiftsByUser)
 	e.GET("/shifts/tasks/:task_id/years/:year_id/dates/:date_id/times/:time_id/weathers/:weather_id", r.shiftController.ShowUsersByShift)
-	e.GET("/shifts/users/:user_id/dates/:date/weathers/:weather", r.shiftController.ShowShiftsByUserAndDateAndWeather)
 	e.GET("/shift-cards/users/:user_id/dates/:date_id/weathers/:weather_id", r.shiftController.ShowShiftCardsByUserAndDateAndWeather)
 	e.POST("/shift-cards", r.shiftController.PostShiftCards)
 
 	// shift(Web)のRoute
-	e.GET("/shifts-admin", r.shiftController.IndexShiftAdmin)
-	e.GET("/shifts-admin/:id", r.shiftController.ShowShiftAdmin)
 	e.POST("/shifts-admin", r.shiftController.CreateShiftAdmin)
 	e.PUT("/shifts-admin/:id", r.shiftController.UpdateShiftAdmin)
 	e.DELETE("/shifts-admin", r.shiftController.DeleteShiftAdmin)
