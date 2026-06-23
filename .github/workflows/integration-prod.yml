@@ -8,6 +8,10 @@ on:
   workflow_call:
   workflow_dispatch:
 
+concurrency:
+  group: seeft-ci
+  cancel-in-progress: false
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -88,13 +92,23 @@ jobs:
           tags: ${{ secrets.HARBOR_REG }}/seeft/mobile:${{ steps.vars.outputs.image_tag }}
           cache-from: type=gha
       
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: NUTFes
+          repositories: k8s-manifests
+          permission-contents: write
+
       - name: Check out k8s manifests repo
         uses: actions/checkout@v6
         with:
           repository: NUTFes/k8s-manifests
           ref: main
           path: k8s-manifests
-          token: ${{ secrets.K8S_MANIFESTS_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
       
       - name: Update SeeFT image tag
         run: |
@@ -103,9 +117,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          sed -i "s|image: reg.nutmeg.cloud/seeft/api:.*|image: reg.nutmeg.cloud/seeft/api:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
-          sed -i "s|image: reg.nutmeg.cloud/seeft/admin:.*|image: reg.nutmeg.cloud/seeft/admin:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
-          sed -i "s|image: reg.nutmeg.cloud/seeft/mobile:.*|image: reg.nutmeg.cloud/seeft/mobile:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: ${{ secrets.HARBOR_REG }}/seeft/api:.*|image: ${{ secrets.HARBOR_REG }}/seeft/api:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: ${{ secrets.HARBOR_REG }}/seeft/admin:.*|image: ${{ secrets.HARBOR_REG }}/seeft/admin:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: ${{ secrets.HARBOR_REG }}/seeft/mobile:.*|image: ${{ secrets.HARBOR_REG }}/seeft/mobile:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
 
           git add seeft/deployment.yml
 
@@ -115,7 +129,8 @@ jobs:
           fi
 
           git commit -m "chore(seeft): update image tag to ${{ steps.vars.outputs.image_tag }}"
-          git push origin main
+          git pull --rebase origin main
+          git push origin HEAD:main
 
 #  trigger-cd:
 #    needs: build-and-push
