@@ -64,18 +64,6 @@ class Api {
     }
   }
 
-// Example
-  Future getMyShift(id) async {
-    String url = '${constant.apiUrl}/shifts/users/$id';
-    try {
-      return await get(url);
-    } catch (err) {
-      logger.e(err);
-      // calling api.get みたいに呼び出し元参照できるようにしたい
-      rethrow;
-    }
-  }
-
   // 準備日晴れシフト
   Future getMyShiftPreparationDaySunny(id) async {
     String url =

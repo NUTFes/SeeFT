@@ -33,7 +33,6 @@ type shiftUseCase struct {
 }
 
 type ShiftUseCase interface {
-	GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
 	GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
 	GetShiftCardsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.ShiftCard, error)
 	GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error)
@@ -74,118 +73,6 @@ type ByTime []entity.Shift
 func (a ByTime) Len() int           { return len(a) }
 func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTime) Less(i, j int) bool { return a[i].Time.ID < a[j].Time.ID }
-
-func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.Shift, error) {
-
-	shift := entity.Shift{}
-	var shifts []entity.Shift
-	place := entity.Place{}
-
-	// クエリー実行
-	rows, err := a.rep.User(c, id)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	for rows.Next() {
-		err := rows.Scan(
-			&shift.ID,
-			&TaskID,
-			&UserID,
-			&YearID,
-			&DateID,
-			&TimeID,
-			&WeatherID,
-			&shift.IsAttendance,
-			&shift.CreatedAt,
-			&shift.UpdatedAt,
-		)
-
-		row, err := a.taskRep.Find(c, TaskID)
-		err = row.Scan(
-			&shift.Task.ID,
-			&shift.Task.Task,
-			&PlaceID,
-			&shift.Task.Url,
-			&shift.Task.BureauID,
-			&shift.Task.MaxMember,
-			&shift.Task.Color,
-			&shift.Task.Remark,
-			&shift.Task.YearID,
-			&shift.Task.CreatedAt,
-			&shift.Task.UpdatedAt,
-		)
-
-		row, err = a.placeRep.Find(c, PlaceID)
-		err = row.Scan(
-			&place.ID,
-			&shift.Task.Place,
-			&place.Remark,
-			&place.CreatedAt,
-			&place.UpdatedAt,
-		)
-
-		row, err = a.userRep.Find(c, UserID)
-		err = row.Scan(
-			&shift.User.ID,
-			&shift.User.Name,
-			&shift.User.Mail,
-			&shift.User.GradeID,
-			&shift.User.DepartmentID,
-			&shift.User.BureauID,
-			&shift.User.RoleID,
-			&shift.User.StudentNumber,
-			&shift.User.Tel,
-			&shift.User.Password,
-			&shift.User.CreatedAt,
-			&shift.User.UpdatedAt,
-			&shift.User.SlackUserID,
-		)
-
-		row, err = a.yearRep.Find(c, YearID)
-		err = row.Scan(
-			&shift.Year.ID,
-			&shift.Year.Year,
-			&shift.Year.CreatedAt,
-			&shift.Year.UpdatedAt,
-		)
-
-		row, err = a.dateRep.Find(c, DateID)
-		err = row.Scan(
-			&shift.Date.ID,
-			&shift.Date.YearID,
-			&shift.Date.Name,
-			&shift.Date.Date,
-			&shift.Date.CreatedAt,
-			&shift.Date.UpdatedAt,
-		)
-
-		row, err = a.timeRep.Find(c, TimeID)
-		err = row.Scan(
-			&shift.Time.ID,
-			&shift.Time.Time,
-			&shift.Time.CreatedAt,
-			&shift.Time.UpdatedAt,
-		)
-
-		row, err = a.weatherRep.Find(c, WeatherID)
-		err = row.Scan(
-			&shift.Weather.ID,
-			&shift.Weather.Weather,
-			&shift.Weather.CreatedAt,
-			&shift.Weather.UpdatedAt,
-		)
-
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-
-		shifts = append(shifts, shift)
-	}
-	sort.Sort(ByTime(shifts))
-	return shifts, nil
-}
 
 func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id string, date string, weather string) ([]entity.Shift, error) {
 

@@ -13,7 +13,6 @@ type shiftController struct {
 }
 
 type ShiftController interface {
-	ShowShiftsByUser(echo.Context) error
 	ShowUsersByShift(echo.Context) error
 	ShowShiftsByUserAndDateAndWeather(echo.Context) error
 	ShowShiftCardsByUserAndDateAndWeather(echo.Context) error
@@ -32,15 +31,6 @@ type ShiftController interface {
 
 func NewShiftController(u usecase.ShiftUseCase) ShiftController {
 	return &shiftController{u}
-}
-
-func (b *shiftController) ShowShiftsByUser(c echo.Context) error {
-	id := c.Param("user_id")
-	shifts, err := b.u.GetShiftsByUser(c.Request().Context(), id)
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, shifts)
 }
 
 func (b *shiftController) ShowUsersByShift(c echo.Context) error {
