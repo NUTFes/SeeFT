@@ -195,31 +195,30 @@ func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.S
 }
 
 func (u *shiftUseCase) CreateShiftAdmin(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
-	var latastShift entity.ShiftAdmin
-	err := u.rep.Create(c, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
+	var createdShift entity.ShiftAdmin
+	id, err := u.rep.CreateAndReturnID(c, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
 	if err != nil {
-		return latastShift, err
+		return createdShift, errors.Wrapf(err, "シフト作成に失敗: %v", err)
 	}
-	row, err := u.rep.FindLatestRecord(c)
+	row, err := u.rep.Find(c, strconv.Itoa(id))
 	if err != nil {
-		return latastShift, err
+		return createdShift, errors.Wrapf(err, "作成したシフトの取得に失敗: %v", err)
 	}
-	err = row.Scan(
-		&latastShift.ID,
-		&latastShift.TaskID,
-		&latastShift.UserID,
-		&latastShift.YearID,
-		&latastShift.DateID,
-		&latastShift.TimeID,
-		&latastShift.WeatherID,
-		&latastShift.IsAttendance,
-		&latastShift.CreatedAt,
-		&latastShift.UpdatedAt,
-	)
-	if err != nil {
-		return latastShift, err
+	if err := row.Scan(
+		&createdShift.ID,
+		&createdShift.TaskID,
+		&createdShift.UserID,
+		&createdShift.YearID,
+		&createdShift.DateID,
+		&createdShift.TimeID,
+		&createdShift.WeatherID,
+		&createdShift.IsAttendance,
+		&createdShift.CreatedAt,
+		&createdShift.UpdatedAt,
+	); err != nil {
+		return createdShift, errors.Wrapf(err, "作成したシフトのScanに失敗: %v", err)
 	}
-	return latastShift, nil
+	return createdShift, nil
 }
 
 func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
