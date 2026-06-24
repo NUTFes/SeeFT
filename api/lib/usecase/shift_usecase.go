@@ -73,7 +73,6 @@ func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTime) Less(i, j int) bool { return a[i].Time.ID < a[j].Time.ID }
 
 func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year string, date string, time string, weather string) (entity.ShiftUsers, error) {
-
 	users := entity.User{}
 	var shiftUsers entity.ShiftUsers
 
@@ -109,14 +108,23 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	}
 
 	row, err := a.yearRep.Find(c, year)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Year.ID,
 		&shiftUsers.Year.Year,
 		&shiftUsers.Year.CreatedAt,
 		&shiftUsers.Year.UpdatedAt,
 	)
+	if err != nil {
+		return shiftUsers, err
+	}
 
 	row, err = a.dateRep.Find(c, date)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Date.ID,
 		&shiftUsers.Date.YearID,
@@ -125,14 +133,26 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 		&shiftUsers.Date.CreatedAt,
 		&shiftUsers.Date.UpdatedAt,
 	)
+	if err != nil {
+		return shiftUsers, err
+	}
 	row, err = a.timeRep.Find(c, time)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Time.ID,
 		&shiftUsers.Time.Time,
 		&shiftUsers.Time.CreatedAt,
 		&shiftUsers.Time.UpdatedAt,
 	)
+	if err != nil {
+		return shiftUsers, err
+	}
 	row, err = a.weatherRep.Find(c, weather)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Weather.ID,
 		&shiftUsers.Weather.Weather,
@@ -152,6 +172,9 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.ShiftAdmin, error) {
 	var shift entity.ShiftAdmin
 	row, err := a.rep.Find(c, id)
+	if err != nil {
+		return shift, err
+	}
 	err = row.Scan(
 		&shift.ID,
 		&shift.TaskID,
@@ -172,25 +195,30 @@ func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.S
 }
 
 func (u *shiftUseCase) CreateShiftAdmin(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
-	var latastShift entity.ShiftAdmin
-	err := u.rep.Create(c, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
-	row, err := u.rep.FindLatestRecord(c)
-	err = row.Scan(
-		&latastShift.ID,
-		&latastShift.TaskID,
-		&latastShift.UserID,
-		&latastShift.YearID,
-		&latastShift.DateID,
-		&latastShift.TimeID,
-		&latastShift.WeatherID,
-		&latastShift.IsAttendance,
-		&latastShift.CreatedAt,
-		&latastShift.UpdatedAt,
-	)
+	var createdShift entity.ShiftAdmin
+	id, err := u.rep.CreateAndReturnID(c, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
 	if err != nil {
-		return latastShift, err
+		return createdShift, errors.Wrapf(err, "シフト作成に失敗: %v", err)
 	}
-	return latastShift, err
+	row, err := u.rep.Find(c, strconv.Itoa(id))
+	if err != nil {
+		return createdShift, errors.Wrapf(err, "作成したシフトの取得に失敗: %v", err)
+	}
+	if err := row.Scan(
+		&createdShift.ID,
+		&createdShift.TaskID,
+		&createdShift.UserID,
+		&createdShift.YearID,
+		&createdShift.DateID,
+		&createdShift.TimeID,
+		&createdShift.WeatherID,
+		&createdShift.IsAttendance,
+		&createdShift.CreatedAt,
+		&createdShift.UpdatedAt,
+	); err != nil {
+		return createdShift, errors.Wrapf(err, "作成したシフトのScanに失敗: %v", err)
+	}
+	return createdShift, nil
 }
 
 func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
@@ -198,6 +226,9 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 	var shift entity.ShiftAdmin
 
 	row, err := u.rep.Find(c, id)
+	if err != nil {
+		return updatedShift, err
+	}
 	err = row.Scan(
 		&shift.ID,
 		&shift.TaskID,
@@ -218,6 +249,9 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 		return updatedShift, err
 	}
 	row, err = u.rep.Find(c, id)
+	if err != nil {
+		return updatedShift, err
+	}
 	err = row.Scan(
 		&updatedShift.ID,
 		&updatedShift.TaskID,
