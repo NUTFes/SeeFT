@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"sort"
 	"strconv"
@@ -289,6 +290,10 @@ func (ru *rescueUnifiedUseCase) SendRescueToGAS(data map[string]interface{}) err
 	if gasURL == "" {
 		return errors.New("GAS URLが設定されていません (RESCUE_GAS_URL)")
 	}
+	parsedURL, err := url.Parse(gasURL)
+	if err != nil || parsedURL.Scheme != "https" {
+		return errors.New("RESCUE_GAS_URL が不正です（https のみ許可）")
+	}
 
 	// JSONに変換
 	jsonData, err := json.Marshal(data)
@@ -296,14 +301,14 @@ func (ru *rescueUnifiedUseCase) SendRescueToGAS(data map[string]interface{}) err
 		return errors.Wrap(err, "レスキューデータのJSON変換失敗")
 	}
 
-	req, err := http.NewRequest("POST", gasURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", gasURL, bytes.NewBuffer(jsonData)) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
 	if err != nil {
 		return errors.Wrap(err, "GASリクエスト作成失敗")
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
 	if err != nil {
 		return errors.Wrap(err, "GASへの送信失敗")
 	}
