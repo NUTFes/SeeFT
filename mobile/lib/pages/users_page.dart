@@ -100,9 +100,9 @@ class _UsersPageState extends State<UsersPage> {
 
   Widget _manualItem(var users, index, context) {
     return Container(
-      decoration: new BoxDecoration(
+      decoration: BoxDecoration(
           border:
-              new Border(bottom: BorderSide(width: 1.0, color: Colors.grey))),
+              Border(bottom: BorderSide(width: 1.0, color: Colors.grey))),
       child: ListTile(
         title: Text(
           users[index]["name"].toString(),
@@ -139,9 +139,9 @@ class _UsersPageState extends State<UsersPage> {
     var roleID = await store.getRoleID();
     var value = await showDialog(
       context: context,
-      builder: (BuildContext context) => new AlertDialog(
-        title: new Text('ユーザ情報'),
-        content: new SizedBox(
+      builder: (BuildContext context) => AlertDialog(
+        title: Text('ユーザ情報'),
+        content: SizedBox(
           height: 200,
           width: 300,
           child: ListView(children: <Widget>[
@@ -177,8 +177,8 @@ class _UsersPageState extends State<UsersPage> {
           ]),
         ),
         actions: <Widget>[
-          new SimpleDialogOption(
-            child: new Text('OK'),
+          SimpleDialogOption(
+            child: Text('OK'),
             onPressed: () => Navigator.of(context).pop(),
           )
         ],
