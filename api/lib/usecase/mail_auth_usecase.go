@@ -35,7 +35,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 
 	// メールアドレスの存在確認
 	row := u.userRep.FindByStudentNumber(c, studentNumber)
-	err := row.Scan(
+	if err := row.Scan(
 		&user.ID,
 		&user.Name,
 		&user.Mail,
@@ -49,11 +49,14 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.SlackUserID,
-	)
+	); err != nil {
+		return entity.LoginUser{}, errors.Wrapf(err, "ユーザーの取得に失敗: %v", err)
+	}
+
 	// パスワードがあっているか確認
 	password = strings.ReplaceAll(password, " ", "")
 	password = strings.ReplaceAll(password, "　", "")
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
 
