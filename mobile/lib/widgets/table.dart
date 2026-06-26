@@ -47,7 +47,7 @@ class ShiftTable {
                   TableCell(
                       child: Container(
                     alignment: Alignment.center,
-                    child: new Text(shifts[index]["time"]["time"]),
+                    child: Text(shifts[index]["time"]["time"]),
                   )),
                   TableCell(
                       /*
@@ -64,7 +64,7 @@ class ShiftTable {
                     //color: HexColor(shifts[index]["Color"].toString()),
                     padding: EdgeInsets.all(0),
                     //height: 25.0,
-                    child: new Material(
+                    child: Material(
                       type: MaterialType.button,
                       color: HexColor(shifts[index]["task"]["color"]),
                       child: InkWell(
@@ -83,7 +83,7 @@ class ShiftTable {
                         },
                         //child: Center(child: new Text(shifts[index]["Work"].toString())),
                         child: Center(
-                              child: new Text(
+                              child: Text(
                                   shifts[index]["task"]["task"].toString())),
                         ),
                       ),

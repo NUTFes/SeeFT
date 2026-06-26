@@ -6,7 +6,7 @@ class FirstJumpSelector extends StatefulWidget {
   const FirstJumpSelector({super.key});
 
   @override
-  State<FirstJumpSelector> createState() => new _FirstJumpSelectorState();
+  State<FirstJumpSelector> createState() => _FirstJumpSelectorState();
 }
 
 class _FirstJumpSelectorState extends State<FirstJumpSelector> {
@@ -63,7 +63,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
             homeWidget = '/signin';
           }
 
-          app = new MaterialApp(
+          app = MaterialApp(
             title: constant.appName,
             theme: materialTheme.light(), // ライトモードのテーマ
               darkTheme: materialTheme.dark(), // ダークモードのテーマ
@@ -75,7 +75,7 @@ class _FirstJumpSelectorState extends State<FirstJumpSelector> {
             },
           );
         } else if (snapshot.hasError) {
-          app = new MaterialApp(
+          app = MaterialApp(
             title: constant.appName,
             theme: materialTheme.light(), // ライトモードのテーマ
               darkTheme: materialTheme.dark(), // ダークモードのテーマ
