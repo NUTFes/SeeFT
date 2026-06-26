@@ -72,7 +72,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
       place == ""
     ) {
       logger.e('Invalid input data');
-      showCustomErrorSnackBar(context, "データが入力されていません");
+      if (context.mounted) showCustomErrorSnackBar(context, "データが入力されていません");
       return false;
     }
     try {
@@ -91,11 +91,11 @@ class RescueRequestTabTroublePage extends StatelessWidget {
       );
 
       logger.i('Trouble report sent successfully.');
-      showCustomSnackBar(context, "レスキューを送信しました");
+      if (context.mounted) showCustomSnackBar(context, "レスキューを送信しました");
       return true;
     } catch (e) {
       logger.e('Failed to send trouble report: $e');
-      showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
+      if (context.mounted) showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
       return false;
     }
   }
@@ -349,6 +349,7 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                         place,
                         detail
                       );
+                      if (!context.mounted) return;
                       logger.i("レスキューを送信しました");
                       if(isSuccess){
                         // 最初の画面まで戻る

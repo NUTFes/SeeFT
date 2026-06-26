@@ -32,11 +32,11 @@ class RescueRequestTabQuestionPage extends StatelessWidget {
       await api.postQuestionRescue(userId, question);
 
       logger.i('Question report sent successfully.');
-      showCustomSnackBar(context, "レスキューを送信しました");
+      if (context.mounted) showCustomSnackBar(context, "レスキューを送信しました");
       return true;
     } catch (e) {
       logger.e('Failed to send question report: $e');
-      showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
+      if (context.mounted) showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
       return false;
     }
   }
@@ -119,6 +119,7 @@ class RescueRequestTabQuestionPage extends StatelessWidget {
                   context,
                   question,
                 );
+                if (!context.mounted) return;
                 logger.i("レスキューを送信しました");
                 if(isSuccess){
                   // 最初の画面まで戻る

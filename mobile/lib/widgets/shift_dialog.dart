@@ -102,7 +102,7 @@ openShiftDialog(
   } else {
     resAfterUsers = 'none';
   }
-
+  if (!context.mounted) return;
   showDialog(
     context: context,
     builder: (context) {

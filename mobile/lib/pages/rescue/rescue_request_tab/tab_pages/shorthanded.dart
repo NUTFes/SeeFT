@@ -73,14 +73,14 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
       place == ""
     ) {
       logger.e('Invalid input data');
-      showCustomErrorSnackBar(context, "データが入力されていません");
+      if (context.mounted) showCustomErrorSnackBar(context, "データが入力されていません");
       return false;
     }
     if(
       selectedTask.id == 0
     ) {
       logger.e('taskID is Invalid');
-      showCustomErrorSnackBar(context, "タスクを選択してください");
+      if (context.mounted) showCustomErrorSnackBar(context, "タスクを選択してください");
       return false;
     }
     try {
@@ -94,11 +94,11 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
       await api.postShorthandedRescue(userId, selectedTask.id, missingNumber, place);
 
       logger.i('Shorthanded report sent successfully.');
-      showCustomSnackBar(context, "レスキューを送信しました");
+      if (context.mounted) showCustomSnackBar(context, "レスキューを送信しました");
       return true;
     } catch (e) {
       logger.e('Failed to send shorthanded report: $e');
-      showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
+      if (context.mounted) showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
       return false;
     }
   }
@@ -353,6 +353,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                         missingNumber,
                         place,
                       );
+                      if (!context.mounted) return;
                       logger.i("レスキューを送信しました");
                       if(isSuccess){
                         // 最初の画面まで戻る

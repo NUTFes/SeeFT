@@ -25,6 +25,7 @@ class _SignInPageState extends State<SignInPage> {
         await store.setRoleID(resRoleId);
         // userIdをstoreにset出来てるか確認
         var userID = await store.getUserID();
+        if (!mounted) return;
         setState(() {
           infoText = "Your ID : $userID";
         });

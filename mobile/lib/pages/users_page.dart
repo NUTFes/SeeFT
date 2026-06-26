@@ -137,6 +137,7 @@ class _UsersPageState extends State<UsersPage> {
 
   Future userInfoModal(users, index) async {
     var roleID = await store.getRoleID();
+    if (!mounted) return;
     var value = await showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
