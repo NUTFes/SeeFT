@@ -25,6 +25,7 @@ class _SignInPageState extends State<SignInPage> {
         await store.setRoleID(resRoleId);
         // userIdをstoreにset出来てるか確認
         var userID = await store.getUserID();
+        if (!mounted) return;
         setState(() {
           infoText = "Your ID : $userID";
         });
@@ -33,6 +34,7 @@ class _SignInPageState extends State<SignInPage> {
             '/layout',
             (Route<dynamic> route) => false);
       } else {
+        if (!mounted) return;
         setState(() {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('学籍番号もしくはパスワードが違います'),
@@ -41,6 +43,7 @@ class _SignInPageState extends State<SignInPage> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('学籍番号もしくはパスワードが違います'),

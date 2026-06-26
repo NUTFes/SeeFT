@@ -91,11 +91,11 @@ class _ReviewFormState extends State<ReviewForm> {
       await api.postReview(userID, taskName, staffingRating, manualRating, comment);
 
       logger.i('レビューの送信に成功しました');
-      showCustomSnackBar(context, "レビューを送信しました");
+      if (context.mounted) showCustomSnackBar(context, "レビューを送信しました");
       return true;
     } catch (e) {
       logger.e('レビューの送信に失敗しました: $e');
-      showCustomErrorSnackBar(context, "レビューの送信に失敗しました");
+      if (context.mounted) showCustomErrorSnackBar(context, "レビューの送信に失敗しました");
       return false;
     }
   }
@@ -114,6 +114,7 @@ class _ReviewFormState extends State<ReviewForm> {
       manualRating,
       _controller.text,
     );
+    if (!mounted) return;
     if(isSuccess){  // 送信成功時
       // Hiveにタスク名を保存
       reviewedTaskNameBox.put(widget.taskName, true);

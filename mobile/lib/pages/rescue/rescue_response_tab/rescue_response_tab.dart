@@ -106,7 +106,8 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
     
     // サーバーからデータを取得
     final List<dynamic>? fetchedData = await _getRescueResponses(userID);
-    
+    if (!mounted) {return;}
+
     // キャッシュデータとフェッチデータを比較
     if (fetchedData == null || deepEq(fetchedData, cachedData)) {
       // フェッチデータがnullまたはキャッシュデータと同じ場合は、キャッシュデータを使用
