@@ -16,6 +16,9 @@ jobs:
         working-directory: mobile
     steps:
       - uses: actions/checkout@v4
+        with:
+          # lint job はトークンを使わないため、git に資格情報を残さない（最小権限）。
+          persist-credentials: false
       - uses: subosito/flutter-action@v2
         with:
           # mobile/.fvmrc と一致させる。Flutter のアップグレードは別ブランチで行う。
