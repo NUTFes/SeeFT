@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # SHA 固定した GitHub Actions を自動更新する（go-lint.yml / flutter-lint.yml）。
+  # 固定したまま放置すると脆弱性修正を取りこぼすため、その逆リスクを Dependabot で解消する。
+  - package-ecosystem: "github-actions"
+    # "/" を指定すると .github/workflows 配下を走査する。
+    directory: "/"
+    schedule:
+      # weekly は「PRを毎週出す」ではなく「毎週更新を確認する」間隔。更新が無ければ無音。
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    # bump コミットの接頭辞。手動コミットの ci: と揃える。
+    commit-message:
+      prefix: "ci"
+    # 複数アクションの更新を1つの PR にまとめてレビュー回数を減らす。
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    # 公開直後の版は掴まず7日待つ。乗っ取り直後の悪意リリースを避ける猶予。
+    cooldown:
+      default-days: 7
