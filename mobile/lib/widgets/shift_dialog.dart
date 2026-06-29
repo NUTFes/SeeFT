@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,12 +7,15 @@ getShiftDetail(workId, userId, date, weather, time) async {
     logger.w(workId);
     var res = await api.shiftDetail(workId, userId, date, weather, time);
     return res;
-  } catch (e) {}
+  } catch (e) {
+    logger.e(e);
+    rethrow;
+  }
 }
 
 _launchURL(url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
+  if (await canLaunchUrl(Uri.parse(url))) {
+    await launchUrl(Uri.parse(url));
   } else {
     throw 'Unable to launch url $url';
   }
@@ -47,7 +49,7 @@ openShiftDialog(
   var resName = task["task"].toString();
   var resURL = task["url"].toString();
   var resPlace = task["place"].toString();
-  var resPresident = task["superviser"].toString();
+  // var resPresident = task["superviser"].toString();
   var resUsersNumber = res["users"].length;
   List<String> resUsersList = <String>[];
   for (var index = 0; index < resUsersNumber; index++) {
@@ -100,14 +102,14 @@ openShiftDialog(
   } else {
     resAfterUsers = 'none';
   }
-
+  if (!context.mounted) return;
   showDialog(
     context: context,
     builder: (context) {
       return SimpleDialog(
         contentPadding: EdgeInsets.zero,
         titlePadding: EdgeInsets.zero,
-        title: Container(
+        title: SizedBox(
           height: 550,
           child: Scaffold(
             appBar: AppBar(
@@ -123,8 +125,7 @@ openShiftDialog(
                 ),
               ],
             ),
-            body: Container(
-              child: ListView(
+            body: ListView(
                 children: <Widget>[
                   ListTile(
                     leading: Icon(Icons.place_outlined),
@@ -159,7 +160,6 @@ openShiftDialog(
                   ),
                 ],
               ),
-            ),
             /*
             floatingActionButton: OutlinedButton(
               child: const Text('マニュアルへ'),

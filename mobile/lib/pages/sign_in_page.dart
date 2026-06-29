@@ -2,8 +2,10 @@ import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/widgets/app_bar.dart';
 
 class SignInPage extends StatefulWidget {
+  const SignInPage({super.key});
+
   @override
-  _SignInPageState createState() => _SignInPageState();
+  State<SignInPage> createState() => _SignInPageState();
 }
 
 /// 利用者登録のページ
@@ -23,25 +25,28 @@ class _SignInPageState extends State<SignInPage> {
         await store.setRoleID(resRoleId);
         // userIdをstoreにset出来てるか確認
         var userID = await store.getUserID();
+        if (!mounted) return;
         setState(() {
-          infoText = "Your ID : ${userID}";
+          infoText = "Your ID : $userID";
         });
         Navigator.pushNamedAndRemoveUntil(
             context,
             '/layout',
             (Route<dynamic> route) => false);
       } else {
+        if (!mounted) return;
         setState(() {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: const Text('学籍番号もしくはパスワードが違います'),
+            content: Text('学籍番号もしくはパスワードが違います'),
             backgroundColor: AppColors.error,
           ));
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: const Text('学籍番号もしくはパスワードが違います'),
+          content: Text('学籍番号もしくはパスワードが違います'),
           backgroundColor: AppColors.error,
         ));
       });
@@ -268,13 +273,6 @@ class _SignInPageState extends State<SignInPage> {
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         child: ElevatedButton(
-                          child: const Text(
-                            'ログイン',
-                            style: TextStyle(
-                              fontSize: AppFontSizes.sm,
-                              color: AppColors.textWhite,
-                            ),
-                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.main,
                             padding: const EdgeInsets.symmetric(
@@ -285,6 +283,13 @@ class _SignInPageState extends State<SignInPage> {
                           onPressed: () async {
                             _signIn();
                           },
+                          child: const Text(
+                            'ログイン',
+                            style: TextStyle(
+                              fontSize: AppFontSizes.sm,
+                              color: AppColors.textWhite,
+                            ),
+                          ),
                         ),
                       ),
                       Container(

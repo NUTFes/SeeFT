@@ -40,7 +40,7 @@ List<dynamic>? _getCashedRescueResponses(int? userID) {
     // userIDがnullの場合は全てのレスキューのレスポンスを取得
     cachedData = rescueBox.get('all_rescue_responses');
   } else {
-    cachedData = rescueBox.get('rescue_responses_by_${userID}');
+    cachedData = rescueBox.get('rescue_responses_by_$userID');
   }
   // final List<dynamic>? cachedData = rescueBox.get('rescue_responses_by_${userID}');
   logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');
@@ -58,10 +58,10 @@ List<dynamic>? _getCashedRescueResponses(int? userID) {
 }
 
 class RescueResponseTab extends StatefulWidget {
-  const RescueResponseTab({Key? key}) : super(key: key);
+  const RescueResponseTab({super.key});
 
   @override
-  _RescueResponseTabState createState() => _RescueResponseTabState();
+  State<RescueResponseTab> createState() => _RescueResponseTabState();
 }
 
 class _RescueResponseTabState extends State<RescueResponseTab> {
@@ -97,9 +97,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
     // キャッシュからデータを取得
     final List<dynamic>? cachedData = _getCashedRescueResponses(userID);
     // キャッシュデータをList<RescueResponse>に変換
-    final List<RescueResponse>? cachedRescueResponses = cachedData != null
-        ? cachedData.map((item) => RescueResponse.fromJson(item)).toList()
-        : null;
+    final List<RescueResponse>? cachedRescueResponses = cachedData?.map((item) => RescueResponse.fromJson(item)).toList();
     
     // 表示データをキャッシュデータで更新
     setState(() {
@@ -108,7 +106,8 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
     
     // サーバーからデータを取得
     final List<dynamic>? fetchedData = await _getRescueResponses(userID);
-    
+    if (!mounted) {return;}
+
     // キャッシュデータとフェッチデータを比較
     if (fetchedData == null || deepEq(fetchedData, cachedData)) {
       // フェッチデータがnullまたはキャッシュデータと同じ場合は、キャッシュデータを使用
@@ -274,36 +273,27 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
   // レスキューのレスポンスを表示するウィジェット
   Widget _rescueResponseWidget(RescueResponse response) {
     String titleRescue = "";
-    String titleResponse = response.response == "" ? "本部からの返答はまだありません。" : "本部からの返答: " + response.response;
+    String titleResponse = response.response == "" ? "本部からの返答はまだありません。" : "本部からの返答: ${response.response}";
     String subTitle = "";
     // レスキューのタイプに応じてタイトルとサブタイトルを設定
     switch(response.type) {
       // トラブル
       case 'trouble':
         final res = response as TroubleRescueResponse;
-        titleRescue = "【トラブル】" + res.content.detail;
-        subTitle = "対応番号: T" + res.id.toString() + "\n"
-                  + "送信者: " + res.userName + "\n"
-                  + "発生タスク: " + res.content.task + "\n"
-                  + "発生場所: " + res.content.place + "\n"
-                  + "発生時刻: " + res.time;
+        titleRescue = "【トラブル】${res.content.detail}";
+        subTitle = "対応番号: T${res.id}\n送信者: ${res.userName}\n発生タスク: ${res.content.task}\n発生場所: ${res.content.place}\n発生時刻: ${res.time}";
         break;
       // 質問
       case 'question':
         final res = response as QuestionRescueResponse;
-        titleRescue = "【質問】" + res.content.question;
-        subTitle = "対応番号: Q" + res.id.toString() + "\n"
-                  + "送信者: " + res.userName + "\n"
-                  + "発生時刻: " + res.time;
+        titleRescue = "【質問】${res.content.question}";
+        subTitle = "対応番号: Q${res.id}\n送信者: ${res.userName}\n発生時刻: ${res.time}";
         break;
       // 人が来ない
       case 'shorthanded':
         final res = response as ShorthandedRescueResponse;
-        titleRescue = "【人が来ない】" + res.content.task + "（" + res.content.missingNumber.toString() + "人）";
-        subTitle = "対応番号: S" + res.id.toString() + "\n"
-                  + "送信者: " + res.userName + "\n"
-                  + "送り先の場所: " + res.content.place + "\n"
-                  + "発生時刻: " + res.time;
+        titleRescue = "【人が来ない】${res.content.task}（${res.content.missingNumber}人）";
+        subTitle = "対応番号: S${res.id}\n送信者: ${res.userName}\n送り先の場所: ${res.content.place}\n発生時刻: ${res.time}";
         break;
     }
     return ListTile(
@@ -311,7 +301,7 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
         TextSpan(
           children: [
             TextSpan(
-              text: titleRescue + "\n",
+              text: "$titleRescue\n",
               style: TextStyle(
                 fontSize: AppFontSizes.md,
                 color: AppColors.textBlack,
@@ -341,20 +331,20 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
   
   // レスキューのレスポンスのステータスに応じたアイコンを表示するウィジェット
   Widget _statusIcon(String status) {
-    Color _iconColor = AppColors.error;
-    String _iconText = "未対応";
+    Color iconColor = AppColors.error;
+    String iconText = "未対応";
     switch (status) {
       case 'done':
-        _iconColor = Color(0xFF325c23);
-        _iconText = "対応済";
+        iconColor = Color(0xFF325c23);
+        iconText = "対応済";
         break;
       case 'inProgress':
-        _iconColor = Color(0xFF3A73E6);
-        _iconText = "対応中";
+        iconColor = Color(0xFF3A73E6);
+        iconText = "対応中";
         break;
       case 'todo':
-        _iconColor = AppColors.error;
-        _iconText = "未対応";
+        iconColor = AppColors.error;
+        iconText = "未対応";
         break;
     }
     
@@ -362,12 +352,12 @@ class _RescueResponseTabState extends State<RescueResponseTab> {
       padding: EdgeInsets.all(4.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: _iconColor, width: 2.0),
+        border: Border.all(color: iconColor, width: 2.0),
       ),
       child: Text(
-        _iconText,
+        iconText,
         style: TextStyle(
-          color: _iconColor,
+          color: iconColor,
           fontWeight: FontWeight.bold,
           fontSize: AppFontSizes.sm,
         ),

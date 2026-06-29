@@ -18,25 +18,25 @@ class ShiftTable {
           TableRow(children: [
             TableCell(
                 child: Container(
+              alignment: Alignment.center,
+              color: Colors.orangeAccent,
               child: Text(
                 "日時",
                 style: TextStyle(
                   color: Colors.white,
                 ),
               ),
-              alignment: Alignment.center,
-              color: Colors.orangeAccent,
             )),
             TableCell(
               child: Container(
+                alignment: Alignment.center,
+                color: Colors.orangeAccent,
                 child: Text(
                   "シフト",
                   style: TextStyle(
                     color: Colors.white,
                   ),
                 ),
-                alignment: Alignment.center,
-                color: Colors.orangeAccent,
               ),
             )
           ]),
@@ -47,7 +47,7 @@ class ShiftTable {
                   TableCell(
                       child: Container(
                     alignment: Alignment.center,
-                    child: new Text(shifts[index]["time"]["time"]),
+                    child: Text(shifts[index]["time"]["time"]),
                   )),
                   TableCell(
                       /*
@@ -64,7 +64,7 @@ class ShiftTable {
                     //color: HexColor(shifts[index]["Color"].toString()),
                     padding: EdgeInsets.all(0),
                     //height: 25.0,
-                    child: new Material(
+                    child: Material(
                       type: MaterialType.button,
                       color: HexColor(shifts[index]["task"]["color"]),
                       child: InkWell(
@@ -82,14 +82,13 @@ class ShiftTable {
                           }
                         },
                         //child: Center(child: new Text(shifts[index]["Work"].toString())),
-                        child: Container(
-                          child: Center(
-                              child: new Text(
+                        child: Center(
+                              child: Text(
                                   shifts[index]["task"]["task"].toString())),
                         ),
                       ),
                     ),
-                  ))
+                  )
                 ]),
         ]);
   }
@@ -101,7 +100,7 @@ class HexColor extends Color {
     hexColor = hexColor.toUpperCase().replaceAll('0X', '');
     // logger.d(hexColor);
     if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
+      hexColor = 'FF$hexColor';
     }
     // logger.d(hexColor);
     return int.parse(hexColor, radix: 16);

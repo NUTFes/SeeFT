@@ -1,48 +1,42 @@
-import 'package:flutter/material.dart';
 import 'package:seeft_mobile/configs/importer.dart';
-import 'package:flutter/services.dart';
 
 //1ページ目とその表示
 Future<void> openRescueDialog(BuildContext context,) async {
   return showDialog<void>(
     context: context,
     barrierDismissible: false, // user must tap button!
-    barrierColor: Colors.black.withOpacity(0.5),
+    barrierColor: Colors.black.withValues(alpha: 0.5),
     builder: (BuildContext context) {
-      int _rescuePageIndex = 0;
-      bool _manualChecked = false;
-      bool _poepleChecked = false;
-      bool _confirmError1 = false;
+      int rescuePageIndex = 0;
+      bool manualChecked = false;
+      bool poepleChecked = false;
+      bool confirmError1 = false;
 
-      bool _taskChecked = false;
-      bool _locateChecked = false;
-      bool _contentChecked = false;
-      bool _confirmError2 = false;
-      TextEditingController _rescueContent = TextEditingController(); 
-      TextEditingController _rescueNumberofPeople = TextEditingController(); 
-      String? _rescuePostLevel;
-      String? _rescuePostLeve2;
-
-      bool _isChecked = false;
-
+      bool taskChecked = false;
+      bool locateChecked = false;
+      bool confirmError2 = false;
+      TextEditingController rescueContent = TextEditingController(); 
+      TextEditingController rescueNumberofPeople = TextEditingController(); 
+      String? rescuePostLevel;
+      String? rescuePostLeve2;
 
       return StatefulBuilder(
         builder: (context, setState){
           return AlertDialog(
             //各ページのタイトル
             title:Text(
-              _rescuePageIndex == 0 ? 'レスキュー要請1/2':
-              _rescuePageIndex == 1 ? 'レスキュー要請1/2':
-              _rescuePageIndex == 2 ? '最終確認':
+              rescuePageIndex == 0 ? 'レスキュー要請1/2':
+              rescuePageIndex == 1 ? 'レスキュー要請1/2':
+              rescuePageIndex == 2 ? '最終確認':
               '要請完了'
             ),
             content:SizedBox(
               height:
-              (_rescuePageIndex == 0) ? MediaQuery.of(context).size.height*0.2 :
-              (_rescuePageIndex == 1) ? MediaQuery.of(context).size.height*0.5 :
+              (rescuePageIndex == 0) ? MediaQuery.of(context).size.height*0.2 :
+              (rescuePageIndex == 1) ? MediaQuery.of(context).size.height*0.5 :
               MediaQuery.of(context).size.height*0.1,
               child:IndexedStack(
-              index:_rescuePageIndex,
+              index:rescuePageIndex,
               children:[
                 //1ページ目のcontent
                 SingleChildScrollView(
@@ -57,16 +51,16 @@ Future<void> openRescueDialog(BuildContext context,) async {
                           highlightColor:Colors.transparent,
                           onTap:(){
                                 setState((){
-                                  _manualChecked = !_manualChecked;
+                                  manualChecked = !manualChecked;
                                 });
                               },
                           child:Row(
                             children:[
                               Checkbox(
-                                value: _manualChecked,
+                                value: manualChecked,
                                 onChanged: (bool? value) {
                                   setState(() { // 🔹 `setState()` で UI を更新
-                                    _manualChecked = value!;
+                                    manualChecked = value!;
                                   });
                                 },
                               ),
@@ -82,16 +76,16 @@ Future<void> openRescueDialog(BuildContext context,) async {
                           highlightColor:Colors.transparent,
                           onTap:(){
                                 setState((){
-                                  _poepleChecked= !_poepleChecked;
+                                  poepleChecked= !poepleChecked;
                                 });
                               },
                         child:Row(
                           children:[
                             Checkbox(
-                            value: _poepleChecked,
+                            value: poepleChecked,
                             onChanged: (bool? value) {
                               setState(() { // 🔹 `setState()` で UI を更新
-                                _poepleChecked = value!;
+                                poepleChecked = value!;
                               });
                             },
                             ),
@@ -101,7 +95,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
                         )
                         ),
                       ),
-                      if (_confirmError1)
+                      if (confirmError1)
                         Text('確認をしてください',style:TextStyle(color:Colors.red))
                     ]
                   )
@@ -122,7 +116,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
                             }).toList();
                           },
                           onSelected: (String selecttask) {
-                            _taskChecked = !_taskChecked;
+                            taskChecked = !taskChecked;
                           },
                           fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
                             return TextField(
@@ -136,7 +130,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
                             );
                           },
                         ), 
-                        if(_taskChecked == false && _confirmError2 == true)
+                        if(taskChecked == false && confirmError2 == true)
                           Text('必要事項を入力してください',style:TextStyle(color:Colors.red)),
                         SizedBox(height: 20),
                         Text('場所', style:Theme.of(context).textTheme.titleLarge),
@@ -149,7 +143,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
                             }).toList();
                           },
                           onSelected: (String selectlocate) {
-                            _locateChecked = !_locateChecked;
+                            locateChecked = !locateChecked;
                           },
                           fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
                             return TextField(
@@ -163,12 +157,12 @@ Future<void> openRescueDialog(BuildContext context,) async {
                             );
                           }
                         ),
-                        if(_locateChecked == false && _confirmError2 == true)
+                        if(locateChecked == false && confirmError2 == true)
                           Text('必要事項を入力してください',style:TextStyle(color:Colors.red)),
                         Text('内容', style:Theme.of(context).textTheme.titleLarge),
                         Text('どんな問題が発生したのか、なるべく詳しく記入してください。'),
                         TextField(
-                          controller: _rescueContent,
+                          controller: rescueContent,
                           maxLines:null,
                           decoration:InputDecoration(
                             border: OutlineInputBorder(),
@@ -178,7 +172,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
                         Text('必要人数',style:Theme.of(context).textTheme.titleLarge),
                         Text('必要な人数を入力してください(半角数字)'),
                         TextField(
-                          controller: _rescueNumberofPeople,
+                          controller: rescueNumberofPeople,
                           keyboardType: TextInputType.number,
                           inputFormatters:[FilteringTextInputFormatter.digitsOnly],
                           maxLines:1,
@@ -192,51 +186,51 @@ Future<void> openRescueDialog(BuildContext context,) async {
                         ListTile(
                           title:Text('部門長レベル'),
                           leading:Radio(
-                            groupValue: _rescuePostLevel,
+                            groupValue: rescuePostLevel,
                             value:'A',
                             onChanged:(String? value){
                               setState((){
-                                _rescuePostLevel = value;
+                                rescuePostLevel = value;
                               });
                             },
                           ),
                           onTap:(){
                             setState((){
-                              _rescuePostLevel = 'A';
+                              rescuePostLevel = 'A';
                             });
                           },
                         ),
                         ListTile(
                           title:Text('局長レベル'),
                           leading:Radio(
-                            groupValue: _rescuePostLevel,
+                            groupValue: rescuePostLevel,
                             value:'B',
                             onChanged:(String? value){
                               setState((){
-                                _rescuePostLevel = value;
+                                rescuePostLevel = value;
                               });
                             },
                           ),
                           onTap:(){
                             setState((){
-                              _rescuePostLevel = 'B';
+                              rescuePostLevel = 'B';
                             });
                           },
                         ),
                         ListTile(
                           title:Text('委員長レベル'),
                           leading:Radio(
-                            groupValue: _rescuePostLevel,
+                            groupValue: rescuePostLevel,
                             value: 'C',
                             onChanged:(String? value){
                               setState((){
-                                _rescuePostLevel = value;
+                                rescuePostLevel = value;
                               });
                             },
                           ),
                           onTap:(){
                             setState((){
-                              _rescuePostLevel = 'C';
+                              rescuePostLevel = 'C';
                             });
                           },
                         ),
@@ -245,51 +239,51 @@ Future<void> openRescueDialog(BuildContext context,) async {
                         ListTile(
                           title:Text('10分以内'),
                           leading:Radio(
-                            groupValue: _rescuePostLeve2,
+                            groupValue: rescuePostLeve2,
                             value: 'A',
                             onChanged:(String? value){
                               setState((){
-                                _rescuePostLeve2 = value;
+                                rescuePostLeve2 = value;
                               });
                             },
                           ),
                           onTap:(){
                             setState((){
-                              _rescuePostLeve2 = 'A';
+                              rescuePostLeve2 = 'A';
                             });
                           },
                         ),
                         ListTile(
                           title:Text('30分以内'),
                           leading:Radio(
-                            groupValue: _rescuePostLeve2,
+                            groupValue: rescuePostLeve2,
                             value: 'B',
                             onChanged:(String? value){
                               setState((){
-                                _rescuePostLeve2 = value;
+                                rescuePostLeve2 = value;
                               });
                             },
                           ),
                           onTap:(){
                             setState((){
-                              _rescuePostLeve2 = 'B';
+                              rescuePostLeve2 = 'B';
                             });
                           },
                         ),
                         ListTile(
                           title:Text('それ以上'),
                           leading:Radio(
-                            groupValue: _rescuePostLeve2,
+                            groupValue: rescuePostLeve2,
                             value: 'C',
                             onChanged:(String? value){
                               setState((){
-                                _rescuePostLeve2 = value;
+                                rescuePostLeve2 = value;
                               });
                             },
                           ),
                           onTap:(){
                             setState((){
-                              _rescuePostLeve2 = 'C';
+                              rescuePostLeve2 = 'C';
                             });
                           },
                         ),
@@ -315,7 +309,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
             ),
             //条件分岐でactionを記述
             actions:<Widget>[
-              if(_rescuePageIndex == 0)...[
+              if(rescuePageIndex == 0)...[
                 TextButton(
                   child:
                     Text('キャンセル'),
@@ -328,24 +322,24 @@ Future<void> openRescueDialog(BuildContext context,) async {
                     Text('次へ'),
                     onPressed: () {
                       setState((){
-                        if (_manualChecked==true && _poepleChecked==true){
-                          _rescuePageIndex = 1;
-                          _confirmError1 = false;
+                        if (manualChecked==true && poepleChecked==true){
+                          rescuePageIndex = 1;
+                          confirmError1 = false;
                         }
                         else{
-                          _confirmError1 = true;
+                          confirmError1 = true;
                         }
                       });
                     }
                 )
               ]
-              else if (_rescuePageIndex == 1)...[
+              else if (rescuePageIndex == 1)...[
                 TextButton(
                   child:
                     const Text('戻る'),
                       onPressed: () {
                         setState((){
-                        _rescuePageIndex = 0;
+                        rescuePageIndex = 0;
                         });
                       }
                 ),
@@ -354,18 +348,18 @@ Future<void> openRescueDialog(BuildContext context,) async {
                     const Text('送信'),
                     onPressed: () {
                       setState((){
-                        if (_taskChecked==true && _locateChecked==true){
-                          _rescuePageIndex = 2;
-                          _confirmError2 = false;
+                        if (taskChecked==true && locateChecked==true){
+                          rescuePageIndex = 2;
+                          confirmError2 = false;
                         }
                         else{
-                          _confirmError2 = true;
+                          confirmError2 = true;
                         }
                       });
                     }
                 )
               ]
-              else if (_rescuePageIndex == 2)...[
+              else if (rescuePageIndex == 2)...[
                 TextButton(
                   child:(
                     Text('キャンセル')
@@ -386,7 +380,7 @@ Future<void> openRescueDialog(BuildContext context,) async {
                   }
                 )
               ]
-              else if (_rescuePageIndex == 3)
+              else if (rescuePageIndex == 3)
                 TextButton(
                   child:(
                     Text('閉じる')

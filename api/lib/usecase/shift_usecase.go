@@ -33,13 +33,8 @@ type shiftUseCase struct {
 }
 
 type ShiftUseCase interface {
-	GetShifts(context.Context) ([]entity.Shift, error)
-	GetShiftByID(context.Context, string) (entity.Shift, error)
-	GetShiftsByUser(context.Context, string) ([]entity.Shift, error)
-	GetShiftsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.Shift, error)
 	GetShiftCardsByUserAndDateAndWeather(context.Context, string, string, string) ([]entity.ShiftCard, error)
 	GetUsersByShift(context.Context, string, string, string, string, string) (entity.ShiftUsers, error)
-	GetShiftsAdmin(context.Context) ([]entity.ShiftAdmin, error)
 	GetShiftAdminByID(context.Context, string) (entity.ShiftAdmin, error)
 	CreateShiftAdmin(context.Context, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
 	UpdateShiftAdmin(context.Context, string, string, string, string, string, string, string, string) (entity.ShiftAdmin, error)
@@ -77,441 +72,7 @@ func (a ByTime) Len() int           { return len(a) }
 func (a ByTime) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByTime) Less(i, j int) bool { return a[i].Time.ID < a[j].Time.ID }
 
-func (a *shiftUseCase) GetShifts(c context.Context) ([]entity.Shift, error) {
-	shift := entity.Shift{}
-	var shifts []entity.Shift
-	place := entity.Place{}
-
-	// クエリー実行
-	rows, err := a.rep.All(c)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		err := rows.Scan(
-			&shift.ID,
-			&TaskID,
-			&UserID,
-			&YearID,
-			&DateID,
-			&TimeID,
-			&WeatherID,
-			&shift.IsAttendance,
-			&shift.CreatedAt,
-			&shift.UpdatedAt,
-		)
-
-		row, err := a.taskRep.Find(c, TaskID)
-		err = row.Scan(
-			&shift.Task.ID,
-			&shift.Task.Task,
-			&PlaceID,
-			&shift.Task.Url,
-			&shift.Task.BureauID,
-			&shift.Task.MaxMember,
-			&shift.Task.Color,
-			&shift.Task.Remark,
-			&shift.Task.YearID,
-			&shift.Task.CreatedAt,
-			&shift.Task.UpdatedAt,
-		)
-
-		row, err = a.placeRep.Find(c, PlaceID)
-		err = rows.Scan(
-			&place.ID,
-			&shift.Task.Place,
-			&place.Remark,
-			&place.CreatedAt,
-			&place.UpdatedAt,
-		)
-
-		row, err = a.userRep.Find(c, UserID)
-		err = row.Scan(
-			&shift.User.ID,
-			&shift.User.Name,
-			&shift.User.Mail,
-			&shift.User.GradeID,
-			&shift.User.DepartmentID,
-			&shift.User.BureauID,
-			&shift.User.RoleID,
-			&shift.User.StudentNumber,
-			&shift.User.Tel,
-			&shift.User.Password,
-			&shift.User.CreatedAt,
-			&shift.User.UpdatedAt,
-			&shift.User.SlackUserID,
-		)
-
-		row, err = a.yearRep.Find(c, YearID)
-		err = row.Scan(
-			&shift.Year.ID,
-			&shift.Year.Year,
-			&shift.Year.CreatedAt,
-			&shift.Year.UpdatedAt,
-		)
-
-		row, err = a.dateRep.Find(c, DateID)
-		err = row.Scan(
-			&shift.Date.ID,
-			&shift.Date.YearID,
-			&shift.Date.Name,
-			&shift.Date.Date,
-			&shift.Date.CreatedAt,
-			&shift.Date.UpdatedAt,
-		)
-
-		row, err = a.timeRep.Find(c, TimeID)
-		err = row.Scan(
-			&shift.Time.ID,
-			&shift.Time.Time,
-			&shift.Time.CreatedAt,
-			&shift.Time.UpdatedAt,
-		)
-
-		row, err = a.weatherRep.Find(c, WeatherID)
-		err = row.Scan(
-			&shift.Weather.ID,
-			&shift.Weather.Weather,
-			&shift.Weather.CreatedAt,
-			&shift.Weather.UpdatedAt,
-		)
-
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-
-		shifts = append(shifts, shift)
-	}
-	return shifts, nil
-}
-
-func (a *shiftUseCase) GetShiftByID(c context.Context, id string) (entity.Shift, error) {
-	var shift entity.Shift
-	place := entity.Place{}
-
-	row, err := a.rep.Find(c, id)
-	err = row.Scan(
-		&shift.ID,
-		&TaskID,
-		&UserID,
-		&YearID,
-		&DateID,
-		&TimeID,
-		&WeatherID,
-		&shift.IsAttendance,
-		&shift.CreatedAt,
-		&shift.UpdatedAt,
-	)
-
-	row, err = a.taskRep.Find(c, TaskID)
-	err = row.Scan(
-		&shift.Task.ID,
-		&shift.Task.Task,
-		&PlaceID,
-		&shift.Task.Url,
-		&shift.Task.BureauID,
-		&shift.Task.MaxMember,
-		&shift.Task.Color,
-		&shift.Task.Remark,
-		&shift.Task.YearID,
-		&shift.Task.CreatedAt,
-		&shift.Task.UpdatedAt,
-	)
-
-	row, err = a.placeRep.Find(c, PlaceID)
-	err = row.Scan(
-		&place.ID,
-		&shift.Task.Place,
-		&place.Remark,
-		&place.CreatedAt,
-		&place.UpdatedAt,
-	)
-
-	row, err = a.userRep.Find(c, UserID)
-	err = row.Scan(
-		&shift.User.ID,
-		&shift.User.Name,
-		&shift.User.Mail,
-		&shift.User.GradeID,
-		&shift.User.DepartmentID,
-		&shift.User.BureauID,
-		&shift.User.RoleID,
-		&shift.User.StudentNumber,
-		&shift.User.Tel,
-		&shift.User.Password,
-		&shift.User.CreatedAt,
-		&shift.User.UpdatedAt,
-		&shift.User.SlackUserID,
-	)
-
-	row, err = a.yearRep.Find(c, YearID)
-	err = row.Scan(
-		&shift.Year.ID,
-		&shift.Year.Year,
-		&shift.Year.CreatedAt,
-		&shift.Year.UpdatedAt,
-	)
-
-	row, err = a.dateRep.Find(c, DateID)
-	err = row.Scan(
-		&shift.Date.ID,
-		&shift.Date.YearID,
-		&shift.Date.Name,
-		&shift.Date.Date,
-		&shift.Date.CreatedAt,
-		&shift.Date.UpdatedAt,
-	)
-
-	row, err = a.timeRep.Find(c, TimeID)
-	err = row.Scan(
-		&shift.Time.ID,
-		&shift.Time.Time,
-		&shift.Time.CreatedAt,
-		&shift.Time.UpdatedAt,
-	)
-
-	row, err = a.weatherRep.Find(c, WeatherID)
-	err = row.Scan(
-		&shift.Weather.ID,
-		&shift.Weather.Weather,
-		&shift.Weather.CreatedAt,
-		&shift.Weather.UpdatedAt,
-	)
-
-	if err != nil {
-		return shift, err
-	}
-	return shift, nil
-}
-
-func (a *shiftUseCase) GetShiftsByUser(c context.Context, id string) ([]entity.Shift, error) {
-
-	shift := entity.Shift{}
-	var shifts []entity.Shift
-	place := entity.Place{}
-
-	// クエリー実行
-	rows, err := a.rep.User(c, id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		err := rows.Scan(
-			&shift.ID,
-			&TaskID,
-			&UserID,
-			&YearID,
-			&DateID,
-			&TimeID,
-			&WeatherID,
-			&shift.IsAttendance,
-			&shift.CreatedAt,
-			&shift.UpdatedAt,
-		)
-
-		row, err := a.taskRep.Find(c, TaskID)
-		err = row.Scan(
-			&shift.Task.ID,
-			&shift.Task.Task,
-			&PlaceID,
-			&shift.Task.Url,
-			&shift.Task.BureauID,
-			&shift.Task.MaxMember,
-			&shift.Task.Color,
-			&shift.Task.Remark,
-			&shift.Task.YearID,
-			&shift.Task.CreatedAt,
-			&shift.Task.UpdatedAt,
-		)
-
-		row, err = a.placeRep.Find(c, PlaceID)
-		err = row.Scan(
-			&place.ID,
-			&shift.Task.Place,
-			&place.Remark,
-			&place.CreatedAt,
-			&place.UpdatedAt,
-		)
-
-		row, err = a.userRep.Find(c, UserID)
-		err = row.Scan(
-			&shift.User.ID,
-			&shift.User.Name,
-			&shift.User.Mail,
-			&shift.User.GradeID,
-			&shift.User.DepartmentID,
-			&shift.User.BureauID,
-			&shift.User.RoleID,
-			&shift.User.StudentNumber,
-			&shift.User.Tel,
-			&shift.User.Password,
-			&shift.User.CreatedAt,
-			&shift.User.UpdatedAt,
-			&shift.User.SlackUserID,
-		)
-
-		row, err = a.yearRep.Find(c, YearID)
-		err = row.Scan(
-			&shift.Year.ID,
-			&shift.Year.Year,
-			&shift.Year.CreatedAt,
-			&shift.Year.UpdatedAt,
-		)
-
-		row, err = a.dateRep.Find(c, DateID)
-		err = row.Scan(
-			&shift.Date.ID,
-			&shift.Date.YearID,
-			&shift.Date.Name,
-			&shift.Date.Date,
-			&shift.Date.CreatedAt,
-			&shift.Date.UpdatedAt,
-		)
-
-		row, err = a.timeRep.Find(c, TimeID)
-		err = row.Scan(
-			&shift.Time.ID,
-			&shift.Time.Time,
-			&shift.Time.CreatedAt,
-			&shift.Time.UpdatedAt,
-		)
-
-		row, err = a.weatherRep.Find(c, WeatherID)
-		err = row.Scan(
-			&shift.Weather.ID,
-			&shift.Weather.Weather,
-			&shift.Weather.CreatedAt,
-			&shift.Weather.UpdatedAt,
-		)
-
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-
-		shifts = append(shifts, shift)
-	}
-	sort.Sort(ByTime(shifts))
-	return shifts, nil
-}
-
-func (a *shiftUseCase) GetShiftsByUserAndDateAndWeather(c context.Context, id string, date string, weather string) ([]entity.Shift, error) {
-
-	shift := entity.Shift{}
-	var shifts []entity.Shift
-	place := entity.Place{}
-
-	// クエリー実行
-	rows, err := a.rep.UserAndDateAndWeather(c, id, date, weather)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		err := rows.Scan(
-			&shift.ID,
-			&TaskID,
-			&UserID,
-			&YearID,
-			&DateID,
-			&TimeID,
-			&WeatherID,
-			&shift.IsAttendance,
-			&shift.CreatedAt,
-			&shift.UpdatedAt,
-		)
-
-		row, err := a.taskRep.Find(c, TaskID)
-		err = row.Scan(
-			&shift.Task.ID,
-			&shift.Task.Task,
-			&PlaceID,
-			&shift.Task.Url,
-			&shift.Task.BureauID,
-			&shift.Task.MaxMember,
-			&shift.Task.Color,
-			&shift.Task.Remark,
-			&shift.Task.YearID,
-			&shift.Task.CreatedAt,
-			&shift.Task.UpdatedAt,
-		)
-
-		row, err = a.placeRep.Find(c, PlaceID)
-		err = row.Scan(
-			&place.ID,
-			&shift.Task.Place,
-			&place.Remark,
-			&place.CreatedAt,
-			&place.UpdatedAt,
-		)
-
-		row, err = a.userRep.Find(c, UserID)
-		err = row.Scan(
-			&shift.User.ID,
-			&shift.User.Name,
-			&shift.User.Mail,
-			&shift.User.GradeID,
-			&shift.User.DepartmentID,
-			&shift.User.BureauID,
-			&shift.User.RoleID,
-			&shift.User.StudentNumber,
-			&shift.User.Tel,
-			&shift.User.Password,
-			&shift.User.CreatedAt,
-			&shift.User.UpdatedAt,
-			&shift.User.SlackUserID,
-		)
-
-		row, err = a.yearRep.Find(c, YearID)
-		err = row.Scan(
-			&shift.Year.ID,
-			&shift.Year.Year,
-			&shift.Year.CreatedAt,
-			&shift.Year.UpdatedAt,
-		)
-
-		row, err = a.dateRep.Find(c, DateID)
-		err = row.Scan(
-			&shift.Date.ID,
-			&shift.Date.YearID,
-			&shift.Date.Name,
-			&shift.Date.Date,
-			&shift.Date.CreatedAt,
-			&shift.Date.UpdatedAt,
-		)
-
-		row, err = a.timeRep.Find(c, TimeID)
-		err = row.Scan(
-			&shift.Time.ID,
-			&shift.Time.Time,
-			&shift.Time.CreatedAt,
-			&shift.Time.UpdatedAt,
-		)
-
-		row, err = a.weatherRep.Find(c, WeatherID)
-		err = row.Scan(
-			&shift.Weather.ID,
-			&shift.Weather.Weather,
-			&shift.Weather.CreatedAt,
-			&shift.Weather.UpdatedAt,
-		)
-
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-
-		shifts = append(shifts, shift)
-	}
-	sort.Sort(ByTime(shifts))
-	return shifts, nil
-}
-
 func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year string, date string, time string, weather string) (entity.ShiftUsers, error) {
-
 	users := entity.User{}
 	var shiftUsers entity.ShiftUsers
 
@@ -520,7 +81,7 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	if err != nil {
 		return shiftUsers, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		// JOINで取得したユーザー情報を直接Scan（個別SQLは不要、passwordは取得しない）
@@ -547,14 +108,23 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	}
 
 	row, err := a.yearRep.Find(c, year)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Year.ID,
 		&shiftUsers.Year.Year,
 		&shiftUsers.Year.CreatedAt,
 		&shiftUsers.Year.UpdatedAt,
 	)
+	if err != nil {
+		return shiftUsers, err
+	}
 
 	row, err = a.dateRep.Find(c, date)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Date.ID,
 		&shiftUsers.Date.YearID,
@@ -563,14 +133,26 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 		&shiftUsers.Date.CreatedAt,
 		&shiftUsers.Date.UpdatedAt,
 	)
+	if err != nil {
+		return shiftUsers, err
+	}
 	row, err = a.timeRep.Find(c, time)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Time.ID,
 		&shiftUsers.Time.Time,
 		&shiftUsers.Time.CreatedAt,
 		&shiftUsers.Time.UpdatedAt,
 	)
+	if err != nil {
+		return shiftUsers, err
+	}
 	row, err = a.weatherRep.Find(c, weather)
+	if err != nil {
+		return shiftUsers, err
+	}
 	err = row.Scan(
 		&shiftUsers.Weather.ID,
 		&shiftUsers.Weather.Weather,
@@ -587,42 +169,12 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 
 // Webアプリ用API
 
-func (a *shiftUseCase) GetShiftsAdmin(c context.Context) ([]entity.ShiftAdmin, error) {
-	shift := entity.ShiftAdmin{}
-	var shifts []entity.ShiftAdmin
-
-	// クエリー実行
-	rows, err := a.rep.All(c)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		err := rows.Scan(
-			&shift.ID,
-			&shift.TaskID,
-			&shift.UserID,
-			&shift.YearID,
-			&shift.DateID,
-			&shift.TimeID,
-			&shift.WeatherID,
-			&shift.IsAttendance,
-			&shift.CreatedAt,
-			&shift.UpdatedAt,
-		)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot connect SQL")
-		}
-
-		shifts = append(shifts, shift)
-	}
-	return shifts, nil
-}
-
 func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.ShiftAdmin, error) {
 	var shift entity.ShiftAdmin
 	row, err := a.rep.Find(c, id)
+	if err != nil {
+		return shift, err
+	}
 	err = row.Scan(
 		&shift.ID,
 		&shift.TaskID,
@@ -643,25 +195,30 @@ func (a *shiftUseCase) GetShiftAdminByID(c context.Context, id string) (entity.S
 }
 
 func (u *shiftUseCase) CreateShiftAdmin(c context.Context, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
-	var latastShift entity.ShiftAdmin
-	err := u.rep.Create(c, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
-	row, err := u.rep.FindLatestRecord(c)
-	err = row.Scan(
-		&latastShift.ID,
-		&latastShift.TaskID,
-		&latastShift.UserID,
-		&latastShift.YearID,
-		&latastShift.DateID,
-		&latastShift.TimeID,
-		&latastShift.WeatherID,
-		&latastShift.IsAttendance,
-		&latastShift.CreatedAt,
-		&latastShift.UpdatedAt,
-	)
+	var createdShift entity.ShiftAdmin
+	id, err := u.rep.CreateAndReturnID(c, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
 	if err != nil {
-		return latastShift, err
+		return createdShift, errors.Wrapf(err, "シフト作成に失敗: %v", err)
 	}
-	return latastShift, err
+	row, err := u.rep.Find(c, strconv.Itoa(id))
+	if err != nil {
+		return createdShift, errors.Wrapf(err, "作成したシフトの取得に失敗: %v", err)
+	}
+	if err := row.Scan(
+		&createdShift.ID,
+		&createdShift.TaskID,
+		&createdShift.UserID,
+		&createdShift.YearID,
+		&createdShift.DateID,
+		&createdShift.TimeID,
+		&createdShift.WeatherID,
+		&createdShift.IsAttendance,
+		&createdShift.CreatedAt,
+		&createdShift.UpdatedAt,
+	); err != nil {
+		return createdShift, errors.Wrapf(err, "作成したシフトのScanに失敗: %v", err)
+	}
+	return createdShift, nil
 }
 
 func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID string, userID string, yearID string, dateID string, timeID string, weatherID string, isAttendance string) (entity.ShiftAdmin, error) {
@@ -669,6 +226,9 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 	var shift entity.ShiftAdmin
 
 	row, err := u.rep.Find(c, id)
+	if err != nil {
+		return updatedShift, err
+	}
 	err = row.Scan(
 		&shift.ID,
 		&shift.TaskID,
@@ -685,8 +245,13 @@ func (u *shiftUseCase) UpdateShiftAdmin(c context.Context, id string, taskID str
 		return shift, err
 	}
 
-	u.rep.Update(c, id, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance)
+	if err = u.rep.Update(c, id, taskID, userID, yearID, dateID, timeID, weatherID, isAttendance); err != nil {
+		return updatedShift, err
+	}
 	row, err = u.rep.Find(c, id)
+	if err != nil {
+		return updatedShift, err
+	}
 	err = row.Scan(
 		&updatedShift.ID,
 		&updatedShift.TaskID,
@@ -723,7 +288,9 @@ func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
 			"deleted_task": taskName,
 		}
 		if u.actionLogRepo != nil {
-			u.actionLogRepo.Create(c, shift.ID, shift.UserID, shift.DateID, "DELETE", diffPayload)
+			if logErr := u.actionLogRepo.Create(c, shift.ID, shift.UserID, shift.DateID, "DELETE", diffPayload); logErr != nil {
+				log.Printf("action_log記録失敗(DELETE): %v", logErr)
+			}
 		}
 	}
 
@@ -740,7 +307,7 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeather(c context.Context, date st
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -773,7 +340,7 @@ func (a *shiftUseCase) GetShiftsAdminByDateAndWeatherAndTime(c context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -1332,7 +899,7 @@ func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) e
 		log.Printf("failed to send request to GAS: %v", err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("GAS returned non-OK status: %d", resp.StatusCode)
@@ -1348,25 +915,25 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 	// N+1問題対策: 事前に必要なユーザー名とタスク名を収集
 	userNameSet := make(map[string]bool)
 	taskNameSet := make(map[string]bool)
-	
+
 	for _, change := range req.Changes {
 		userNameSet[change.UserName] = true
 		taskName := strings.ReplaceAll(change.TaskName, "　", " ")
 		taskNameSet[taskName] = true
 	}
-	
+
 	// ユーザー名のリストを作成
 	userNames := make([]string, 0, len(userNameSet))
 	for name := range userNameSet {
 		userNames = append(userNames, name)
 	}
-	
+
 	// タスク名のリストを作成
 	taskNames := make([]string, 0, len(taskNameSet))
 	for name := range taskNameSet {
 		taskNames = append(taskNames, name)
 	}
-	
+
 	// 一括でユーザーを取得してマップ化
 	userMap := make(map[string]entity.User)
 	if len(userNames) > 0 {
@@ -1374,8 +941,8 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		if err != nil {
 			return errors.Wrap(err, "ユーザー一括取得失敗")
 		}
-		defer userRows.Close()
-		
+		defer func() { _ = userRows.Close() }()
+
 		for userRows.Next() {
 			var user entity.User
 			var slackUserID sql.NullString
@@ -1388,7 +955,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			userMap[user.Name] = user
 		}
 	}
-	
+
 	// 一括でタスクを取得してマップ化
 	taskMap := make(map[string]entity.Task)
 	if len(taskNames) > 0 {
@@ -1396,8 +963,8 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		if err != nil {
 			return errors.Wrap(err, "タスク一括取得失敗")
 		}
-		defer taskRows.Close()
-		
+		defer func() { _ = taskRows.Close() }()
+
 		for taskRows.Next() {
 			var task entity.Task
 			if err := taskRows.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
@@ -1481,13 +1048,27 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		taskID := strconv.Itoa(task.ID)
 
 		// 4. 既存シフトがあるか確認
-		existRow, _ := u.rep.FindByUnique(ctx, userID, dateID, timeID, weatherID)
+		existRow, err := u.rep.FindByUnique(ctx, userID, dateID, timeID, weatherID)
+		if err != nil {
+			return errors.Wrapf(err, "シフト検索失敗: user=%s, date=%s", user.Name, dateID)
+		}
 		var existShift entity.ShiftAdmin
-		dateIDInt, _ := strconv.Atoi(dateID)
-		if err := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt); err == nil && existShift.ID != 0 {
+		dateIDInt, err := strconv.Atoi(dateID)
+		if err != nil {
+			return errors.Wrapf(err, "dateIDパース失敗: %v", dateID)
+		}
+		scanErr := existRow.Scan(&existShift.ID, &existShift.TaskID, &existShift.UserID, &existShift.YearID, &existShift.DateID, &existShift.TimeID, &existShift.WeatherID, &existShift.IsAttendance, &existShift.CreatedAt, &existShift.UpdatedAt)
+		if scanErr != nil && !errors.Is(scanErr, sql.ErrNoRows) {
+			// 未存在以外のDBエラーを新規作成へフォールバックさせない（重複生成防止）
+			return errors.Wrapf(scanErr, "シフト既存確認失敗: user=%s, date=%s", user.Name, dateID)
+		}
+		if scanErr == nil && existShift.ID != 0 {
 			// 既存があれば更新（タスクが変更された場合のみaction_logに記録）
 			oldTaskID := existShift.TaskID
-			newTaskID, _ := strconv.Atoi(taskID)
+			newTaskID, err := strconv.Atoi(taskID)
+			if err != nil {
+				return errors.Wrapf(err, "taskIDパース失敗: %v", taskID)
+			}
 			if oldTaskID != newTaskID {
 				// タスクが変更された場合
 				oldTaskRow, _ := u.taskRep.Find(ctx, strconv.Itoa(oldTaskID))
@@ -1511,11 +1092,15 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 					},
 				}
 				if u.actionLogRepo != nil {
-					u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload)
+					if logErr := u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload); logErr != nil {
+						log.Printf("action_log記録失敗(UPDATE): %v", logErr)
+					}
 				}
 			}
 			isAttendance := false
-			u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance))
+			if err := u.rep.Update(ctx, strconv.Itoa(existShift.ID), taskID, userID, strconv.Itoa(existShift.YearID), dateID, timeID, weatherID, strconv.FormatBool(isAttendance)); err != nil {
+				return errors.Wrapf(err, "シフト更新失敗: %v", existShift.ID)
+			}
 		} else {
 			// なければ新規作成（RETURNING idで確実にIDを取得）
 			isAttendance := false
@@ -1534,7 +1119,9 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 				},
 			}
 			if u.actionLogRepo != nil {
-				u.actionLogRepo.Create(ctx, newShiftID, user.ID, dateIDInt, "CREATE", diffPayload)
+				if logErr := u.actionLogRepo.Create(ctx, newShiftID, user.ID, dateIDInt, "CREATE", diffPayload); logErr != nil {
+					log.Printf("action_log記録失敗(CREATE): %v", logErr)
+				}
 			}
 		}
 	}
@@ -1548,7 +1135,7 @@ func (a *shiftUseCase) loadGradeMap(ctx context.Context) (map[int]string, error)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var grade entity.Grade
@@ -1567,7 +1154,7 @@ func (a *shiftUseCase) loadBureauMap(ctx context.Context) (map[int]string, error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var bureau entity.Bureau

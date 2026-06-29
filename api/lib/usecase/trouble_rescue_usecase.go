@@ -34,7 +34,7 @@ func (tu *troubleRescueUseCase) GetTroubleRescues(c context.Context) ([]entity.T
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get trouble rescues")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var troubleRescues []entity.TroubleRescueForGet
 	for rows.Next() {
@@ -75,7 +75,7 @@ func (tu *troubleRescueUseCase) GetTroubleRescuesByUserID(c context.Context, use
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get trouble rescues by user ID")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var troubleRescues []entity.TroubleRescueForGet
 	for rows.Next() {
@@ -98,7 +98,7 @@ func (tu *troubleRescueUseCase) GetTroubleRescuesByTaskID(c context.Context, tas
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get trouble rescues by task ID")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var troubleRescues []entity.TroubleRescueForGet
 	for rows.Next() {

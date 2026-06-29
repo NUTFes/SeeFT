@@ -17,7 +17,7 @@ class ReviewBottomSheet {
       context: context,
       isScrollControlled: true, // 高さを自由に調整
       backgroundColor: AppColors.base,
-      barrierColor: Colors.black.withOpacity(0.2), // ← デフォルト0.54 → 薄めに調整
+      barrierColor: Colors.black.withValues(alpha: 0.2), // ← デフォルト0.54 → 薄めに調整
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -40,7 +40,7 @@ class ReviewForm extends StatefulWidget {
   final String taskName;
   final int userID;
 
-  const ReviewForm({Key? key, required this.taskName, required this.userID}) : super(key: key);
+  const ReviewForm({super.key, required this.taskName, required this.userID});
 
   @override
   State<ReviewForm> createState() => _ReviewFormState();
@@ -91,11 +91,11 @@ class _ReviewFormState extends State<ReviewForm> {
       await api.postReview(userID, taskName, staffingRating, manualRating, comment);
 
       logger.i('レビューの送信に成功しました');
-      showCustomSnackBar(context, "レビューを送信しました");
+      if (context.mounted) showCustomSnackBar(context, "レビューを送信しました");
       return true;
     } catch (e) {
       logger.e('レビューの送信に失敗しました: $e');
-      showCustomErrorSnackBar(context, "レビューの送信に失敗しました");
+      if (context.mounted) showCustomErrorSnackBar(context, "レビューの送信に失敗しました");
       return false;
     }
   }
@@ -114,6 +114,7 @@ class _ReviewFormState extends State<ReviewForm> {
       manualRating,
       _controller.text,
     );
+    if (!mounted) return;
     if(isSuccess){  // 送信成功時
       // Hiveにタスク名を保存
       reviewedTaskNameBox.put(widget.taskName, true);
@@ -136,7 +137,7 @@ class _ReviewFormState extends State<ReviewForm> {
         spacing: 8,
         children: [
           Text(
-            "シフトのレビュー: " + widget.taskName,
+            "シフトのレビュー: ${widget.taskName}",
             style: TextStyle(
               color: AppColors.textBlack,
               fontSize: AppFontSizes.md,
@@ -160,6 +161,7 @@ class _ReviewFormState extends State<ReviewForm> {
           ),
           const SizedBox(height: 8),
           Visibility(
+            visible: _isFailed,
             child: Text(
               "送信に失敗しました。もう一度お試しください。",
               style: TextStyle(
@@ -167,7 +169,6 @@ class _ReviewFormState extends State<ReviewForm> {
                 fontSize: AppFontSizes.sm,
               )
             ),
-            visible: _isFailed,
           ),
           Row(
             spacing: 8.0,

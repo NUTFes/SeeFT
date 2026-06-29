@@ -43,7 +43,7 @@ func (u *userUseCase) GetUsers(c context.Context) ([]entity.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var slackUserID sql.NullString
@@ -82,6 +82,9 @@ func (u *userUseCase) GetUserByID(c context.Context, id string) (entity.User, er
 	var slackUserID sql.NullString
 
 	row, err := u.userRep.Find(c, id)
+	if err != nil {
+		return user, err // ← ゼロ値の task を返す
+	}
 	err = row.Scan(
 		&user.ID,
 		&user.Name,
@@ -113,9 +116,17 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 	var slackUserID sql.NullString
 	password = strings.ReplaceAll(password, " ", "")
 	password = strings.ReplaceAll(password, "　", "")
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-	err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword))
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return latastUser, err
+	}
+	if err = u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword)); err != nil {
+		return latastUser, err
+	}
 	row, err := u.userRep.FindNewRecord(c)
+	if err != nil {
+		return latastUser, err
+	}
 	err = row.Scan(
 		&latastUser.ID,
 		&latastUser.Name,
@@ -146,6 +157,9 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 	var slackUserID sql.NullString
 
 	row, err := u.userRep.Find(c, id)
+	if err != nil {
+		return user, err // ← ゼロ値の task を返す
+	}
 	err = row.Scan(
 		&user.ID,
 		&user.Name,
@@ -168,8 +182,13 @@ func (u *userUseCase) UpdateUser(c context.Context, id string, name string, mail
 		user.SlackUserID = slackUserID.String
 	}
 
-	u.userRep.Update(c, id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, user.Password)
+	if err = u.userRep.Update(c, id, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, user.Password); err != nil {
+		return updatedUser, err
+	}
 	row, err = u.userRep.Find(c, id)
+	if err != nil {
+		return user, err // ← ゼロ値の task を返す
+	}
 	err = row.Scan(
 		&updatedUser.ID,
 		&updatedUser.Name,
@@ -220,6 +239,9 @@ func (u *userUseCase) GetCurrentUser(c context.Context, accessToken string) (ent
 	// userIDの該当するuserを取得
 	var slackUserID sql.NullString
 	row, err = u.userRep.Find(c, strconv.Itoa(session.UserID))
+	if err != nil {
+		return user, err // ← ゼロ値の task を返す
+	}
 	err = row.Scan(
 		&user.ID,
 		&user.Name,
@@ -340,7 +362,10 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 		// ユーザー名からUserID取得
 		userName := strings.ReplaceAll(change.Name, " ", "")
 		userName = strings.ReplaceAll(userName, "　", "")
-		userRow, _ := u.userRep.FindByName(ctx, userName) // Rowはユーザー名が入っている前提
+		userRow, err := u.userRep.FindByName(ctx, userName)
+		if err != nil {
+			return errors.Wrapf(err, "ユーザー検索失敗: %v", userName)
+		}
 		var user entity.User
 		var slackUserID sql.NullString
 		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID); err == nil {
@@ -348,20 +373,28 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 				user.SlackUserID = slackUserID.String
 			}
 			// ユーザーが存在すれば更新
-			u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password)
-		} else if err.Error() == "sql: no rows in result set" {
+			if err := u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password); err != nil {
+				return errors.Wrapf(err, "ユーザー更新失敗: %v", change.Name)
+			}
+		} else if errors.Is(err, sql.ErrNoRows) {
 			// ユーザーがいなければ新規作成
 			name := change.Name
 			mail := ""
 			roleID := "1"
 			password := userDefaultPassword
-			hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+			hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+			if err != nil {
+				return errors.Wrapf(err, "パスワードハッシュ化失敗: %v", change.Name)
+			}
 			createErr := u.userRep.Create(ctx, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed))
 			if createErr != nil {
 				return errors.Wrapf(createErr, "ユーザー新規作成失敗: %v", change.Name)
 			}
 			// 再取得
-			userRow, _ = u.userRep.FindByName(ctx, change.Name)
+			userRow, err = u.userRep.FindByName(ctx, change.Name)
+			if err != nil {
+				return errors.Wrapf(err, "ユーザー再検索失敗: %v", change.Name)
+			}
 			if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID); err != nil {
 				return errors.Wrapf(err, "ユーザー再取得失敗: %v", change.Name)
 			}

@@ -44,7 +44,7 @@ Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherI
 List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
   // キャッシュからデータを取得
   logger.i('=== キャッシュからデータを取得します ===');
-  final List<dynamic>? cachedData = shiftCardBox.get('${dayID}_${weatherID}');
+  final List<dynamic>? cachedData = shiftCardBox.get('${dayID}_$weatherID');
   logger.i('キャッシュデータの取得に成功しました: ${cachedData != null ? cachedData.length : 'null'} items');
   
   // キャッシュデータがない場合は表示データをnullに設定する
@@ -60,8 +60,10 @@ List<dynamic>? _getCashedShiftCardDataList(int dayID, int weatherID) {
 }
 
 class MyShiftPage extends StatefulWidget {
+  const MyShiftPage({super.key});
+
   @override
-  _MyShiftPageState createState() => _MyShiftPageState();
+  State<MyShiftPage> createState() => _MyShiftPageState();
 }
 
 class _MyShiftPageState extends State<MyShiftPage>
@@ -259,28 +261,24 @@ class _MyShiftPageState extends State<MyShiftPage>
       // フェッチデータが新しい場合はキャッシュデータと表示データを更新
       
       // フェッチデータをShiftCardDataListに変換
-      final ShiftCardDataList? fetchedShiftCardDataList = ShiftCardDataList.fromJson(fetchedData);
+      final ShiftCardDataList fetchedShiftCardDataList = ShiftCardDataList.fromJson(fetchedData);
       
       // New対象カードの検出
       Set<String> detectedNewKeys = {};
-      if (fetchedShiftCardDataList != null) {
-        final existingNewKeys = _filterAlreadyOpened(_loadPersistedNewKeys(dayID));
-        detectedNewKeys = _detectNewOrUpdatedCardKeys(
-          dayID,
-          cashedShiftCardDataList,
-          fetchedShiftCardDataList,
-        );
-        detectedNewKeys = {...existingNewKeys, ...detectedNewKeys};
-        // 既に開かれたカードを除外
-        detectedNewKeys = _filterAlreadyOpened(detectedNewKeys);
-      }
+      final existingNewKeys = _filterAlreadyOpened(_loadPersistedNewKeys(dayID));
+      detectedNewKeys = _detectNewOrUpdatedCardKeys(
+        dayID,
+        cashedShiftCardDataList,
+        fetchedShiftCardDataList,
+      );
+      detectedNewKeys = {...existingNewKeys, ...detectedNewKeys};
+       // 既に開かれたカードを除外
+      detectedNewKeys = _filterAlreadyOpened(detectedNewKeys);
       
       // hiveのキャッシュデータをフェッチデータで更新
-      shiftCardBox.put('${dayID}_${weatherID}', fetchedData);
+      shiftCardBox.put('${dayID}_$weatherID', fetchedData);
       // 最新データに存在しない既読キーを掃除
-      if (fetchedShiftCardDataList != null) {
-        _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
-      }
+      _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
       
       // ここにレビューの処理を挟む
       _showReviewFormIfNeeded(fetchedShiftCardDataList, dayID);
@@ -300,7 +298,7 @@ class _MyShiftPageState extends State<MyShiftPage>
   // レビューを表示する
   void _showReviewFormIfNeeded(ShiftCardDataList? shiftCardDataList, int dayID) {
     if(shiftCardDataList == null) {
-      print("シフトカードデータがありません. レビューを表示しません.");
+      logger.w("シフトカードデータがありません. レビューを表示しません.");
       return;
     }
     
@@ -325,23 +323,23 @@ class _MyShiftPageState extends State<MyShiftPage>
     }
 
     // 各シフトカードに対するレビュー処理
-    shiftCardDataList.data.forEach((shiftCard) {
+    for (var shiftCard in shiftCardDataList.data) {
       // シフトカードのタスクが既にレビュー済みかどうかを確認
-      final _isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
-      if(_isReviewed){
-        print("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
-        return;
+      final isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
+      if(isReviewed){
+        logger.d("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
+        continue;
       }
-      print("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
+      logger.d("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
       
       // シフトカードからタスクの終了時刻を取得
       final String endTime = shiftCard.endTime.padLeft(5, '0'); // 1桁時間の場合に備えて0埋め
-      DateTime shiftEndTime = DateTime.parse("$targetDate " + endTime);
-      print("現在時刻: $now, シフト終了時刻: $shiftEndTime");
+      DateTime shiftEndTime = DateTime.parse("$targetDate $endTime");
+      logger.d("現在時刻: $now, シフト終了時刻: $shiftEndTime");
       
       // 対象のタスクが終了しているかどうかを判定
-      final _isFinished = now.isAfter(shiftEndTime);
-      if (_isFinished) {
+      final isFinished = now.isAfter(shiftEndTime);
+      if (isFinished) {
         // 各シフトカードに対するレビュー処理を実行
         ReviewBottomSheet.show(
           context,
@@ -349,7 +347,7 @@ class _MyShiftPageState extends State<MyShiftPage>
           _userID
         );
       }
-    });
+    }
   }
 
   // ========== New表示のためのヘルパー関数 ==========
@@ -649,7 +647,7 @@ class _MyShiftPageState extends State<MyShiftPage>
           '\n'
           'Has data: ${shiftCardDataList != null}'
         );
-        if (shiftCardDataList == null || shiftCardDataList!.data.length == 0) {
+        if (shiftCardDataList == null || shiftCardDataList!.data.isEmpty) {
           logger.i('タブ ${index + 1}: データがありません');
           // データがない場合は「データがありません」のメッセージを表示
           return Center(

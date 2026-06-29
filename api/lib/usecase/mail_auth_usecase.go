@@ -35,7 +35,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 
 	// メールアドレスの存在確認
 	row := u.userRep.FindByStudentNumber(c, studentNumber)
-	err := row.Scan(
+	if err := row.Scan(
 		&user.ID,
 		&user.Name,
 		&user.Mail,
@@ -49,11 +49,14 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.SlackUserID,
-	)
+	); err != nil {
+		return entity.LoginUser{}, errors.Wrapf(err, "ユーザーの取得に失敗: %v", err)
+	}
+
 	// パスワードがあっているか確認
 	password = strings.ReplaceAll(password, " ", "")
 	password = strings.ReplaceAll(password, "　", "")
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	loginUser := entity.LoginUser{ID: user.ID, RoleID: user.RoleID, Mail: user.Mail}
 
@@ -71,9 +74,17 @@ func (u *mailAuthUseCase) WebSignUp(c context.Context, name string, mail string,
 	// パスワードをハッシュ化
 	password = strings.ReplaceAll(password, " ", "")
 	password = strings.ReplaceAll(password, "　", "")
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-	err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed))
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return token, errors.Wrapf(err, "パスワードハッシュ化失敗")
+	}
+	if err = u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed)); err != nil {
+		return token, err
+	}
 	row, err := u.userRep.FindNewRecord(c)
+	if err != nil {
+		return token, err
+	}
 	err = row.Scan(
 		&user.ID,
 		&user.Name,
@@ -128,20 +139,28 @@ func (u *mailAuthUseCase) WebSignIn(c context.Context, studentNumber string, pas
 		&user.UpdatedAt,
 		&user.SlackUserID,
 	)
-	u.sessionRep.DeleteByUserID(c, strconv.Itoa(int(user.ID)))
+	if err != nil {
+		return token, err
+	}
 
 	// パスワードがあっているか確認
 	password = strings.ReplaceAll(password, " ", "")
 	password = strings.ReplaceAll(password, "　", "")
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return token, err
+	}
+
+	// 認証成功後に既存セッションを削除（認証前に削除すると誤パス試行で強制ログアウトできてしまう）
+	if err = u.sessionRep.DeleteByUserID(c, strconv.Itoa(int(user.ID))); err != nil {
 		return token, err
 	}
 	// トークン発行
 	accessToken, err := _makeRandomStr(10)
-	// ログイン (セッション開始)
-	err = u.sessionRep.Create(c, strconv.Itoa(int(user.ID)), accessToken)
 	if err != nil {
+		return token, err
+	}
+	// ログイン (セッション開始)
+	if err = u.sessionRep.Create(c, strconv.Itoa(int(user.ID)), accessToken); err != nil {
 		return token, err
 	}
 	token.AccessToken = accessToken

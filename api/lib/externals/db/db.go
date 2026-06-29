@@ -67,7 +67,7 @@ func ConnectMySQL() (client, error) {
 
 func (c client) CloseDB() {
 	if c.db != nil {
-		c.db.Close()
+		_ = c.db.Close()
 	}
 }
 

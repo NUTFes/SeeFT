@@ -9,9 +9,9 @@ import 'package:seeft_mobile/widgets/custom_snack_bar.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 
 class RescueRequestTabShorthandedPage extends StatelessWidget {
-  RescueRequestTabShorthandedPage({
-    Key? key,
-  }) : super(key: key);
+  const RescueRequestTabShorthandedPage({
+    super.key,
+  });
   
   // ユーザIDに紐づくタスクを取得する関数
   Future<List<RescueTaskDropdownMenuItem>?> fetchData() async {
@@ -27,7 +27,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
       if (res is List) {
         logger.i('Response is List with ${res.length} items');
         if (res.isNotEmpty) {
-          logger.i('First item: ${res}');
+          logger.i('First item: $res');
         }
       } else {
         logger.w('Response is not a List, it is: ${res.runtimeType}');
@@ -73,14 +73,14 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
       place == ""
     ) {
       logger.e('Invalid input data');
-      showCustomErrorSnackBar(context, "データが入力されていません");
+      if (context.mounted) showCustomErrorSnackBar(context, "データが入力されていません");
       return false;
     }
     if(
       selectedTask.id == 0
     ) {
       logger.e('taskID is Invalid');
-      showCustomErrorSnackBar(context, "タスクを選択してください");
+      if (context.mounted) showCustomErrorSnackBar(context, "タスクを選択してください");
       return false;
     }
     try {
@@ -94,11 +94,11 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
       await api.postShorthandedRescue(userId, selectedTask.id, missingNumber, place);
 
       logger.i('Shorthanded report sent successfully.');
-      showCustomSnackBar(context, "レスキューを送信しました");
+      if (context.mounted) showCustomSnackBar(context, "レスキューを送信しました");
       return true;
     } catch (e) {
       logger.e('Failed to send shorthanded report: $e');
-      showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
+      if (context.mounted) showCustomErrorSnackBar(context, "レスキューの送信に失敗しました");
       return false;
     }
   }
@@ -106,16 +106,16 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 選択されたタスクを格納する変数
-    RescueTaskDropdownMenuItem _selectedTask = RescueTaskDropdownMenuItem(
+    RescueTaskDropdownMenuItem selectedTask = RescueTaskDropdownMenuItem(
       id: 0,
       taskName: 'タスクを選択してください'
     );
     // 不足人数を格納する変数
-    int _missingNumber = 0;
+    int missingNumber = 0;
     // 発生場所を格納する変数
-    String _place = '';
+    String place = '';
     // 送信中かどうかを示す変数
-    bool _isSubmitting = false;
+    bool isSubmitting = false;
 
     return FutureBuilder<List<dynamic>?>(
       future: fetchData(),
@@ -257,13 +257,13 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                         StatefulBuilder(
                           builder: (context, setState) {
                             return CustomDropdownButton<String>(
-                              value: _selectedTask.id.toString(),
+                              value: selectedTask.id.toString(),
                               items: dropdownMenuItems,
                               isDense: true, // 高さをコンパクトにする
                               onChanged: (value) {
                                 setState(() {
                                   // 選択されたタスクを更新
-                                  _selectedTask = tasks.firstWhere(
+                                  selectedTask = tasks.firstWhere(
                                     (task) => task.id.toString() == value,
                                     orElse: () => RescueTaskDropdownMenuItem(
                                       id: 0, // タスク外
@@ -271,7 +271,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                                     ),
                                   );
                                 });
-                                logger.i("選択されたタスク: ${_selectedTask.taskName}");
+                                logger.i("選択されたタスク: ${selectedTask.taskName}");
                               },
                               hintText: 'タスクを選択してください',
                             );
@@ -296,7 +296,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                               onChanged: (String value) {
                                 // 入力されたときの処理
                                 setState(() {
-                                  _missingNumber = int.tryParse(value) ?? 0;
+                                  missingNumber = int.tryParse(value) ?? 0;
                                 });
                                 logger.i("入力された人数: $value");
                               },
@@ -321,7 +321,7 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
                               onChanged: (String value) {
                                 // 入力されたときの処理
                                 setState(() {
-                                  _place = value;
+                                  place = value;
                                 });
                                 logger.i("入力された場所: $value");
                               },
@@ -341,29 +341,30 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
               StatefulBuilder(
                 builder: (context, setState) {
                   return CustomElevatedButton(
-                    isDisabled: _isSubmitting,
+                    isDisabled: isSubmitting,
                     onPressed: () async {
                       setState(() {
-                        _isSubmitting = true;
+                        isSubmitting = true;
                       });
                       // レスキューを送信する
                       final isSuccess = await _sendRescueRequest(
                         context,
-                        _selectedTask,
-                        _missingNumber,
-                        _place,
+                        selectedTask,
+                        missingNumber,
+                        place,
                       );
+                      if (!context.mounted) return;
                       logger.i("レスキューを送信しました");
                       if(isSuccess){
                         // 最初の画面まで戻る
                         Navigator.of(context).popUntil((route) => route.isFirst);
                       }else{
                         setState(() {
-                          _isSubmitting = false;
+                          isSubmitting = false;
                         });
                       }
                     },
-                    label: _isSubmitting ? "送信中..." : "送信",
+                    label: isSubmitting ? "送信中..." : "送信",
                   );
                 }
               ),

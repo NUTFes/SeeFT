@@ -1,15 +1,17 @@
 version: "2"
 
 linters:
-  default: none
   enable:
-    - unused
-    - revive
     - gosec
+    - revive
   settings:
     revive:
       severity: warning
-    gosec:
+    gosec: {}
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0
 
 run:
   timeout: 5m

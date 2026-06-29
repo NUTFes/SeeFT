@@ -31,7 +31,7 @@ func (u *gradeUseCase) GetGrades(c context.Context) ([]entity.Grade, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -53,6 +53,9 @@ func (u *gradeUseCase) GetGrades(c context.Context) ([]entity.Grade, error) {
 func (u *gradeUseCase) GetGradeByID(c context.Context, id string) (entity.Grade, error) {
 	var grade entity.Grade
 	row, err := u.rep.Find(c, id)
+	if err != nil {
+		return grade, err
+	}
 	err = row.Scan(
 		&grade.ID,
 		&grade.Grade,

@@ -31,7 +31,7 @@ func (a *bureauUseCase) GetBureaus(c context.Context) ([]entity.Bureau, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -54,6 +54,9 @@ func (a *bureauUseCase) GetBureaus(c context.Context) ([]entity.Bureau, error) {
 func (b *bureauUseCase) GetBureauByID(c context.Context, id string) (entity.Bureau, error) {
 	var bureau entity.Bureau
 	row, err := b.rep.Find(c, id)
+	if err != nil {
+		return bureau, err
+	}
 	err = row.Scan(
 		&bureau.ID,
 		&bureau.Bureau,

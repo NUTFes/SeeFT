@@ -31,7 +31,7 @@ func (u *departmentUseCase) GetDepartments(c context.Context) ([]entity.Departme
 	  if err != nil {
 		  return nil, err
 	  }
-	  defer rows.Close()
+	  defer func() { _ = rows.Close() }()
 
 	  for rows.Next() {
 		  err := rows.Scan(
@@ -53,6 +53,9 @@ func (u *departmentUseCase) GetDepartments(c context.Context) ([]entity.Departme
 func (u *departmentUseCase) GetDepartmentByID(c context.Context, id string)(entity.Department, error){
 	var department entity.Department
 	row, err := u.rep.Find(c, id)
+	if err != nil {
+		return department, err
+	}
 	err = row.Scan(
 		&department.ID,
 		&department.Department,

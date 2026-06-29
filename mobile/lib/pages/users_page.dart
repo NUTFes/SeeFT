@@ -1,14 +1,13 @@
-import 'dart:developer';
 
 import 'package:seeft_mobile/configs/importer.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 
 class UsersPage extends StatefulWidget {
+  const UsersPage({super.key});
+
   @override
-  _UsersPageState createState() => _UsersPageState();
+  State<UsersPage> createState() => _UsersPageState();
 }
 
 class _UsersPageState extends State<UsersPage> {
@@ -21,19 +20,21 @@ class _UsersPageState extends State<UsersPage> {
   void initState() {
     super.initState();
 
-    var bureauId;
+    List<dynamic> bureauId;
     getBureauData().then((value) async {
       bureauId = await value;
-      for (int i = 0; i < bureauId.toString().length; i++) {
+      for (int i = 0; i < bureauId.length; i++) {
         bureauNameList.add(bureauId[i]["bureau"].toString());
         bureauIdList.add(bureauId[i]["id"].toString());
+      }
+      if (mounted) {
+        setState(() {});
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
         title: const Text('ユーザ一覧'),
@@ -44,8 +45,8 @@ class _UsersPageState extends State<UsersPage> {
       body: FutureBuilder(
         future: getData(),
         builder: (ctx, snapshot) {
-          if (snapshot.connectionState == AsyncSnapshot.waiting()) {
-            logger.w("message");
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            logger.i("Loading user list...");
           }
           if (!snapshot.hasData) {
             // 待機画面を表示
@@ -80,7 +81,7 @@ class _UsersPageState extends State<UsersPage> {
                     itemCount: usersLength,
                     itemBuilder: (BuildContext context, int index) {
                       if (userList[index]["bureauID"] == isSelectedValue) {
-                        return Container(
+                        return SizedBox(
                             height: 40,
                             child: _manualItem(snapshot.data, index, context));
                       } else {
@@ -99,9 +100,9 @@ class _UsersPageState extends State<UsersPage> {
 
   Widget _manualItem(var users, index, context) {
     return Container(
-      decoration: new BoxDecoration(
+      decoration: BoxDecoration(
           border:
-              new Border(bottom: BorderSide(width: 1.0, color: Colors.grey))),
+              Border(bottom: BorderSide(width: 1.0, color: Colors.grey))),
       child: ListTile(
         title: Text(
           users[index]["name"].toString(),
@@ -136,11 +137,12 @@ class _UsersPageState extends State<UsersPage> {
 
   Future userInfoModal(users, index) async {
     var roleID = await store.getRoleID();
+    if (!mounted) return;
     var value = await showDialog(
       context: context,
-      builder: (BuildContext context) => new AlertDialog(
-        title: new Text('ユーザ情報'),
-        content: new Container(
+      builder: (BuildContext context) => AlertDialog(
+        title: Text('ユーザ情報'),
+        content: SizedBox(
           height: 200,
           width: 300,
           child: ListView(children: <Widget>[
@@ -176,8 +178,8 @@ class _UsersPageState extends State<UsersPage> {
           ]),
         ),
         actions: <Widget>[
-          new SimpleDialogOption(
-            child: new Text('OK'),
+          SimpleDialogOption(
+            child: Text('OK'),
             onPressed: () => Navigator.of(context).pop(),
           )
         ],
@@ -187,15 +189,15 @@ class _UsersPageState extends State<UsersPage> {
   }
 }
 
-void _openPhoneApp(String tel_number) {
+void _openPhoneApp(String telNumber) {
   _launchURL(
-    'tel:' + tel_number,
+    'tel:$telNumber',
   );
 }
 
 Future<void> _launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
+  if (await canLaunchUrl(Uri.parse(url))) {
+     await launchUrl(Uri.parse(url));
   } else {
     final Error error = ArgumentError('Could not launch $url');
     throw error;

@@ -8,8 +8,8 @@ import 'package:seeft_mobile/pages/rescue/rescue_request_tab/tab_pages/question.
 class RescueRequestTabSelectTypePage extends StatelessWidget {
 
   RescueRequestTabSelectTypePage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   // 問題の種類のリスト
   final List<Map<String, dynamic>> _listItems = [

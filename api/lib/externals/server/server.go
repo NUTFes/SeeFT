@@ -61,4 +61,5 @@ func RunServer(ctx context.Context, router router.Router) error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return e.Shutdown(shutdownCtx)
+
 }

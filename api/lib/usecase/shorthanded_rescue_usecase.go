@@ -34,7 +34,7 @@ func (su *shorthandedRescueUseCase) GetShorthandedRescues(c context.Context) ([]
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get shorthanded rescues")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var shorthandedRescues []entity.ShorthandedRescueForGet
 	for rows.Next() {
@@ -75,7 +75,7 @@ func (su *shorthandedRescueUseCase) GetShorthandedRescuesByUserID(c context.Cont
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get shorthanded rescues by user ID")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var shorthandedRescues []entity.ShorthandedRescueForGet
 	for rows.Next() {
@@ -98,7 +98,7 @@ func (su *shorthandedRescueUseCase) GetShorthandedRescuesByTaskID(c context.Cont
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get shorthanded rescues by task ID")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var shorthandedRescues []entity.ShorthandedRescueForGet
 	for rows.Next() {

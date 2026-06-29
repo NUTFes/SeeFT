@@ -5,8 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 class EtcPage extends StatelessWidget {
 
   EtcPage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
   
   // 環境変数からSeeFTの操作説明と全体シフトのURLを取得
   final String seeftInstructionsUrl = constant.seeftInstructionsUrl;
@@ -15,7 +15,7 @@ class EtcPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 項目リスト
-    final List<Map<String, dynamic>> _listItems = [
+    final List<Map<String, dynamic>> listItems = [
       {
         'text': '操作説明', 
         'explanation': 'SeeFTの操作説明を開きます',
@@ -24,8 +24,8 @@ class EtcPage extends StatelessWidget {
           logger.i("操作説明が選択されました");
           // SeeFTの操作説明のスライドを開く
           final url = seeftInstructionsUrl;
-          if (await canLaunch(url)) {
-            await launch(url);
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url));
           } else {
             final Error error = ArgumentError('Could not launch $url');
             throw error;
@@ -40,8 +40,8 @@ class EtcPage extends StatelessWidget {
           logger.i("全体シフトが選択されました");
           // 全体シフトのURLを開く
           final url = wholeShiftUrl;
-          if (await canLaunch(url)) {
-            await launch(url);
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url));
           } else {
             final Error error = ArgumentError('Could not launch $url');
             throw error;
@@ -73,17 +73,17 @@ class EtcPage extends StatelessWidget {
             children: [
               // 問題の種類を選択するリスト
               ListView.separated(
-                itemCount: _listItems.length,
+                itemCount: listItems.length,
                 shrinkWrap: true, // リストの高さを自動調整
                 physics: NeverScrollableScrollPhysics(), // スクロールを無効化
                 itemBuilder: (context, index) {
                   return ListTile(
                     leading: Icon(
-                      _listItems[index]['icon'],
+                      listItems[index]['icon'],
                       color: AppColors.main,
                     ),
                     title: Text(
-                      _listItems[index]['text'],
+                      listItems[index]['text'],
                       style: TextStyle(
                         fontSize: AppFontSizes.md,
                         fontWeight: FontWeight.bold,
@@ -91,7 +91,7 @@ class EtcPage extends StatelessWidget {
                       ),
                     ),
                     subtitle: Text(
-                      _listItems[index]['explanation'],
+                      listItems[index]['explanation'],
                       style: TextStyle(
                         fontSize: AppFontSizes.sm,
                         color: AppColors.grayDark,
@@ -104,7 +104,7 @@ class EtcPage extends StatelessWidget {
                     ),
                     onTap: () {
                       // 問題の種類が選択されたときの処理
-                      _listItems[index]['onTap']();
+                      listItems[index]['onTap']();
                     },
                   );
                 },

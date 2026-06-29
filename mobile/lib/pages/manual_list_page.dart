@@ -7,8 +7,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
 
 class ManualListPage extends StatefulWidget {
+  const ManualListPage({super.key});
+
   @override
-  _ManualListPageState createState() => _ManualListPageState();
+  State<ManualListPage> createState() => _ManualListPageState();
 }
 
 class _ManualListPageState extends State<ManualListPage> {
@@ -30,8 +32,8 @@ class _ManualListPageState extends State<ManualListPage> {
       body: FutureBuilder(
         future: getData(),
         builder: (ctx, snapshot) {
-          if (snapshot.connectionState == AsyncSnapshot.waiting()) {
-            logger.w("message");
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            logger.i("Loading manual list...");
           }
           if (!snapshot.hasData) {
             // 待機画面を表示
@@ -45,7 +47,7 @@ class _ManualListPageState extends State<ManualListPage> {
                   child: ListView.builder(
                     itemCount: manualLength,
                     itemBuilder: (BuildContext context, int index) {
-                      return Container(
+                      return SizedBox(
                         height: 40,
                         child: _manualItem(snapshot.data, index, context));
                     },
@@ -76,9 +78,10 @@ class _ManualListPageState extends State<ManualListPage> {
           ),
         ),
         onTap: () async {
-          if (await canLaunch(manuals[index]["url"].toString())) {
-            await launch((manuals[index]["url"].toString()));
+          if (await canLaunchUrl(Uri.parse(manuals[index]["url"].toString()))) {
+            await launchUrl(Uri.parse((manuals[index]["url"].toString())));
           }
+          
         },
       ),
     );

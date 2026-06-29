@@ -15,7 +15,7 @@ late final Box reviewedTaskNameBox;
 late final Box openedCardKeysBox;
 
 class PermanentStore {
-  static PermanentStore _instance = PermanentStore();
+  static final PermanentStore _instance = PermanentStore();
 
   static getInstance() {
     return _instance;
@@ -33,7 +33,7 @@ class PermanentStore {
       logger.d('load parmeanent store: $userID');
       return userID;
     } catch (e) {
-      print('Error while fetching SharedPreferences(getUserID): $e');
+      logger.e('Error while fetching SharedPreferences(getUserID): $e');
       return 0;
     }
   }
