@@ -26,6 +26,10 @@ func New(name string, interval time.Duration, job Job) *Scheduler {
 // interval ごとに job を実行し、job が返したエラーはログ出力のみ（ループは止めない）。
 func (s *Scheduler) Start(ctx context.Context) {
 	go func() {
+		if err := s.job(ctx); err != nil {
+			log.Printf("[scheduler:%s] job error (initial): %v", s.name, err)
+		}
+
 		ticker := time.NewTicker(s.interval)
 		defer ticker.Stop()
 		for {
