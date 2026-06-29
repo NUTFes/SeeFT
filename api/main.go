@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,10 +12,19 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	client := di.InitializeServer(ctx)
-	defer client.CloseDB()
+	client, err := di.InitializeServer(ctx)
+	if client != nil {
+		defer client.CloseDB()
+	}
+	return err
 }
 
 // func main() async {

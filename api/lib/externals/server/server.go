@@ -13,7 +13,7 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-func RunServer(ctx context.Context, router router.Router) {
+func RunServer(ctx context.Context, router router.Router) error {
 	// echoのインスタンス
 	e := echo.New()
 
@@ -41,19 +41,24 @@ func RunServer(ctx context.Context, router router.Router) {
 	// swagger
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
+	errCh := make(chan error, 1)
+
 	// サーバー起動
 	go func() {
 
 		if err := e.Start(":1234"); err != nil && err != http.ErrServerClosed {
-			e.Logger.Fatal(err)
+			errCh <- err
 		}
 	}()
 
-	<-ctx.Done()
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+
+	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := e.Shutdown(shutdownCtx); err != nil {
-		e.Logger.Fatal(err)
-	}
+	return e.Shutdown(shutdownCtx)
 }

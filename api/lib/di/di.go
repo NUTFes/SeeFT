@@ -2,7 +2,6 @@ package di
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
@@ -16,11 +15,11 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 )
 
-func InitializeServer(ctx context.Context) db.Client {
+func InitializeServer(ctx context.Context) (db.Client, error) {
 	// DB接続
 	client, err := db.ConnectMySQL()
 	if err != nil {
-		log.Fatal("db error")
+		return nil, err
 	}
 
 	crud := abstract.NewCrud(client)
@@ -101,7 +100,7 @@ func InitializeServer(ctx context.Context) db.Client {
 	// Scheduler: 5分間隔で未送信通知を flush する（goroutine で起動し即 return）
 	slackService, err := slack.NewSlackService()
 	if err != nil {
-		log.Fatalf("slack init: %v", err)
+		return nil, err
 	}
 	notificationUseCase := usecase.NewNotificationUseCase(
 		actionLogRepository, slackService,
@@ -111,7 +110,9 @@ func InitializeServer(ctx context.Context) db.Client {
 	scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(ctx)
 
 	// Server
-	server.RunServer(ctx, router)
+	if err := server.RunServer(ctx, router); err != nil {
+		return client, err
+	}
 
-	return client
+	return client, nil
 }
