@@ -1,16 +1,19 @@
 package server
 
 import (
+	"context"
+	"net/http"
+	"os"
+	"time"
+
 	_ "github.com/NUTFes/SeeFT/api/docs"
 	"github.com/NUTFes/SeeFT/api/lib/router"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"net/http"
-	"os"
 )
 
-func RunServer(router router.Router) {
+func RunServer(ctx context.Context, router router.Router) {
 	// echoのインスタンス
 	e := echo.New()
 
@@ -39,5 +42,18 @@ func RunServer(router router.Router) {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// サーバー起動
-	e.Start(":1234")
+	go func() {
+
+		if err := e.Start(":1234"); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(shutdownCtx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }

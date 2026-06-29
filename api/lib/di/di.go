@@ -16,7 +16,7 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 )
 
-func InitializeServer() db.Client {
+func InitializeServer(ctx context.Context) db.Client {
 	// DB接続
 	client, err := db.ConnectMySQL()
 	if err != nil {
@@ -108,10 +108,10 @@ func InitializeServer() db.Client {
 		userRepository, dateRepository, timeRepository,
 		taskRepository, shiftRepository, weatherRepository,
 	)
-	scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(context.Background())
+	scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(ctx)
 
 	// Server
-	server.RunServer(router)
+	server.RunServer(ctx, router)
 
 	return client
 }

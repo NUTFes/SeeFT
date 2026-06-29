@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/NUTFes/SeeFT/api/lib/di"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	client := di.InitializeServer()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	client := di.InitializeServer(ctx)
 	defer client.CloseDB()
 }
 

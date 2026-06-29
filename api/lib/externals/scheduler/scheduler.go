@@ -28,10 +28,17 @@ func (s *Scheduler) Start(ctx context.Context) {
 	go func() {
 		ticker := time.NewTicker(s.interval)
 		defer ticker.Stop()
-		for range ticker.C {
-			if err := s.job(ctx); err != nil {
-				log.Printf("[scheduler:%s] job error: %v", s.name, err)
+		for {
+			select {
+			case <-ticker.C:
+				if err := s.job(ctx); err != nil {
+					log.Printf("[scheduler:%s] job error: %v", s.name, err)
+				}
+			case <-ctx.Done():
+				log.Printf("[scheduler:%s] stopped: %v", s.name, ctx.Err())
+				return
 			}
+
 		}
 	}()
 }
