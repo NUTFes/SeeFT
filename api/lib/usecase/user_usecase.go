@@ -15,8 +15,6 @@ import (
 
 type userUseCase struct {
 	userRep    rep.UserRepository
-	burearRep  rep.BureauRepository
-	taskRep    rep.TaskRepository
 	sessionRep rep.SessionRepository
 }
 
