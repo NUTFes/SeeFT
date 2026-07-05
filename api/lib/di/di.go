@@ -2,6 +2,7 @@ package di
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
@@ -100,14 +101,17 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	// Scheduler: 5分間隔で未送信通知を flush する（goroutine で起動し即 return）
 	slackService, err := slack.NewSlackService()
 	if err != nil {
-		return nil, err
+		log.Printf("slack init failed, notification scheduler disabled: %v", err)
 	}
-	notificationUseCase := usecase.NewNotificationUseCase(
-		actionLogRepository, slackService,
-		userRepository, dateRepository, timeRepository,
-		taskRepository, shiftRepository, weatherRepository,
-	)
-	scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(ctx)
+	if err == nil {
+		notificationUseCase := usecase.NewNotificationUseCase(
+			actionLogRepository, slackService,
+			userRepository, dateRepository, timeRepository,
+			taskRepository, shiftRepository, weatherRepository,
+		)
+		scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(ctx)
+
+	}
 
 	// Server
 	if err := server.RunServer(ctx, router); err != nil {
