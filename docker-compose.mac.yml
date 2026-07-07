@@ -5,8 +5,7 @@ services:
     container_name: nutfes-seeft-db
     image: postgres:18
     volumes:
-      - ./mysql/db:/docker-entrypoint-initdb.d/ # 初期データ
-      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./postgresql/db:/docker-entrypoint-initdb.d/ # 初期データ
     environment:
       POSTGRES_DB: seeft_db
       POSTGRES_USER: seeft
