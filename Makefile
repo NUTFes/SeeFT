@@ -57,6 +57,10 @@ exec:
 tidy:
 	docker compose run --rm api go mod tidy
 
+.PHONY: test
+test:
+	docker compose run --rm api go test ./...
+
 .PHONY: go-init
 go-init:
 	docker compose run --rm api go mod init github.com/NUTFes/SeeFT/api
