@@ -63,8 +63,6 @@ func NewShiftUseCase(
 	return &shiftUseCase{rep, shiftCardRep, taskRep, userRep, yearRep, dateRep, timeRep, weatherRep, placeRep, gradeRep, bureauRep, actionLogRepo}
 }
 
-var TaskID, UserID, YearID, DateID, TimeID, WeatherID, PlaceID string
-
 // 時間でソート
 type ByTime []entity.Shift
 
