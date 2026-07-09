@@ -56,7 +56,7 @@ test-roadmap.mdに書かれていた懸念（「新しめの golangci-lint は g
 
 一点、副作用として確認できたのは`go mod tidy`の実行結果そのものである。Go1.16→1.17以降のgoディレクティブへの変更は、Goのモジュールグラフ剪定（module graph pruning、Go1.17で導入）の対象になるため、`go.mod`に間接依存が明示的に約33行追加され、`go.sum`から不要なチェックサムが約27行削られる。これは一度きりの機械的な変更であり、実装PRで`go mod tidy`を実行すれば自動的に反映される。
 
-```
+```diff
 # go.mod の変化（例: go 1.19 にした場合の go mod tidy 結果）
 -github.com/mattn/go-isatty v0.0.17 // indirect  （requireブロック内の位置が変わる）
 +require (
