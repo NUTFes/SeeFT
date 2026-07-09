@@ -44,7 +44,7 @@ type BureauRepository interface {
 
 テストを 1 本も書く前に、書いたテストが回る環境を作る。すべて小さい独立した PR にできる。
 
-- Go バージョンの一本化（既存 issue #385）。現状は `api/go.mod` が `go 1.16`、`api/Dockerfile` と `api/prod.Dockerfile` が `golang:latest`、`go-lint.yml:20` が `go-version: stable` の三重不整合。go directive が 1.16 のままだと testify や go-sqlmock の新しいバージョンが入らないため、テスト導入の直接の前提になる。
+- Go バージョンの一本化（既存 issue #385）。現状は `api/go.mod` が `go 1.16`、`api/Dockerfile` と `api/prod.Dockerfile` が `golang:latest`、`go-lint.yml:20` が `go-version: stable` の三重不整合。go directive が 1.16 のままだと testify や go-sqlmock の新しいバージョンが入らないため、テスト導入の直接の前提になる。採用バージョンの比較・実機検証結果は [go-version-comparison.md](./go-version-comparison.md) にまとめた。
 - `docker-compose.yml:8` と `docker-compose.mac.yml` のマウント修正。存在しない `./mysql/db` を initdb にマウントしており（#277 のディレクトリ改名への追随漏れ）、DB の初期化が機能していない。`./postgresql/db` に直す。MySQL 時代の遺物である `my.cnf` のマウントも合わせて整理する。
 - CI に go test ジョブを追加。`go-lint.yml` と同型で `working-directory: api`、`go test ./... -count=1`。テストが 0 本でも green になるので、最初に敷いておくと以降のフェーズの PR が全部 CI で検証される。
 - `Makefile` に `test` ターゲットを追加し、`AGENTS.md` の Commands 節に記載する。なお `make seed` 系 3 ターゲットは参照先の `/app/seeds/seeds.go` が存在せず全て壊れている（後述のバグ一覧参照）。
