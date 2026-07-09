@@ -1,4 +1,5 @@
 import 'package:seeft_mobile/configs/importer.dart';
+import 'package:seeft_mobile/widgets/manual_viewer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/widgets/new_badge.dart';
 
@@ -253,8 +254,8 @@ class ShiftCard extends StatelessWidget {
   }
   // マニュアルセクションのUIを生成するヘルパーメソッド
   Widget _buildManualSection({
-    required String title, 
-    String? url
+    required String title,
+    String? url,
   }) {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
@@ -268,24 +269,76 @@ class ShiftCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: AppFontSizes.xs,
                 color: AppColors.textBlack,
-                fontWeight: FontWeight.bold
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 4.0),
-            GestureDetector(
-              onTap: () => url != null ? _launchManualUrl(url) : null,  // マニュアルが存在すればタップでマニュアルを開く
-              child: Text(
-                url ?? 'マニュアルがありません',
-                style: TextStyle(
+            if (url == null)
+              Text(
+                'マニュアルがありません',
+                style: const TextStyle(
                   fontSize: AppFontSizes.xs,
-                  color: url != null ? AppColors.link : AppColors.textBlack,
-                  height: 1.5 // 行間を調整
-                )
-              ),
-            )
+                  color: AppColors.textBlack,
+                  height: 1.5,
+                ),
+              )
+            else
+              _InlineManualExpansion(url: url),
           ],
         ),
       ),
+    );
+  }
+}
+
+// マニュアルをインラインで開閉するウィジェット
+class _InlineManualExpansion extends StatefulWidget {
+  final String url;
+  const _InlineManualExpansion({required this.url});
+
+  @override
+  State<_InlineManualExpansion> createState() => _InlineManualExpansionState();
+}
+
+class _InlineManualExpansionState extends State<_InlineManualExpansion> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(4.0),
+          onTap: () => setState(() => _isExpanded = !_isExpanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 16,
+                  color: AppColors.link,
+                ),
+                const SizedBox(width: 4.0),
+                Text(
+                  _isExpanded ? 'マニュアルを閉じる' : 'マニュアルを見る',
+                  style: const TextStyle(
+                    fontSize: AppFontSizes.xs,
+                    color: AppColors.link,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_isExpanded) ...[
+          const SizedBox(height: 8.0),
+          ManualViewer(url: widget.url),
+        ],
+      ],
     );
   }
 }
