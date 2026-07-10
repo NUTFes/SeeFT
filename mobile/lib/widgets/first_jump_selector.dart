@@ -37,13 +37,16 @@ class _StartupScreen extends StatefulWidget {
 }
 
 class _StartupScreenState extends State<_StartupScreen> {
+  // initState で一度だけ生成し、再ビルドのたびに読み込みをやり直さないようにする
+  late final Future<bool> _prefReadFuture;
+
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 3), () => logger.w('progress duration:'));
+    _prefReadFuture = _getPrefRead();
   }
 
-  Future<bool> getPrefRead() async {
+  Future<bool> _getPrefRead() async {
     try {
       final isUserID = await store.isUserID();
       final userID = await store.getUserID();
@@ -61,7 +64,7 @@ class _StartupScreenState extends State<_StartupScreen> {
     logger.i('navigated Splash.');
 
     return FutureBuilder<bool>(
-      future: getPrefRead(),
+      future: _prefReadFuture,
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         logger.i('===============================');
         logger.i(snapshot.connectionState);
