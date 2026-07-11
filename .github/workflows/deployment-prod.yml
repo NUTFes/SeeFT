@@ -14,6 +14,18 @@ jobs:
           ssh-keygen -R "${{ secrets.CONTAINER_IP }}" 2>/dev/null || true
           echo "${{ secrets.DEPLOY_HOST_KEY }}" >> ~/.ssh/known_hosts
 
+      - name: Check SSH connectivity
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          echo "Resolving host..."
+          getent ahosts "$SSH_HOST" || true
+
+          echo "Checking port 22..."
+          timeout 10 bash -c "</dev/tcp/$SSH_HOST/22" \
+            && echo "Port 22 is reachable" \
+            || echo "Port 22 is unreachable"
+
       - name: SSH and Deploy
         env:
           HARBOR_PASS: ${{ secrets.HARBOR_PASS }}
