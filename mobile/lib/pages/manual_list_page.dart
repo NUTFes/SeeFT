@@ -24,6 +24,7 @@ class _ManualListPageState extends State<ManualListPage> {
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounce;
   bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -79,17 +80,30 @@ class _ManualListPageState extends State<ManualListPage> {
       if (mounted) {
         setState(() {
           _allManuals = res as List<dynamic>;
+          _hasError = false;
           _isLoading = false;
         });
       }
     } catch (err) {
       logger.e('don`t response. error message: $err');
       if (mounted) {
+        // ロード失敗は「0件ヒット」とは別物として扱う。
+        // これがないとクエリ未入力時に空リスト＝真っ白な画面になる。
         setState(() {
+          _hasError = true;
           _isLoading = false;
         });
       }
     }
+  }
+
+  // エラー表示からの再読み込み。
+  void _retry() {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+    _loadData();
   }
 
   List<dynamic> get _filteredManuals {
@@ -105,6 +119,12 @@ class _ManualListPageState extends State<ManualListPage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return WaitPage();
+    }
+    if (_hasError) {
+      return Scaffold(
+        backgroundColor: AppColors.base,
+        body: _buildErrorView(),
+      );
     }
     final manuals = _filteredManuals;
     return Scaffold(
@@ -154,6 +174,37 @@ class _ManualListPageState extends State<ManualListPage> {
                         );
                       },
                     ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ロード失敗時の表示（再読み込み可能）。
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'マニュアルの読み込みに失敗しました',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textBlack,
+                fontSize: AppFontSizes.md,
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.main,
+                foregroundColor: AppColors.textWhite,
+              ),
+              onPressed: _retry,
+              child: const Text('再読み込み'),
             ),
           ],
         ),
