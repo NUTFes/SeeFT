@@ -8,7 +8,7 @@
 
 1. フェーズ0: テスト実行基盤の整備（CI に go test、Go バージョン一本化、壊れた compose マウントの修正）
 2. フェーズ1: 依存ゼロの純関数テスト（モックも DB も不要。テストの書き方の規約をここで確立する）
-3. フェーズ2: repository 層の特性化テスト（実 DB を使う統合テスト。「現状の動作を正解にする」の実装）
+3. フェーズ2: repository 層のゴールデンテスト（実 DB を使う統合テスト。「現状の動作を正解にする」の実装）
 4. フェーズ3: repository 層のクエリ修正（フェーズ2 のテストを安全網にしてプレースホルダ化）
 5. フェーズ4: usecase 層のテスト（go-sqlmock）
 6. フェーズ5: controller 層のテスト（httptest。GAS との「結合テスト」はここの契約テストで代替する）
@@ -59,9 +59,9 @@ type BureauRepository interface {
 - `api/lib/externals/slack/slack_service.go` の `BuildMessageBlocks`（L88）。Slack API 通信なしで Block 構成の分岐を検証できる。
 - `api/lib/externals/scheduler/scheduler.go` の `Start`。カウンタを増やすだけの Job と短い interval で「起動直後の即時実行」「interval ごとの再実行」「ctx キャンセルで停止」「job エラーでもループ継続」を検証できる。このパッケージは PR #322（通知の定期実行）で追加されるため、マージ後に着手する。
 
-## フェーズ2: repository の特性化テスト（実 DB 統合）
+## フェーズ2: repository のゴールデンテスト（実 DB 統合）
 
-「現状の動作を正解にする」を実装するフェーズ。特性化テスト（characterization test）とは、正しい仕様を定義するのではなく、いま動いているコードの出力をそのままテストの期待値として固定するもの。これがあると次のフェーズのクエリ書き換えが「テストが緑のまま = 挙動が変わっていない」で機械的に判定できる。
+「現状の動作を正解にする」を実装するフェーズ。ゴールデンテスト（golden master test。レガシーコード文脈では特性化テスト/characterization testとも呼ぶ）とは、正しい仕様を定義するのではなく、いま動いているコードの出力をそのままテストの期待値として固定するもの。これがあると次のフェーズのクエリ書き換えが「テストが緑のまま = 挙動が変わっていない」で機械的に判定できる。
 
 実行環境は GitHub Actions の service container を使う。
 
@@ -86,7 +86,7 @@ query := "SELECT * FROM shifts WHERE id = " + id
 
 フェーズ2 のテストを安全網として、連結を `$1` プレースホルダに置換していく。同じファイル内に正しい書き方（`shift_repository.go` の `Users` メソッドは `$1〜$5` を使用）が既にあるので、それに揃える。優先順位は、ユーザー自由記述が入る review、次いで連結箇所最多の shift。あわせて次の 2 点も処理する。
 
-- `department_repository.go:42` のカラム名バグ修正。これは挙動の変更（常に失敗 → 成功する）なので、特性化テストの期待値を意識的に更新する。
+- `department_repository.go:42` のカラム名バグ修正。これは挙動の変更（常に失敗 → 成功する）なので、ゴールデンテストの期待値を意識的に更新する。
 - 無条件の `fmt.Printf`（クエリのデバッグ出力）を `DEBUG_SQL` 環境変数ガードに統一。テスト出力の汚染防止を兼ねた機械的な整理。
 
 ## フェーズ4: usecase のテスト（go-sqlmock）
