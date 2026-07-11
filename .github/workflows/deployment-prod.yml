@@ -35,3 +35,4 @@ jobs:
             docker compose -f docker-compose.cd.yml up -d
             docker image prune -f
           EOF
+          
