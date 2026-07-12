@@ -117,7 +117,15 @@ def main() -> int:
 
     message = args.message or f"manuals/{number}: {os.path.basename(manual_dir)} を更新"
     git(pages_repo, "add", rel_path)
-    git(pages_repo, "commit", "-m", message)
+    diff = subprocess.run(
+        ["git", "-C", pages_repo, "diff", "--cached", "--quiet", "--", rel_path]
+    )
+    if diff.returncode == 0:
+        print("  変更なしのため commit をスキップ")
+    elif diff.returncode == 1:
+        git(pages_repo, "commit", "-m", message)
+    else:
+        raise RuntimeError("git diff --cached の実行に失敗しました")
 
     if args.push:
         git(pages_repo, "push")
