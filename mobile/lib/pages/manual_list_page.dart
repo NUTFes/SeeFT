@@ -118,7 +118,7 @@ class _ManualListPageState extends State<ManualListPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return WaitPage();
+      return const WaitPage(message: 'マニュアルを読み込んでいます');
     }
     if (_hasError) {
       return Scaffold(
