@@ -70,15 +70,23 @@ def resolve_manual_dir(arg: str) -> str:
 
 
 def find_source_html(manual_dir: str) -> str:
-    """元 HTML（slide_* / verify_* 以外の .html）を 1 つ返す。"""
-    for f in os.listdir(manual_dir):
-        if (
-            f.endswith(".html")
-            and not f.startswith("slide")
-            and not f.startswith("verify")
-        ):
-            return os.path.join(manual_dir, f)
-    raise FileNotFoundError(f"No source HTML found in {manual_dir}")
+    """元 HTML (slide_* / verify_* 以外の .html) を 1 つ返す。"""
+    candidates = sorted(
+        f for f in os.listdir(manual_dir)
+        if f.endswith(".html")
+        and not f.startswith("slide")
+        and not f.startswith("verify")
+    )
+    if not candidates:
+        raise FileNotFoundError(f"No source HTML found in {manual_dir}")
+    if "source.html" in candidates:
+        return os.path.join(manual_dir, "source.html")
+    if len(candidates) == 1:
+        return os.path.join(manual_dir, candidates[0])
+    raise RuntimeError(
+        f"Ambiguous source HTML in {manual_dir}: {candidates}. "
+        "Keep exactly one source HTML (or name it source.html)."
+    )
 
 
 # 生成 HTML から除去するナビゲーション chrome のパターン。
