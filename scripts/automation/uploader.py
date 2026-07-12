@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 from typing import Optional
 
@@ -23,6 +24,15 @@ PROJECT_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
 
 # スタブ版の出力先 (リポジトリ外、git に commit したくない)
 DEFAULT_STAGING_DIR = os.path.join(PROJECT_ROOT, "scripts", "automation", "out")
+
+
+def _safe_key(key: str) -> str:
+    """key (Sheets の値、外部入力) をファイル名として安全な形に正規化する。"""
+    name = os.path.basename(key).strip()
+    name = re.sub(r"[^\w.-]+", "_", name, flags=re.UNICODE)
+    if not name or name in {".", ".."}:
+        raise ValueError(f"Invalid key: {key!r}")
+    return name
 
 
 def upload(local_html_path: str, key: str, staging_dir: Optional[str] = None) -> str:
@@ -42,8 +52,8 @@ def upload(local_html_path: str, key: str, staging_dir: Optional[str] = None) ->
     target_dir = staging_dir or DEFAULT_STAGING_DIR
     os.makedirs(target_dir, exist_ok=True)
 
-    # key をファイル名に流用 (英数字以外もそのまま使う、ローカルファイルなので問題なし)
-    target_filename = f"{key}.html"
+    # key はスプシ由来の外部入力なので、ファイル名として安全な形に正規化してから使う
+    target_filename = f"{_safe_key(key)}.html"
     target_path = os.path.join(target_dir, target_filename)
     shutil.copy2(local_html_path, target_path)
 
@@ -63,7 +73,7 @@ def upload_text(local_text_path: str, key: str, staging_dir: Optional[str] = Non
     target_dir = staging_dir or DEFAULT_STAGING_DIR
     os.makedirs(target_dir, exist_ok=True)
 
-    target_path = os.path.join(target_dir, f"{key}.txt")
+    target_path = os.path.join(target_dir, f"{_safe_key(key)}.txt")
     shutil.copy2(local_text_path, target_path)
 
     abs_path = os.path.abspath(target_path)
