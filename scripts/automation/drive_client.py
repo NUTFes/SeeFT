@@ -66,6 +66,8 @@ def _ensure_drive_service():
     creds = None
     if os.path.exists(TOKEN_PATH):
         creds = Credentials.from_authorized_user_file(TOKEN_PATH, DRIVE_SCOPES)
+        if creds and not creds.has_scopes(DRIVE_SCOPES):
+            creds = None
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -81,6 +83,7 @@ def _ensure_drive_service():
         os.makedirs(CONFIG_DIR, exist_ok=True)
         with open(TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
+        os.chmod(TOKEN_PATH, 0o600)
 
     return build("drive", "v3", credentials=creds)
 
