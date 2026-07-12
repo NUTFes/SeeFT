@@ -210,8 +210,8 @@ class SheetsBackend:
 
     def _read_all(self) -> list[list[str]]:
         service = self._ensure_service()
-        # A1:Y200 まで読む (列数 25 = Y、行数は余裕めに 200)
-        range_name = f"{self.sheet_name}!A1:Y200"
+        # 列は Y まで固定し、行数は可変で取得する
+        range_name = f"{self.sheet_name}!A:Y"
         result = service.spreadsheets().values().get(
             spreadsheetId=self.spreadsheet_id,
             range=range_name,
