@@ -81,13 +81,23 @@ def resolve_manual_dir(arg: str) -> str:
 
 
 def load_source(manual_dir: str) -> tuple[str, list[str]]:
-    html_file = None
-    for f in os.listdir(manual_dir):
-        if f.endswith(".html") and not f.startswith("slide"):
-            html_file = os.path.join(manual_dir, f)
-            break
-    if not html_file:
+    candidates = sorted(
+        f for f in os.listdir(manual_dir)
+        if f.endswith(".html")
+        and not f.startswith("slide")
+        and not f.startswith("verify")
+    )
+    if not candidates:
         raise FileNotFoundError(f"No source HTML found in {manual_dir}")
+    if "source.html" in candidates:
+        html_file = os.path.join(manual_dir, "source.html")
+    elif len(candidates) == 1:
+        html_file = os.path.join(manual_dir, candidates[0])
+    else:
+        raise RuntimeError(
+            f"Ambiguous source HTML in {manual_dir}: {candidates}. "
+            "Keep exactly one source HTML (or name it source.html)."
+        )
 
     result = subprocess.run(
         ["pandoc", "-f", "html", "-t", "markdown", html_file],
@@ -294,7 +304,7 @@ def main() -> int:
             extra_instructions = f.read()
         print(f"  追加指示: {instr_path} ({len(extra_instructions)} chars)")
 
-    response_text, _usage = anyio.run(
+    response_text, usage = anyio.run(
         call_claude_sdk,
         system_prompt,
         user_prompt_template,
@@ -303,6 +313,12 @@ def main() -> int:
         args.model,
         extra_instructions,
     )
+    if usage.get("is_error"):
+        print(f"  ERROR: Claude Agent SDK returned is_error=True: {usage}", file=sys.stderr)
+        return 1
+    if not response_text.strip():
+        print("  ERROR: Empty response from Claude Agent SDK", file=sys.stderr)
+        return 1
 
     slide_html = extract_html(response_text)
     images = load_images_base64(manual_dir)
