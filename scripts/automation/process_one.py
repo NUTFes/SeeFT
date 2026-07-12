@@ -140,9 +140,10 @@ def process_one(args) -> int:
         return 3
 
     # 3. Doc URL 存在チェック
-    doc_url = row.get("Google Doc URL").strip()
+    raw_doc_url = row.get("Google Doc URL")
+    doc_url = raw_doc_url.strip() if isinstance(raw_doc_url, str) else ""
     if not doc_url and not args.skip_drive:
-        print(f"ABORT: Google Doc URL が空です", file=sys.stderr)
+        print("ABORT: Google Doc URL が空です", file=sys.stderr)
         return 4
 
     # 4. ステータスを「実行中」に
