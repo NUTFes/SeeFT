@@ -41,14 +41,22 @@ PHONE_RE = re.compile(r"(?<![0-9])(\d{2,4}-\d{2,4}-\d{3,4})(?![0-9])")
 
 def find_source_html(manual_dir: str) -> str:
     """元 HTML (slide_* / verify_* 以外の .html) を 1 つ返す。"""
-    for f in os.listdir(manual_dir):
-        if (
-            f.endswith(".html")
-            and not f.startswith("slide")
-            and not f.startswith("verify")
-        ):
-            return os.path.join(manual_dir, f)
-    raise FileNotFoundError(f"No source HTML found in {manual_dir}")
+    candidates = sorted(
+        f for f in os.listdir(manual_dir)
+        if f.endswith(".html")
+        and not f.startswith("slide")
+        and not f.startswith("verify")
+    )
+    if not candidates:
+        raise FileNotFoundError(f"No source HTML found in {manual_dir}")
+    if "source.html" in candidates:
+        return os.path.join(manual_dir, "source.html")
+    if len(candidates) == 1:
+        return os.path.join(manual_dir, candidates[0])
+    raise RuntimeError(
+        f"Ambiguous source HTML in {manual_dir}: {candidates}. "
+        "Keep exactly one source HTML (or name it source.html)."
+    )
 
 
 def load_ast(html_path: str) -> dict:
@@ -115,8 +123,18 @@ def autolink_phone(text: str) -> str:
     return PHONE_RE.sub(repl, text)
 
 
-def render_inlines(inlines: list, images_b64: dict) -> str:
-    """Pandoc の inline ノード列を HTML 文字列に変換する。"""
+# RawInline (fmt=="html") で許可する生 HTML。pandoc が Google Docs HTML から実際に
+# 出力する既知パターンのみ (改行 <br> と 上付き/下付き)。それ以外はエスケープする。
+_RAW_INLINE_ALLOWLIST_RE = re.compile(r"</?(br|sub|sup)\s*/?>", re.IGNORECASE)
+
+
+def render_inlines(inlines: list, images_b64: dict, autolink: bool = True) -> str:
+    """Pandoc の inline ノード列を HTML 文字列に変換する。
+
+    autolink: True の場合のみ Str ノードのプレーンテキストを電話番号リンク化する。
+    既存の <a> の内側 (Link) や HTML 属性値 (Image alt) では False を渡し、
+    タグ構造やページを破壊するリンクの二重ラップを防ぐ。
+    """
     parts: list = []
     for x in inlines:
         if not isinstance(x, dict):
@@ -124,19 +142,20 @@ def render_inlines(inlines: list, images_b64: dict) -> str:
         t = x.get("t")
         c = x.get("c")
         if t == "Str":
-            parts.append(html.escape(c))
+            text = html.escape(c)
+            parts.append(autolink_phone(text) if autolink else text)
         elif t in ("Space", "SoftBreak"):
             parts.append(" ")
         elif t == "LineBreak":
             parts.append("<br>")
         elif t == "Strong":
-            parts.append(f"<strong>{render_inlines(c, images_b64)}</strong>")
+            parts.append(f"<strong>{render_inlines(c, images_b64, autolink)}</strong>")
         elif t == "Emph":
-            parts.append(f"<em>{render_inlines(c, images_b64)}</em>")
+            parts.append(f"<em>{render_inlines(c, images_b64, autolink)}</em>")
         elif t == "Underline":
-            parts.append(f"<u>{render_inlines(c, images_b64)}</u>")
+            parts.append(f"<u>{render_inlines(c, images_b64, autolink)}</u>")
         elif t == "Strikeout":
-            parts.append(f"<s>{render_inlines(c, images_b64)}</s>")
+            parts.append(f"<s>{render_inlines(c, images_b64, autolink)}</s>")
         elif t == "Code":
             # Code は [attrs, str]
             parts.append(f"<code>{html.escape(c[1])}</code>")
@@ -144,14 +163,16 @@ def render_inlines(inlines: list, images_b64: dict) -> str:
             attrs, inner, target = c
             url, _title = target
             url = unwrap_google_redirect(url)
-            inner_html = render_inlines(inner, images_b64)
+            # リンクの内側テキストは既に <a> の中なので二重にラップしない
+            inner_html = render_inlines(inner, images_b64, autolink=False)
             parts.append(f'<a href="{html.escape(url)}">{inner_html}</a>')
         elif t == "Image":
             attrs, alt_inlines, target = c
             url, _title = target
             fname = os.path.basename(url)
             data_uri = images_b64.get(fname, url)
-            alt = render_inlines(alt_inlines, images_b64)
+            # alt は HTML 属性値なのでタグを差し込めない
+            alt = render_inlines(alt_inlines, images_b64, autolink=False)
             parts.append(
                 f'<img src="{html.escape(data_uri)}" alt="{alt}" '
                 f'onclick="openLightbox(this)" loading="lazy">'
@@ -159,17 +180,22 @@ def render_inlines(inlines: list, images_b64: dict) -> str:
         elif t == "Span":
             # Google Docs CSS クラス用ラッパー。中身だけ展開
             _attrs, inner = c
-            parts.append(render_inlines(inner, images_b64))
+            parts.append(render_inlines(inner, images_b64, autolink))
         elif t == "Quoted":
             # ["DoubleQuote" or "SingleQuote", inlines]
             quote_type, inner = c
             q = '"' if quote_type.get("t") == "DoubleQuote" else "'"
-            parts.append(f"{q}{render_inlines(inner, images_b64)}{q}")
+            parts.append(f"{q}{render_inlines(inner, images_b64, autolink)}{q}")
         elif t == "RawInline":
-            # ["html", "<raw>"] みたいなやつ。フォーマット指定が html なら通す
+            # ["html", "<raw>"] みたいなやつ。フォーマット指定が html でも
+            # allowlist (br/sub/sup) 以外は実行可能な形で通さずエスケープする
             fmt, raw = c
             if fmt == "html":
-                parts.append(raw)
+                safe = raw.strip()
+                if _RAW_INLINE_ALLOWLIST_RE.fullmatch(safe):
+                    parts.append(safe)
+                else:
+                    parts.append(html.escape(raw))
         elif t == "Note":
             # 脚注。MVP では無視
             pass
@@ -209,7 +235,7 @@ def render_block(block: dict, images_b64: dict) -> str:
         text = render_inlines(c, images_b64)
         if not text.strip():
             return ""
-        return f"<p>{autolink_phone(text)}</p>"
+        return f"<p>{text}</p>"
     if t == "BulletList":
         items = [
             f"<li>{render_blocks_inline(item, images_b64)}</li>"
