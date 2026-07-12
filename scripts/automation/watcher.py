@@ -86,18 +86,22 @@ def run_process_one(manual_name: str, mode: str, args) -> int:
     return proc.returncode
 
 
-def scan_once(client, args) -> int:
-    """1 周スキャンして、検出された全マニュアルを処理。処理件数を返す。"""
+def scan_once(client, args) -> tuple[int, int]:
+    """1 周スキャンして処理する。戻り値は (処理件数, 失敗件数)。"""
     pending = find_pending_rows(client)
     if not pending:
-        return 0
+        return 0, 0
     print(f"処理対象: {len(pending)} 件")
+    failed = 0
     for name, mode in pending:
         try:
-            run_process_one(name, mode, args)
+            rc = run_process_one(name, mode, args)
+            if rc != 0:
+                failed += 1
         except Exception as e:
             print(f"ERROR processing {name}: {e}", file=sys.stderr)
-    return len(pending)
+            failed += 1
+    return len(pending), failed
 
 
 def main() -> int:
@@ -128,14 +132,14 @@ def main() -> int:
     print(f"=== watcher 起動 ({client.mode} モード, interval={args.interval}s) ===")
 
     if args.once:
-        n = scan_once(client, args)
-        print(f"=== 1 周完了 ({n} 件処理) ===")
-        return 0
+        n, failed = scan_once(client, args)
+        print(f"=== 1 周完了 ({n} 件処理, 失敗 {failed} 件) ===")
+        return 1 if failed else 0
 
     # 常駐モード
     try:
         while True:
-            n = scan_once(client, args)
+            n, _failed = scan_once(client, args)
             if n == 0:
                 print(f"  処理対象なし。{args.interval}s 待機...")
             time.sleep(args.interval)
