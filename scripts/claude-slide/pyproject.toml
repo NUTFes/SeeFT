@@ -1,0 +1,9 @@
+[project]
+name = "claude-slide"
+version = "0.1.0"
+description = "Generate manual slide HTML via Claude Agent SDK (subscription auth, no API key)"
+requires-python = ">=3.10"
+dependencies = [
+    "claude-agent-sdk>=0.1.80",
+    "anyio>=4.0",
+]
