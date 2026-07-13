@@ -160,7 +160,7 @@ try {
 
 ### Always Do
 - 新規 SQL はプレースホルダで書く
-- 設定値（API URL・シークレット）は環境変数 / `PropertiesService` から取得
+- 設定値（API URL・シークレット）は環境変数 / `PropertiesService`（GASのみ）から取得
 - Flutter で非同期またぎ後の `setState()` 前に `mounted` チェック
 - GAS で `LockService` 取得後は `finally` で `releaseLock()`
 - 空リストは `[]Type{}` を返す
