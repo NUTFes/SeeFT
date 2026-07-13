@@ -3,14 +3,16 @@
 責務:
   1. スプシ (or CSV) から行を読む
   2. ステージ 3 (副委員長 + 執行部) 完了済か検証
-  3. ステータスを「実行中」にセット
+  3. ステータスを「処理中」にセット (watcher の lease/claim と同じ値で揃える)
   4. Drive から Google Doc を HTML (zip) でダウンロード → manual_dir 配下に展開
-  5. generate_slide.py を呼んで Claude で HTML 生成
-     (「修正提案」列 → instructions.md への自動書き込みは未実装。現状は手動編集が前提)
-  6. uploader.py で配信先にアップロード
-  7. スプシに「生成HTML URL」「最終生成日時」「HTML生成ステータス=完了」を書き戻す
+  5. 「修正提案」列の内容があれば instructions.md へ書き込む (CSV/Sheets 両対応)
+  6. generate_slide.py を呼んで Claude で HTML 生成 (instructions.md を追加指示として注入)
+  7. uploader.py で配信先にアップロード
+  8. スプシに「生成HTML URL」「最終生成日時」「HTML生成ステータス=完了」を書き戻す
+     (--mode regen のときは「比較確認状況=再確認待ち」も書き戻す)
 
-例外時はステータスを「エラー」にして詳細を備考に書く。
+例外時はステータスを「エラー」にする。--mode regen の場合は「比較確認状況」を
+「再生成依頼」へ戻し再試行できるようにする。詳細は備考に書く。
 
 使い方:
   # CSV モード (OAuth 不要、Drive ダウンロードはスキップ前提)
@@ -31,7 +33,6 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import os
-import shutil
 import subprocess
 import sys
 import traceback
@@ -50,6 +51,13 @@ STATUS_COL = "HTML生成ステータス"
 URL_COL = "生成HTML URL"
 DATETIME_COL = "最終生成日時"
 NOTE_COL = "備考"
+COMPARISON_COL = "比較確認状況"
+SUGGESTION_COL = "修正提案"
+
+# watcher.py の CLAIMED_VALUE と同じ値 (lease 表示用。二重起動防止の実体は watcher 側で完結)
+CLAIMED_VALUE = "処理中"
+REGEN_DONE_VALUE = "再確認待ち"
+REGEN_REQUEST_VALUE = "再生成依頼"
 
 # ステージ 3 完了とみなす値 (44th xlsx 慣例: 完成 / 確認不要)
 STAGE_DONE_VALUES = {"完成", "確認不要"}
@@ -89,13 +97,27 @@ def validate_stage_complete(row, force: bool) -> tuple[bool, str]:
     return True, ""
 
 
+def write_instructions(manual_dir: str, suggestion: str) -> None:
+    """「修正提案」列の内容を manual_dir/instructions.md へ書く。
+
+    generate_slide.py はこのファイルを直接読み、「この回の追加・修正指示 (最優先)」
+    として生成プロンプトの末尾に注入する。空文字なら何もしない (PM が
+    instructions.md を直接手編集している既存運用を壊さないため)。
+    """
+    if not suggestion.strip():
+        return
+    instr_path = os.path.join(manual_dir, "instructions.md")
+    with open(instr_path, "w", encoding="utf-8") as f:
+        f.write(suggestion.strip() + "\n")
+    print(f"  修正提案を書き込み: {instr_path}")
+
+
 def run_generate(manual_dir: str, prompt_variant: str) -> str:
     """既存 generate_slide.py を subprocess 起動。
 
     generate_slide.py は --status-csv を受け付けない (存在しない CLI フラグ)。
-    「修正提案」列の内容を反映するには、呼び出し側が事前に manual_dir/instructions.md
-    を書いておく必要がある (generate_slide.py はそれを直接読む)。この自動書き込みは
-    未実装であり、現状の運用は PM が手動で instructions.md を編集する形になっている。
+    「修正提案」列の内容は呼び出し元 (process_one) が事前に write_instructions() で
+    manual_dir/instructions.md へ書いており、generate_slide.py がそれを直接読む。
 
     戻り値: 生成された HTML ファイルの絶対パス
     """
@@ -106,7 +128,7 @@ def run_generate(manual_dir: str, prompt_variant: str) -> str:
     ]
 
     print(f"  Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True)
 
     # 出力パスは generate_slide.py のルール (slide_claude.{variant}.html)
     output_filename = (
@@ -150,10 +172,10 @@ def process_one(args) -> int:
         print("ABORT: Google Doc URL が空です", file=sys.stderr)
         return 4
 
-    # 4. ステータスを「実行中」に
+    # 4. ステータスを「処理中」に (watcher の claim と同じ値。二重起動防止の可視化)
     if not args.dry_run:
-        client.write_cells(args.manual_name, {STATUS_COL: "実行中"})
-        print(f"  ステータス → 実行中")
+        client.write_cells(args.manual_name, {STATUS_COL: CLAIMED_VALUE})
+        print(f"  ステータス → {CLAIMED_VALUE}")
 
     try:
         # 5. manual_dir を確定
@@ -171,8 +193,9 @@ def process_one(args) -> int:
             html_path = download_doc_to_manual_dir(doc_url, manual_dir)
             print(f"  Doc HTML: {html_path}")
 
-        # 7. generate_slide.py 起動
+        # 7. 修正提案 → instructions.md、generate_slide.py 起動
         if not args.skip_generation:
+            write_instructions(manual_dir, row.get(SUGGESTION_COL))
             generated_path = run_generate(manual_dir, args.prompt)
             print(f"  生成完了: {generated_path}")
         else:
@@ -194,23 +217,30 @@ def process_one(args) -> int:
             URL_COL: url,
             DATETIME_COL: _now_str(),
         }
+        if args.mode == "regen":
+            # 再確認待ちへ遷移させ、次回スキャンで同じ行を再生成し続けないようにする
+            updates[COMPARISON_COL] = REGEN_DONE_VALUE
         if args.dry_run:
             print(f"  [dry-run] スプシ書き戻しはスキップ。更新内容: {updates}")
         else:
             client.write_cells(args.manual_name, updates)
-            print(f"  スプシ更新完了")
+            print("  スプシ更新完了")
 
-        print(f"=== 完了 ===")
+        print("=== 完了 ===")
         return 0
 
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)
         traceback.print_exc()
         if not args.dry_run:
-            client.write_cells(args.manual_name, {
+            error_updates = {
                 STATUS_COL: "エラー",
                 NOTE_COL: f"[{_now_str()}] {type(e).__name__}: {e}",
-            })
+            }
+            if args.mode == "regen":
+                # 再試行できるよう claim 前の状態へ戻す
+                error_updates[COMPARISON_COL] = REGEN_REQUEST_VALUE
+            client.write_cells(args.manual_name, error_updates)
         return 1
 
 
@@ -247,6 +277,14 @@ def main() -> int:
     parser.add_argument(
         "--force", action="store_true",
         help="ステージ 3 未完了でも強行実行 (警告のみ)",
+    )
+    parser.add_argument(
+        "--mode", choices=["first_gen", "regen"], default=None,
+        help=(
+            "watcher.py から渡される呼び出し種別。regen 指定時は成功で"
+            "「比較確認状況=再確認待ち」、失敗で「再生成依頼」に戻す。"
+            "PM が直接 CLI 実行する場合は省略可"
+        ),
     )
     args = parser.parse_args()
 
