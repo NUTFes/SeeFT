@@ -1,0 +1,7 @@
+{
+  // MD040 (fenced-code-language): このディレクトリの manual-prompt*.md は
+  // _load_prompt_from_md() (scripts/claude-slide/generate_slide.py) が裸の
+  // ``` / ```` フェンスを前提にパースしているため、言語指定を付けると
+  // プロンプトのコードブロック抽出が壊れる。.claude/ 配下のみ無効化する。
+  "MD040": false
+}

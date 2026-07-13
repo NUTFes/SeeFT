@@ -1,4 +1,0 @@
-# MD040 (fenced-code-language): .claude/manual-prompt*.md は _load_prompt_from_md()
-# (scripts/claude-slide/generate_slide.py) が裸の ``` / ```` フェンスを前提にパースしているため、
-# 言語指定を付けるとプロンプトのコードブロック抽出が壊れる。リポジトリ全体で無効化する。
-MD040: false
