@@ -367,9 +367,6 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 		var user entity.User
 		var slackUserID sql.NullString
 		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID); err == nil {
-			if slackUserID.Valid {
-				user.SlackUserID = slackUserID.String
-			}
 			// ユーザーが存在すれば更新
 			if err := u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password); err != nil {
 				return errors.Wrapf(err, "ユーザー更新失敗: %v", change.Name)

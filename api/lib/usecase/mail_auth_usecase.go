@@ -54,9 +54,6 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 	); err != nil {
 		return entity.LoginUser{}, errors.Wrapf(err, "ユーザーの取得に失敗: %v", err)
 	}
-	if slackUserID.Valid {
-		user.SlackUserID = slackUserID.String
-	}
 
 	// パスワードがあっているか確認
 	password = strings.ReplaceAll(password, " ", "")
@@ -109,9 +106,6 @@ func (u *mailAuthUseCase) WebSignUp(c context.Context, name string, mail string,
 	if err != nil {
 		return token, err
 	}
-	if slackUserID.Valid {
-		user.SlackUserID = slackUserID.String
-	}
 
 	// トークン発行
 	accessToken, err := _makeRandomStr(10)
@@ -151,9 +145,6 @@ func (u *mailAuthUseCase) WebSignIn(c context.Context, studentNumber string, pas
 	)
 	if err != nil {
 		return token, err
-	}
-	if slackUserID.Valid {
-		user.SlackUserID = slackUserID.String
 	}
 
 	// パスワードがあっているか確認

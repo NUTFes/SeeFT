@@ -8,6 +8,9 @@ linters:
     revive:
       severity: warning
     gosec: {}
+    govet:
+      enable:
+        - unusedwrite
 
 issues:
   max-same-issues: 0
