@@ -100,7 +100,7 @@ def export_doc_as_html_zip(doc_id: str) -> bytes:
     downloader = MediaIoBaseDownload(fh, request)
     done = False
     while not done:
-        status, done = downloader.next_chunk()
+        _status, done = downloader.next_chunk()
     fh.seek(0)
     return fh.read()
 
