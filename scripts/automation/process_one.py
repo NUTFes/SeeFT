@@ -5,7 +5,8 @@
   2. ステージ 3 (副委員長 + 執行部) 完了済か検証
   3. ステータスを「実行中」にセット
   4. Drive から Google Doc を HTML (zip) でダウンロード → manual_dir 配下に展開
-  5. generate_slide.py を呼んで Claude で HTML 生成 (修正提案を注入)
+  5. generate_slide.py を呼んで Claude で HTML 生成
+     (「修正提案」列 → instructions.md への自動書き込みは未実装。現状は手動編集が前提)
   6. uploader.py で配信先にアップロード
   7. スプシに「生成HTML URL」「最終生成日時」「HTML生成ステータス=完了」を書き戻す
 
@@ -64,6 +65,9 @@ def _slug_for_dir(manual_name: str) -> str:
     44th 既存ディレクトリと衝突しないよう、45th_ プレフィックスを付ける。
     既に PM が手動で manual_dir を切ってる場合は --manual-dir で上書き可能。
     """
+    separators = tuple(s for s in (os.sep, os.altsep) if s)
+    if not manual_name or any(separator in manual_name for separator in separators):
+        raise ValueError("マニュアル名にパス区切りは使用できません")
     return f"45th_{manual_name}"
 
 
@@ -85,11 +89,13 @@ def validate_stage_complete(row, force: bool) -> tuple[bool, str]:
     return True, ""
 
 
-def run_generate(manual_dir: str, prompt_variant: str, status_csv: str | None) -> str:
+def run_generate(manual_dir: str, prompt_variant: str) -> str:
     """既存 generate_slide.py を subprocess 起動。
 
-    generate_slide.py は --status-csv で「個別生成指示」列を CSV から引く設計だが、
-    新スキーマでは「修正提案」列がそれに相当する。CSV パスを引き渡せば自動で読まれる。
+    generate_slide.py は --status-csv を受け付けない (存在しない CLI フラグ)。
+    「修正提案」列の内容を反映するには、呼び出し側が事前に manual_dir/instructions.md
+    を書いておく必要がある (generate_slide.py はそれを直接読む)。この自動書き込みは
+    未実装であり、現状の運用は PM が手動で instructions.md を編集する形になっている。
 
     戻り値: 生成された HTML ファイルの絶対パス
     """
@@ -98,8 +104,6 @@ def run_generate(manual_dir: str, prompt_variant: str, status_csv: str | None) -
         "--prompt", prompt_variant,
         manual_dir,
     ]
-    if status_csv:
-        cmd.extend(["--status-csv", status_csv])
 
     print(f"  Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, check=True)
@@ -169,9 +173,7 @@ def process_one(args) -> int:
 
         # 7. generate_slide.py 起動
         if not args.skip_generation:
-            generated_path = run_generate(
-                manual_dir, args.prompt, status_csv=args.csv_path,
-            )
+            generated_path = run_generate(manual_dir, args.prompt)
             print(f"  生成完了: {generated_path}")
         else:
             # スキップ時は既存ファイルを使う
