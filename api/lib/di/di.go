@@ -1,9 +1,14 @@
 package di
 
 import (
+	"context"
 	"log"
+	"time"
+
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
+	"github.com/NUTFes/SeeFT/api/lib/externals/scheduler"
 	"github.com/NUTFes/SeeFT/api/lib/externals/server"
+	"github.com/NUTFes/SeeFT/api/lib/externals/slack"
 	"github.com/NUTFes/SeeFT/api/lib/internals/controller"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
@@ -11,11 +16,11 @@ import (
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
 )
 
-func InitializeServer() db.Client {
+func InitializeServer(ctx context.Context) (db.Client, error) {
 	// DB接続
 	client, err := db.ConnectMySQL()
 	if err != nil {
-		log.Fatal("db error")
+		return nil, err
 	}
 
 	crud := abstract.NewCrud(client)
@@ -93,8 +98,25 @@ func InitializeServer() db.Client {
 		reviewController,
 	)
 
-	// Server
-	server.RunServer(router)
+	// Scheduler: 5分間隔で未送信通知を flush する（goroutine で起動し即 return）
+	slackService, err := slack.NewSlackService()
+	if err != nil {
+		log.Printf("slack init failed, notification scheduler disabled: %v", err)
+	}
+	if err == nil {
+		notificationUseCase := usecase.NewNotificationUseCase(
+			actionLogRepository, slackService,
+			userRepository, dateRepository, timeRepository,
+			taskRepository, shiftRepository, weatherRepository,
+		)
+		scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(ctx)
 
-	return client
+	}
+
+	// Server
+	if err := server.RunServer(ctx, router); err != nil {
+		return client, err
+	}
+
+	return client, nil
 }

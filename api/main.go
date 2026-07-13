@@ -1,13 +1,30 @@
 package main
 
 import (
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/NUTFes/SeeFT/api/lib/di"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	client := di.InitializeServer()
-	defer client.CloseDB()
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	client, err := di.InitializeServer(ctx)
+	if client != nil {
+		defer client.CloseDB()
+	}
+	return err
 }
 
 // func main() async {

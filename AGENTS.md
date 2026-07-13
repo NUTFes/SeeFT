@@ -37,7 +37,7 @@ api/lib/
 ├── internals/
 │   ├── controller/    # HTTP I/O（Echo）。DB アクセス禁止
 │   └── repository/    # SQL 実行のみ。*sql.Rows を返す
-└── externals/{db,server,slack}
+└── externals/{db,server,slack,scheduler}   # scheduler: 通知の定期実行 ticker ループ
 
 mobile/lib/
 ├── pages/      # 画面（StatefulWidget）
@@ -49,6 +49,12 @@ mobile/lib/
 
 gas/{shift,task,user,rescue}/   # ドメイン別。コード.js / onChange.js 等
 ```
+
+## 通知の定期実行
+
+未送信の通知ログ（`action_logs` の `is_sent = false`）は、`externals/scheduler` の ticker ループが API プロセス内で5分間隔に `NotificationUseCase.ProcessUnsentNotifications` を呼び、Slack DM へ flush します（`di.go` で配線。`cmd/send-notifications` は手動 flush 用として併存）。
+
+**API は単一インスタンス前提**です。複数レプリカで動かすと各プロセスの ticker が同じ未送信ログを拾って二重送信します。本番（`docker-compose.prod.yml`）は API を1レプリカで運用しているため現状は問題ありません。複数レプリカ化する場合はリーダー選出や排他制御が必要です。
 
 ## Code Style
 
