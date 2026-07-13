@@ -10,6 +10,8 @@
   - Doc URL 単独入力では発火しない (PM が明示的にステータスを変えるまで待つ)
   - 任意セル編集では発火しない (列 18, 22 だけを見る)
   - 完了済 (列 18=完了 で 最終生成日時 あり) は二重処理しない
+  - 処理中 (subprocess 起動前に claim 済み、列 18 or 22 = "処理中") は二重処理しない
+    (処理中プロセスとは別の watcher / cron が同じ行を拾わないようにする lease)
 
 使い方:
   # ローカル CSV モード (dry-run / 開発)
@@ -40,6 +42,15 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
 PROCESS_ONE_SCRIPT = os.path.join(SCRIPT_DIR, "process_one.py")
 
+DEFAULT_INTERVAL_SECONDS = int(os.environ.get("SEEFT_PIPELINE_WATCH_INTERVAL_SECONDS", "60"))
+
+# ステータス列 (process_one.py の STATUS_COL/COMPARISON_COL と整合)
+STATUS_COL = "HTML生成ステータス"
+COMPARISON_COL = "比較確認状況"
+# subprocess 起動前に書き込む claim 値。"実行中"/"再生成依頼" と異なる値にすることで、
+# 生成が終わるまでの間、後続のポーリングが同じ行を二重に拾わないようにする。
+CLAIMED_VALUE = "処理中"
+
 
 def find_pending_rows(client) -> list[tuple[str, str]]:
     """処理対象の (マニュアル名, mode) を返す。
@@ -66,11 +77,23 @@ def find_pending_rows(client) -> list[tuple[str, str]]:
     return pending
 
 
+def claim_row(client, manual_name: str, mode: str) -> None:
+    """subprocess 起動前に lease (claim) を書き込む。
+
+    トリガー条件 ("実行中" / "再生成依頼") とは異なる値へ書き換えることで、
+    生成が終わるまでの間、後続のポーリング (別プロセスも含む) が同じ行を
+    再度拾わないようにする。
+    """
+    col = STATUS_COL if mode == "first_gen" else COMPARISON_COL
+    client.write_cells(manual_name, {col: CLAIMED_VALUE})
+
+
 def run_process_one(manual_name: str, mode: str, args) -> int:
     """process_one.py を subprocess で呼ぶ。"""
     cmd = [
         sys.executable, PROCESS_ONE_SCRIPT,
         manual_name,
+        "--mode", mode,
     ]
     if args.csv_path:
         cmd.extend(["--csv-path", args.csv_path])
@@ -95,6 +118,7 @@ def scan_once(client, args) -> tuple[int, int]:
     failed = 0
     for name, mode in pending:
         try:
+            claim_row(client, name, mode)
             rc = run_process_one(name, mode, args)
             if rc != 0:
                 failed += 1
@@ -113,8 +137,11 @@ def main() -> int:
     group.add_argument("--spreadsheet-id", help="Sheets API モード")
 
     parser.add_argument(
-        "--interval", type=int, default=60,
-        help="ポーリング間隔 (秒)。default: 60",
+        "--interval", type=int, default=DEFAULT_INTERVAL_SECONDS,
+        help=(
+            f"ポーリング間隔 (秒)。default: {DEFAULT_INTERVAL_SECONDS} "
+            f"(環境変数 SEEFT_PIPELINE_WATCH_INTERVAL_SECONDS で変更可)"
+        ),
     )
     parser.add_argument(
         "--once", action="store_true",
