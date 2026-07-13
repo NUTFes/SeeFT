@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
@@ -35,6 +36,7 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 
 	// メールアドレスの存在確認
 	row := u.userRep.FindByStudentNumber(c, studentNumber)
+	var slackUserID sql.NullString
 	if err := row.Scan(
 		&user.ID,
 		&user.Name,
@@ -48,9 +50,12 @@ func (u *mailAuthUseCase) SignIn(c context.Context, studentNumber string, passwo
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.SlackUserID,
+		&slackUserID,
 	); err != nil {
 		return entity.LoginUser{}, errors.Wrapf(err, "ユーザーの取得に失敗: %v", err)
+	}
+	if slackUserID.Valid {
+		user.SlackUserID = slackUserID.String
 	}
 
 	// パスワードがあっているか確認
@@ -85,6 +90,7 @@ func (u *mailAuthUseCase) WebSignUp(c context.Context, name string, mail string,
 	if err != nil {
 		return token, err
 	}
+	var slackUserID sql.NullString
 	err = row.Scan(
 		&user.ID,
 		&user.Name,
@@ -98,10 +104,13 @@ func (u *mailAuthUseCase) WebSignUp(c context.Context, name string, mail string,
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.SlackUserID,
+		&slackUserID,
 	)
 	if err != nil {
 		return token, err
+	}
+	if slackUserID.Valid {
+		user.SlackUserID = slackUserID.String
 	}
 
 	// トークン発行
@@ -124,6 +133,7 @@ func (u *mailAuthUseCase) WebSignIn(c context.Context, studentNumber string, pas
 
 	// メールアドレスの存在確認
 	row := u.userRep.FindByStudentNumber(c, studentNumber)
+	var slackUserID sql.NullString
 	err := row.Scan(
 		&user.ID,
 		&user.Name,
@@ -137,10 +147,13 @@ func (u *mailAuthUseCase) WebSignIn(c context.Context, studentNumber string, pas
 		&user.Password,
 		&user.CreatedAt,
 		&user.UpdatedAt,
-		&user.SlackUserID,
+		&slackUserID,
 	)
 	if err != nil {
 		return token, err
+	}
+	if slackUserID.Valid {
+		user.SlackUserID = slackUserID.String
 	}
 
 	// パスワードがあっているか確認
