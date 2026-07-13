@@ -112,7 +112,7 @@ def main() -> int:
     shutil.copy2(src_html, dest)
 
     size_kb = os.path.getsize(dest) // 1024
-    print(f"=== 配置 ===")
+    print("=== 配置 ===")
     print(f"  {os.path.basename(manual_dir)} → manuals/{number}/index.html ({size_kb}KB)")
 
     message = args.message or f"manuals/{number}: {os.path.basename(manual_dir)} を更新"
