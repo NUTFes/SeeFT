@@ -7,12 +7,18 @@
 
 OAuth セットアップ (本番モード): `docs/proposals/manual-proposal-v4-slides/automation-design.md`
 Section 5 を参照。`~/.config/seeft-pipeline/credentials.json` を配置 →
-初回実行でブラウザ認証 → `token.json` 自動生成。
+初回実行でブラウザ認証 → `token.json` 自動生成 (権限 0600)。
+
+サーバー/デプロイ運用では `SEEFT_PIPELINE_GOOGLE_TOKEN_JSON` (と必要なら
+`SEEFT_PIPELINE_GOOGLE_CREDENTIALS_JSON`) にシークレットストア経由で JSON を渡せば、
+ローカルファイルには一切触れずに認証できる。開発者手元での初回ブラウザ認証は
+installed-app 型 OAuth の標準パターンとしてローカルファイルにフォールバックする。
 """
 
 from __future__ import annotations
 
 import csv
+import json
 import os
 from dataclasses import dataclass
 from typing import Optional
@@ -58,7 +64,11 @@ CONFIG_DIR = os.path.expanduser("~/.config/seeft-pipeline")
 CREDENTIALS_PATH = os.path.join(CONFIG_DIR, "credentials.json")
 TOKEN_PATH = os.path.join(CONFIG_DIR, "token.json")
 
-DEFAULT_SHEET_NAME = "Sheet1"  # スプシ側のシート名 (運用開始時に確認・調整)
+DEFAULT_SHEET_NAME = os.environ.get("SEEFT_PIPELINE_SHEET_NAME", "Sheet1")
+
+# 本番/サーバー運用向け: 設定済みならこちらを最優先 (ローカルファイル不要)
+TOKEN_JSON_ENV = "SEEFT_PIPELINE_GOOGLE_TOKEN_JSON"
+CREDENTIALS_JSON_ENV = "SEEFT_PIPELINE_GOOGLE_CREDENTIALS_JSON"
 
 
 def col_idx_to_letter(idx: int) -> str:
@@ -185,25 +195,49 @@ class SheetsBackend:
         from google_auth_oauthlib.flow import InstalledAppFlow
         from googleapiclient.discovery import build
 
+        # 本番/サーバー運用: 環境変数に token が直接渡されていればローカルファイルに触れない
+        token_from_env = os.environ.get(TOKEN_JSON_ENV)
+        from_env = token_from_env is not None
+
         creds = None
-        if os.path.exists(TOKEN_PATH):
+        if from_env:
+            creds = Credentials.from_authorized_user_info(json.loads(token_from_env), SCOPES)
+        elif os.path.exists(TOKEN_PATH):
             creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
+            elif from_env:
+                raise RuntimeError(
+                    f"{TOKEN_JSON_ENV} の token が無効・期限切れです。"
+                    f"新しい token JSON を取得して環境変数を更新してください。"
+                )
             else:
-                if not os.path.exists(CREDENTIALS_PATH):
+                credentials_from_env = os.environ.get(CREDENTIALS_JSON_ENV)
+                if credentials_from_env:
+                    flow = InstalledAppFlow.from_client_config(
+                        json.loads(credentials_from_env), SCOPES
+                    )
+                elif os.path.exists(CREDENTIALS_PATH):
+                    flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+                else:
                     raise FileNotFoundError(
-                        f"OAuth credentials not found at {CREDENTIALS_PATH}. "
+                        f"OAuth credentials not found ({CREDENTIALS_JSON_ENV} 環境変数、"
+                        f"または {CREDENTIALS_PATH})。"
                         f"Google Cloud Console で credentials.json を取得し、"
-                        f"{CONFIG_DIR}/ に配置してください。詳細は "
+                        f"{CONFIG_DIR}/ に配置するか環境変数に設定してください。詳細は "
                         f"docs/proposals/manual-proposal-v4-slides/automation-design.md Section 5"
                     )
-                flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
                 creds = flow.run_local_server(port=0)
-            os.makedirs(CONFIG_DIR, exist_ok=True)
-            with open(TOKEN_PATH, "w") as token:
-                token.write(creds.to_json())
+
+            # env 由来の token はデプロイ側が管理するシークレットストアの写しなので、
+            # ここではローカルファイルへ書き戻さない (from_env=True のときのみ発生しうる分岐)
+            if not from_env:
+                os.makedirs(CONFIG_DIR, exist_ok=True)
+                with open(TOKEN_PATH, "w") as token:
+                    token.write(creds.to_json())
+                os.chmod(TOKEN_PATH, 0o600)
 
         self._service = build("sheets", "v4", credentials=creds)
         return self._service
