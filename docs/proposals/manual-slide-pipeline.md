@@ -123,11 +123,11 @@ API 認証時（参考）:
 ## 既知の挙動
 
 ### max_turns について
-Claude Agent SDK 版では `max_turns=10` を設定済。
+Claude Agent SDK 版では `max_turns=20` を設定済。
 
-理由: 大入力（28KB+ markdown）で Claude が稀に内部的にツール試行する挙動があり、
-`max_turns=1` だと「Reached maximum number of turns (1)」で失敗するケースがあった。
-`max_turns=10` で安全マージンを確保。実際の num_turns は 1 で済むことが多い。
+理由: 大入力（55KB+ markdown）で Claude が稀に内部的にツール試行する挙動があり、
+`max_turns=10` では `disallowed_tools` 拒否で turn が消費されて flaky に失敗する事象を確認したため、
+余裕大きめに `max_turns=20` で安全マージンを確保している。実際の num_turns は 1 で済むことが多い。
 
 ### 画像配置精度
 LLM はファイル名と Markdown 文脈（figcaption の順序等）から推測して画像を配置する。
