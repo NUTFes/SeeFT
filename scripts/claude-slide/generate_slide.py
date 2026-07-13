@@ -212,7 +212,7 @@ async def call_claude_sdk(
 
     options = ClaudeAgentOptions(**options_kwargs)
 
-    print(f"  Calling Claude via Agent SDK (subscription)...")
+    print("  Calling Claude via Agent SDK (subscription)...")
     print(f"  Model: {model or '(Claude Code default)'}")
     print(f"  Input: ~{len(user_text)//1000}K chars text, {len(image_files)} images (filename only)")
 
@@ -281,7 +281,7 @@ def main() -> int:
         slide_html = replace_placeholders(slide_html, load_images_base64(manual_dir))
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(slide_html)
-        print(f"=== 画像再埋め込み（--embed-only）===")
+        print("=== 画像再埋め込み（--embed-only）===")
         print(f"  {output_path}: {before//1024}KB → {os.path.getsize(output_path)//1024}KB")
         return 0
 
