@@ -21,6 +21,7 @@ make build        # コンテナビルド
 make exec         # api コンテナにシェルログイン
 make seed         # DB シード投入
 make tidy         # go mod tidy（コンテナ内）
+make test         # go test ./...（コンテナ内）
 make mobile-up    # fvm flutter run -d web-server --web-port 45029 --dart-define-from-file=env/.env
 ```
 
