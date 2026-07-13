@@ -3,6 +3,9 @@
 pandoc -t json の AST を読み込み、ノードごとに規則写像で SeeFT 規格の HTML を組み立てる。
 同じ入力に対して常に同じ出力を返す。Claude / API キー一切不要。
 
+対応 pandoc バージョン: 3.x 以降 (pandoc-api-version 1.23 の Table AST 構造に依存。
+古い pandoc では render_table() の分岐に合わず表が `<!-- table parse failed -->` になる)。
+
 使い方:
   uv run --project scripts/deterministic-slide python scripts/deterministic-slide/convert.py docs/manuals/44th_幼稚園WARSコラボブース当日マニュアル
 
@@ -167,9 +170,11 @@ def render_inlines(inlines: list, images_b64: dict, autolink: bool = True) -> st
             inner_html = render_inlines(inner, images_b64, autolink=False)
             parts.append(f'<a href="{html.escape(url)}">{inner_html}</a>')
         elif t == "Image":
-            attrs, alt_inlines, target = c
+            _attrs, alt_inlines, target = c
             url, _title = target
             fname = os.path.basename(url)
+            if fname not in images_b64:
+                print(f"  WARNING: 埋め込み画像が見つかりません: {fname} (元URLへフォールバック)", file=sys.stderr)
             data_uri = images_b64.get(fname, url)
             # alt は HTML 属性値なのでタグを差し込めない
             alt = render_inlines(alt_inlines, images_b64, autolink=False)
@@ -281,7 +286,7 @@ def render_table(table_c: list, images_b64: dict) -> str:
     """
     # 雑にだけど構造は読み取る
     try:
-        _attr, caption, _colspecs, head, bodies, foot = table_c
+        _attr, caption, _colspecs, head, bodies, _foot = table_c
     except (ValueError, TypeError):
         return "<!-- table parse failed -->"
 
@@ -352,6 +357,7 @@ def split_into_sections(blocks: list, images_b64: dict) -> tuple[dict, list]:
     sections: list = []
     current: dict | None = None
     h1_seen_for_cover = False
+    used_ids: set = set()
 
     def push_to_current(html_fragment: str):
         nonlocal current
@@ -377,8 +383,12 @@ def split_into_sections(blocks: list, images_b64: dict) -> tuple[dict, list]:
                 # 新セクション
                 if current is not None:
                     sections.append(current)
+                sec_id = slugify(title_text, len(sections) + 1)
+                if sec_id in used_ids:
+                    sec_id = f"{sec_id}-{len(sections) + 1}"
+                used_ids.add(sec_id)
                 current = {
-                    "id": slugify(title_text, len(sections) + 1),
+                    "id": sec_id,
                     "title": title_text,
                     "title_html": title_html,
                     "html_parts": [],
