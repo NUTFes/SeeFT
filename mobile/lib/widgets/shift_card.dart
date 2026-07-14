@@ -1,4 +1,5 @@
 import 'package:seeft_mobile/configs/importer.dart';
+import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 import 'package:seeft_mobile/widgets/manual_viewer.dart';
 import 'package:seeft_mobile/widgets/new_badge.dart';
 import 'package:seeft_mobile/widgets/review_bottom_sheet.dart';
@@ -513,10 +514,21 @@ class _ManualToggleState extends State<_ManualToggle> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () async {
-                        await launchUrl(
-                          Uri.parse(widget.url),
-                          mode: LaunchMode.externalApplication,
-                        );
+                        var launched = false;
+                        try {
+                          launched = await launchUrl(
+                            Uri.parse(widget.url),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } catch (_) {
+                          launched = false;
+                        }
+                        if (!launched && context.mounted) {
+                          showCustomErrorSnackBar(
+                            context,
+                            'マニュアルを開けませんでした',
+                          );
+                        }
                       },
                       child: const Text(
                         '別のタブで開く',
