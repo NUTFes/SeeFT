@@ -688,6 +688,7 @@ class _MyShiftPageState extends State<MyShiftPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ShiftCard(
+                        key: ValueKey(cardKey),
                         data: data,
                         userID: _userID,
                         isNew: isNew,
