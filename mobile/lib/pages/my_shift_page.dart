@@ -689,6 +689,7 @@ class _MyShiftPageState extends State<MyShiftPage>
                     children: [
                       ShiftCard(
                         data: data,
+                        userID: _userID,
                         isNew: isNew,
                         onOpened: () {
                           // トグルを開いたときの処理

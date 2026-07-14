@@ -1,316 +1,481 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/widgets/manual_viewer.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/widgets/new_badge.dart';
+import 'package:seeft_mobile/widgets/review_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // シフトカードのウィジェット
 class ShiftCard extends StatelessWidget {
   final ShiftCardData data;
+  final int userID;
   final bool isNew;
   final VoidCallback? onOpened;
 
   const ShiftCard({
     super.key,
     required this.data,
+    required this.userID,
     this.isNew = false,
     this.onOpened,
   });
-  
-  // リンクを開くための非同期メソッドを定義
-  Future<void> _launchManualUrl(String url) async {
-    // 開きたいURLをUriオブジェクトに変換
-    final Uri uri = Uri.parse(url);
-
-    // launchUrlを実行
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {  // ここで外部アプリで開くように指定
-      // URLが開けなかった場合のエラー処理
-      throw Exception('Could not launch $uri');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin:EdgeInsets.zero,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0), // 角丸を設定
-        side: BorderSide(
-          color: AppColors.grayLight, // 枠線の色
-          width: 1.0, // 枠線の太さ
+        borderRadius: BorderRadius.circular(AppBorderRadius.normal),
+        side: const BorderSide(
+          color: AppColors.grayLight,
+          width: 1.0,
         ),
       ),
       elevation: 0.5,
       shadowColor: null,
-      color: AppColors.base, // 背景色を設定
+      color: AppColors.base,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 時刻とマニュアルを開くボタン
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 時刻の表示
                 Row(
                   children: [
                     const Icon(
                       Icons.access_time,
                       color: AppColors.textBlack,
-                      size: 16
+                      size: 16,
                     ),
                     const SizedBox(width: 2.0),
                     Text(
-                      "${data.startTime}〜${data.endTime}",
+                      '${data.startTime}~${data.endTime}',
                       style: const TextStyle(
                         fontSize: AppFontSizes.sm,
-                        color: AppColors.textBlack
+                        color: AppColors.textBlack,
                       ),
                     ),
                   ],
                 ),
-                // マニュアルを開くボタン
-                _manualButton(url: data.url),
+                _cardMenu(context),
               ],
             ),
-            // タスク名とNewバッジの表示
             Row(
               children: [
+                if (isNew) ...[
+                  const NewBadge(),
+                  const SizedBox(width: 4.0),
+                ],
                 Flexible(
                   child: Text(
                     data.taskName.toString(),
                     style: const TextStyle(
                       fontSize: AppFontSizes.md,
-                      color: AppColors.textBlack, 
-                      fontWeight: FontWeight.bold
+                      color: AppColors.textBlack,
+                      fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.left,
                   ),
                 ),
-                if (isNew) ...[
-                  const SizedBox(width: 8.0),
-                  const NewBadge(),
-                ],
               ],
             ),
             const SizedBox(height: 6.0),
             const Divider(
               height: 1,
-              color: AppColors.grayLight, // 区切り線の色
+              color: AppColors.grayLight,
             ),
-            // 集合場所とトグル
-            Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent), // 区切り線の色を透明に
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                iconColor: AppColors.textBlack, // アイコンの色を変更
-                minTileHeight: 0, // タイルの高さを最小に
-                onExpansionChanged: (expanded) {
-                  // トグルを開いたときにコールバックを呼ぶ
-                  if (expanded && isNew && onOpened != null) {
-                    onOpened!();
-                  }
-                },
-                // 集合場所の表示
-                title: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined, 
-                      color: AppColors.textBlack,
-                      size: 16
-                    ),
-                    const SizedBox(width: 2.0),
-                    Text(
-                      data.place,
-                      style: const TextStyle(
-                        fontSize: AppFontSizes.sm,
-                        color: AppColors.textBlack
-                      ),
-                    ),
-                  ],
+            const SizedBox(height: 6.0),
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  color: AppColors.textBlack,
+                  size: 16,
                 ),
-                // トグルが展開されたときの内容
-                children: <Widget>[
-                  _buildSection(
-                    title: '【集合場所】',
-                    content: [data.place]
+                const SizedBox(width: 2.0),
+                Flexible(
+                  child: Text(
+                    data.place,
+                    style: const TextStyle(
+                      fontSize: AppFontSizes.sm,
+                      color: AppColors.textBlack,
+                    ),
                   ),
-                  _buildManualSection(
-                    title: '【マニュアル】',
-                    url: data.url != '' ? data.url : null
-                  ),
-                  _buildSection(
-                    title: '【困った時は】',
-                    content: [
-                      '以下の順に対応してください。',
-                      '1. マニュアルを確認してください。',
-                      '2. 近くの人や近くの先輩に相談してください。',
-                      '3. 「緊急事対応」ページから本部に連絡してください。',
-                    ],
-                  ),
-                  _buildSection(
-                    title: '【担当者の一覧】',
-                    content: [
-                      for (var member in data.shiftMembers)
-                        '${member.sTime}〜${member.eTime}\n${member.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}',
-                    ],
-                  ),
-                  _buildSection(
-                    title: '【前の時間の担当者の一覧】',
-                    content: [
-                      if (data.beforeMembers.members.isNotEmpty)
-                        '${data.beforeMembers.sTime}〜${data.beforeMembers.eTime}\n${data.beforeMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}'
-                      else
-                        '前の時間の担当者はいません',
-                    ],
-                  ),
-                  _buildSection(
-                    title: '【次の時間の担当者の一覧】',
-                    content: [
-                      if (data.afterMembers.members.isNotEmpty)
-                        '${data.afterMembers.sTime}〜${data.afterMembers.eTime}\n${data.afterMembers.members.map((m) => '(${m.bureau}${m.grade}) ${m.name}').join(', ')}'
-                      else
-                        '次の時間の担当者はいません',
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  // マニュアルボタン
-  Widget _manualButton({
-    required String url,
-  }) {
-    final bool isDisabled = url.isEmpty;  // マニュアルがない場合は無効化する
-    return ElevatedButton.icon(
-      onPressed: isDisabled ? null : () => _launchManualUrl(url), // マニュアルがあればタップで開く
-      icon: Icon(
-        Icons.quiz_outlined,
-        size: 16,
-        color: isDisabled ? AppColors.grayDark : AppColors.textWhite,
-      ),
-      label: Text(
-        isDisabled ? 'マニュアルなし' : 'マニュアル',
-        style: TextStyle(
-          fontSize: AppFontSizes.sm,
-          color: isDisabled ? AppColors.grayDark : AppColors.textWhite,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isDisabled ? AppColors.grayLight : AppColors.link,
-        padding: const EdgeInsets.symmetric(
-          vertical: 4.0,
-          horizontal: 8.0
-        ),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100.0),
-        ),
-        // 横幅を広げるための設定
-        // minimumSize: Size(double.infinity, 40),
-      ),
-    );
-  }
-  
-  // 各セクションのUIを生成するヘルパーメソッド
-  Widget _buildSection({
-    required String title, 
-    required List<String> content
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: AppFontSizes.xs,
-                color: AppColors.textBlack,
-                fontWeight: FontWeight.bold
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 4.0),
-            ...content.map((line) => Text(
-              line, 
-              style: const TextStyle(
-                fontSize: AppFontSizes.xs, 
-                color: AppColors.textBlack,
-                height: 1.5 // 行間を調整
-              )
-            )),
+            _ManualToggle(
+              url: data.url,
+              onOpened: () {
+                if (isNew && onOpened != null) {
+                  onOpened!();
+                }
+              },
+            ),
           ],
         ),
       ),
     );
   }
-  // マニュアルセクションのUIを生成するヘルパーメソッド
-  Widget _buildManualSection({
+
+  Widget _cardMenu(BuildContext context) {
+    return Builder(
+      builder: (menuContext) {
+        return _ShiftCardMoreButton(
+          onPressed: (position) => _showCardMenu(menuContext, position),
+        );
+      },
+    );
+  }
+
+  Future<void> _showCardMenu(BuildContext context, Offset position) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final action = await showMenu<_ShiftCardMenuAction>(
+      context: context,
+      color: Colors.transparent,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      constraints: const BoxConstraints.tightFor(width: 212),
+      menuPadding: EdgeInsets.zero,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(position.dx, position.dy, 0, 0),
+        Offset.zero & overlay.size,
+      ),
+      items: const [
+        _ShiftCardMenuPanel(),
+      ],
+    );
+
+    if (action == null) return;
+    switch (action) {
+      case _ShiftCardMenuAction.members:
+        if (isNew && onOpened != null) {
+          onOpened!();
+        }
+        if (context.mounted) {
+          _showMembersDialog(context);
+        }
+        break;
+      case _ShiftCardMenuAction.review:
+        if (context.mounted) {
+          ReviewBottomSheet.show(context, data.taskName, userID);
+        }
+        break;
+    }
+  }
+
+  void _showMembersDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.base,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppBorderRadius.normal),
+          ),
+          contentPadding: const EdgeInsets.all(16.0),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildMemberSection(
+                  title: '【担当者の一覧】',
+                  groups: data.shiftMembers,
+                  emptyMessage: '担当者はいません',
+                ),
+                const SizedBox(height: 12.0),
+                _buildMemberSection(
+                  title: '【前の時間の担当者の一覧】',
+                  groups: [data.beforeMembers],
+                  emptyMessage: '前の時間の担当者はいません',
+                ),
+                const SizedBox(height: 12.0),
+                _buildMemberSection(
+                  title: '【次の時間の担当者の一覧】',
+                  groups: [data.afterMembers],
+                  emptyMessage: '次の時間の担当者はいません',
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMemberSection({
     required String title,
-    String? url,
+    required List<ShiftMembers> groups,
+    required String emptyMessage,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: AppFontSizes.xs,
-                color: AppColors.textBlack,
-                fontWeight: FontWeight.bold,
-              ),
+    final validGroups =
+        groups.where((group) => group.members.isNotEmpty).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: AppFontSizes.xs,
+            color: AppColors.textBlack,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        if (validGroups.isEmpty)
+          Text(
+            emptyMessage,
+            style: const TextStyle(
+              fontSize: AppFontSizes.xs,
+              color: AppColors.textBlack,
+              height: 1.5,
             ),
-            const SizedBox(height: 4.0),
-            if (url == null)
-              Text(
-                'マニュアルがありません',
+          )
+        else
+          ...validGroups.map(
+            (group) => Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: Text(
+                '${group.sTime}~${group.eTime}\n${group.members.map((member) => '(${member.bureau}${member.grade})${member.name}').join(', ')}',
                 style: const TextStyle(
                   fontSize: AppFontSizes.xs,
                   color: AppColors.textBlack,
-                  height: 1.5,
+                  height: 1.4,
                 ),
-              )
-            else
-              _InlineManualExpansion(url: url),
-          ],
-        ),
-      ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
 
-// マニュアルをインラインで開閉するウィジェット
-class _InlineManualExpansion extends StatefulWidget {
-  final String url;
-  const _InlineManualExpansion({required this.url});
-
-  @override
-  State<_InlineManualExpansion> createState() => _InlineManualExpansionState();
+enum _ShiftCardMenuAction {
+  members,
+  review,
 }
 
-class _InlineManualExpansionState extends State<_InlineManualExpansion> {
-  bool _isExpanded = false;
+class _ShiftCardMoreButton extends StatelessWidget {
+  static const double _menuLeftOffset = 0.0;
+  static const double _menuTopOffset = 0.0;
+
+  final Future<void> Function(Offset position) onPressed;
+
+  const _ShiftCardMoreButton({required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => onPressed(_menuPosition(context)),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(AppBorderRadius.normal),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(
+              Icons.more_vert,
+              color: AppColors.textBlack,
+              size: 24,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Offset _menuPosition(BuildContext context) {
+    final box = context.findRenderObject() as RenderBox;
+    final topLeft = box.localToGlobal(Offset.zero);
+    return Offset(
+      topLeft.dx - _menuLeftOffset,
+      topLeft.dy + _menuTopOffset,
+    );
+  }
+}
+
+class _ShiftCardMenuPanel extends PopupMenuEntry<_ShiftCardMenuAction> {
+  const _ShiftCardMenuPanel();
+
+  @override
+  double get height => 138;
+
+  @override
+  bool represents(_ShiftCardMenuAction? value) => false;
+
+  @override
+  State<_ShiftCardMenuPanel> createState() => _ShiftCardMenuPanelState();
+}
+
+class _ShiftCardMenuPanelState extends State<_ShiftCardMenuPanel> {
+  _ShiftCardMenuAction? _hoveredAction;
+  _ShiftCardMenuAction? _pressedAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 1.0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.40),
+              offset: const Offset(0, 4),
+              blurRadius: 4.0,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: ColoredBox(
+            color: AppColors.base,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8.0),
+                _ShiftCardMenuRow(
+                  action: _ShiftCardMenuAction.members,
+                  label: '担当者一覧',
+                  isHovered: _hoveredAction == _ShiftCardMenuAction.members,
+                  isPressed: _pressedAction == _ShiftCardMenuAction.members,
+                  onHoverChanged: _handleHoverChanged,
+                  onPressChanged: _handlePressChanged,
+                ),
+                _ShiftCardMenuRow(
+                  action: _ShiftCardMenuAction.review,
+                  label: 'レビューを書く',
+                  isHovered: _hoveredAction == _ShiftCardMenuAction.review,
+                  isPressed: _pressedAction == _ShiftCardMenuAction.review,
+                  onHoverChanged: _handleHoverChanged,
+                  onPressChanged: _handlePressChanged,
+                ),
+                const SizedBox(height: 8.0),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleHoverChanged(_ShiftCardMenuAction action, bool isHovered) {
+    setState(() {
+      _hoveredAction = isHovered ? action : null;
+    });
+  }
+
+  void _handlePressChanged(_ShiftCardMenuAction action, bool isPressed) {
+    setState(() {
+      _pressedAction = isPressed ? action : null;
+    });
+  }
+}
+
+class _ShiftCardMenuRow extends StatelessWidget {
+  final _ShiftCardMenuAction action;
+  final String label;
+  final bool isHovered;
+  final bool isPressed;
+  final void Function(_ShiftCardMenuAction action, bool isHovered)
+      onHoverChanged;
+  final void Function(_ShiftCardMenuAction action, bool isPressed)
+      onPressChanged;
+
+  const _ShiftCardMenuRow({
+    required this.action,
+    required this.label,
+    required this.isHovered,
+    required this.isPressed,
+    required this.onHoverChanged,
+    required this.onPressChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => onHoverChanged(action, true),
+      onExit: (_) => onHoverChanged(action, false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => onPressChanged(action, true),
+        onTapCancel: () => onPressChanged(action, false),
+        onTapUp: (_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 120));
+          if (context.mounted) {
+            Navigator.pop(context, action);
+          }
+        },
+        child: Container(
+          width: double.infinity,
+          height: 40,
+          alignment: Alignment.center,
+          color: _backgroundColor,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: AppFontSizes.sm,
+              color: isPressed ? AppColors.textWhite : AppColors.textBlack,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color get _backgroundColor {
+    if (isPressed) return AppColors.main;
+    return AppColors.base;
+  }
+}
+
+class _ManualToggle extends StatefulWidget {
+  final String url;
+  final VoidCallback? onOpened;
+
+  const _ManualToggle({
+    required this.url,
+    this.onOpened,
+  });
+
+  @override
+  State<_ManualToggle> createState() => _ManualToggleState();
+}
+
+class _ManualToggleState extends State<_ManualToggle> {
+  bool _isExpanded = false;
+
+  bool get _hasManual => widget.url.isNotEmpty;
+
+  void _toggleManual() {
+    if (!_hasManual) return;
+    final willExpand = !_isExpanded;
+    setState(() => _isExpanded = willExpand);
+    if (willExpand && widget.onOpened != null) {
+      widget.onOpened!();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = _hasManual ? AppColors.link : AppColors.grayDark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
           borderRadius: BorderRadius.circular(4.0),
-          onTap: () => setState(() => _isExpanded = !_isExpanded),
+          onTap: _hasManual ? _toggleManual : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: Row(
@@ -319,14 +484,14 @@ class _InlineManualExpansionState extends State<_InlineManualExpansion> {
                 Icon(
                   _isExpanded ? Icons.expand_less : Icons.expand_more,
                   size: 16,
-                  color: AppColors.link,
+                  color: textColor,
                 ),
                 const SizedBox(width: 4.0),
                 Text(
-                  _isExpanded ? 'マニュアルを閉じる' : 'マニュアルを見る',
-                  style: const TextStyle(
+                  _manualText,
+                  style: TextStyle(
                     fontSize: AppFontSizes.xs,
-                    color: AppColors.link,
+                    color: textColor,
                     height: 1.5,
                   ),
                 ),
@@ -336,9 +501,45 @@ class _InlineManualExpansionState extends State<_InlineManualExpansion> {
         ),
         if (_isExpanded) ...[
           const SizedBox(height: 8.0),
-          ManualViewer(url: widget.url),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.link),
+              borderRadius: BorderRadius.circular(AppBorderRadius.normal),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppBorderRadius.normal),
+              child: Column(
+                children: [
+                  ManualViewer(url: widget.url),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () async {
+                        await launchUrl(
+                          Uri.parse(widget.url),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      },
+                      child: const Text(
+                        '別のタブで開く',
+                        style: TextStyle(
+                          fontSize: AppFontSizes.xs,
+                          color: AppColors.link,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ],
     );
+  }
+
+  String get _manualText {
+    if (!_hasManual) return 'マニュアルなし';
+    return _isExpanded ? 'マニュアルを閉じる' : 'マニュアルを開く';
   }
 }
