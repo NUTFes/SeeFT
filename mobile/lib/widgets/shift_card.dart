@@ -305,7 +305,7 @@ class _ShiftCardMenuPanel extends PopupMenuEntry<_ShiftCardMenuAction> {
   const _ShiftCardMenuPanel();
 
   @override
-  double get height => 138;
+  double get height => 97;
 
   @override
   bool represents(_ShiftCardMenuAction? value) => false;
@@ -315,7 +315,6 @@ class _ShiftCardMenuPanel extends PopupMenuEntry<_ShiftCardMenuAction> {
 }
 
 class _ShiftCardMenuPanelState extends State<_ShiftCardMenuPanel> {
-  _ShiftCardMenuAction? _hoveredAction;
   _ShiftCardMenuAction? _pressedAction;
 
   @override
@@ -344,17 +343,13 @@ class _ShiftCardMenuPanelState extends State<_ShiftCardMenuPanel> {
                 _ShiftCardMenuRow(
                   action: _ShiftCardMenuAction.members,
                   label: '担当者一覧',
-                  isHovered: _hoveredAction == _ShiftCardMenuAction.members,
                   isPressed: _pressedAction == _ShiftCardMenuAction.members,
-                  onHoverChanged: _handleHoverChanged,
                   onPressChanged: _handlePressChanged,
                 ),
                 _ShiftCardMenuRow(
                   action: _ShiftCardMenuAction.review,
                   label: 'レビューを書く',
-                  isHovered: _hoveredAction == _ShiftCardMenuAction.review,
                   isPressed: _pressedAction == _ShiftCardMenuAction.review,
-                  onHoverChanged: _handleHoverChanged,
                   onPressChanged: _handlePressChanged,
                 ),
                 const SizedBox(height: 8.0),
@@ -364,12 +359,6 @@ class _ShiftCardMenuPanelState extends State<_ShiftCardMenuPanel> {
         ),
       ),
     );
-  }
-
-  void _handleHoverChanged(_ShiftCardMenuAction action, bool isHovered) {
-    setState(() {
-      _hoveredAction = isHovered ? action : null;
-    });
   }
 
   void _handlePressChanged(_ShiftCardMenuAction action, bool isPressed) {
@@ -382,19 +371,14 @@ class _ShiftCardMenuPanelState extends State<_ShiftCardMenuPanel> {
 class _ShiftCardMenuRow extends StatelessWidget {
   final _ShiftCardMenuAction action;
   final String label;
-  final bool isHovered;
   final bool isPressed;
-  final void Function(_ShiftCardMenuAction action, bool isHovered)
-      onHoverChanged;
   final void Function(_ShiftCardMenuAction action, bool isPressed)
       onPressChanged;
 
   const _ShiftCardMenuRow({
     required this.action,
     required this.label,
-    required this.isHovered,
     required this.isPressed,
-    required this.onHoverChanged,
     required this.onPressChanged,
   });
 
@@ -404,7 +388,6 @@ class _ShiftCardMenuRow extends StatelessWidget {
       button: true,
       label: label,
       child: InkWell(
-        onHover: (hovering) => onHoverChanged(action, hovering),
         onTapDown: (_) => onPressChanged(action, true),
         onTapCancel: () => onPressChanged(action, false),
         onTap: () async {
