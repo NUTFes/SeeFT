@@ -271,25 +271,21 @@ class _ShiftCardMoreButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => onPressed(_menuPosition(context)),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(AppBorderRadius.normal),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(
-              Icons.more_vert,
-              color: AppColors.textBlack,
-              size: 24,
-            ),
-          ),
+    return IconButton(
+      onPressed: () => onPressed(_menuPosition(context)),
+      tooltip: 'メニューを開く',
+      padding: const EdgeInsets.all(8.0),
+      constraints: const BoxConstraints(),
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppBorderRadius.normal),
         ),
+      ),
+      icon: const Icon(
+        Icons.more_vert,
+        color: AppColors.textBlack,
+        size: 24,
       ),
     );
   }
@@ -403,20 +399,22 @@ class _ShiftCardMenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => onHoverChanged(action, true),
-      onExit: (_) => onHoverChanged(action, false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        onHover: (hovering) => onHoverChanged(action, hovering),
         onTapDown: (_) => onPressChanged(action, true),
         onTapCancel: () => onPressChanged(action, false),
-        onTapUp: (_) async {
+        onTap: () async {
           await Future<void>.delayed(const Duration(milliseconds: 120));
           if (context.mounted) {
             Navigator.pop(context, action);
           }
         },
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
         child: Container(
           width: double.infinity,
           height: 40,
