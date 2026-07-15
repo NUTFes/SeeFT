@@ -32,7 +32,7 @@ services:
     tty: true
     depends_on:
       db: 
-        condition: service_started
+        condition: service_healthy
 
   admin:
     container_name: "nutfes-seeft-admin"

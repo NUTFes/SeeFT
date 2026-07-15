@@ -70,24 +70,33 @@ go-init:
 vendor:
 	docker compose run --rm api go mod vendor
 
+.PHONY: migrate
+migrate:
+	docker compose up -d --wait --wait-timeout 60 db
+	docker compose run --rm --no-deps api go run ./cmd/migrate
+
 .PHONY: seed
 seed:
-	docker compose run --rm api go mod tidy
-	docker compose up -d db
-	sleep 15
-	docker compose run --rm api go run /app/seeds/seeds.go
+	docker compose up -d --wait --wait-timeout 60 db
+	docker compose run --rm --no-deps api go run ./cmd/seed
 
-.PHONY: prod seed
+.PHONY: prod-migrate
+prod-migrate:
+	docker compose -f docker-compose.prod.yml run --rm --no-deps api go run ./cmd/migrate
+
+.PHONY: prod-seed
 prod-seed:
-	docker compose -f docker-compose.prod.yml run --rm api go mod tidy
-	docker compose -f docker-compose.prod.yml run --rm api go run /app/seeds/seeds.go
+	docker compose -f docker-compose.prod.yml run --rm --no-deps api go run ./cmd/seed
 
-.PHONY: mac seed
+.PHONY: mac-migrate
+mac-migrate:
+	docker compose -f docker-compose.mac.yml up -d --wait --wait-timeout 60 db
+	docker compose -f docker-compose.mac.yml run --rm --no-deps api go run ./cmd/migrate
+
+.PHONY: mac-seed
 mac-seed:
-	docker compose -f docker-compose.mac.yml run --rm api go mod tidy
-	docker compose -f docker-compose.mac.yml up -d db
-	sleep 15
-	docker compose -f docker-compose.mac.yml run --rm api go run /app/seeds/seeds.go
+	docker compose -f docker-compose.mac.yml up -d --wait --wait-timeout 60 db
+	docker compose -f docker-compose.mac.yml run --rm --no-deps api go run ./cmd/seed
 
 .PHONY: schemaspy
 schemaspy:
