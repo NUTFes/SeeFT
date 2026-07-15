@@ -2,7 +2,7 @@ package usecase
 
 import "testing"
 
-// TestCompareTimeStrings は compareTimeStrings のゴールデンテスト。
+// compareTimeStrings のゴールデンテスト。
 // 期待値は docs/development/test-design/phase1-pure-functions.md の
 // compareTimeStrings セクションに記載のケース表と、実行による裏取り結果に基づく。
 // 「要判断」の付いたケースは現状の挙動をそのまま固定したもので、
@@ -60,7 +60,10 @@ func TestCompareTimeStrings(t *testing.T) {
 			want: 0,
 		},
 		{
-			name:  "コロンが2個以上の書式は等価扱い",
+			// 要判断（issue #418）: コロンが2個以上の入力も、空文字列と同じ
+			// ガード節（len(parts) != 2）を通り「等価」扱いになる。上の
+			// 「空文字列」ケースと同一の論点（issue #418 の論点1）。
+			name:  "コロンが2個以上の書式は等価扱い（要判断: issue #418）",
 			time1: "10:00:00", time2: "9:00",
 			want: 0,
 		},
