@@ -4,8 +4,6 @@ services:
   db:
     container_name: nutfes-seeft-db
     image: postgres:18
-    volumes:
-      - ./postgresql/db:/docker-entrypoint-initdb.d/ # 初期データ
     environment:
       POSTGRES_DB: seeft_db
       POSTGRES_USER: seeft
@@ -25,6 +23,7 @@ services:
     env_file: ["./api/env/dev.env"]
     volumes:
       - ./api:/app
+      - ./postgresql:/db_data:ro
     #シェルスクリプトを実行するコマンド
     command: "./start.sh"
     ports:
