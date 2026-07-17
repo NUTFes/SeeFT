@@ -1,6 +1,6 @@
 # SeeFT API 負荷試験 事前調査・試験計画
 
-作成日: 2026-07-17
+作成日: 2026-07-16
 
 対象: SeeFT 45th production stack（`docker-compose.prod.yml` 構成）
 
@@ -135,7 +135,7 @@ e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 #### 棚卸しから言えること
 
-74 エンドポイントの内訳は、**実際にトラフィックが流れるのが mobile 発 9 ルート + GAS 発 6 ルートの計 15 ルート**、admin(凍結) 専用が 27 ルート（本番でほぼ無トラフィック）、監視・開発用（healthcheck / swagger）が 2 ルート、そして残り 30 ルートは呼び出し元が存在しないデッドルートである。負荷試験のシナリオは現役の 15 ルートに絞ってよい。
+74 エンドポイントの内訳は、**実際にトラフィックが流れるのが mobile 発 9 ルート + GAS 発 6 ルートの計 15 ルート**、admin(凍結) 専用が 30 ルート（`web_signin`/`web_signup`/`web_signout` を含む。本番でほぼ無トラフィック）、監視・開発用（healthcheck / swagger）が 2 ルート、そして残り 27 ルートは呼び出し元が存在しないデッドルートである。負荷試験のシナリオは現役の 15 ルートに絞ってよい。
 
 `POST /request_shifts` は特筆に値する。mobile・admin のどちらからも呼ばれておらず（grep ゼロ）、実装は DB 保存が no-op で、ハードコードされた GAS URL への同期送信だけを行う。
 
@@ -217,7 +217,7 @@ dbPort := os.Getenv("NUTMEG_DB_PORT")
 dbName := os.Getenv("NUTMEG_DB_NAME")
 ```
 
-本番値は `api/env/seeft.env`（リポジトリ外）にあり、接続先は Patroni 管理の共有 HA クラスタ（192.168.1.120。GM・FinanSu の本番 DB が同居）である。
+本番値は `api/env/seeft.env`（リポジトリ外）にあり、接続先は Patroni 管理の共有 HA クラスタ（GM・FinanSu の本番 DB が同居）である。実アドレスはアクセス制御された運用資料側にのみ記録し、本書には記載しない。
 
 #### 共有 DB に向けた試験 vs 隔離 DB に向けた試験
 
@@ -226,6 +226,8 @@ Bingo 報告書が「トンネル経由 vs 内部直結」で失敗要因を切�
 第一に、巻き込み事故のリスクが構造的に高い。API は接続プールの上限を設定しておらず（`db.go:43` の `sql.Open` 後に `SetMaxOpenConns` / `SetMaxIdleConns` / `SetConnMaxLifetime` の呼び出しが存在しない）、`database/sql` の既定値は「接続数無制限」である。高負荷時には VU 数に比例して接続が伸び、共有クラスタの接続上限を SeeFT が食い潰した場合、障害は GM・FinanSu に波及する。
 
 第二に、切り分けとしても不要である。DB 単体の性能はクラスタ側の資源とチューニングに支配され、SeeFT の試験で知りたい「API 実装のボトルネック」は隔離 DB でも同じように観測できる。共有クラスタ固有の挙動（フェイルオーバー、他プロジェクトとの資源競合）は負荷試験ではなく運用監視の領域である。
+
+ただし、この2つの理由は「試験しない」ことの正当化であって、「隔離 DB の結果が本番と同じ」という意味ではない。隔離された `postgres:18` はハードウェア・設定・同時実行負荷が本番 Patroni クラスタと異なり、他プロジェクトとの資源競合も再現しない。したがって本書の試験結果は**「API 実装 + 隔離 DB」という基準線**であり、本番クラスタでの実性能を保証するものではない。この前提は結果を報告する際にも明記する。
 
 隔離 DB の土台は既にリポジトリにある。`docker-compose.yml` の `db` サービス（`postgres:18`、`postgresql/db/` を initdb にマウント、healthcheck 付き）をそのまま使い、試験用スタックは本番 compose から DB 接続先だけを隔離 DB に向けた構成で立てる。
 
@@ -263,7 +265,7 @@ with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
 - `GetUsersByShift` は1回あたり JOIN クエリ1本 + year / date / time / weather の `Find` 4本 = **5 クエリ**
 - グループ前後の時間帯メンバー取得（`getBeforeMembers` / `getAfterMembers`、`shift_usecase.go:659,717`）でさらに `GetUsersByShift` 2回分
 
-1日フルにシフトが入った部員（例: 8 スロット × 2 タスクグループ）で、おおよそ 50〜60 クエリ / リクエストに達する。300 人が朝の 5 分間に一斉アクセスすると毎秒 50〜100 リクエスト、DB には毎秒数千クエリが届く計算になり、ここが試験の主戦場になる。
+1日フルにシフトが入った部員（例: 8 スロット × 2 タスクグループ）で、おおよそ 50〜60 クエリ / リクエストに達する。300 人以上が集合時刻前後にアプリを開く場合、1 人あたり 1〜2 リクエスト（signin の有無で変動）を送るため、S1 の ramp（5 分）で均せば平均は 1〜2 req/s 程度にしかならない。この程度の req/s でも、1 リクエストが数十クエリに増幅されるため、DB には平均で毎秒 100〜200 クエリが届く計算になる。さらに集合時刻の直前 30 秒〜1 分にアクセスが偏った場合は瞬間的に 10〜20 req/s、DB には毎秒 500〜1,000 クエリ規模のバーストがあり得る。ここが試験の主戦場になる。実際のバースト幅は当日の運用（何時にアプリを開くよう案内するか）に依存し確たる根拠がないため、試験では ramp 時間を 5 分/1 分/30 秒で切り替えて感度を確認する（4.4 節の VU 段階とは別に、ramp 時間そのものを変数として扱う）。
 
 #### GET /rescues — N+1
 
@@ -324,7 +326,14 @@ read/write 比はおおよそ 97:3 で読み取り支配。書き込みで重い
 **S2: 日中定常**
 
 - 一定 VU で 10 分保持
-- 1 VU の 60 秒サイクル: `GET /shift-cards` 1回（100%）、`GET /shifts/tasks/...` ×3（30%）、`GET /rescues` または `GET /rescues/users/:id`（20%）、`GET /tasks`（10%）、`GET /tasks/users/:id` → `POST /rescues`（2%）、`POST /reviews`（2%）
+- 1 VU・60 秒サイクルごとに、次の操作を**独立試行**として判定する（排他的な分岐ではないため合計は100%を超えてよい）:
+  - `GET /shift-cards`: 毎サイクル確実に1回
+  - `GET /shifts/tasks/...`（現在/前/後の3リクエスト）: 30%の確率で発生
+  - `GET /rescues` または `GET /rescues/users/:id`: 20%の確率で発生
+  - `GET /tasks`: 10%の確率で発生
+  - `GET /tasks/users/:id` → `POST /rescues`: 2%の確率で発生
+  - `POST /reviews`: 2%の確率で発生
+- 期待値ベースでは、300 VU・1分あたり平均で shift-cards 300回、shifts/tasks 系 90回（3リクエスト相当で270）、rescues参照 60回、tasks参照 30回、rescue送信 6回、review送信 6回になる
 
 **S3: GAS バッチ併走**
 
@@ -446,11 +455,11 @@ pass/fail 基準（段階ごとに全条件を満たして PASS）:
 
 | 変数 | 試験時の値 | 遮断される副作用 |
 |---|---|---|
-| `RESCUE_GAS_URL` | ローカルスタブ（`https` 必須。自己署名 + 200 固定応答の軽量サーバー） | POST /rescues の実スプシ書き込み |
+| `RESCUE_GAS_URL` | ローカルスタブ（`https` 必須。専用の信頼済み CA から発行した証明書 + 200 固定応答の軽量サーバー） | POST /rescues の実スプシ書き込み |
 | `SLACK_BOT_TOKEN` | 未設定 | 通知スケジューラごと無効化（`di.go:102-114` で安全にスキップされる） |
 | `NUTMEG_DB_*` | 隔離 DB | 共有クラスタへの接続 |
 
-注意点が2つ。`RESCUE_GAS_URL` は実装が `https` スキームを検証する（`rescue_unified_usecase.go:293-295`）ため、スタブも https で立てる必要がある。また `POST /request_shifts` はハードコード URL（`shift_usecase.go:885`）のため環境変数では遮断できないが、呼び出し元が存在しないため試験対象から除外すれば実害はない。
+注意点が3つ。第一に、`RESCUE_GAS_URL` は実装が `https` スキームを検証する（`rescue_unified_usecase.go:293-295`）ため、スタブも https で立てる必要がある。第二に、送信処理は `&http.Client{}` の既定 TLS 検証をそのまま使う（`rescue_unified_usecase.go:310`）ため、自己署名証明書をそのまま使うと `x509: certificate signed by unknown authority` で失敗する。スタブ証明書を発行した CA を試験用 API コンテナの信頼ストアに追加する（ローカル CA を発行し `update-ca-certificates` を通す等）ことで解決し、`InsecureSkipVerify` は使わない。第三に、`POST /request_shifts` はハードコード URL（`shift_usecase.go:885`）のため環境変数では遮断できないが、呼び出し元が存在しないため試験対象から除外すれば実害はない。
 
 ### 4.7 既知の制約と扱い
 
