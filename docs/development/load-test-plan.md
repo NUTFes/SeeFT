@@ -16,7 +16,7 @@
 
 1. **当日の負荷はほぼ mobile 由来で、本丸は `GET /shift-cards` の朝バーストである。** mobile にはポーリングが存在せず（`Timer.periodic` ゼロ、手動リフレッシュのみ）、負荷は「人の操作」起点。技大祭当日の朝、実行委員 300 人以上が一斉にアプリを開いたとき、1人あたり1〜2リクエストが `GET /shift-cards` に集中する。このエンドポイントは1リクエストで数十クエリを発行する多段クエリ構造を持つ（後述 2.5）。
 2. **全 API トラフィックが Cloudflare Tunnel を通る。** mobile は Flutter Web（ブラウザ実行）であり、API は `https://seeft-api.nutfes.net` として単独ホスト名でトンネル公開されている。Bingo で 1000 clients 不合格の主因となった経路が、SeeFT では静的ファイルだけでなく全 API リクエストに乗る。したがって「内部直結（Track A）vs 検証用トンネル経由（Track B）」の切り分けが必須。
-3. **本番 DB へ向けた試験は最初から選択肢にない。** 本番 DB は Patroni 管理の共有 HA クラスタ（GM・FinanSu と同居）であり、かつ API は DB 接続プールの上限を設定していない（`SetMaxOpenConns` なし = 無制限）。負荷をかければ接続数が青天井で伸び、同居プロジェクトを巻き込む。試験は隔離 DB（compose 内の `postgres:18`）に対してのみ行う。
+3. **本番 DB へ向けた試験は最初から選択肢にない。** 本番 DB は Patroni 管理の共有 HA クラスタで、Postgres（SeeFT）と MySQL（GM・FinanSu）が同じ3台の物理ノード上で同居している。API は DB 接続プールの上限も設定していない（`SetMaxOpenConns` なし = 無制限）。負荷をかければ Postgres 側の接続数が青天井で伸び、同じノードの CPU・メモリ・スワップを食い潰して同居する MySQL 側（GM・FinanSu）にまで影響しうる。試験は隔離 DB（compose 内の `postgres:18`）に対してのみ行う。
 4. **外部副作用の遮断が前提条件になる。** `POST /rescues` は同期・タイムアウトなしで GAS（Google スプレッドシート）へ送信し、API プロセス内の通知スケジューラは5分間隔で Slack DM を送る。スタブ URL と無効トークンへの差し替えなしに試験すると、実スプシ書き込みと実 DM が発生する。
 5. **試験前に直すべき欠陥が2つある。** 認証3エンドポイントの `Access-Token` ヘッダ欠落時 panic（500 化）と、DB 接続プール無制限。前者は 5xx 判定を汚し、後者は隔離 DB 上でも接続枯渇でエラーモードを歪めるため、いずれも試験の測定品質に直結する。
 
@@ -217,13 +217,13 @@ dbPort := os.Getenv("NUTMEG_DB_PORT")
 dbName := os.Getenv("NUTMEG_DB_NAME")
 ```
 
-本番値は `api/env/seeft.env`（リポジトリ外）にあり、接続先は Patroni 管理の共有 HA クラスタ（GM・FinanSu の本番 DB が同居）である。実アドレスはアクセス制御された運用資料側にのみ記録し、本書には記載しない。
+本番値は `api/env/seeft.env`（リポジトリ外）にあり、接続先は Patroni 管理の共有 HA クラスタである。Postgres（SeeFT）と MySQL（GM・FinanSu）は別クラスタ・別接続プールだが、同じ3台の物理ノード上で同居している。実アドレスはアクセス制御された運用資料側にのみ記録し、本書には記載しない。
 
 #### 共有 DB に向けた試験 vs 隔離 DB に向けた試験
 
 Bingo 報告書が「トンネル経由 vs 内部直結」で失敗要因を切り分けたのと同じ発想で、DB についても2つの試験対象を区別する。ただし結論が異なる。経路の切り分けは両方測る価値があるが、**DB は共有クラスタに向けた試験を最初から実施しない**。理由は2つ。
 
-第一に、巻き込み事故のリスクが構造的に高い。API は接続プールの上限を設定しておらず（`db.go:43` の `sql.Open` 後に `SetMaxOpenConns` / `SetMaxIdleConns` / `SetConnMaxLifetime` の呼び出しが存在しない）、`database/sql` の既定値は「接続数無制限」である。高負荷時には VU 数に比例して接続が伸び、共有クラスタの接続上限を SeeFT が食い潰した場合、障害は GM・FinanSu に波及する。
+第一に、巻き込み事故のリスクが構造的に高い。API は接続プールの上限を設定しておらず（`db.go:43` の `sql.Open` 後に `SetMaxOpenConns` / `SetMaxIdleConns` / `SetConnMaxLifetime` の呼び出しが存在しない）、`database/sql` の既定値は「接続数無制限」である。GM・FinanSu は同じクラスタの MySQL 側（別接続プール・別ポート）を使うため、SeeFT が Postgres の接続数を食い潰しても両者の接続プールが直接競合するわけではない。ただし MySQL Server・PostgreSQL・Patroni・etcd は同じ3台の物理ノード上で同居しており、Postgres 側の高負荷が CPU・メモリ・スワップを圧迫すれば、同じノードで動く MySQL 側（GM・FinanSu）にもノイジーネイバーとして影響しうる。この種の資源圧迫は既に実例がある。MySQL 側のスワップ枯渇でノード全体が圧迫され、`systemctl restart mysql` でようやく解消した運用記録が残っており、1つの DB エンジンの負荷が同じノード上の他エンジンを巻き込みうることを裏付けている。
 
 第二に、切り分けとしても不要である。DB 単体の性能はクラスタ側の資源とチューニングに支配され、SeeFT の試験で知りたい「API 実装のボトルネック」は隔離 DB でも同じように観測できる。共有クラスタ固有の挙動（フェイルオーバー、他プロジェクトとの資源競合）は負荷試験ではなく運用監視の領域である。
 
