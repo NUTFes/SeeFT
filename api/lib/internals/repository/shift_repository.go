@@ -7,6 +7,7 @@ import (
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository/abstract"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
@@ -20,6 +21,7 @@ type ShiftRepository interface {
 	Find(context.Context, string) (*sql.Row, error)
 	User(context.Context, string) (*sql.Rows, error)
 	Users(context.Context, string, string, string, string, string) (*sql.Rows, error)
+	UsersByTimes(context.Context, string, string, string, []int, string) (*sql.Rows, error)
 	UserAndDateAndWeather(context.Context, string, string, string) (*sql.Rows, error)
 	DateAndWeather(context.Context, string, string) (*sql.Rows, error)
 	DateAndWeatherAndTime(context.Context, string, string, string, string) (*sql.Rows, error)
@@ -68,6 +70,18 @@ func (b *shiftRepository) Users(c context.Context, task string, year string, dat
 	}
 	fmt.Printf("\x1b[36m%s\n", query)
 	return rows, nil
+}
+
+// 複数の時間帯のユーザーをまとめて取得（shift-cardsのN+1解消。ShiftCard生成時にtime_idごとに
+// Usersを繰り返し呼んでいたのを1クエリにまとめるための専用メソッド。GetUsersByShiftはShowUsersByShift
+// エンドポイントが単一time_id版として引き続き使うため変更しない）
+func (b *shiftRepository) UsersByTimes(c context.Context, task string, year string, date string, times []int, weather string) (*sql.Rows, error) {
+	if len(times) == 0 {
+		query := "SELECT s.time_id, u.id, u.name, u.mail, u.grade_id, u.department_id, u.bureau_id, u.role_id, u.student_number, u.tel, u.created_at, u.updated_at, COALESCE(u.slack_user_id, '') FROM shifts s JOIN users u ON s.user_id = u.id WHERE 1=0"
+		return b.crud.Read(c, query)
+	}
+	query := "SELECT s.time_id, u.id, u.name, u.mail, u.grade_id, u.department_id, u.bureau_id, u.role_id, u.student_number, u.tel, u.created_at, u.updated_at, COALESCE(u.slack_user_id, '') FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.task_id = $1 AND s.year_id = $2 AND s.date_id = $3 AND s.time_id = ANY($4) AND s.weather_id = $5"
+	return b.crud.Read(c, query, task, year, date, pq.Array(times), weather)
 }
 
 // 特定のユーザと日時取得
