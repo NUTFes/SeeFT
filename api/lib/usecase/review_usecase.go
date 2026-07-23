@@ -36,6 +36,8 @@ func (u *reviewUseCase) GetReviewsGAS(ctx context.Context) ([]entity.ReviewGAS, 
 	}
 	defer func() { _ = rows.Close() }()
 
+	loc, locErr := time.LoadLocation("Asia/Tokyo")
+
 	var res []entity.ReviewGAS
 	for rows.Next() {
 		var r entity.ReviewGAS
@@ -55,9 +57,14 @@ func (u *reviewUseCase) GetReviewsGAS(ctx context.Context) ([]entity.ReviewGAS, 
 		); err != nil {
 			return nil, errors.Wrap(err, "rows.Scan")
 		}
+		if locErr == nil {
+        r.CreatedAt = created.In(loc).Format("2006/01/02 15:04:05")
+        r.UpdatedAt = updated.In(loc).Format("2006/01/02 15:04:05")
+    	} else {
 		r.CreatedAt = created.Format("2006/01/02 15:04:05")
 		r.UpdatedAt = updated.Format("2006/01/02 15:04:05")
-		res = append(res, r)
+		}
+		res = append(res, r)		
 	}
 	return res, nil
 }
@@ -68,6 +75,8 @@ func (u *reviewUseCase) GetReviewGASByID(ctx context.Context, id string) (entity
 	if err != nil {
 		return entity.ReviewGAS{}, errors.Wrap(err, "reviewRep.FindWithDetails")
 	}
+
+	loc, locErr := time.LoadLocation("Asia/Tokyo")
 
 	var r entity.ReviewGAS
 	var created, updated time.Time
@@ -86,8 +95,13 @@ func (u *reviewUseCase) GetReviewGASByID(ctx context.Context, id string) (entity
 	); err != nil {
 		return entity.ReviewGAS{}, err
 	}
-	r.CreatedAt = created.Format("2006/01/02 15:04:05")
-	r.UpdatedAt = updated.Format("2006/01/02 15:04:05")
+	if locErr == nil {
+    r.CreatedAt = created.In(loc).Format("2006/01/02 15:04:05")
+    r.UpdatedAt = updated.In(loc).Format("2006/01/02 15:04:05")
+	} else {
+    r.CreatedAt = created.Format("2006/01/02 15:04:05")
+    r.UpdatedAt = updated.Format("2006/01/02 15:04:05")
+	}
 	return r, nil
 }
 
