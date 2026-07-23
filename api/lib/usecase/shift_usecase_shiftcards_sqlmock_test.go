@@ -167,9 +167,9 @@ func TestGetShiftCardsByUserAndDateAndWeather_SingleCardBatchesUserFetch(t *test
 			AddRow(userRow(1, 1, "Alice")...).
 			AddRow(userRow(3, 2, "Bob")...))
 
-	// 前後スロット(time_id=0, 7)は存在しない前提。endTime計算・前後判定・最終スロットのeTime再計算の
-	// 3回、いずれもtime_id=7のFindが呼ばれるが該当なしを返す
-	expectNoMoreTimes(mock, 3)
+	// 前後スロット(time_id=0, 7)は存在しない前提。time_id=7のFindはEndTime算出・前後判定・
+	// 最終スロットのeTime再計算で共有されるため1回だけ呼ばれ、該当なしを返す
+	expectNoMoreTimes(mock, 1)
 
 	cards, err := uc.GetShiftCardsByUserAndDateAndWeather(context.Background(), "10", "2", "1")
 	require.NoError(t, err)
@@ -225,8 +225,8 @@ func TestGetShiftCardsByUserAndDateAndWeather_TwoTasksBatchPerCard(t *testing.T)
 		WillReturnRows(sqlmock.NewRows(emptyUsersCols).AddRow(userRow(1, 2, "Bob")...))
 
 	// 両カードとも time_id=1..2 で連続し、前スロット(0)は存在せず、後ろのFind(3)も該当なし。
-	// カードごとに3回(endTime/前後判定/最終スロットeTime再計算)、2カード分で合計6回
-	expectNoMoreTimes(mock, 6)
+	// カードごとに1回(endTime/前後判定/最終スロットeTime再計算で共有)、2カード分で合計2回
+	expectNoMoreTimes(mock, 2)
 
 	cards, err := uc.GetShiftCardsByUserAndDateAndWeather(context.Background(), "10", "2", "1")
 	require.NoError(t, err)

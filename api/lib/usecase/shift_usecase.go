@@ -165,8 +165,8 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	return shiftUsers, nil
 }
 
-// getUsersByTimes は同一task/year/date/weatherで複数time_idにまたがるシフトメンバーを
-// 1クエリでまとめて取得し、time_idごとに振り分ける（shift-cardsのN+1解消）。
+// 同一task/year/date/weatherで複数time_idにまたがるシフトメンバーを1クエリでまとめて取得し、
+// time_idごとに振り分ける（shift-cardsのN+1解消）。
 // year/date/time/weatherの個別Findは呼び出し元(getShiftMembersForTime等)で
 // 使われていなかったため、意図的に取得しない。
 func (a *shiftUseCase) getUsersByTimes(c context.Context, taskID, yearID, dateID, weatherID int, timeIDs []int) (map[int][]entity.User, error) {
@@ -209,7 +209,7 @@ func (a *shiftUseCase) getUsersByTimes(c context.Context, taskID, yearID, dateID
 	return usersByTime, nil
 }
 
-// toShiftMembers はUser群をShiftMemberに変換する（grade/bureauはマップから引く）
+// User群をShiftMemberに変換する（grade/bureauはマップから引く）
 func (a *shiftUseCase) toShiftMembers(users []entity.User, gradeMap, bureauMap map[int]string) []entity.ShiftMember {
 	members := make([]entity.ShiftMember, 0, len(users))
 	for _, user := range users {
@@ -612,9 +612,10 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 	first := group[0]
 	last := group[len(group)-1]
 
-	// 終了時刻を取得
-	endTime, err := a.getNextTimeString(c, last.Time.ID)
-	if err != nil {
+	// 終了時刻を取得（同じ問い合わせをEndTime算出・前後判定・最終スロットのeTime再計算で共有する）
+	nextOfLast, nextOfLastErr := a.getNextTimeString(c, last.Time.ID)
+	endTime := nextOfLast
+	if nextOfLastErr != nil {
 		endTime = last.Time.Time // フォールバック
 	}
 
@@ -649,8 +650,8 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 	nextTimeID := last.Time.ID + 1
 	var nextStart, nextEnd string
 	hasNext := false
-	if s, err := a.getNextTimeString(c, last.Time.ID); err == nil && s != "" {
-		nextStart = s
+	if nextOfLastErr == nil && nextOfLast != "" {
+		nextStart = nextOfLast
 		if e, err := a.getNextTimeString(c, nextTimeID); err == nil {
 			nextEnd = e
 		} else {
@@ -674,17 +675,14 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 	for i, shift := range group {
 		members := a.toShiftMembers(usersByTime[shift.Time.ID], gradeMap, bureauMap)
 
-		// 終了時刻を計算
+		// 終了時刻を計算（最終スロットはEndTime算出時に取得済みのnextOfLastを再利用する）
 		var eTime string
 		if i < len(group)-1 {
 			eTime = group[i+1].Time.Time
+		} else if nextOfLastErr != nil {
+			eTime = shift.Time.Time
 		} else {
-			nextTime, err := a.getNextTimeString(c, shift.Time.ID)
-			if err != nil {
-				eTime = shift.Time.Time
-			} else {
-				eTime = nextTime
-			}
+			eTime = nextOfLast
 		}
 
 		shiftMember := entity.ShiftMembers{
