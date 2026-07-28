@@ -16,6 +16,10 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     outputs:
       image_tag: ${{ steps.vars.outputs.image_tag }}
 
@@ -30,35 +34,16 @@ jobs:
         id: vars
         run: |
           echo "image_tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
-      - name: Connect to Tailscale
-        uses: tailscale/github-action@v2
-        with:
-          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
-          tags: tag:ci
-
-      - name: Configure Insecure Registry
-        run: |
-          sudo service docker stop
-          echo "{\"insecure-registries\": [\"${{ secrets.HARBOR_REG }}\"]}" | sudo tee /etc/docker/daemon.json
-          sudo service docker start
-
+      
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-          buildkitd-config-inline: |
-            [registry."${{ secrets.HARBOR_REG }}"]
-              http = true
-              insecure = true
+        uses: docker/setup-buildx-action@v4
 
-      - name: Log in to Harbor
-        uses: docker/login-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
         with:
-          registry: ${{ secrets.HARBOR_REG }}
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_PASS }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create .env file
         run: |
@@ -66,31 +51,34 @@ jobs:
           printf '%s' "${{ secrets.SEEFT_MOBILE_ENVS }}" > mobile/env/.env
 
       - name: Build and Push API
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./api
           file: ./api/prod.Dockerfile
           push: true
-          tags: ${{ secrets.HARBOR_REG }}/seeft/api:latest
-          cache-from: type=gha
+          tags: ghcr.io/nutfes/seeft/api:${{ steps.vars.outputs.image_tag }}
+          cache-from: type=gha,scope=seeft-api
+          cache-to: type=gha,mode=max,scope=seeft-api
 
       - name: Build and Push Admin
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./admin
           file: ./admin/prod.Dockerfile
           push: true
-          tags: ${{ secrets.HARBOR_REG }}/seeft/admin:latest
-          cache-from: type=gha
+          tags: ghcr.io/nutfes/seeft/admin:${{ steps.vars.outputs.image_tag }}
+          cache-from: type=gha,scope=seeft-admin
+          cache-to: type=gha,mode=max,scope=seeft-admin
 
       - name: Build and Push Mobile
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./mobile
           file: ./mobile/Dockerfile
           push: true
-          tags: ${{ secrets.HARBOR_REG }}/seeft/mobile:latest
-          cache-from: type=gha
+          tags: ghcr.io/nutfes/seeft/mobile:${{ steps.vars.outputs.image_tag }}
+          cache-from: type=gha,scope=seeft-mobile
+          cache-to: type=gha,mode=max,scope=seeft-mobile
       
       - name: Create GitHub App token
         id: app-token
@@ -117,11 +105,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          HARBOR_REG="reg.nutmeg.cloud"
+          REGISTRY="ghcr.io/nutfes/seeft"
 
-          sed -i "s|image: ${HARBOR_REG}/seeft/api:.*|image: ${HARBOR_REG}/seeft/api:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
-          sed -i "s|image: ${HARBOR_REG}/seeft/admin:.*|image: ${HARBOR_REG}/seeft/admin:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
-          sed -i "s|image: ${HARBOR_REG}/seeft/mobile:.*|image: ${HARBOR_REG}/seeft/mobile:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: .*\/api:.*|image: ${REGISTRY}/api:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: .*\/admin:.*|image: ${REGISTRY}/admin:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
+          sed -i "s|image: .*\/mobile:.*|image: ${REGISTRY}/mobile:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
 
           git add seeft/deployment.yml
 
@@ -134,7 +122,7 @@ jobs:
           git pull --rebase origin main
           git push origin HEAD:main
 
-  trigger-cd:
-    needs: build-and-push
-    uses: ./.github/workflows/deployment-prod.yml
-    secrets: inherit
+#  trigger-cd:
+#    needs: build-and-push
+#    uses: ./.github/workflows/deployment-prod.yml
+#    secrets: inherit
