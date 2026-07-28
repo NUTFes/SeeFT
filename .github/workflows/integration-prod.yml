@@ -122,7 +122,10 @@ jobs:
           git pull --rebase origin main
           git push origin HEAD:main
 
-#  trigger-cd:
-#    needs: build-and-push
-#    uses: ./.github/workflows/deployment-prod.yml
-#    secrets: inherit
+  trigger-cd:
+    needs: build-and-push
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/deployment-prod.yml
+    secrets: inherit
