@@ -90,7 +90,7 @@ jobs:
   
   trigger-k8s-CI:
     needs: build-and-push
-    uses: ./.github/workflows/k8s-CI.yml
+    uses: ./.github/workflows/k8s-integration-prod.yml
     with:
       image_tag: ${{ needs.build-and-push.outputs.image_tag }}
     secrets: inherit
