@@ -43,9 +43,9 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
             docker compose -f docker-compose.cd.yml pull
-            docker compose -f docker-compose.cd.yml up -d
+            docker compose -f docker-compose.cd.yml up -d --wait --wait-timeout 120
 
-            docker image prune -f
+            docker image prune -a -f --filter "until=168h"
 
           EOF
           } | ssh deploy-user@${{ secrets.CONTAINER_IP }} -T bash -s
