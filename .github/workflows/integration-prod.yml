@@ -79,48 +79,6 @@ jobs:
           tags: ghcr.io/nutfes/seeft/mobile:${{ steps.vars.outputs.image_tag }}
           cache-from: type=gha,scope=seeft-mobile
           cache-to: type=gha,mode=max,scope=seeft-mobile
-      
-      - name: Create GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.GH_APP_CLIENT_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: NUTFes
-          repositories: k8s-manifests
-          permission-contents: write
-
-      - name: Check out k8s manifests repo
-        uses: actions/checkout@v6
-        with:
-          repository: NUTFes/k8s-manifests
-          ref: main
-          path: k8s-manifests
-          token: ${{ steps.app-token.outputs.token }}
-      
-      - name: Update SeeFT image tag
-        run: |
-          cd k8s-manifests
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          REGISTRY="ghcr.io/nutfes/seeft"
-
-          sed -i "s|image: .*\/api:.*|image: ${REGISTRY}/api:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
-          sed -i "s|image: .*\/admin:.*|image: ${REGISTRY}/admin:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
-          sed -i "s|image: .*\/mobile:.*|image: ${REGISTRY}/mobile:${{ steps.vars.outputs.image_tag }}|g" seeft/deployment.yml
-
-          git add seeft/deployment.yml
-
-          if git diff --cached --quiet; then
-            echo "No manifest changes"
-            exit 0
-          fi
-
-          git commit -m "chore(seeft): update image tag to ${{ steps.vars.outputs.image_tag }}"
-          git pull --rebase origin main
-          git push origin HEAD:main
 
   trigger-cd:
     needs: build-and-push
@@ -128,4 +86,11 @@ jobs:
       contents: read
       packages: read
     uses: ./.github/workflows/deployment-prod.yml
+    secrets: inherit
+  
+  trigger-k8s-CI:
+    needs: build-and-push
+    uses: ./.github/workflows/k8s-CI.yml
+    with:
+      image_tag: ${{ needs.build-and-push.outputs.image_tag }}
     secrets: inherit

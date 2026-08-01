@@ -1,0 +1,61 @@
+name: k8s-CI
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+    secrets:
+      GH_APP_CLIENT_ID:
+        required: true
+      GH_APP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  change-manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.GH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: NUTFes
+          repositories: k8s-manifests
+          permission-contents: write
+
+      - name: Check out k8s manifests repo
+        uses: actions/checkout@v6
+        with:
+          repository: NUTFes/k8s-manifests
+          ref: main
+          path: k8s-manifests
+          token: ${{ steps.app-token.outputs.token }}
+      
+      - name: Update SeeFT image tag
+        working-directory: k8s-manifests
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          REGISTRY="ghcr.io/nutfes/seeft"
+
+          sed -i "s|image: .*\/api:.*|image: ${REGISTRY}/api:${IMAGE_TAG}|g" seeft/deployment.yml
+          sed -i "s|image: .*\/admin:.*|image: ${REGISTRY}/admin:${IMAGE_TAG}|g" seeft/deployment.yml
+          sed -i "s|image: .*\/mobile:.*|image: ${REGISTRY}/mobile:${IMAGE_TAG}|g" seeft/deployment.yml
+
+          git add seeft/deployment.yml
+
+          if git diff --cached --quiet; then
+            echo "No manifest changes"
+            exit 0
+          fi
+
+          git commit -m "chore(seeft): update image tag to ${IMAGE_TAG}"
+          git pull --rebase origin main
+          git push origin HEAD:main
