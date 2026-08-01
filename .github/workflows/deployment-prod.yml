@@ -24,13 +24,14 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USERNAME: ${{ github.actor }}
         run: |
-          export IMAGE_TAG="${GITHUB_SHA::7}"  
+          IMAGE_TAG="${GITHUB_SHA::7}"
 
-          ssh deploy-user@${{ secrets.CONTAINER_IP }} -T \
-            -o SendEnv=GHCR_TOKEN \
-            -o SendEnv=GHCR_USERNAME \
-            -o SendEnv=IMAGE_TAG \
-            bash -s << 'EOF'
+          {
+            printf 'export GHCR_TOKEN=%q\n' "$GHCR_TOKEN"
+            printf 'export GHCR_USERNAME=%q\n' "$GHCR_USERNAME"
+            printf 'export IMAGE_TAG=%q\n' "$IMAGE_TAG"
+
+            cat <<'EOF'
             set -e
 
             cd /home/deploy-user/SeeFT
@@ -38,13 +39,13 @@ jobs:
             git fetch origin feat/mitomen/261/CI-CD-Pipeline
             git reset --hard origin/feat/mitomen/261/CI-CD-Pipeline
             git checkout -B feat/mitomen/261/CI-CD-Pipeline origin/feat/mitomen/261/CI-CD-Pipeline
-            
-            echo "$GHCR_TOKEN" | docker login ghcr.io \
-              -u "$GHCR_USERNAME" \
-              --password-stdin
+
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
             docker compose -f docker-compose.cd.yml pull
             docker compose -f docker-compose.cd.yml up -d
 
             docker image prune -f
+
           EOF
+          } | ssh deploy-user@${{ secrets.CONTAINER_IP }} -T bash -s
