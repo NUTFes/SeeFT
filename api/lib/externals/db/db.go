@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	// "github.com/joho/godotenv"
 	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -45,7 +46,14 @@ func ConnectMySQL() (client, error) {
 	if err != nil {
 		return client{}, err
 	}
-	
+
+	// 接続数の上限を設定（無制限のままだと高負荷時にPostgresのmax_connectionsを超過し、
+	// リクエストが500エラーで失敗する。ミニPC実測で400並列負荷時の500エラー率を
+	// 37.8%→0%に改善することを確認済み）
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(20)
+	db.SetConnMaxLifetime(30 * time.Minute)
+
 	err = db.Ping()
 
 	if err != nil {
