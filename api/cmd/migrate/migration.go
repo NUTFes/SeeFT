@@ -15,7 +15,6 @@ import (
 
 const migrationSourceURL = "file:///db_data/db/migrations"
 
-// applyMigrationsは、未適用のup migrationをversionの昇順で適用する。
 func applyMigrations(config dbConfig) error {
 	migrator, err := newMigrator(config)
 	if err != nil {
@@ -78,7 +77,6 @@ func applyMigrations(config dbConfig) error {
 	return nil
 }
 
-// Migrationのdown
 func downMigrations(config dbConfig, down string) error {
 	migrator, err := newMigrator(config)
 	if err != nil {
@@ -159,7 +157,6 @@ func newMigrator(config dbConfig) (*migrate.Migrate, error) {
 	return migrator, nil
 }
 
-// closeMigratorは、migration sourceとDB接続を終了する。
 func closeMigrator(migrator *migrate.Migrate) {
 	sourceErr, databaseErr := migrator.Close()
 

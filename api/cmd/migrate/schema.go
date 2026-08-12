@@ -37,7 +37,6 @@ type schemaFile struct {
 	order int
 }
 
-// applySchemasは、schemaディレクトリ内のSQLを所定の順序で適用する。
 func applySchemas(db *sql.DB) error {
 	if err := ensureSchemaHistoryTable(db); err != nil {
 		return err
@@ -64,7 +63,6 @@ func applySchemas(db *sql.DB) error {
 	return nil
 }
 
-// ensureSchemaHistoryTableは、schemaファイルの適用履歴を管理するテーブルを作成する。
 func ensureSchemaHistoryTable(db *sql.DB) error {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
@@ -82,7 +80,6 @@ func ensureSchemaHistoryTable(db *sql.DB) error {
 	return nil
 }
 
-// findSchemaFilesは、create<数字>*.sqlを取得し、数字順に並べる。
 func findSchemaFiles(directory string) ([]schemaFile, error) {
 	entries, err := os.ReadDir(directory)
 	if err != nil {
@@ -102,7 +99,6 @@ func findSchemaFiles(directory string) ([]schemaFile, error) {
 
 		name := entry.Name()
 
-		// SQL以外のファイルは対象外とする。
 		if !strings.EqualFold(filepath.Ext(name), ".sql") {
 			continue
 		}
@@ -142,7 +138,6 @@ func findSchemaFiles(directory string) ([]schemaFile, error) {
 	return files, nil
 }
 
-// applySchemaFileは、未適用のschemaファイルをトランザクション内で適用する。
 func applySchemaFile(db *sql.DB, file schemaFile) error {
 	content, err := os.ReadFile(file.path)
 	if err != nil {
@@ -196,7 +191,6 @@ func applySchemaFile(db *sql.DB, file schemaFile) error {
 		return nil
 
 	case errors.Is(err, sql.ErrNoRows):
-		// 未適用なので、この後でSQLを実行する。
 
 	default:
 		return fmt.Errorf(
@@ -252,7 +246,6 @@ func applySchemaFile(db *sql.DB, file schemaFile) error {
 	return nil
 }
 
-// findAppliedChecksumは、適用済みファイルのチェックサムを取得する。
 func findAppliedChecksum(
 	ctx context.Context,
 	tx *sql.Tx,
@@ -273,7 +266,6 @@ WHERE file_name = $1
 	return checksum, nil
 }
 
-// insertSchemaHistoryは、正常に適用したschemaファイルを履歴へ登録する。
 func insertSchemaHistory(
 	ctx context.Context,
 	tx *sql.Tx,
@@ -300,7 +292,6 @@ VALUES ($1, $2)
 	return nil
 }
 
-// calculateChecksumは、schemaファイルの内容からSHA-256を生成する。
 func calculateChecksum(content []byte) string {
 	return fmt.Sprintf("%x", sha256.Sum256(content))
 }

@@ -38,7 +38,6 @@ func main() {
 
 	switch command {
 	case "up":
-		// 初期schemaを適用する。
 		if err := applySchemas(db); err != nil {
 			log.Fatalf(
 				"schemaの適用に失敗しました: %v",
@@ -46,7 +45,6 @@ func main() {
 			)
 		}
 
-		// schema適用後、未適用のup migrationを適用する。
 		if err := applyMigrations(config); err != nil {
 			log.Fatalf(
 				"migrationのupに失敗しました: %v",
@@ -63,7 +61,6 @@ func main() {
 
 		downArg := os.Args[2]
 
-		// 適用済みのmigrationに対して、down migrationを適用する。
 		if err := downMigrations(config, downArg); err != nil {
 			log.Fatalf(
 				"migrationのdownに失敗しました: %v",

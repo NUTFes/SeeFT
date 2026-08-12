@@ -13,7 +13,6 @@ const (
 	seedExecutionTimeout = 60 * time.Second
 )
 
-// applySeedは、seed.sqlを1つのトランザクション内で実行する。
 func applySeed(db *sql.DB) error {
 	content, err := os.ReadFile(seedFilePath)
 	if err != nil {
