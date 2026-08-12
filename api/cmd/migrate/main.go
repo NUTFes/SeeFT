@@ -71,6 +71,6 @@ func main() {
 		log.Println("migrationのdownが完了しました")
 
 	default:
-		log.Fatalf("不明なコマンドです: %s", command)
+		log.Fatal("不明なコマンドです")
 	}
 }
