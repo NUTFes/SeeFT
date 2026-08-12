@@ -80,6 +80,11 @@ seed:
 	docker compose up -d --wait --wait-timeout 60 db
 	docker compose run --rm --no-deps api go run ./cmd/seed
 
+.PHONY: migrate-down
+migrate-down:
+	docker compose up -d --wait --wait-timeout 60 db
+	docker compose run --rm --no-deps api go run ./cmd/migrate down $(N)
+
 .PHONY: prod-migrate
 prod-migrate:
 	docker compose -f docker-compose.prod.yml run --rm --no-deps api go run ./cmd/migrate
@@ -87,6 +92,10 @@ prod-migrate:
 .PHONY: prod-seed
 prod-seed:
 	docker compose -f docker-compose.prod.yml run --rm --no-deps api go run ./cmd/seed
+
+.PHONY: prod-migrate-down
+prod-migrate-down:
+	docker compose -f docker-compose.prod.yml run --rm --no-deps api go run ./cmd/migrate down $(N)
 
 .PHONY: mac-migrate
 mac-migrate:
@@ -97,6 +106,11 @@ mac-migrate:
 mac-seed:
 	docker compose -f docker-compose.mac.yml up -d --wait --wait-timeout 60 db
 	docker compose -f docker-compose.mac.yml run --rm --no-deps api go run ./cmd/seed
+
+.PHONY: mac-migrate-down
+mac-migrate-down:
+	docker compose -f docker-compose.mac.yml up -d --wait --wait-timeout 60 db
+	docker compose -f docker-compose.mac.yml run --rm --no-deps api go run ./cmd/migrate down $(N)
 
 .PHONY: schemaspy
 schemaspy:

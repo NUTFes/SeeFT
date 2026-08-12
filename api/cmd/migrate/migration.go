@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -14,18 +17,9 @@ const migrationSourceURL = "file:///db_data/db/migrations"
 
 // applyMigrationsは、未適用のup migrationをversionの昇順で適用する。
 func applyMigrations(config dbConfig) error {
-	databaseURL := buildDatabaseURL(config)
-
-	migrator, err := migrate.New(
-		migrationSourceURL,
-		databaseURL,
-	)
+	migrator, err := newMigrator(config)
 	if err != nil {
-		return fmt.Errorf(
-			"migrationの初期化に失敗しました: source=%s: %w",
-			migrationSourceURL,
-			err,
-		)
+		return err
 	}
 	defer closeMigrator(migrator)
 
@@ -84,6 +78,87 @@ func applyMigrations(config dbConfig) error {
 	return nil
 }
 
+// Migrationのdown
+func downMigrations(config dbConfig, down string) error {
+	migrator, err := newMigrator(config)
+	if err != nil {
+		return err
+	}
+	defer closeMigrator(migrator)
+
+	if down == "all" {
+		if err := migrator.Down(); err != nil {
+			if errors.Is(err, migrate.ErrNoChange) {
+				log.Println("downするmigrationはありません")
+				return nil
+			}
+
+			return fmt.Errorf(
+				"migrationのdownに失敗しました: %w",
+				err,
+			)
+		}
+
+		return nil
+	}
+
+	downNum, err := strconv.Atoi(down)
+	if err != nil {
+		return fmt.Errorf(
+			"downするmigration数が不正です: %s",
+			down,
+		)
+	}
+	if downNum <= 0 {
+		return fmt.Errorf(
+			"downするmigration数は1以上を指定してください: %d",
+			downNum,
+		)
+	}
+
+	appliedCount, err := getAppliedMigrationCount(migrator)
+	if err != nil {
+		return fmt.Errorf(
+			"適用済みmigration数の取得に失敗しました: %w",
+			err,
+		)
+	}
+	if downNum > appliedCount {
+		return fmt.Errorf(
+			"指定されたmigration数が適用済みmigration数を超えています: down=%d applied=%d",
+			downNum,
+			appliedCount,
+		)
+	}
+
+	if err := migrator.Steps(-downNum); err != nil {
+		return fmt.Errorf(
+			"migrationのdownに失敗しました: %w",
+			err,
+		)
+	}
+
+	return nil
+}
+
+func newMigrator(config dbConfig) (*migrate.Migrate, error) {
+	databaseURL := buildDatabaseURL(config)
+
+	migrator, err := migrate.New(
+		migrationSourceURL,
+		databaseURL,
+	)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"migrationの初期化に失敗しました: source=%s: %w",
+			migrationSourceURL,
+			err,
+		)
+	}
+
+	return migrator, nil
+}
+
 // closeMigratorは、migration sourceとDB接続を終了する。
 func closeMigrator(migrator *migrate.Migrate) {
 	sourceErr, databaseErr := migrator.Close()
@@ -101,4 +176,54 @@ func closeMigrator(migrator *migrate.Migrate) {
 			databaseErr,
 		)
 	}
+}
+
+const migrationDirPath = "/db_data/db/migrations"
+
+func getAppliedMigrationCount(migrator *migrate.Migrate) (int, error) {
+	currentVersion, _, err := migrator.Version()
+	if err != nil {
+		if errors.Is(err, migrate.ErrNilVersion) {
+			return 0, nil
+		}
+
+		return 0, fmt.Errorf(
+			"現在のmigration versionの取得に失敗しました: %w",
+			err,
+		)
+	}
+
+	entries, err := os.ReadDir(migrationDirPath)
+	if err != nil {
+		return 0, fmt.Errorf(
+			"migrationディレクトリの読み込みに失敗しました: %w",
+			err,
+		)
+	}
+
+	count := 0
+
+	for _, entry := range entries {
+		name := entry.Name()
+
+		if !strings.HasSuffix(name, ".up.sql") {
+			continue
+		}
+
+		versionStr, _, ok := strings.Cut(name, "_")
+		if !ok {
+			continue
+		}
+
+		version, err := strconv.ParseUint(versionStr, 10, 64)
+		if err != nil {
+			continue
+		}
+
+		if version <= uint64(currentVersion) {
+			count++
+		}
+	}
+
+	return count, nil
 }

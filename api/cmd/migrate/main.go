@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 )
 
@@ -30,21 +31,49 @@ func main() {
 		)
 	}
 
-	// 初期schemaを適用する。
-	if err := applySchemas(db); err != nil {
-		log.Fatalf(
-			"schemaの適用に失敗しました: %v",
-			err,
-		)
+	command := "up"
+	if len(os.Args) >= 2 {
+		command = os.Args[1]
 	}
 
-	// schema適用後、未適用のup migrationを適用する。
-	if err := applyMigrations(config); err != nil {
-		log.Fatalf(
-			"migrationの適用に失敗しました: %v",
-			err,
-		)
-	}
+	switch command {
+	case "up":
+		// 初期schemaを適用する。
+		if err := applySchemas(db); err != nil {
+			log.Fatalf(
+				"schemaの適用に失敗しました: %v",
+				err,
+			)
+		}
 
-	log.Println("schemaとmigrationの適用が完了しました")
+		// schema適用後、未適用のup migrationを適用する。
+		if err := applyMigrations(config); err != nil {
+			log.Fatalf(
+				"migrationのupに失敗しました: %v",
+				err,
+			)
+		}
+
+		log.Println("schemaとmigrationのupが完了しました")
+
+	case "down":
+		if len(os.Args) < 3 {
+			log.Fatal("downするmigration数、またはallを指定してください")
+		}
+
+		downArg := os.Args[2]
+
+		// 適用済みのmigrationに対して、down migrationを適用する。
+		if err := downMigrations(config, downArg); err != nil {
+			log.Fatalf(
+				"migrationのdownに失敗しました: %v",
+				err,
+			)
+		}
+
+		log.Println("migrationのdownが完了しました")
+
+	default:
+		log.Fatalf("不明なコマンドです: %s", command)
+	}
 }
