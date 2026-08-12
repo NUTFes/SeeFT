@@ -13,7 +13,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-const migrationSourceURL = "file:///db_data/db/migrations"
+const migrationDirPath = "/db_data/db/migrations"
+const migrationSourceURL = "file://" + migrationDirPath
 
 func applyMigrations(config dbConfig) error {
 	migrator, err := newMigrator(config)
@@ -174,8 +175,6 @@ func closeMigrator(migrator *migrate.Migrate) {
 		)
 	}
 }
-
-const migrationDirPath = "/db_data/db/migrations"
 
 func getAppliedMigrationCount(migrator *migrate.Migrate) (int, error) {
 	currentVersion, _, err := migrator.Version()
