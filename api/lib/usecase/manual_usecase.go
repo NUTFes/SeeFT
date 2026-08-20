@@ -23,6 +23,12 @@ const manualSessionTTL = 30 * 24 * time.Hour
 // OAuth state の有効期限（issue #444: ログイン開始から10分以内にコールバックを完了させる）
 const manualStateTTL = 10 * time.Minute
 
+// Googleのトークンエンドポイント。資格情報ではなく公開URL
+const googleTokenEndpoint = "https://oauth2.googleapis.com/token" //nolint:gosec // 公開URLでありハードコードされた資格情報ではない
+
+// IDトークンの発行者として受理する値（Google公式ドキュメントに両表記が明記されている）
+var manualAllowedIssuers = []string{"https://accounts.google.com", "accounts.google.com"}
+
 // 例外的に許可するメール。小文字で記載
 var manualAllowExtra = []string{}
 
@@ -71,7 +77,7 @@ type manualUseCase struct {
 func NewManualUseCase(cfg ManualConfig) ManualUseCase {
 	return &manualUseCase{
 		cfg:           cfg,
-		tokenEndpoint: "https://oauth2.googleapis.com/token",
+		tokenEndpoint: googleTokenEndpoint,
 	}
 }
 
@@ -126,6 +132,8 @@ type manualTokenResponse struct {
 type manualIDTokenClaims struct {
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
+	Aud           string `json:"aud"`
+	Iss           string `json:"iss"`
 }
 
 // ExchangeCode は認可コードをGoogleのトークンエンドポイントに渡し、認証済みメールアドレスを取得する。
@@ -174,6 +182,14 @@ func (u *manualUseCase) ExchangeCode(ctx context.Context, code string) (string, 
 	var claims manualIDTokenClaims
 	if err := json.Unmarshal(payloadJSON, &claims); err != nil {
 		return "", fmt.Errorf("id_tokenのpayload解析失敗: %w", err)
+	}
+	// TLS直取得のため署名検証は省略するが、他アプリ向けトークンの誤用・混入への
+	// 防御としてaud（宛先クライアント）とiss（発行者）は検証する
+	if claims.Aud != u.cfg.ClientID {
+		return "", fmt.Errorf("id_tokenのaudが本アプリのクライアントIDと一致しない")
+	}
+	if !slices.Contains(manualAllowedIssuers, claims.Iss) {
+		return "", fmt.Errorf("id_tokenのissがGoogleの発行者と一致しない")
 	}
 	if !claims.EmailVerified {
 		return "", fmt.Errorf("メールアドレスが未検証のためログイン拒否")
@@ -246,6 +262,11 @@ func (u *manualUseCase) ManualPath(manualID string) (string, bool) {
 // signPayload はJSONペイロードをbase64url化した上でHMAC-SHA256署名を付与し、
 // "payload.signature" 形式の文字列を返す（state・セッションCookie共通の署名フォーマット）。
 func (u *manualUseCase) signPayload(payload any) string {
+	// 空鍵で署名するとCookie偽造による認証バイパスにつながるため常に失敗させる
+	// （設定の存在検証はdi.go側でも行うが、多層防御としてここでも拒否する）
+	if u.cfg.ClientSecret == "" {
+		return ""
+	}
 	raw, err := json.Marshal(payload)
 	if err != nil {
 		// 呼び出し元の構造体は固定なのでMarshalが失敗することは想定しない
@@ -258,6 +279,10 @@ func (u *manualUseCase) signPayload(payload any) string {
 
 // verifySignedPayload は "payload.signature" 形式の文字列を検証し、デコード済みJSONを返す。
 func (u *manualUseCase) verifySignedPayload(value string) ([]byte, bool) {
+	// 空鍵は署名の意味を持たないため検証を常に失敗させる（signPayloadと対の多層防御）
+	if u.cfg.ClientSecret == "" {
+		return nil, false
+	}
 	idx := strings.LastIndex(value, ".")
 	if idx < 0 {
 		return nil, false

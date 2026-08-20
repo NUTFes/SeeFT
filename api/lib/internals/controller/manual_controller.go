@@ -5,6 +5,7 @@ import (
 	"html"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/usecase"
@@ -31,6 +32,20 @@ func NewManualController(u usecase.ManualUseCase) ManualController {
 	return &manualController{u}
 }
 
+// maskEmail はログ出力用にメールアドレスの個人識別性を下げる（ローカル部の先頭2文字のみ残す）。
+// メールアドレスは個人情報のため、ログには生の値を残さない。
+func maskEmail(email string) string {
+	local, domain, found := strings.Cut(email, "@")
+	if !found || local == "" {
+		return "***"
+	}
+	head := local
+	if len(head) > 2 {
+		head = head[:2]
+	}
+	return head + "***@" + domain
+}
+
 // ShowManual はマニュアルHTMLを返す。有効なセッションCookieがなければログイン誘導ページを返す。
 func (mc *manualController) ShowManual(c echo.Context) error {
 	id := c.Param("id")
@@ -39,10 +54,13 @@ func (mc *manualController) ShowManual(c echo.Context) error {
 		if email, ok := mc.u.VerifySessionCookie(cookie.Value); ok {
 			path, exists := mc.u.ManualPath(id)
 			if !exists {
-				log.Printf("manual_gate: not_found id=%s email=%s", id, email)
+				log.Printf("manual_gate: not_found id=%s user=%s", id, maskEmail(email))
 				return c.HTML(http.StatusNotFound, mc.renderNotFoundPage(id))
 			}
-			log.Printf("manual_gate: allowed id=%s email=%s", id, email)
+			log.Printf("manual_gate: allowed id=%s user=%s", id, maskEmail(email))
+			// 個人連絡先を含むため、ブラウザ・中間プロキシでのキャッシュを禁止する
+			c.Response().Header().Set("Cache-Control", "no-store, private")
+			c.Response().Header().Set("Pragma", "no-cache")
 			return c.File(path)
 		}
 	}
@@ -84,7 +102,7 @@ func (mc *manualController) OAuthCallback(c echo.Context) error {
 	}
 
 	if !mc.u.IsAllowed(email) {
-		log.Printf("manual_gate: denied id=%s email=%s", manualID, email)
+		log.Printf("manual_gate: denied id=%s user=%s", manualID, maskEmail(email))
 		return c.HTML(http.StatusForbidden, mc.renderDeniedPage(email))
 	}
 
@@ -97,7 +115,7 @@ func (mc *manualController) OAuthCallback(c echo.Context) error {
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(manualSessionCookieMaxAge.Seconds()),
 	})
-	log.Printf("manual_gate: allowed id=%s email=%s", manualID, email)
+	log.Printf("manual_gate: allowed id=%s user=%s", manualID, maskEmail(email))
 	return c.Redirect(http.StatusFound, "/manuals/"+manualID)
 }
 

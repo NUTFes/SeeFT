@@ -68,12 +68,9 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	if manualDir == "" {
 		manualDir = "/manuals"
 	}
-	manualUseCase := usecase.NewManualUseCase(usecase.ManualConfig{
-		ClientID:     os.Getenv("MANUAL_OAUTH_CLIENT_ID"),
-		ClientSecret: os.Getenv("MANUAL_OAUTH_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("MANUAL_OAUTH_REDIRECT_URL"),
-		ManualDir:    manualDir,
-	})
+	manualClientID := os.Getenv("MANUAL_OAUTH_CLIENT_ID")
+	manualClientSecret := os.Getenv("MANUAL_OAUTH_CLIENT_SECRET")
+	manualRedirectURL := os.Getenv("MANUAL_OAUTH_REDIRECT_URL")
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
@@ -91,7 +88,22 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	troubleRescueController := controller.NewTroubleRescueController(troubleRescueUseCase)
 	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase, rescueUnifiedUseCase, userUseCase, taskUseCase, gradeUseCase, bureauUseCase)
 	reviewController := controller.NewReviewController(reviewUseCase)
-	manualController := controller.NewManualController(manualUseCase)
+
+	// MANUAL_OAUTH_* が揃っていない場合はマニュアル配信を無効化する。
+	// 特にシークレットが空だとHMAC署名が空鍵になりCookie偽造で認証を素通りできるため、
+	// 設定不備のまま /manuals ルートを公開してはならない（router側はnilで未登録になる）
+	var manualController controller.ManualController
+	if manualClientID != "" && manualClientSecret != "" && manualRedirectURL != "" {
+		manualUseCase := usecase.NewManualUseCase(usecase.ManualConfig{
+			ClientID:     manualClientID,
+			ClientSecret: manualClientSecret,
+			RedirectURL:  manualRedirectURL,
+			ManualDir:    manualDir,
+		})
+		manualController = controller.NewManualController(manualUseCase)
+	} else {
+		log.Printf("manual_gate: MANUAL_OAUTH_CLIENT_ID / MANUAL_OAUTH_CLIENT_SECRET / MANUAL_OAUTH_REDIRECT_URL が未設定のため、マニュアル配信ルートを無効化します")
+	}
 
 	// router
 	router := router.NewRouter(

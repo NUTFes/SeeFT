@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
@@ -16,7 +18,7 @@ func newTestManualUseCase() *manualUseCase {
 	return &manualUseCase{
 		cfg: ManualConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: "test-client-secret",
+			ClientSecret: "test-client-secret", //nolint:gosec // テスト用のダミー値であり実資格情報ではない
 			RedirectURL:  "https://example.com/manuals/oauth/callback",
 			ManualDir:    "",
 		},
@@ -160,7 +162,7 @@ func TestManualUseCase_ManualPath(t *testing.T) {
 		t.Fatalf("failed to create dummy manual file: %v", err)
 	}
 
-	u := &manualUseCase{cfg: ManualConfig{ManualDir: dir}, tokenEndpoint: "https://oauth2.googleapis.com/token"}
+	u := &manualUseCase{cfg: ManualConfig{ManualDir: dir}, tokenEndpoint: googleTokenEndpoint}
 
 	t.Run("正常なIDは存在するファイルパスを返す", func(t *testing.T) {
 		path, ok := u.ManualPath("summer-fes")
@@ -196,12 +198,19 @@ func TestManualUseCase_ManualPath(t *testing.T) {
 // 未署名相当のJWT文字列を組み立てる（ExchangeCodeはTLS越しの直接取得を前提に署名検証を省略している）。
 func fakeIDToken(t *testing.T, email string, emailVerified bool) string {
 	t.Helper()
-
-	header := map[string]string{"alg": "RS256", "typ": "JWT"}
-	claims := map[string]any{
+	return fakeIDTokenWithClaims(t, map[string]any{
 		"email":          email,
 		"email_verified": emailVerified,
-	}
+		"aud":            "id",
+		"iss":            "https://accounts.google.com",
+	})
+}
+
+// fakeIDTokenWithClaims は任意のclaimsからJWT文字列を組み立てる（aud/iss不一致の検証用）。
+func fakeIDTokenWithClaims(t *testing.T, claims map[string]any) string {
+	t.Helper()
+
+	header := map[string]string{"alg": "RS256", "typ": "JWT"}
 
 	headerJSON, err := json.Marshal(header)
 	if err != nil {
@@ -252,6 +261,70 @@ func TestManualUseCase_ExchangeCode(t *testing.T) {
 		}
 		if email != "" {
 			t.Errorf("ExchangeCode() email = %q, want empty on error", email)
+		}
+	})
+
+	t.Run("audが自アプリのクライアントIDと異なるトークンは拒否される", func(t *testing.T) {
+		idToken := fakeIDTokenWithClaims(t, map[string]any{
+			"email": "taro.nutfes@gmail.com", "email_verified": true,
+			"aud": "other-app", "iss": "https://accounts.google.com",
+		})
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]string{"id_token": idToken})
+		}))
+		defer server.Close()
+
+		u := &manualUseCase{cfg: ManualConfig{ClientID: "id", ClientSecret: "secret", RedirectURL: "https://example.com/cb"}, tokenEndpoint: server.URL}
+		if _, err := u.ExchangeCode(context.Background(), "dummy-code"); err == nil {
+			t.Fatalf("ExchangeCode() error = nil, want error（aud不一致は拒否想定）")
+		}
+	})
+
+	t.Run("issがGoogleの発行者でないトークンは拒否される", func(t *testing.T) {
+		idToken := fakeIDTokenWithClaims(t, map[string]any{
+			"email": "taro.nutfes@gmail.com", "email_verified": true,
+			"aud": "id", "iss": "https://evil.example.com",
+		})
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]string{"id_token": idToken})
+		}))
+		defer server.Close()
+
+		u := &manualUseCase{cfg: ManualConfig{ClientID: "id", ClientSecret: "secret", RedirectURL: "https://example.com/cb"}, tokenEndpoint: server.URL}
+		if _, err := u.ExchangeCode(context.Background(), "dummy-code"); err == nil {
+			t.Fatalf("ExchangeCode() error = nil, want error（iss不一致は拒否想定）")
+		}
+	})
+}
+
+// 署名鍵（ClientSecret）が空の場合に署名系が必ず失敗することを確認する。
+// 空鍵のHMACはCookie偽造による認証バイパスにつながるため、fail-closedであることが必須。
+func TestManualUseCase_EmptySecretFailsClosed(t *testing.T) {
+	empty := &manualUseCase{cfg: ManualConfig{ClientID: "id", ClientSecret: "", RedirectURL: "https://example.com/cb"}, tokenEndpoint: googleTokenEndpoint}
+
+	t.Run("空鍵ではstateもCookieも発行されない", func(t *testing.T) {
+		if got := empty.MakeState("stamprally"); got != "" {
+			t.Errorf("MakeState() = %q, want empty", got)
+		}
+		if got := empty.MakeSessionCookie("taro.nutfes@gmail.com"); got != "" {
+			t.Errorf("MakeSessionCookie() = %q, want empty", got)
+		}
+	})
+
+	t.Run("空鍵で偽造したCookieは検証を通らない", func(t *testing.T) {
+		// 攻撃の再現: 鍵なし（空鍵）でpayloadと署名を自作する
+		payload := base64.RawURLEncoding.EncodeToString([]byte(`{"email":"attacker.nutfes@gmail.com","exp":99999999999999}`))
+		mac := hmac.New(sha256.New, []byte(""))
+		mac.Write([]byte(payload))
+		forged := payload + "." + base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+
+		if _, ok := empty.VerifySessionCookie(forged); ok {
+			t.Fatalf("VerifySessionCookie(forged) ok = true, want false（空鍵の偽造Cookieは拒否必須）")
+		}
+		if _, ok := empty.VerifyState(forged); ok {
+			t.Errorf("VerifyState(forged) ok = true, want false")
 		}
 	})
 }
