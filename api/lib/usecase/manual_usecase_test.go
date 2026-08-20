@@ -24,7 +24,7 @@ func newTestManualUseCase() *manualUseCase {
 			RedirectURL:  "https://example.com/manuals/oauth/callback",
 			ManualDir:    "",
 		},
-		tokenEndpoint: "https://oauth2.googleapis.com/token",
+		tokenEndpoint: googleTokenEndpoint,
 	}
 }
 

@@ -290,12 +290,9 @@ func (u *manualUseCase) VerifyUploadToken(header string) bool {
 		return false
 	}
 
-	// 長さが異なる場合は比較するまでもなく不一致が確定するため先に弾く。
-	// 一致しうる場合の実際のバイト比較はタイミング攻撃を防ぐため
-	// crypto/subtle.ConstantTimeCompare を用いて時間差が漏れないようにする。
-	if len(token) != len(u.cfg.UploadToken) {
-		return false
-	}
+	// タイミング攻撃を防ぐため crypto/subtle で比較する
+	// （ConstantTimeCompare は長さ不一致でも0を返すため、長さの事前比較は行わない。
+	// 	事前比較があると正解トークンの長さが応答時間差として漏れる）
 	return subtle.ConstantTimeCompare([]byte(token), []byte(u.cfg.UploadToken)) == 1
 }
 
@@ -389,9 +386,19 @@ func (u *manualUseCase) verifySignedPayload(value string) ([]byte, bool) {
 	return raw, true
 }
 
-// sign はClientSecretを鍵としてbase64url payloadのHMAC-SHA256を計算する。
-func (u *manualUseCase) sign(encodedPayload string) string {
+// signingKey はstate・セッションCookieの署名に使う鍵を導出する。
+// OAuthクライアントシークレットをそのままHMAC鍵に使い回さず、用途文字列で
+// ドメイン分離した導出鍵を用いることで、署名鍵とOAuth資格情報の役割を分ける
+// （環境変数を増やさずに鍵の用途分離を実現するための方式）。
+func (u *manualUseCase) signingKey() []byte {
 	mac := hmac.New(sha256.New, []byte(u.cfg.ClientSecret))
+	mac.Write([]byte("seeft-manual-gate-signing-v1"))
+	return mac.Sum(nil)
+}
+
+// sign は導出済み署名鍵でbase64url payloadのHMAC-SHA256を計算する。
+func (u *manualUseCase) sign(encodedPayload string) string {
+	mac := hmac.New(sha256.New, u.signingKey())
 	mac.Write([]byte(encodedPayload))
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 }
