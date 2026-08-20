@@ -17,6 +17,15 @@ const migrationDirPath = "/db_data/db/migrations"
 const migrationSourceURL = "file://" + migrationDirPath
 
 func applyMigrations(config dbConfig) error {
+	hasMigrations, err := hasMigrationFiles()
+	if err != nil {
+		return err
+	}
+	if !hasMigrations {
+		log.Println("migrationファイルが存在しないため、migrationの適用をスキップします")
+		return nil
+	}
+
 	migrator, err := newMigrator(config)
 	if err != nil {
 		return err
@@ -174,6 +183,24 @@ func closeMigrator(migrator *migrate.Migrate) {
 			databaseErr,
 		)
 	}
+}
+
+func hasMigrationFiles() (bool, error) {
+	entries, err := os.ReadDir(migrationDirPath)
+	if err != nil {
+		return false, fmt.Errorf(
+			"migrationディレクトリの読み込みに失敗しました: %w",
+			err,
+		)
+	}
+
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".up.sql") {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func getAppliedMigrationCount(migrator *migrate.Migrate) (int, error) {
