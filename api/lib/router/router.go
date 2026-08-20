@@ -77,6 +77,8 @@ func (r router) ProvideRouter(e *echo.Echo) {
 	if r.manualController != nil {
 		e.GET("/manuals/:id", r.manualController.ShowManual)
 		e.GET("/manuals/oauth/callback", r.manualController.OAuthCallback)
+		// アップロードはさらに MANUAL_UPLOAD_TOKEN 設定時のみ有効（usecase側で拒否）
+		e.PUT("/manuals/:id", r.manualController.UploadManual)
 	}
 
 	// mail auth

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"html"
 	"log"
@@ -18,14 +19,19 @@ const manualSessionCookieName = "seeft_manual_session"
 // Cookieの有効期間（usecase側のセッション署名TTLと揃えている）
 const manualSessionCookieMaxAge = 30 * 24 * time.Hour
 
+// マニュアルアップロード時に許容する本文の最大バイト数（issue #448）
+const manualUploadMaxBytes = 20 << 20 // 20MB
+
 type manualController struct {
 	u usecase.ManualUseCase
 }
 
-// ManualController はnutfes限定のマニュアルHTML配信（issue #444）を扱う。
+// ManualController はnutfes限定のマニュアルHTML配信（issue #444）と
+// 認証済みアップロード（issue #448）を扱う。
 type ManualController interface {
 	ShowManual(echo.Context) error
 	OAuthCallback(echo.Context) error
+	UploadManual(echo.Context) error
 }
 
 func NewManualController(u usecase.ManualUseCase) ManualController {
@@ -117,6 +123,39 @@ func (mc *manualController) OAuthCallback(c echo.Context) error {
 	})
 	log.Printf("manual_gate: allowed id=%s user=%s", manualID, maskEmail(email))
 	return c.Redirect(http.StatusFound, "/manuals/"+manualID)
+}
+
+// UploadManual はBearerトークンで認証済みのクライアントからマニュアルHTMLの
+// アップロードを受け付け、ManualDir配下に保存する（issue #448）。
+func (mc *manualController) UploadManual(c echo.Context) error {
+	id := c.Param("id")
+
+	if !mc.u.VerifyUploadToken(c.Request().Header.Get("Authorization")) {
+		// トークンの値自体は絶対にログへ出力しない
+		log.Printf("manual_gate: upload_unauthorized id=%s", id)
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+	}
+
+	body := http.MaxBytesReader(c.Response(), c.Request().Body, manualUploadMaxBytes)
+	size, err := mc.u.SaveManual(id, body)
+	if err != nil {
+		var maxBytesErr *http.MaxBytesError
+		switch {
+		case errors.As(err, &maxBytesErr):
+			return c.JSON(http.StatusRequestEntityTooLarge, map[string]string{"error": "payload too large"})
+		case errors.Is(err, usecase.ErrInvalidManualID):
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid manual id"})
+		default:
+			log.Printf("manual_gate: upload_failed id=%s err=%v", id, err)
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to save"})
+		}
+	}
+
+	log.Printf("manual_gate: uploaded id=%s size=%d", id, size)
+	return c.JSON(http.StatusCreated, map[string]any{
+		"id":  id,
+		"url": mc.u.PublicManualURL(id),
+	})
 }
 
 // manualPageStyle は本機能のページ共通スタイル（白背景・ティール#009688・システムの日本語フォント・幅480px）。

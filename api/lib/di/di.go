@@ -71,6 +71,9 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	manualClientID := os.Getenv("MANUAL_OAUTH_CLIENT_ID")
 	manualClientSecret := os.Getenv("MANUAL_OAUTH_CLIENT_SECRET")
 	manualRedirectURL := os.Getenv("MANUAL_OAUTH_REDIRECT_URL")
+	// アップロード(PUT /manuals/:id)用トークン（issue #448）。閲覧機能の有効条件（OAuth3変数）とは独立しており、
+	// 未設定でも閲覧機能はそのまま動作する（アップロードのみusecase側でfail-closedに無効化される）
+	manualUploadToken := os.Getenv("MANUAL_UPLOAD_TOKEN")
 
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
@@ -99,6 +102,7 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 			ClientSecret: manualClientSecret,
 			RedirectURL:  manualRedirectURL,
 			ManualDir:    manualDir,
+			UploadToken:  manualUploadToken,
 		})
 		manualController = controller.NewManualController(manualUseCase)
 	} else {

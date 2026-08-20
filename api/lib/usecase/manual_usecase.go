@@ -4,9 +4,12 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -38,6 +41,10 @@ var manualAllowedDomainRe = regexp.MustCompile(`(?i)\.nutfes@gmail\.com$`)
 // マニュアルIDのバリデーション（パストラバーサル対策）
 var manualIDRe = regexp.MustCompile(`^[a-z0-9_-]{1,64}$`)
 
+// ErrInvalidManualID はアップロード対象のマニュアルIDが命名規則（manualIDRe）に
+// 違反している場合にSaveManualが返すセンチネルエラー。
+var ErrInvalidManualID = errors.New("manual id はa-z0-9_-の1〜64文字のみ許可されている")
+
 // ManualConfig は ManualUseCase の生成に必要な設定値。
 // 環境変数の読み取りは呼び出し側（di.go）の責務とし、usecase では os.Getenv を呼ばない。
 type ManualConfig struct {
@@ -45,6 +52,9 @@ type ManualConfig struct {
 	ClientSecret string
 	RedirectURL  string
 	ManualDir    string
+	// UploadToken はPUT /manuals/:id を許可するBearerトークン（issue #448）。
+	// 未設定の場合はアップロード機能自体をfail-closedで無効化する。
+	UploadToken string
 }
 
 // ManualUseCase はGoogleアカウントによるマニュアル閲覧制限（issue #444）を扱う。
@@ -65,6 +75,13 @@ type ManualUseCase interface {
 	VerifySessionCookie(value string) (email string, ok bool)
 	// ManualPath はマニュアルIDからHTMLファイルパスを解決する（存在しなければ ok=false）。
 	ManualPath(manualID string) (string, bool)
+	// VerifyUploadToken はAuthorizationヘッダの値（"Bearer <token>"）を検証し、
+	// アップロード用トークンと一致するかどうかを判定する（issue #448）。
+	VerifyUploadToken(header string) bool
+	// SaveManual はアップロード本文をManualDir配下の{id}.htmlとして保存し、書き込みバイト数を返す。
+	SaveManual(manualID string, body io.Reader) (int64, error)
+	// PublicManualURL はアップロード成功時にクライアントへ返す公開閲覧URLを組み立てる。
+	PublicManualURL(manualID string) string
 }
 
 type manualUseCase struct {
@@ -257,6 +274,76 @@ func (u *manualUseCase) ManualPath(manualID string) (string, bool) {
 		return "", false
 	}
 	return path, true
+}
+
+// VerifyUploadToken はAuthorizationヘッダの値（"Bearer <token>"）を検証し、
+// アップロード用トークンと一致するかどうかを判定する。
+// UploadTokenが未設定の場合は常に拒否する（issue #444と同じfail-closed方針：
+// 設定漏れのままアップロードが素通りする事故を防ぐため、未設定なら常に拒否する）。
+func (u *manualUseCase) VerifyUploadToken(header string) bool {
+	if u.cfg.UploadToken == "" {
+		return false
+	}
+
+	scheme, token, found := strings.Cut(header, " ")
+	if !found || !strings.EqualFold(scheme, "Bearer") || token == "" {
+		return false
+	}
+
+	// 長さが異なる場合は比較するまでもなく不一致が確定するため先に弾く。
+	// 一致しうる場合の実際のバイト比較はタイミング攻撃を防ぐため
+	// crypto/subtle.ConstantTimeCompare を用いて時間差が漏れないようにする。
+	if len(token) != len(u.cfg.UploadToken) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(token), []byte(u.cfg.UploadToken)) == 1
+}
+
+// SaveManual はアップロード本文をManualDir配下の{id}.htmlとして保存し、書き込みバイト数を返す。
+// 同一ディレクトリ内に一時ファイルを作成してから書き込み完了後にリネームすることで、
+// 配信中の閲覧者に書きかけの内容を見せないための原子的な置き換えを行う。
+// サイズ上限の強制はここでは行わない（呼び出し側のcontrollerがMaxBytesReaderで制御する）。
+func (u *manualUseCase) SaveManual(manualID string, body io.Reader) (int64, error) {
+	if !manualIDRe.MatchString(manualID) {
+		return 0, ErrInvalidManualID
+	}
+
+	dir := u.cfg.ManualDir
+	if err := os.MkdirAll(dir, 0o755); err != nil { //nolint:gosec // G301: 非公開情報を含まない公開マニュアルの配信先ディレクトリのため0o755で問題ない
+		return 0, fmt.Errorf("マニュアル保存先ディレクトリの作成失敗: %w", err)
+	}
+
+	tmp, err := os.CreateTemp(dir, manualID+".tmp-*")
+	if err != nil {
+		return 0, fmt.Errorf("一時ファイルの作成失敗: %w", err)
+	}
+	tmpPath := tmp.Name()
+
+	written, copyErr := io.Copy(tmp, body)
+	closeErr := tmp.Close()
+	if copyErr != nil || closeErr != nil {
+		_ = os.Remove(tmpPath)
+		if copyErr != nil {
+			return 0, fmt.Errorf("マニュアル本文の書き込み失敗: %w", copyErr)
+		}
+		return 0, fmt.Errorf("一時ファイルのクローズ失敗: %w", closeErr)
+	}
+
+	dest := filepath.Join(dir, manualID+".html")
+	// 配信中の閲覧者に書きかけの内容を見せないため、書き込み完了後にリネームで原子的に置き換える
+	if err := os.Rename(tmpPath, dest); err != nil {
+		_ = os.Remove(tmpPath)
+		return 0, fmt.Errorf("マニュアルファイルの置き換え失敗: %w", err)
+	}
+
+	return written, nil
+}
+
+// PublicManualURL はアップロード成功時にクライアントへ返す公開閲覧URLを組み立てる。
+// 新しい環境変数を増やさないための導出（RedirectURLは /manuals/oauth/callback 固定形）。
+func (u *manualUseCase) PublicManualURL(manualID string) string {
+	base := strings.TrimSuffix(u.cfg.RedirectURL, "/oauth/callback")
+	return base + "/" + manualID
 }
 
 // signPayload はJSONペイロードをbase64url化した上でHMAC-SHA256署名を付与し、

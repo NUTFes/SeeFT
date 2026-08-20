@@ -6,10 +6,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -327,4 +329,131 @@ func TestManualUseCase_EmptySecretFailsClosed(t *testing.T) {
 			t.Errorf("VerifyState(forged) ok = true, want false")
 		}
 	})
+}
+
+// VerifyUploadToken のテーブルテスト。UploadTokenが未設定の場合は正しい値を提示しても
+// 常に拒否される（issue #444と同じfail-closed方針）ことを含めて確認する。
+func TestManualUseCase_VerifyUploadToken(t *testing.T) {
+	withToken := &manualUseCase{ //nolint:gosec // テスト用のダミートークンであり実資格情報ではない
+		cfg: ManualConfig{UploadToken: "correct-upload-token"},
+	}
+	withoutToken := &manualUseCase{cfg: ManualConfig{UploadToken: ""}}
+
+	cases := []struct {
+		name   string
+		u      *manualUseCase
+		header string
+		want   bool
+	}{
+		{
+			name:   "正しいBearerトークンは許可",
+			u:      withToken,
+			header: "Bearer correct-upload-token",
+			want:   true,
+		},
+		{
+			name:   "スキームが小文字のbearerでも許可（大小無視）",
+			u:      withToken,
+			header: "bearer correct-upload-token",
+			want:   true,
+		},
+		{
+			name:   "トークン不一致は拒否",
+			u:      withToken,
+			header: "Bearer wrong-token",
+			want:   false,
+		},
+		{
+			name:   "スキームがBearerでない場合は拒否",
+			u:      withToken,
+			header: "Basic correct-upload-token",
+			want:   false,
+		},
+		{
+			name:   "空ヘッダは拒否",
+			u:      withToken,
+			header: "",
+			want:   false,
+		},
+		{
+			name:   "UploadToken未設定なら正しい値でも拒否（fail-closed）",
+			u:      withoutToken,
+			header: "Bearer correct-upload-token",
+			want:   false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := c.u.VerifyUploadToken(c.header)
+			if got != c.want {
+				t.Errorf("VerifyUploadToken(%q) = %v, want %v", c.header, got, c.want)
+			}
+		})
+	}
+}
+
+// SaveManual の正常系・異常系を確認する。
+func TestManualUseCase_SaveManual(t *testing.T) {
+	t.Run("正常なIDで保存するとファイル内容とバイト数が一致する", func(t *testing.T) {
+		dir := t.TempDir()
+		u := &manualUseCase{cfg: ManualConfig{ManualDir: dir}}
+
+		content := "<html>hello</html>"
+		n, err := u.SaveManual("summer-fes", strings.NewReader(content))
+		if err != nil {
+			t.Fatalf("SaveManual() error = %v, want nil", err)
+		}
+		if n != int64(len(content)) {
+			t.Errorf("SaveManual() n = %d, want %d", n, len(content))
+		}
+
+		got, err := os.ReadFile(filepath.Join(dir, "summer-fes.html")) //nolint:gosec // G304: dirはt.TempDir()由来のテスト専用パスであり外部入力ではない
+		if err != nil {
+			t.Fatalf("failed to read saved file: %v", err)
+		}
+		if string(got) != content {
+			t.Errorf("saved content = %q, want %q", string(got), content)
+		}
+	})
+
+	t.Run("不正なIDはErrInvalidManualIDを返す", func(t *testing.T) {
+		dir := t.TempDir()
+		u := &manualUseCase{cfg: ManualConfig{ManualDir: dir}}
+
+		if _, err := u.SaveManual("../etc/passwd", strings.NewReader("dummy")); !errors.Is(err, ErrInvalidManualID) {
+			t.Errorf("SaveManual() error = %v, want ErrInvalidManualID", err)
+		}
+	})
+
+	t.Run("既存ファイルへの上書きで内容が置き換わる", func(t *testing.T) {
+		dir := t.TempDir()
+		u := &manualUseCase{cfg: ManualConfig{ManualDir: dir}}
+
+		if _, err := u.SaveManual("summer-fes", strings.NewReader("old content")); err != nil {
+			t.Fatalf("SaveManual() first write error = %v", err)
+		}
+		if _, err := u.SaveManual("summer-fes", strings.NewReader("new content")); err != nil {
+			t.Fatalf("SaveManual() second write error = %v", err)
+		}
+
+		got, err := os.ReadFile(filepath.Join(dir, "summer-fes.html")) //nolint:gosec // G304: dirはt.TempDir()由来のテスト専用パスであり外部入力ではない
+		if err != nil {
+			t.Fatalf("failed to read saved file: %v", err)
+		}
+		if string(got) != "new content" {
+			t.Errorf("saved content = %q, want %q", string(got), "new content")
+		}
+	})
+}
+
+// PublicManualURL がRedirectURLから公開URLを正しく導出することを確認する。
+func TestManualUseCase_PublicManualURL(t *testing.T) {
+	u := &manualUseCase{cfg: ManualConfig{RedirectURL: "https://example.com/manuals/oauth/callback"}}
+
+	got := u.PublicManualURL("summer-fes")
+	want := "https://example.com/manuals/summer-fes"
+	if got != want {
+		t.Errorf("PublicManualURL() = %q, want %q", got, want)
+	}
 }
