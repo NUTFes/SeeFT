@@ -3,6 +3,7 @@ package di
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
@@ -62,6 +63,18 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	rescueUnifiedUseCase := usecase.NewRescueUnifiedUseCase(questionRescueRepository, shorthandedRescueRepository, troubleRescueRepository, userRepository, taskRepository)
 	reviewUseCase := usecase.NewReviewUseCase(reviewRepository, taskRepository)
 
+	// マニュアル配信（nutfes限定, issue #444）: 設定値は環境変数から読み取るのみでロジックは持たない
+	manualDir := os.Getenv("MANUAL_DIR")
+	if manualDir == "" {
+		manualDir = "/manuals"
+	}
+	manualUseCase := usecase.NewManualUseCase(usecase.ManualConfig{
+		ClientID:     os.Getenv("MANUAL_OAUTH_CLIENT_ID"),
+		ClientSecret: os.Getenv("MANUAL_OAUTH_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("MANUAL_OAUTH_REDIRECT_URL"),
+		ManualDir:    manualDir,
+	})
+
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
 	mailAuthController := controller.NewMailAuthController(mailAuthUseCase)
@@ -78,6 +91,7 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	troubleRescueController := controller.NewTroubleRescueController(troubleRescueUseCase)
 	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase, rescueUnifiedUseCase, userUseCase, taskUseCase, gradeUseCase, bureauUseCase)
 	reviewController := controller.NewReviewController(reviewUseCase)
+	manualController := controller.NewManualController(manualUseCase)
 
 	// router
 	router := router.NewRouter(
@@ -96,6 +110,7 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 		troubleRescueController,
 		rescueUnifiedController,
 		reviewController,
+		manualController,
 	)
 
 	// Scheduler: 5分間隔で未送信通知を flush する（goroutine で起動し即 return）
