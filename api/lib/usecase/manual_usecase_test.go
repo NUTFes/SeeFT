@@ -15,10 +15,10 @@ import (
 )
 
 func newTestManualUseCase() *manualUseCase {
-	return &manualUseCase{
+	return &manualUseCase{ //nolint:gosec // ClientSecretはテスト用のダミー値であり実資格情報ではない
 		cfg: ManualConfig{
 			ClientID:     "test-client-id",
-			ClientSecret: "test-client-secret", //nolint:gosec // テスト用のダミー値であり実資格情報ではない
+			ClientSecret: "test-client-secret",
 			RedirectURL:  "https://example.com/manuals/oauth/callback",
 			ManualDir:    "",
 		},
