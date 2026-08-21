@@ -30,7 +30,7 @@ func buildDatabaseURL(config dbConfig) string {
 	}
 
 	query := databaseURL.Query()
-	query.Set("sslmode", "disable")
+	query.Set("sslmode", config.sslMode)
 	databaseURL.RawQuery = query.Encode()
 
 	return databaseURL.String()
