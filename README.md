@@ -44,7 +44,7 @@ make up-db
 
 ### マイグレーションのdown
 ``` fish
-make down-migrate N=<整数|all>
+make migrate-down N=<整数|all>
 ```
 
 ### Develop
