@@ -49,7 +49,7 @@ git submodule update --init
 一度コンテナをdownさせてからupし直してみてください。
 
 ## SchemaSpyでDBスキーマを確認する（PostgreSQL）
-- DB初期データは `mysql/db` ディレクトリにありますが、実際のDBはPostgreSQLです。
+- DB初期データは `postgresql/db` ディレクトリにありますが、実際のDBはPostgreSQLです。
 - 最終生成物の出力先: `api/docs/er-diagrams/`
 - 一時出力先: `api/docs/schemaspy`（処理後に削除）
 
