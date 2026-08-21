@@ -28,7 +28,7 @@ docker compose down -v
 
 ## Note
 ### 初期テーブルの追加
-```
+``` fish
 make migrate
 ```
 
