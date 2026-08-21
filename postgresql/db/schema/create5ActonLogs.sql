@@ -1,4 +1,4 @@
-CREATE TABLE action_logs (
+CREATE TABLE IF NOT EXISTS action_logs (
     id SERIAL PRIMARY KEY,
     shift_id INTEGER,
     user_id INTEGER,

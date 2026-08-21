@@ -3,7 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
 	_ "github.com/lib/pq"
+
 	// "github.com/joho/godotenv"
 	"os"
 	"time"
@@ -13,7 +15,7 @@ import (
 )
 
 type client struct {
-	db *sql.DB
+	db   *sql.DB
 	gorm *gorm.DB
 }
 
@@ -33,15 +35,19 @@ func ConnectMySQL() (client, error) {
 	dbHost := os.Getenv("NUTMEG_DB_HOST")
 	dbPort := os.Getenv("NUTMEG_DB_PORT")
 	dbName := os.Getenv("NUTMEG_DB_NAME")
-	
+	dbSSLMode := os.Getenv("NUTMEG_DB_SSLMODE")
+	if dbSSLMode == "" {
+		dbSSLMode = "disable"
+	}
+
 	// MySQLに接続する
 	// データベース接続部分
 	// dbconf := "seeft:password@tcp(nutfes-seeft-db:3306)/seeft_db?charset=utf8mb4&parseTime=true"
 	// dbconf := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8mb4&parseTime=true"
 	// db, err := sql.Open("mysql", dbconf)
 
-	dns := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=disable"
-	db, err := sql.Open("postgres", dns);
+	dns := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=" + dbSSLMode
+	db, err := sql.Open("postgres", dns)
 
 	if err != nil {
 		return client{}, err
