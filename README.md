@@ -3,6 +3,9 @@
 ## Installation
 ``` fish
 make build
+make up
+
+make migrate
 make seed
 ```
 
@@ -24,6 +27,11 @@ docker compose down -v
 ```
 
 ## Note
+### 初期テーブルの追加
+```
+make migrate
+```
+
 ### 初期データの追加
 ``` fish
 make seed
