@@ -11,6 +11,7 @@ type dbConfig struct {
 	host     string
 	port     string
 	name     string
+	sslMode  string
 }
 
 func loadDBConfig() (dbConfig, error) {
@@ -20,6 +21,7 @@ func loadDBConfig() (dbConfig, error) {
 		host:     os.Getenv("NUTMEG_DB_HOST"),
 		port:     getEnvOrDefault("NUTMEG_DB_PORT", "5432"),
 		name:     os.Getenv("NUTMEG_DB_NAME"),
+		sslMode:  getEnvOrDefault("NUTMEG_DB_SSLMODE", "disable"),
 	}
 
 	if config.user == "" {

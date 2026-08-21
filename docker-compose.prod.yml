@@ -26,6 +26,8 @@ services:
     command: "go run main.go"
     env_file: ["./api/env/seeft.env"]
     ports: ["1234:1234"]
+    environment:
+      NUTMEG_DB_SSLMODE: require
 
   admin:
     container_name: "nutfes-seeft-admin"
