@@ -493,11 +493,12 @@ func (a *shiftUseCase) convertShiftCardDataToShifts(data []entity.ShiftCardData)
 		shift := entity.Shift{
 			ID: d.ShiftID,
 			Task: entity.TaskMobile{
-				ID:    d.TaskID,
-				Task:  d.TaskName,
-				Color: d.TaskColor,
-				Place: d.PlaceName,
-				Url:   d.TaskURL,
+				ID:        d.TaskID,
+				Task:      d.TaskName,
+				Color:     d.TaskColor,
+				Place:     d.PlaceName,
+				Url:       d.TaskURL,
+				ManualUrl: d.TaskManualURL,
 			},
 			User: entity.User{
 				ID:       d.UserID,
@@ -595,6 +596,7 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 			EndTime:      "",
 			Place:        "",
 			Url:          "",
+			ManualUrl:    "",
 			ShiftMembers: []entity.ShiftMembers{}, // 空配列で初期化
 			BeforeMembers: entity.ShiftMembers{
 				STime:   "",
@@ -626,6 +628,7 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 		EndTime:      endTime,
 		Place:        first.Task.Place,
 		Url:          first.Task.Url,
+		ManualUrl:    first.Task.ManualUrl,
 		ShiftMembers: []entity.ShiftMembers{}, // 空配列で初期化
 	}
 

@@ -16,6 +16,7 @@ type ShiftCardData struct {
     TaskName      string    `gorm:"column:task_name"`
     TaskColor     string    `gorm:"column:task_color"`
     TaskURL       string    `gorm:"column:task_url"`
+    TaskManualURL string    `gorm:"column:manual_url"`
     TaskRemark    string    `gorm:"column:task_remark"`
     MaxMember     int       `gorm:"column:max_member"`
     TaskBureauID  int       `gorm:"column:task_bureau_id"`
