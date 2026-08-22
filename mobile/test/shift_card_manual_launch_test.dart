@@ -29,6 +29,7 @@ ShiftCardData _fakeDataWithManual() {
     endTime: '12:00',
     place: '正門',
     url: 'https://example.com/manual',
+    manualUrl: '',
     shiftMembers: const [],
     beforeMembers: ShiftMembers(sTime: '', eTime: '', members: const []),
     afterMembers: ShiftMembers(sTime: '', eTime: '', members: const []),
@@ -54,12 +55,12 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('マニュアルを開く'));
+    await tester.tap(find.text('ドキュメント版を開く'));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('別のタブで開く'));
+    await tester.ensureVisible(find.text('ドキュメント版を別のタブで開く'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('別のタブで開く'));
+    await tester.tap(find.text('ドキュメント版を別のタブで開く'));
     await tester.pumpAndSettle();
 
     expect(find.text('マニュアルを開けませんでした'), findsOneWidget);
@@ -73,12 +74,12 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('マニュアルを開く'));
+    await tester.tap(find.text('ドキュメント版を開く'));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('別のタブで開く'));
+    await tester.ensureVisible(find.text('ドキュメント版を別のタブで開く'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('別のタブで開く'));
+    await tester.tap(find.text('ドキュメント版を別のタブで開く'));
     await tester.pumpAndSettle();
 
     expect(find.text('マニュアルを開けませんでした'), findsNothing);

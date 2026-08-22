@@ -110,6 +110,7 @@ class ShiftCard extends StatelessWidget {
             const SizedBox(height: 4.0),
             _ManualToggle(
               url: data.url,
+              manualUrl: data.manualUrl,
               onOpened: () {
                 if (isNew && onOpened != null) {
                   onOpened!();
@@ -424,10 +425,12 @@ class _ShiftCardMenuRow extends StatelessWidget {
 
 class _ManualToggle extends StatefulWidget {
   final String url;
+  final String manualUrl;
   final VoidCallback? onOpened;
 
   const _ManualToggle({
     required this.url,
+    required this.manualUrl,
     this.onOpened,
   });
 
@@ -438,10 +441,11 @@ class _ManualToggle extends StatefulWidget {
 class _ManualToggleState extends State<_ManualToggle> {
   bool _isExpanded = false;
 
-  bool get _hasManual => widget.url.isNotEmpty;
+  bool get _hasDocument => widget.url.isNotEmpty;
+  bool get _hasSlide => widget.manualUrl.isNotEmpty;
 
   void _toggleManual() {
-    if (!_hasManual) return;
+    if (!_hasDocument) return;
     final willExpand = !_isExpanded;
     setState(() => _isExpanded = willExpand);
     if (willExpand && widget.onOpened != null) {
@@ -449,15 +453,34 @@ class _ManualToggleState extends State<_ManualToggle> {
     }
   }
 
+  // スライド版は認証付き配信のためiframe埋め込みができない。常に別タブで開く
+  Future<void> _openSlide() async {
+    if (widget.onOpened != null) {
+      widget.onOpened!();
+    }
+    var launched = false;
+    try {
+      launched = await launchUrl(
+        Uri.parse(widget.manualUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      launched = false;
+    }
+    if (!launched && mounted) {
+      showCustomErrorSnackBar(context, 'マニュアル（スライド版）を開けませんでした');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final textColor = _hasManual ? AppColors.link : AppColors.grayDark;
+    final textColor = _hasDocument ? AppColors.link : AppColors.grayDark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
           borderRadius: BorderRadius.circular(4.0),
-          onTap: _hasManual ? _toggleManual : null,
+          onTap: _hasDocument ? _toggleManual : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: Row(
@@ -514,7 +537,7 @@ class _ManualToggleState extends State<_ManualToggle> {
                         }
                       },
                       child: const Text(
-                        '別のタブで開く',
+                        'ドキュメント版を別のタブで開く',
                         style: TextStyle(
                           fontSize: AppFontSizes.xs,
                           color: AppColors.link,
@@ -527,12 +550,39 @@ class _ManualToggleState extends State<_ManualToggle> {
             ),
           ),
         ],
+        if (_hasSlide)
+          InkWell(
+            borderRadius: BorderRadius.circular(4.0),
+            onTap: _openSlide,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.slideshow,
+                    size: 16,
+                    color: AppColors.link,
+                  ),
+                  SizedBox(width: 4.0),
+                  Text(
+                    'スライド版を別のタブで開く',
+                    style: TextStyle(
+                      fontSize: AppFontSizes.xs,
+                      color: AppColors.link,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
 
   String get _manualText {
-    if (!_hasManual) return 'マニュアルなし';
-    return _isExpanded ? 'マニュアルを閉じる' : 'マニュアルを開く';
+    if (!_hasDocument) return 'ドキュメント版なし';
+    return _isExpanded ? 'ドキュメント版を閉じる' : 'ドキュメント版を開く';
   }
 }
