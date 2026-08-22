@@ -14,6 +14,10 @@ import (
 
 var taskDebugSQL = os.Getenv("DEBUG_SQL") != "0"
 
+// SELECT * を避けるための明示的なカラムリスト
+// manual_urlはNULL許容カラムのため、Scan時のNULL事故防止でCOALESCEしておく（issue #428対応）
+const taskColumns = "id, task, place_id, url, COALESCE(manual_url, '') AS manual_url, bureau_id, max_member, color, remark, year_id, created_at, updated_at"
+
 type taskRepository struct {
 	client db.Client
 	crud   abstract.Crud
@@ -38,19 +42,19 @@ func NewTaskRepository(c db.Client, ac abstract.Crud) TaskRepository {
 
 // 全件取得
 func (b *taskRepository) All(c context.Context) (*sql.Rows, error) {
-	query := "SELECT * FROM tasks"
+	query := "SELECT " + taskColumns + " FROM tasks"
 	return b.crud.Read(c, query)
 }
 
 // 1件取得
 func (b *taskRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT * FROM tasks WHERE id =" + id
+	query := "SELECT " + taskColumns + " FROM tasks WHERE id =" + id
 	return b.crud.ReadByID(c, query)
 }
 
 // 特定のシフト取得
 func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error) {
-	query := "SELECT * FROM tasks WHERE name =" + name
+	query := "SELECT " + taskColumns + " FROM tasks WHERE name =" + name
 	rows, err := b.client.DB().QueryContext(c, query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
@@ -83,7 +87,7 @@ func (b *taskRepository) Destroy(c context.Context, id string) error {
 func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 	query := `
 		SELECT
-			*
+			` + taskColumns + `
 		FROM
 			tasks
 		ORDER BY
@@ -95,7 +99,7 @@ func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 
 // タスク名からタスクを取得する
 func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
-	query := "SELECT * FROM tasks WHERE task = '" + name + "'"
+	query := "SELECT " + taskColumns + " FROM tasks WHERE task = '" + name + "'"
 	return b.client.DB().QueryRowContext(c, query), nil
 }
 
@@ -103,18 +107,18 @@ func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, e
 func (b *taskRepository) FindByNames(c context.Context, names []string) (*sql.Rows, error) {
 	if len(names) == 0 {
 		// 空の結果を返す
-		query := "SELECT * FROM tasks WHERE 1=0"
+		query := "SELECT " + taskColumns + " FROM tasks WHERE 1=0"
 		return b.client.DB().QueryContext(c, query)
 	}
 
-	query := "SELECT * FROM tasks WHERE task = ANY($1::text[])"
+	query := "SELECT " + taskColumns + " FROM tasks WHERE task = ANY($1::text[])"
 	return b.client.DB().QueryContext(c, query, pq.Array(names))
 }
 
 // 指定したuserIDの全てのタスクを取得する
 func (b *taskRepository) FindByUserID(c context.Context, userID string) (*sql.Rows, error) {
 	query := `
-	SELECT DISTINCT t.*
+	SELECT DISTINCT t.id, t.task, t.place_id, t.url, COALESCE(t.manual_url, '') AS manual_url, t.bureau_id, t.max_member, t.color, t.remark, t.year_id, t.created_at, t.updated_at
 	FROM tasks t
 	JOIN shifts s ON t.id = s.task_id
 	WHERE s.user_id = $1
