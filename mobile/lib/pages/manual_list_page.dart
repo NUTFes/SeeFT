@@ -236,7 +236,11 @@ class _ManualListPageState extends State<ManualListPage> {
                 icon: const Icon(Icons.slideshow),
                 onPressed: () async {
                   if (await canLaunchUrl(Uri.parse(manualUrl))) {
-                    await launchUrl(Uri.parse(manualUrl));
+                    // スライド版は認証付き配信のため埋め込み不可。必ず別タブで開く
+                    await launchUrl(
+                      Uri.parse(manualUrl),
+                      mode: LaunchMode.externalApplication,
+                    );
                   }
                 },
               ),

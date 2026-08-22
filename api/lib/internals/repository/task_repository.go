@@ -48,14 +48,14 @@ func (b *taskRepository) All(c context.Context) (*sql.Rows, error) {
 
 // 1件取得
 func (b *taskRepository) Find(c context.Context, id string) (*sql.Row, error) {
-	query := "SELECT " + taskColumns + " FROM tasks WHERE id =" + id
-	return b.crud.ReadByID(c, query)
+	query := "SELECT " + taskColumns + " FROM tasks WHERE id = $1"
+	return b.crud.ReadByID(c, query, id)
 }
 
 // 特定のシフト取得
 func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error) {
-	query := "SELECT " + taskColumns + " FROM tasks WHERE name =" + name
-	rows, err := b.client.DB().QueryContext(c, query)
+	query := "SELECT " + taskColumns + " FROM tasks WHERE task = $1"
+	rows, err := b.client.DB().QueryContext(c, query, name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot connect SQL")
 	}
@@ -99,8 +99,8 @@ func (b *taskRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
 
 // タスク名からタスクを取得する
 func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, error) {
-	query := "SELECT " + taskColumns + " FROM tasks WHERE task = '" + name + "'"
-	return b.client.DB().QueryRowContext(c, query), nil
+	query := "SELECT " + taskColumns + " FROM tasks WHERE task = $1"
+	return b.client.DB().QueryRowContext(c, query, name), nil
 }
 
 // 複数のタスク名から一括でタスクを取得する（N+1問題対策）
