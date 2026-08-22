@@ -48,7 +48,6 @@ openShiftDialog(
       weather["id"].toString());
   var resName = task["task"].toString();
   var resURL = task["url"].toString();
-  var resManualURL = (task["manualUrl"] ?? '').toString();
   var resPlace = task["place"].toString();
   // var resPresident = task["superviser"].toString();
   var resUsersNumber = res["users"].length;
@@ -116,6 +115,15 @@ openShiftDialog(
             appBar: AppBar(
               title: Text(resName), //シフト名
               centerTitle: true,
+              actions: <Widget>[
+                IconButton(
+                  onPressed: () async {
+                    _launchURL(resURL);
+                  },
+                  icon: Icon(Icons.wrap_text),
+                  color: Colors.orangeAccent[100],
+                ),
+              ],
             ),
             body: ListView(
                 children: <Widget>[
@@ -150,43 +158,20 @@ openShiftDialog(
                     title: Text("次のメンバー"),
                     subtitle: Text(resAfterUsers),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            _launchURL(resURL);
-                          },
-                          icon: Icon(Icons.description),
-                          label: const Text('ドキュメント版'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.orangeAccent,
-                            side: const BorderSide(color: Colors.orangeAccent),
-                          ),
-                        ),
-                        if (resManualURL.isNotEmpty)
-                          const SizedBox(width: 12.0),
-                        if (resManualURL.isNotEmpty)
-                          OutlinedButton.icon(
-                            onPressed: () async {
-                              _launchURL(resManualURL);
-                            },
-                            icon: Icon(Icons.slideshow),
-                            label: const Text('スライド版'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.orangeAccent,
-                              side:
-                                  const BorderSide(color: Colors.orangeAccent),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
+            /*
+            floatingActionButton: OutlinedButton(
+              child: const Text('マニュアルへ'),
+              style: OutlinedButton.styleFrom(
+                primary: Colors.orangeAccent,
+                side: const BorderSide(color: Colors.orangeAccent),
+              ),
+              onPressed: () async {
+                //_launchURL(resURL);
+              },
+            ),
+            */
           ),
         ),
       );
