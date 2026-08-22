@@ -213,6 +213,8 @@ class _ManualListPageState extends State<ManualListPage> {
   }
 
   Widget _manualItem(var manuals, index, context) {
+    // スライド版マニュアルのURL。未設定のタスクではボタンを出さない
+    final manualUrl = (manuals[index]["manualUrl"] ?? '').toString();
     return Container(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(
@@ -228,6 +230,16 @@ class _ManualListPageState extends State<ManualListPage> {
             fontSize: AppFontSizes.md,
           ),
         ),
+        trailing: manualUrl.isEmpty
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.slideshow),
+                onPressed: () async {
+                  if (await canLaunchUrl(Uri.parse(manualUrl))) {
+                    await launchUrl(Uri.parse(manualUrl));
+                  }
+                },
+              ),
         onTap: () async {
           if (await canLaunchUrl(Uri.parse(manuals[index]["url"].toString()))) {
             await launchUrl(Uri.parse((manuals[index]["url"].toString())));
