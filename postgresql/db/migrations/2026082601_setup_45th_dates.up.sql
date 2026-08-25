@@ -3,11 +3,13 @@
 -- のため、45thの日程もその並びに合わせる。準々備日は既存の並びを壊さないよう5番に置く。
 
 -- 固定IDの既存行を書き換えるため、想定外のデータを黙って壊さないよう前提を検証する。
--- 許可する状態は次の2つだけで、いずれにも当てはまらない場合はmigrationを失敗させる。
---   (a) 未適用: id 1〜4が43rd(2024年)のseed値のままで、id 5が存在しない
---   (b) 適用済み: id 1〜5が本migrationの投入値と完全一致（再実行）
+-- 許可する状態は次の3つだけで、いずれにも当てはまらない場合はmigrationを失敗させる。
+--   (a) 初期状態: datesが空（初期化直後で、seedをまだ流していないDB）
+--   (b) 未適用:   id 1〜4が43rd(2024年)のseed値のままで、id 5が存在しない
+--   (c) 適用済み: id 1〜5が本migrationの投入値と完全一致（seed適用後の再実行を含む）
 DO $$
 DECLARE
+  total_rows   INTEGER;
   seed_rows    INTEGER;
   applied_rows INTEGER;
   extra_rows   INTEGER;
@@ -20,7 +22,10 @@ BEGIN
     RAISE EXCEPTION 'years.id = 45 の year が想定(2026)と異なります: %', year45;
   END IF;
 
-  -- (a) 未適用: 43rdのseed値と完全一致し、id 5が未作成
+  -- (a) 初期状態: 1行も無ければこのmigrationがそのまま45thの日程を作る
+  SELECT count(*) INTO total_rows FROM dates;
+
+  -- (b) 未適用: 43rdのseed値と完全一致し、id 5が未作成
   SELECT count(*) INTO seed_rows
   FROM dates
   WHERE (id, year_id, name,       date)
@@ -31,7 +36,7 @@ BEGIN
 
   SELECT count(*) INTO extra_rows FROM dates WHERE id = 5;
 
-  -- (b) 適用済み: 本migrationの投入値と完全一致
+  -- (c) 適用済み: 本migrationの投入値と完全一致（seed.sqlが投入した状態もこれに一致する）
   SELECT count(*) INTO applied_rows
   FROM dates
   WHERE (id, year_id, name,       date)
@@ -41,8 +46,8 @@ BEGIN
          (4, 45, '片付け日', '2026/09/21'),
          (5, 45, '準々備日', '2026/09/17'));
 
-  IF NOT ((seed_rows = 4 AND extra_rows = 0) OR applied_rows = 5) THEN
-    RAISE EXCEPTION 'dates の id 1〜5 が想定と異なります（43rdのseed値のまま、または本migration適用済みのいずれかである必要があります）。手動で確認してください';
+  IF NOT (total_rows = 0 OR (seed_rows = 4 AND extra_rows = 0) OR applied_rows = 5) THEN
+    RAISE EXCEPTION 'dates の id 1〜5 が想定と異なります（空、43rdのseed値のまま、本migration適用済みのいずれかである必要があります）。手動で確認してください';
   END IF;
 
   -- 45th以外のシフトが対象の日程を参照している場合、上書きすると別日程を指す状態になる
@@ -59,14 +64,14 @@ INSERT INTO years (id, year)
 VALUES (45, 2026)
 ON CONFLICT (id) DO NOTHING;
 
--- 既存の1〜4は43rd(2024年)の日程。45thの日程で上書きする
-UPDATE dates SET year_id = 45, name = '準備日',   date = '2026/09/18' WHERE id = 1;
-UPDATE dates SET year_id = 45, name = '1日目',    date = '2026/09/19' WHERE id = 2;
-UPDATE dates SET year_id = 45, name = '2日目',    date = '2026/09/20' WHERE id = 3;
-UPDATE dates SET year_id = 45, name = '片付け日', date = '2026/09/21' WHERE id = 4;
-
+-- 既存行があれば45thの日程で上書きし、無ければ作成する。
+-- 初期化直後のDB（datesが空）でもUPDATEが0行にならないよう、全idをINSERT ... ON CONFLICTで揃える
 INSERT INTO dates (id, year_id, name, date)
-VALUES (5, 45, '準々備日', '2026/09/17')
+VALUES (1, 45, '準備日',   '2026/09/18'),
+       (2, 45, '1日目',    '2026/09/19'),
+       (3, 45, '2日目',    '2026/09/20'),
+       (4, 45, '片付け日', '2026/09/21'),
+       (5, 45, '準々備日', '2026/09/17')
 ON CONFLICT (id) DO UPDATE
   SET year_id = EXCLUDED.year_id,
       name    = EXCLUDED.name,
