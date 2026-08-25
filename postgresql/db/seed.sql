@@ -129,7 +129,10 @@ VALUES
   ('渉外局'),
   ('財務局'),
   ('制作局'),
-  ('情報局');
+  ('情報局'),
+  -- 45thから追加。user_usecase.go / task_usecase.go の局名変換表の番号(9)と
+  -- 対応するため、末尾に追加すること
+  ('産学局');
 
 INSERT INTO years
   (id, year)

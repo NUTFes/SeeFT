@@ -291,6 +291,8 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			bureauID = "7"
 		case `情報局`:
 			bureauID = "8"
+		case `産学局`:
+			bureauID = "9"
 		default:
 			bureauID = "0"
 		}
