@@ -134,6 +134,10 @@ VALUES
   -- 対応するため、末尾に追加すること
   ('産学局');
 
+-- years/datesは 2026082601_setup_45th_dates.up.sql でも投入するため、
+-- prod-migrate → prod-seed の順で実行しても主キー重複にならないよう ON CONFLICT を付ける。
+-- なおseed.sql全体は初期化直後に1回だけ流す前提で、他のテーブルは冪等ではない
+-- （seedの二重実行はplaces等で主キー重複になる）
 INSERT INTO years
   (id, year)
 VALUES
@@ -141,7 +145,9 @@ VALUES
   (41, 2022),
   (42, 2023),
   (43, 2024),
-  (45, 2026);
+  (45, 2026)
+ON CONFLICT (id) DO UPDATE
+  SET year = EXCLUDED.year;
 
 -- shift_usecase.goの日付名→dateID変換は固定値（準備日=1/1日目=2/2日目=3/片付け日=4/準々備日=5）
 -- のため、idがその並びになるよう明示指定する
@@ -152,7 +158,11 @@ VALUES
   (2, 45, '1日目', '2026/09/19'),
   (3, 45, '2日目', '2026/09/20'),
   (4, 45, '片付け日', '2026/09/21'),
-  (5, 45, '準々備日', '2026/09/17');
+  (5, 45, '準々備日', '2026/09/17')
+ON CONFLICT (id) DO UPDATE
+  SET year_id = EXCLUDED.year_id,
+      name    = EXCLUDED.name,
+      date    = EXCLUDED.date;
 
 SELECT setval('dates_id_seq', (SELECT MAX(id) FROM dates));
 
