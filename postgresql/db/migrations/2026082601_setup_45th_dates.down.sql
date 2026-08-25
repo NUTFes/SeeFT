@@ -1,5 +1,18 @@
 -- 45thの日程マスタ投入を巻き戻し、43rd(2024年)のseed相当の状態へ戻す（issue #453）
 
+-- shifts.date_id は dates.id を ON DELETE 指定なしで参照しているため、
+-- 45thのシフトが投入済みの状態では巻き戻せない。データを黙って壊さないよう明示的に失敗させる。
+DO $$
+DECLARE
+  ref_shifts INTEGER;
+BEGIN
+  SELECT count(*) INTO ref_shifts FROM shifts WHERE date_id IN (1, 2, 3, 4, 5);
+
+  IF ref_shifts > 0 THEN
+    RAISE EXCEPTION 'dates を参照するシフトが%件あるため巻き戻せません。先にシフトを削除するか、移行方針を決めてください', ref_shifts;
+  END IF;
+END $$;
+
 DELETE FROM dates WHERE id = 5;
 
 UPDATE dates SET year_id = 43, name = '準備日',   date = '2024/09/13' WHERE id = 1;

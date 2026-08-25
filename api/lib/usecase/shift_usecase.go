@@ -938,7 +938,12 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		case "片付け日":
 			dateID = "4"
 		case "準々備日":
-			// 45thから運用される日程。既存の1〜4の並びを壊さないため5番に割り当てている
+			// 45thから運用される日程。既存の1〜4の並びを壊さないため5番に割り当てている。
+			// shiftsはyear_idとdate_idを個別に外部キー検証するため、45th以外の年度でも
+			// dates.id=5のシフトを保存できてしまう。年度と日程の不整合を防ぐため明示的に弾く
+			if yearID != "45" {
+				return errors.New("準々備日は45th(yearID=45)のみ対応しています: yearID=" + yearID)
+			}
 			dateID = "5"
 		default:
 			return errors.New("不正な日付名: " + change.Date)
