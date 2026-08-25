@@ -278,6 +278,8 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 			bureauID = "7"
 		case `情報局`:
 			bureauID = "8"
+		case `産学局`:
+			bureauID = "9"
 		default:
 			bureauID = "1" // デフォルトは執行部
 		}
