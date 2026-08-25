@@ -359,12 +359,15 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			tel = "00000000000" // 電話番号が空の場合は仮の値を設定
 		}
 
-		// ユーザー名からUserID取得
-		userName := strings.ReplaceAll(change.Name, " ", "")
-		userName = strings.ReplaceAll(userName, "　", "")
-		userRow, err := u.userRep.FindByName(ctx, userName)
+		// ユーザー名からUserID取得。
+		// 検索キーは新規作成・再取得と同じchange.Nameを使う。ここでスペースを除去すると
+		// 「姓名」で検索して「姓 名」で作成することになり、次回以降も既存ユーザーを引けず
+		// 実行のたびに重複行が増える。
+		// シフト取り込みは日程シートの表記(スペース入り)でFindByNamesを引くため、
+		// users.nameはスペースを保ったまま保存しておく必要がある。
+		userRow, err := u.userRep.FindByName(ctx, change.Name)
 		if err != nil {
-			return errors.Wrapf(err, "ユーザー検索失敗: %v", userName)
+			return errors.Wrapf(err, "ユーザー検索失敗: %v", change.Name)
 		}
 		var user entity.User
 		var slackUserID sql.NullString
