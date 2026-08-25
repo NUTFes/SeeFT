@@ -134,10 +134,10 @@ VALUES
   -- 対応するため、末尾に追加すること
   ('産学局');
 
--- years/datesは 2026082601_setup_45th_dates.up.sql でも投入するため、
--- prod-migrate → prod-seed の順で実行しても主キー重複にならないよう ON CONFLICT を付ける。
--- なおseed.sql全体は初期化直後に1回だけ流す前提で、他のテーブルは冪等ではない
--- （seedの二重実行はplaces等で主キー重複になる）
+-- 年度と日程はここが唯一の定義。年度が変わったら（46th以降）ここを書き換える。
+-- ON CONFLICTは、うっかりseedを二重実行しても壊れないようにするための保険。
+-- なおseed.sql全体が冪等なわけではなく、他のテーブル（places等）は二重実行すると
+-- 主キー重複になる。seedは初期化直後に1回だけ流す前提。
 INSERT INTO years
   (id, year)
 VALUES
