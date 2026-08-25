@@ -22,6 +22,7 @@ type router struct {
 	troubleRescueController     controller.TroubleRescueController
 	rescueUnifiedController     controller.RescueUnifiedController
 	reviewController            controller.ReviewController
+	manualController            controller.ManualController
 }
 
 type Router interface {
@@ -44,6 +45,7 @@ func NewRouter(
 	troubleRescueController controller.TroubleRescueController,
 	rescueUnifiedController controller.RescueUnifiedController,
 	reviewController controller.ReviewController,
+	manualController controller.ManualController,
 ) Router {
 	return router{
 		healthController,
@@ -61,6 +63,7 @@ func NewRouter(
 		troubleRescueController,
 		rescueUnifiedController,
 		reviewController,
+		manualController,
 	}
 }
 
@@ -68,6 +71,15 @@ func (r router) ProvideRouter(e *echo.Echo) {
 
 	// Healthcheck
 	e.GET("/", r.healthcheckController.IndexHealthcheck)
+
+	// マニュアル配信（nutfes限定）。MANUAL_OAUTH_* 未設定時は di.go が nil を渡すため
+	// ルート自体を登録しない（空の署名鍵で認証が素通りする事故を防ぐ）
+	if r.manualController != nil {
+		e.GET("/manuals/:id", r.manualController.ShowManual)
+		e.GET("/manuals/oauth/callback", r.manualController.OAuthCallback)
+		// アップロードはさらに MANUAL_UPLOAD_TOKEN 設定時のみ有効（usecase側で拒否）
+		e.PUT("/manuals/:id", r.manualController.UploadManual)
+	}
 
 	// mail auth
 	e.POST("/mail_auth/signin", r.mailAuthController.SignIn)

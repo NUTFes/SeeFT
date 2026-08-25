@@ -3,6 +3,7 @@ package di
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/externals/db"
@@ -62,6 +63,18 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	rescueUnifiedUseCase := usecase.NewRescueUnifiedUseCase(questionRescueRepository, shorthandedRescueRepository, troubleRescueRepository, userRepository, taskRepository)
 	reviewUseCase := usecase.NewReviewUseCase(reviewRepository, taskRepository)
 
+	// マニュアル配信（nutfes限定, issue #444）: 設定値は環境変数から読み取るのみでロジックは持たない
+	manualDir := os.Getenv("MANUAL_DIR")
+	if manualDir == "" {
+		manualDir = "/manuals"
+	}
+	manualClientID := os.Getenv("MANUAL_OAUTH_CLIENT_ID")
+	manualClientSecret := os.Getenv("MANUAL_OAUTH_CLIENT_SECRET")
+	manualRedirectURL := os.Getenv("MANUAL_OAUTH_REDIRECT_URL")
+	// アップロード(PUT /manuals/:id)用トークン（issue #448）。閲覧機能の有効条件（OAuth3変数）とは独立しており、
+	// 未設定でも閲覧機能はそのまま動作する（アップロードのみusecase側でfail-closedに無効化される）
+	manualUploadToken := os.Getenv("MANUAL_UPLOAD_TOKEN")
+
 	// Controller
 	healthcheckController := controller.NewHealthCheckController()
 	mailAuthController := controller.NewMailAuthController(mailAuthUseCase)
@@ -78,6 +91,23 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	troubleRescueController := controller.NewTroubleRescueController(troubleRescueUseCase)
 	rescueUnifiedController := controller.NewRescueUnifiedController(questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase, rescueUnifiedUseCase, userUseCase, taskUseCase, gradeUseCase, bureauUseCase)
 	reviewController := controller.NewReviewController(reviewUseCase)
+
+	// MANUAL_OAUTH_* が揃っていない場合はマニュアル配信を無効化する。
+	// 特にシークレットが空だとHMAC署名が空鍵になりCookie偽造で認証を素通りできるため、
+	// 設定不備のまま /manuals ルートを公開してはならない（router側はnilで未登録になる）
+	var manualController controller.ManualController
+	if manualClientID != "" && manualClientSecret != "" && manualRedirectURL != "" {
+		manualUseCase := usecase.NewManualUseCase(usecase.ManualConfig{
+			ClientID:     manualClientID,
+			ClientSecret: manualClientSecret,
+			RedirectURL:  manualRedirectURL,
+			ManualDir:    manualDir,
+			UploadToken:  manualUploadToken,
+		})
+		manualController = controller.NewManualController(manualUseCase)
+	} else {
+		log.Printf("manual_gate: MANUAL_OAUTH_CLIENT_ID / MANUAL_OAUTH_CLIENT_SECRET / MANUAL_OAUTH_REDIRECT_URL が未設定のため、マニュアル配信ルートを無効化します")
+	}
 
 	// router
 	router := router.NewRouter(
@@ -96,6 +126,7 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 		troubleRescueController,
 		rescueUnifiedController,
 		reviewController,
+		manualController,
 	)
 
 	// Scheduler: 5分間隔で未送信通知を flush する（goroutine で起動し即 return）

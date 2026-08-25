@@ -21,9 +21,12 @@ services:
     container_name: nutfes-seeft-api
     build: ./api
     env_file: ["./api/env/dev.env"]
+    # マニュアル閲覧制限（issue #444）: MANUAL_OAUTH_CLIENT_ID / MANUAL_OAUTH_CLIENT_SECRET /
+    # MANUAL_OAUTH_REDIRECT_URL / MANUAL_DIR は ./api/env/dev.env 側に追加すること
     volumes:
       - ./api:/app
       - ./postgresql:/db_data:ro
+      - ./manuals:/manuals
     #シェルスクリプトを実行するコマンド
     command: "./start.sh"
     ports:
