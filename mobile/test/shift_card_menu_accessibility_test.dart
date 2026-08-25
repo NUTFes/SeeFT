@@ -12,6 +12,7 @@ ShiftCardData _fakeData() {
     endTime: '12:00',
     place: '正門',
     url: '',
+    manualUrl: '',
     shiftMembers: [
       ShiftMembers(sTime: '10:00', eTime: '12:00', members: []),
     ],

@@ -99,7 +99,7 @@ func TestGetUsersByTimes_EmptyTimeIDsSkipsQuery(t *testing.T) {
 
 var shiftCardCols = []string{
 	"shift_id", "user_id", "task_id", "year_id", "date_id", "time_id", "weather_id", "is_attendance",
-	"task_name", "task_color", "task_url", "task_remark", "max_member", "task_bureau_id",
+	"task_name", "task_color", "task_url", "manual_url", "task_remark", "max_member", "task_bureau_id",
 	"place_id", "place_name", "time_value",
 	"user_name", "user_bureau_id", "user_grade_id",
 	"year_value", "date_value", "weather_value",
@@ -108,7 +108,7 @@ var shiftCardCols = []string{
 func shiftCardDataRow(shiftID, userID, taskID, yearID, dateID, timeID, weatherID int, taskName, timeValue string) []driver.Value {
 	return []driver.Value{
 		shiftID, userID, taskID, yearID, dateID, timeID, weatherID, true,
-		taskName, "#ffffff", "", "", 5, 1,
+		taskName, "#ffffff", "", "", "", 5, 1,
 		1, "1号館", timeValue,
 		"シフト太郎", 1, 1,
 		"2026", "9/6", "晴れ",

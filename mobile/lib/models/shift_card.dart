@@ -28,6 +28,7 @@ class ShiftCardData {
   final String endTime;
   final String place;
   final String url;
+  final String manualUrl;
   final List<ShiftMembers> shiftMembers;
   final ShiftMembers beforeMembers;
   final ShiftMembers afterMembers;
@@ -38,6 +39,7 @@ class ShiftCardData {
     required this.endTime,
     required this.place,
     required this.url,
+    required this.manualUrl,
     required this.shiftMembers,
     required this.beforeMembers,
     required this.afterMembers,
@@ -57,6 +59,7 @@ class ShiftCardDataList {
       endTime: item['end_time'] as String,
       place: item['place'] as String,
       url: item['url'] as String,
+      manualUrl: (item['manual_url'] as String?) ?? '',
       shiftMembers: item['shift_members'] != null?
         (item['shift_members'] as List<dynamic>)
           .map((member) => ShiftMembers(

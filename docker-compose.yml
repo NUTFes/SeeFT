@@ -4,8 +4,6 @@ services:
   db:
     container_name: nutfes-seeft-db
     image: postgres:18
-    volumes:
-      - ./postgresql/db:/docker-entrypoint-initdb.d/ # 初期データ
     environment:
       POSTGRES_DB: seeft_db
       POSTGRES_USER: seeft
@@ -27,6 +25,7 @@ services:
     # MANUAL_OAUTH_REDIRECT_URL / MANUAL_DIR は ./api/env/dev.env 側に追加すること
     volumes:
       - ./api:/app
+      - ./postgresql:/db_data:ro
       - ./manuals:/manuals
     #シェルスクリプトを実行するコマンド
     command: "./start.sh"
@@ -36,7 +35,7 @@ services:
     tty: true
     depends_on:
       db: 
-        condition: service_started
+        condition: service_healthy
 
   # mobile:
   #   container_name: nutfes-seeft-mobile
