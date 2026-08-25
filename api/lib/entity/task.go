@@ -9,6 +9,7 @@ type Task struct {
 	Task      string    `json:"task"`
 	PlaceID   int       `json:"placeID"`
 	Url       string    `json:"url"`
+	ManualUrl string    `json:"manualUrl"`
 	BureauID  int       `json:"bureauID"`
 	MaxMember int       `json:"maxMember"`
 	Color     string    `json:"color"`
@@ -23,6 +24,7 @@ type TaskMobile struct {
 	Task      string    `json:"task"`
 	Place     string    `json:"place"`
 	Url       string    `json:"url"`
+	ManualUrl string    `json:"manualUrl"`
 	BureauID  int       `json:"bureauID"`
 	MaxMember int       `json:"maxMember"`
 	Color     string    `json:"color"`

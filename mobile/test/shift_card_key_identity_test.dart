@@ -10,6 +10,7 @@ ShiftCardData _fakeData(String taskName, String url) {
     endTime: '12:00',
     place: '正門',
     url: url,
+    manualUrl: '',
     shiftMembers: const [],
     beforeMembers: ShiftMembers(sTime: '', eTime: '', members: const []),
     afterMembers: ShiftMembers(sTime: '', eTime: '', members: const []),
@@ -51,21 +52,21 @@ void main() {
     await tester.pumpWidget(_wrap([cardA, cardB]));
     await tester.pumpAndSettle();
 
-    expect(_manualToggleTextWithinCard('A', 'マニュアルを開く'), findsOneWidget);
-    expect(_manualToggleTextWithinCard('B', 'マニュアルを開く'), findsOneWidget);
+    expect(_manualToggleTextWithinCard('A', 'ドキュメント版を開く'), findsOneWidget);
+    expect(_manualToggleTextWithinCard('B', 'ドキュメント版を開く'), findsOneWidget);
 
-    await tester.tap(_manualToggleTextWithinCard('A', 'マニュアルを開く'));
+    await tester.tap(_manualToggleTextWithinCard('A', 'ドキュメント版を開く'));
     await tester.pumpAndSettle();
 
-    expect(_manualToggleTextWithinCard('A', 'マニュアルを閉じる'), findsOneWidget);
-    expect(_manualToggleTextWithinCard('B', 'マニュアルを開く'), findsOneWidget);
+    expect(_manualToggleTextWithinCard('A', 'ドキュメント版を閉じる'), findsOneWidget);
+    expect(_manualToggleTextWithinCard('B', 'ドキュメント版を開く'), findsOneWidget);
 
     // 並び順を入れ替えて再描画（一覧の再取得・並び替えを想定）
     await tester.pumpWidget(_wrap([cardB, cardA]));
     await tester.pumpAndSettle();
 
     // 開閉状態は位置ではなくKey（カードの中身）に紐づいたままであること
-    expect(_manualToggleTextWithinCard('A', 'マニュアルを閉じる'), findsOneWidget);
-    expect(_manualToggleTextWithinCard('B', 'マニュアルを開く'), findsOneWidget);
+    expect(_manualToggleTextWithinCard('A', 'ドキュメント版を閉じる'), findsOneWidget);
+    expect(_manualToggleTextWithinCard('B', 'ドキュメント版を開く'), findsOneWidget);
   });
 }

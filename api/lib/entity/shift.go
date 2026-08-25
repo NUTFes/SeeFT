@@ -60,6 +60,7 @@ type ShiftCard struct {
 	EndTime       string         `json:"end_time"`
 	Place         string         `json:"place"`
 	Url           string         `json:"url"`
+	ManualUrl     string         `json:"manual_url"`
 	ShiftMembers  []ShiftMembers `json:"shift_members"`
 	BeforeMembers ShiftMembers   `json:"before_members"`
 	AfterMembers  ShiftMembers   `json:"after_members"`

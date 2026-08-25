@@ -260,10 +260,10 @@ func (ru *rescueUnifiedUseCase) getTaskName(c context.Context, taskID string) (s
 	}
 
 	var id int
-	var task, url, color, remark string
+	var task, url, manualUrl, color, remark string
 	var placeID, bureauID, maxMember, yearID int
 	var createdAt, updatedAt string
-	err = row.Scan(&id, &task, &placeID, &url, &bureauID, &maxMember, &color, &remark, &yearID, &createdAt, &updatedAt)
+	err = row.Scan(&id, &task, &placeID, &url, &manualUrl, &bureauID, &maxMember, &color, &remark, &yearID, &createdAt, &updatedAt)
 	if err != nil {
 		return "", err
 	}

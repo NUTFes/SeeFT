@@ -334,7 +334,7 @@ func (u *shiftUseCase) DeleteShiftAdmin(c context.Context, id string) error {
 		taskRow, taskErr := u.taskRep.Find(c, strconv.Itoa(shift.TaskID))
 		if taskErr == nil {
 			var task entity.Task
-			if scanErr := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); scanErr == nil {
+			if scanErr := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.ManualUrl, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); scanErr == nil {
 				taskName = task.Task
 			}
 		}
@@ -493,11 +493,12 @@ func (a *shiftUseCase) convertShiftCardDataToShifts(data []entity.ShiftCardData)
 		shift := entity.Shift{
 			ID: d.ShiftID,
 			Task: entity.TaskMobile{
-				ID:    d.TaskID,
-				Task:  d.TaskName,
-				Color: d.TaskColor,
-				Place: d.PlaceName,
-				Url:   d.TaskURL,
+				ID:        d.TaskID,
+				Task:      d.TaskName,
+				Color:     d.TaskColor,
+				Place:     d.PlaceName,
+				Url:       d.TaskURL,
+				ManualUrl: d.TaskManualURL,
 			},
 			User: entity.User{
 				ID:       d.UserID,
@@ -595,6 +596,7 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 			EndTime:      "",
 			Place:        "",
 			Url:          "",
+			ManualUrl:    "",
 			ShiftMembers: []entity.ShiftMembers{}, // 空配列で初期化
 			BeforeMembers: entity.ShiftMembers{
 				STime:   "",
@@ -626,6 +628,7 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 		EndTime:      endTime,
 		Place:        first.Task.Place,
 		Url:          first.Task.Url,
+		ManualUrl:    first.Task.ManualUrl,
 		ShiftMembers: []entity.ShiftMembers{}, // 空配列で初期化
 	}
 
@@ -905,7 +908,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 
 		for taskRows.Next() {
 			var task entity.Task
-			if err := taskRows.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
+			if err := taskRows.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.ManualUrl, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
 				continue
 			}
 			taskMap[task.Task] = task
@@ -978,7 +981,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			}
 			// 新規作成したタスクを再取得してマップに追加
 			taskRow, _ := u.taskRep.FindByName(ctx, change.TaskName)
-			if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
+			if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.ManualUrl, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
 				return errors.Wrapf(err, "タスク再取得失敗: %v", change.TaskName)
 			}
 			taskMap[task.Task] = task
@@ -1013,7 +1016,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 				var oldTask entity.Task
 				oldTaskName := "（不明）"
 				if oldTaskRow != nil {
-					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil {
+					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.ManualUrl, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil {
 						oldTaskName = oldTask.Task
 					}
 				}

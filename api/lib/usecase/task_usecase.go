@@ -49,6 +49,7 @@ func (b *taskUseCase) GetTasks(c context.Context) ([]entity.Task, error) {
 			&task.Task,
 			&task.PlaceID,
 			&task.Url,
+			&task.ManualUrl,
 			&task.BureauID,
 			&task.MaxMember,
 			&task.Color,
@@ -78,6 +79,7 @@ func (b *taskUseCase) GetTaskByID(c context.Context, id string) (entity.Task, er
 		&task.Task,
 		&task.PlaceID,
 		&task.Url,
+		&task.ManualUrl,
 		&task.BureauID,
 		&task.MaxMember,
 		&task.Color,
@@ -109,6 +111,7 @@ func (b *taskUseCase) GetTasksByShift(c context.Context, shift string) ([]entity
 			&task.Task,
 			&task.PlaceID,
 			&task.Url,
+			&task.ManualUrl,
 			&task.BureauID,
 			&task.MaxMember,
 			&task.Color,
@@ -142,6 +145,7 @@ func (b *taskUseCase) GetTasksByUserID(c context.Context, userID string) ([]enti
 			&task.Task,
 			&task.PlaceID,
 			&task.Url,
+			&task.ManualUrl,
 			&task.BureauID,
 			&task.MaxMember,
 			&task.Color,
@@ -173,6 +177,7 @@ func (u *taskUseCase) CreateTask(c context.Context, name string, placeID string,
 		&latasTask.Task,
 		&latasTask.PlaceID,
 		&latasTask.Url,
+		&latasTask.ManualUrl,
 		&latasTask.BureauID,
 		&latasTask.MaxMember,
 		&latasTask.Color,
@@ -200,6 +205,7 @@ func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, plac
 		&task.Task,
 		&task.PlaceID,
 		&task.Url,
+		&task.ManualUrl,
 		&task.BureauID,
 		&task.MaxMember,
 		&task.Color,
@@ -224,6 +230,7 @@ func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, plac
 		&updatedTask.Task,
 		&updatedTask.PlaceID,
 		&updatedTask.Url,
+		&updatedTask.ManualUrl,
 		&updatedTask.BureauID,
 		&updatedTask.MaxMember,
 		&updatedTask.Color,
@@ -324,7 +331,7 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 			return errors.Wrapf(err, "タスク検索失敗: %v", taskName)
 		}
 		var task entity.Task
-		if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err == nil {
+		if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.ManualUrl, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err == nil {
 			// タスクが存在する場合は更新
 			color := "ffffff"
 			yearID := yearID

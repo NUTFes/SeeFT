@@ -192,7 +192,7 @@ func (n *notificationUseCase) loadTaskMap(ctx context.Context, shiftMap map[int]
 		// DBの行データをTaskに変換
 		var task entity.Task
 		err = taskRow.Scan(
-			&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.BureauID,
+			&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.ManualUrl, &task.BureauID,
 			&task.MaxMember, &task.Color, &task.Remark, &task.YearID,
 			&task.CreatedAt, &task.UpdatedAt,
 		)
