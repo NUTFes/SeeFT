@@ -937,6 +937,9 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			dateID = "3"
 		case "片付け日":
 			dateID = "4"
+		case "準々備日":
+			// 45thから運用される日程。既存の1〜4の並びを壊さないため5番に割り当てている
+			dateID = "5"
 		default:
 			return errors.New("不正な日付名: " + change.Date)
 		}
