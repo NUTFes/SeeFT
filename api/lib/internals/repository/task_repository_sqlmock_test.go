@@ -18,8 +18,8 @@ const (
 	testTaskSlideURL = "https://seeft-api.nutfes.net/manuals/enishi"
 )
 
-// fakeTaskDBClient は db.Client を満たす最小限のフェイク。
-// taskRepository の Create / Update は crud 経由で DB() だけを使うため GormDB は呼ばれない。
+// テスト用の最小限の db.Client フェイク。
+// Create / Update は crud 経由で DB() だけを使うため GormDB は呼ばれない。
 type fakeTaskDBClient struct {
 	sqlDB *sql.DB
 }
