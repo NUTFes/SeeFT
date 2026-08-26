@@ -17,11 +17,12 @@ const ROSTER_START_COL = 2;
 const VALID_BUREAUS = ["執行部", "執行部補佐", "総務局", "企画局", "渉外局", "財務局", "制作局", "情報局", "産学局"];
 const VALID_GRADES = ["B1", "B2", "B3", "B4", "M1", "M2", "D1", "D2", "D3", "OB"];
 
-// タスク一覧シートの列（1始まり）。A=シフト名 / F=管轄局 / L=最大人数
+// タスク一覧シートの列（1始まり）。A=シフト名 / F=管轄局 / H=集合場所 / L=最大人数
 const TASK_LIST_SHEET = "タスク一覧";
 const TASK_LIST_START_ROW = 4;
 const TASK_COL_NAME = 1;
 const TASK_COL_BUREAU = 6;
+const TASK_COL_PLACE = 8;
 const TASK_COL_MAX = 12;
 
 // 名簿をSeeFTに送信する
@@ -217,7 +218,9 @@ function buildTaskChanges_(sheet) {
       yearID: YEAR_ID,
       taskName: taskName,
       bureau: String(row[TASK_COL_BUREAU - 1] || "").trim(),
-      place: "",   // 集合場所はタスク一覧に列が無いためAPI側の既定値(ID=1)に任せる
+      // 空文字を送るとAPI側が既定値(place_id=1 本部)に落とすため、
+      // 埋まっている行だけがその集合場所になる
+      place: String(row[TASK_COL_PLACE - 1] || "").trim(),
       url: "",     // マニュアルURLは別途アップロードAPIで紐づけるためここでは送らない
       maxMember: isFinite(maxMember) && maxMember > 0 ? maxMember : 1
     });
