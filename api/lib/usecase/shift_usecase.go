@@ -979,11 +979,13 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			name := change.TaskName
 			placeID := "1"
 			url := ""
+			// シフト送信はマニュアル情報を持たないため、紐付けはタスク送信側に任せる
+			manualURL := ""
 			bureauID := "1"
 			maxMember := "1"
 			color := "000000"
 			remark := ""
-			createErr := u.taskRep.Create(ctx, name, placeID, url, bureauID, maxMember, color, remark, yearID)
+			createErr := u.taskRep.Create(ctx, name, placeID, url, manualURL, bureauID, maxMember, color, remark, yearID)
 			if createErr != nil {
 				return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.TaskName)
 			}

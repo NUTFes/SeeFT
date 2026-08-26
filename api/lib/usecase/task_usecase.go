@@ -165,7 +165,9 @@ func (b *taskUseCase) GetTasksByUserID(c context.Context, userID string) ([]enti
 
 func (u *taskUseCase) CreateTask(c context.Context, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) (entity.Task, error) {
 	latasTask := entity.Task{}
-	if err := u.rep.Create(c, name, placeID, url, bureauID, maxMember, color, remark, yearID); err != nil {
+	// 管理画面からの新規作成ではマニュアル（スライド版）を指定できないため空で作る
+	const manualURL = ""
+	if err := u.rep.Create(c, name, placeID, url, manualURL, bureauID, maxMember, color, remark, yearID); err != nil {
 		return latasTask, err
 	}
 	row, err := u.rep.FindNewRecord(c)
@@ -218,6 +220,8 @@ func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, plac
 		return task, err
 	}
 
+	// 管理画面からの編集ではマニュアル（スライド版）を扱わないため、
+	// Update は manual_url をSET句に含めない（既存値がそのまま残る）
 	if err = u.rep.Update(c, id, name, placeID, url, bureauID, maxMember, color, remark, yearID); err != nil {
 		return task, err
 	}
@@ -338,14 +342,14 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 			color := "ffffff"
 			yearID := yearID
 			remark := ""
-			if err := u.rep.Update(ctx, strconv.Itoa(task.ID), taskName, placeID, change.Url, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID); err != nil {
+			if err := u.rep.UpdateWithManualURL(ctx, strconv.Itoa(task.ID), taskName, placeID, change.Url, change.ManualUrl, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID); err != nil {
 				return errors.Wrapf(err, "タスク更新失敗: %v", taskName)
 			}
 		} else if errors.Is(err, sql.ErrNoRows) {
 			// タスクが存在しない場合は新規作成
 			color := "ffffff"
 			remark := ""
-			createErr := u.rep.Create(ctx, taskName, placeID, change.Url, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID)
+			createErr := u.rep.Create(ctx, taskName, placeID, change.Url, change.ManualUrl, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID)
 			if createErr != nil {
 				return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.TaskName)
 			}
