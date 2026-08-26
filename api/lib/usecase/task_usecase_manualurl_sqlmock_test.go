@@ -81,9 +81,10 @@ func TestUpdateTasksAndPlacesFromGAS_WritesManualURL(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-// 管理画面からの編集は manual_url を送らない。空で上書きすると、タスク名を直しただけで
-// シフトカードのスライド版の行が消えてしまう（if (_hasSlide) の条件付き描画）。
-// 更新前に読み出した既存値を引き継ぐことを固定する。
+// 管理画面からの編集は manual_url を扱わない。空で上書きするとタスク名を直しただけで
+// シフトカードのスライド版の行が消える（if (_hasSlide) の条件付き描画）。かといって
+// 読み出した値を書き戻すと、間にGASのタスク送信が挟まったとき古い値で上書きする。
+// SET句に manual_url を含めない形で既存値が残ることを固定する。
 func TestUpdateTask_PreservesExistingManualURL(t *testing.T) {
 	u, mock, client := newTaskUseCaseWithMock(t)
 	defer client.CloseDB()
@@ -94,9 +95,9 @@ func TestUpdateTask_PreservesExistingManualURL(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows(taskColumnNames).
 			AddRow(taskRow("縁日運営", testManualDocURL, testManualSlideURL)...))
 
-	// manual_url には空文字ではなく既存値が渡ること
-	mock.ExpectExec(`UPDATE tasks\s+SET task = \$1, place_id = \$2, url = \$3, manual_url = \$4`).
-		WithArgs("縁日運営（改）", "1", testManualDocURL, testManualSlideURL, "4", "12", "ffffff", "", "45", "7").
+	// SET句に manual_url が無く、引数にも渡らないこと
+	mock.ExpectExec(`UPDATE tasks\s+SET task = \$1, place_id = \$2, url = \$3, bureau_id = \$4,\s+max_member = \$5, color = \$6, remark = \$7, year_id = \$8\s+WHERE id = \$9`).
+		WithArgs("縁日運営（改）", "1", testManualDocURL, "4", "12", "ffffff", "", "45", "7").
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	// 更新後の再読み出し

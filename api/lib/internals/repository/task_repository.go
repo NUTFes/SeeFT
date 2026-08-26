@@ -28,7 +28,8 @@ type TaskRepository interface {
 	Find(context.Context, string) (*sql.Row, error)
 	Shift(context.Context, string) (*sql.Rows, error)
 	Create(context.Context, string, string, string, string, string, string, string, string, string) error
-	Update(context.Context, string, string, string, string, string, string, string, string, string, string) error
+	Update(context.Context, string, string, string, string, string, string, string, string, string) error
+	UpdateWithManualURL(context.Context, string, string, string, string, string, string, string, string, string, string) error
 	Destroy(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
@@ -75,8 +76,21 @@ func (b *taskRepository) Create(c context.Context, name string, placeID string, 
 	return b.crud.UpdateDB(c, query, name, placeID, url, manualURL, bureauID, maxMember, color, remark, yearID)
 }
 
-// 編集
-func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, manualURL string, bureauID string, maxMember string, color string, remark string, yearID string) error {
+// 編集（管理画面用）
+// manual_url はSET句に含めない。管理画面はスライド版を扱わないため、
+// 読み出した値を書き戻す形にするとGASのタスク送信と競合したときに古い値で上書きする
+func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) error {
+	query := `
+		UPDATE tasks
+		SET task = $1, place_id = $2, url = $3, bureau_id = $4,
+		    max_member = $5, color = $6, remark = $7, year_id = $8
+		WHERE id = $9`
+	return b.crud.UpdateDB(c, query, name, placeID, url, bureauID, maxMember, color, remark, yearID, id)
+}
+
+// 編集（GASのタスク送信用）
+// スプレッドシートを正として manual_url も書き換える
+func (b *taskRepository) UpdateWithManualURL(c context.Context, id string, name string, placeID string, url string, manualURL string, bureauID string, maxMember string, color string, remark string, yearID string) error {
 	query := `
 		UPDATE tasks
 		SET task = $1, place_id = $2, url = $3, manual_url = $4, bureau_id = $5,

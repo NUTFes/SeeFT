@@ -220,9 +220,9 @@ func (u *taskUseCase) UpdateTask(c context.Context, id string, name string, plac
 		return task, err
 	}
 
-	// 管理画面からの編集ではマニュアル（スライド版）を指定できない。空で上書きすると
-	// タスク名を直しただけで導線が消えるため、更新前に読み出した既存値を引き継ぐ
-	if err = u.rep.Update(c, id, name, placeID, url, task.ManualUrl, bureauID, maxMember, color, remark, yearID); err != nil {
+	// 管理画面からの編集ではマニュアル（スライド版）を扱わないため、
+	// Update は manual_url をSET句に含めない（既存値がそのまま残る）
+	if err = u.rep.Update(c, id, name, placeID, url, bureauID, maxMember, color, remark, yearID); err != nil {
 		return task, err
 	}
 	row, err = u.rep.Find(c, id)
@@ -342,7 +342,7 @@ func (u *taskUseCase) UpdateTasksAndPlacesFromGAS(ctx context.Context, req entit
 			color := "ffffff"
 			yearID := yearID
 			remark := ""
-			if err := u.rep.Update(ctx, strconv.Itoa(task.ID), taskName, placeID, change.Url, change.ManualUrl, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID); err != nil {
+			if err := u.rep.UpdateWithManualURL(ctx, strconv.Itoa(task.ID), taskName, placeID, change.Url, change.ManualUrl, bureauID, strconv.Itoa(change.MaxMember), color, remark, yearID); err != nil {
 				return errors.Wrapf(err, "タスク更新失敗: %v", taskName)
 			}
 		} else if errors.Is(err, sql.ErrNoRows) {

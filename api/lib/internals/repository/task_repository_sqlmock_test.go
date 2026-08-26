@@ -54,7 +54,7 @@ func TestTaskRepositoryCreate_ManualURLFollowsURL(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestTaskRepositoryUpdate_ManualURLFollowsURL(t *testing.T) {
+func TestTaskRepositoryUpdateWithManualURL_ManualURLFollowsURL(t *testing.T) {
 	repo, mock := newTaskRepoWithMock(t)
 
 	// WHERE 句の id は最後のプレースホルダ（$10）なので、引数も末尾に来る
@@ -62,7 +62,23 @@ func TestTaskRepositoryUpdate_ManualURLFollowsURL(t *testing.T) {
 		WithArgs("縁日運営", "1", testTaskDocURL, testTaskSlideURL, "4", "12", "ffffff", "", "45", "7").
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	err := repo.Update(context.Background(), "7", "縁日運営", "1", testTaskDocURL, testTaskSlideURL, "4", "12", "ffffff", "", "45")
+	err := repo.UpdateWithManualURL(context.Background(), "7", "縁日運営", "1", testTaskDocURL, testTaskSlideURL, "4", "12", "ffffff", "", "45")
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// 管理画面用の Update は manual_url をSET句に含めないこと。
+// 読み出した値を書き戻す形だと、GASのタスク送信と競合したときに古い値で上書きする。
+func TestTaskRepositoryUpdate_DoesNotTouchManualURL(t *testing.T) {
+	repo, mock := newTaskRepoWithMock(t)
+
+	// SET句に manual_url が無い形を固定する（$4 が bureau_id になっている）
+	mock.ExpectExec(`UPDATE tasks\s+SET task = \$1, place_id = \$2, url = \$3, bureau_id = \$4,\s+max_member = \$5, color = \$6, remark = \$7, year_id = \$8\s+WHERE id = \$9`).
+		WithArgs("縁日運営", "1", testTaskDocURL, "4", "12", "ffffff", "", "45", "7").
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err := repo.Update(context.Background(), "7", "縁日運営", "1", testTaskDocURL, "4", "12", "ffffff", "", "45")
 
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
