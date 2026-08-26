@@ -8,7 +8,7 @@ function setConditionalFormatting() {
   const sheet5 =  ss.getSheetByName("2日目_晴れ")
   const sheet6 =  ss.getSheetByName("2日目_雨")
   const sheet7 =  ss.getSheetByName("片付け日")
-  const taskSheet = ss.getSheetByName("全タスク")
+  const taskSheet = ss.getSheetByName("タスク一覧")
 
   const sheets= [
     sheet1,
@@ -33,6 +33,7 @@ function setConditionalFormattingCurrentSheet(){
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
   const sheetName = sheet.getName();
+  ui = ui || SpreadsheetApp.getUi(); // メニュー実行時はonOpenと別コンテキストでuiが未初期化のため
 
   // ダイアログで送信内容を確認
   const confirm = ui.alert(
@@ -41,63 +42,12 @@ function setConditionalFormattingCurrentSheet(){
   if (confirm === ui.Button.CANCEL) {
     // キャンセルされた場合の処理
     Logger.log("操作がキャンセルされました");
-    return 
+    return
   }
   // キャンセルされなかった場合の処理
-  const taskSheet = ss.getSheetByName("全タスク")    // タスクシートを取得
+  const taskSheet = ss.getSheetByName("タスク一覧")    // タスクシートを取得
   setConditionalFormattingToSheet(sheet, taskSheet) // 開いているシートに条件付き書式を割り当てる
   // setBackgroundColorToSheet(sheet, taskSheet) // 開いているシートに背景色を割り当てる
-}
-
-// 指定したシートにタスクごとに背景色を割り当てる関数
-function setBackgroundColorToSheet(sheet, taskSheet){
-  // === 全タスクシートからタスク名とカラーコードのマッピングを作成 ===
-  const mappingValues = taskSheet.getRange("A3:Q" + taskSheet.getLastRow()).getValues();
-  const colorMap = {};
-  mappingValues.forEach(row => {
-    const taskName = row[0];  // A列
-    const bgColor = row[15];  // P列
-    const fontColor = getContrastTextColor(bgColor);
-    if (taskName && bgColor) {
-      // 例: { "りんご": "#FF0000", "バナナ": "#FFFF00" }
-      colorMap[taskName] = {
-        bg: bgColor.startsWith("#") ? bgColor : "#" + bgColor,
-        font: fontColor
-      }
-    }
-  });
-
-  // === シートの対象範囲を取得 ===
-  const range = sheet.getRange("G3:BZ300");
-  const values = range.getValues();
-
-  // === 背景色 & 文字色の配列を作成 ===
-  const bgColors = [];
-  const fontColors = [];
-
-  for (let row = 0; row < values.length; row++) {
-    const bgRow = [];
-    const fontRow = [];
-    for (let cell = 0; cell < values[row].length; cell++) {
-      const cellValue = values[row][cell];
-      if (cellValue == "") {
-        bgRow.push(null);  // セルが空白の場合
-        fontRow.push(null);
-      } else if (colorMap[cellValue]) {
-        bgRow.push(colorMap[cellValue].bg);
-        fontRow.push(colorMap[cellValue].font);
-      } else {
-        bgRow.push("#000000"); // 一致しない場合 → 背景黒
-        fontRow.push("#FFFFFF"); // 一致しない場合 → 文字白
-      }
-    }
-    bgColors.push(bgRow);
-    fontColors.push(fontRow);
-  }
-
-  // === 背景色と文字色を一括適用 ===
-  range.setBackgrounds(bgColors);
-  range.setFontColors(fontColors);
 }
 
 // 指定されたシートにタスクごとに背景色を条件付き書式で割り当てる関数
@@ -108,7 +58,7 @@ function setConditionalFormattingToSheet(sheet, taskSheet) {
   sheet.clearConditionalFormatRules();
 
   const rules = [];
-  const range = sheet.getRange("G3:BZ300");
+  const range = sheet.getRange("B11:MM82");
 
   for (let i = 0; i < values.length; i++) {
     const keyword = values[i][0]; // A列
@@ -127,7 +77,7 @@ function setConditionalFormattingToSheet(sheet, taskSheet) {
   }
 
   // シフト希望のNG理由の書式設定(空白でないかつ、タスクに存在していない値の場合、黒塗りにする)
-  const ngformula = `=NOT(OR(COUNTIF(INDIRECT("全タスク!$A$3:A"), G3), G3 = ""))`;
+  const ngformula = `=NOT(OR(COUNTIF(INDIRECT("タスク一覧!$A$3:A"), B11), B11 = ""))`;
   const ngRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(ngformula)
     .setBackground("#000000")
@@ -142,7 +92,7 @@ function setConditionalFormattingToSheet(sheet, taskSheet) {
 // タスクシートにタスクごとに背景色を条件付き書式で割り当てる関数
 function setConditionalFormattingToTaskSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const taskSheet = ss.getSheetByName("全タスク")
+  const taskSheet = ss.getSheetByName("タスク一覧")
   const lastRow = taskSheet.getLastRow()
   // const values = taskSheet.getRange("A3:P" + lastRow).getValues();
   const values = taskSheet.getRange("A3:P500").getValues();
