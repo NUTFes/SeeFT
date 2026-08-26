@@ -196,6 +196,10 @@ VALUES
   (3, 'D講', 'D講義室'),
   (4, '屋外', '屋外エリア');
 
+-- idを明示したINSERTはSERIALのシーケンスを進めないため、ここで揃える。
+-- 揃えないとGASのタスク送信が新しい集合場所を作るときにid=1で衝突する（issue #470）
+SELECT setval('places_id_seq', (SELECT MAX(id) FROM places));
+
 -- tasksテーブルの初期データ
 INSERT INTO tasks
   (task, place_id, url, bureau_id, max_member, color, remark, year_id)
