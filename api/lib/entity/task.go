@@ -40,7 +40,8 @@ type TaskAndPlaceChange struct {
 	TaskName  string `json:"taskName"`  // タスク名
 	Bureau    string `json:"bureau"`    // 管轄局
 	Place     string `json:"place"`     // 集合場所
-	Url       string `json:"url"`       // マニュアルURL
+	Url       string `json:"url"`       // マニュアル（ドキュメント版）のURL
+	ManualUrl string `json:"manualUrl"` // マニュアル（スライド版）のURL
 	MaxMember int    `json:"maxMember"` // 最大人数
 }
 

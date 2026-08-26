@@ -27,8 +27,8 @@ type TaskRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	Shift(context.Context, string) (*sql.Rows, error)
-	Create(context.Context, string, string, string, string, string, string, string, string) error
-	Update(context.Context, string, string, string, string, string, string, string, string, string) error
+	Create(context.Context, string, string, string, string, string, string, string, string, string) error
+	Update(context.Context, string, string, string, string, string, string, string, string, string, string) error
 	Destroy(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
@@ -66,15 +66,23 @@ func (b *taskRepository) Shift(c context.Context, name string) (*sql.Rows, error
 }
 
 // 作成
-func (b *taskRepository) Create(c context.Context, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) error {
-	query := "INSERT INTO tasks (task, place_id, url, bureau_id, max_member, color, remark, year_id) VALUES ('" + name + "', " + placeID + ", '" + url + "', " + bureauID + ", " + maxMember + ", '" + color + "', '" + remark + "', " + yearID + ")"
-	return b.crud.UpdateDB(c, query)
+// url（ドキュメント版）と manualURL（スライド版）はスプレッドシート由来の値なので、
+// クォートを含んでもクエリが壊れないようプレースホルダで渡す
+func (b *taskRepository) Create(c context.Context, name string, placeID string, url string, manualURL string, bureauID string, maxMember string, color string, remark string, yearID string) error {
+	query := `
+		INSERT INTO tasks (task, place_id, url, manual_url, bureau_id, max_member, color, remark, year_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	return b.crud.UpdateDB(c, query, name, placeID, url, manualURL, bureauID, maxMember, color, remark, yearID)
 }
 
 // 編集
-func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, bureauID string, maxMember string, color string, remark string, yearID string) error {
-	query := "UPDATE tasks SET (task, place_id, url, bureau_id, max_member, color, remark, year_id) = ('" + name + "', " + placeID + ", '" + url + "', " + bureauID + ", " + maxMember + ", '" + color + "', '" + remark + "', " + yearID + ") WHERE id = " + id
-	return b.crud.UpdateDB(c, query)
+func (b *taskRepository) Update(c context.Context, id string, name string, placeID string, url string, manualURL string, bureauID string, maxMember string, color string, remark string, yearID string) error {
+	query := `
+		UPDATE tasks
+		SET task = $1, place_id = $2, url = $3, manual_url = $4, bureau_id = $5,
+		    max_member = $6, color = $7, remark = $8, year_id = $9
+		WHERE id = $10`
+	return b.crud.UpdateDB(c, query, name, placeID, url, manualURL, bureauID, maxMember, color, remark, yearID, id)
 }
 
 // 削除
