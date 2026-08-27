@@ -169,13 +169,22 @@ def replace_placeholders(html: str, images: dict[str, str]) -> str:
 
 
 def extract_html(response: str) -> str:
-    match = re.search(r"```html\s*\n(.*?)```", response, re.DOTALL)
+    # 非貪欲 (.*?) だと、生成 HTML の中に ``` が現れた時点で切れる（CSS コメントや
+    # コードサンプル、モデルが入れ子でフェンスを書いた場合）。プロンプト自体が html と
+    # css の 2 つのフェンスを例示しているため、モデルが真似る余地は十分にある。
+    # 「最初の ```html から最後の ```」を貪欲に取り、その中の最初の <!DOCTYPE〜最後の
+    # </html> をさらに切り出すことで、前後の説明文や入れ子フェンスの影響を受けなくする。
+    match = re.search(r"```html\s*\n(.*)```", response, re.DOTALL)
+    body = match.group(1) if match else response
+    match = re.search(r"(<!DOCTYPE html>.*</html>)", body, re.DOTALL | re.IGNORECASE)
     if match:
         return match.group(1).strip()
-    match = re.search(r"(<!DOCTYPE html>.*?</html>)", response, re.DOTALL | re.IGNORECASE)
-    if match:
-        return match.group(1).strip()
-    return response.strip()
+    return body.strip()
+
+
+def is_complete_html(html: str) -> bool:
+    # 応答が途中で切れていても SDK は is_error=False を返す。構造的に閉じているかで判定する
+    return html.rstrip().lower().endswith("</html>")
 
 
 async def call_claude_sdk(
@@ -320,7 +329,24 @@ def main() -> int:
         print("  ERROR: Empty response from Claude Agent SDK", file=sys.stderr)
         return 1
 
+    # 抽出の前に生の応答を残す。抽出や埋め込みに失敗しても、10 分かけて再生成せず
+    # ここから復旧できる（LLM 呼び出しは非決定的で、再生成すると別の HTML になる）
+    raw_path = output_path + ".raw.md"
+    with open(raw_path, "w", encoding="utf-8") as f:
+        f.write(response_text)
+    print(f"  Raw response: {raw_path} ({os.path.getsize(raw_path)//1024}KB)")
+
     slide_html = extract_html(response_text)
+    if not is_complete_html(slide_html):
+        # SDK は途中で切れた応答も is_error=False で返すため、ここで止める。
+        # 生の応答は上で保存済みなので、原因を見て extract_html を直せば再生成なしで済む
+        print(
+            f"  ERROR: 抽出した HTML が </html> で閉じていません（{len(slide_html)//1024}KB）。"
+            f" 生の応答 {raw_path} を確認してください",
+            file=sys.stderr,
+        )
+        return 1
+
     images = load_images_base64(manual_dir)
     slide_html = replace_placeholders(slide_html, images)
 
