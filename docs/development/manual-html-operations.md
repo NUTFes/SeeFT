@@ -136,10 +136,19 @@ PUT https://seeft-api.nutfes.net/manuals/{id}
 
 ### コマンド
 
+トークンを環境変数に読み込む。`export TOKEN='値'` と直接書かないのは、コマンドがシェルの履歴ファイルに残り、トークンが平文で保存されるためである。次の書き方なら入力は画面にも履歴にも残らない。
+
 ```bash
-export MANUAL_UPLOAD_TOKEN='（共有されたトークン）'
+printf 'アップロードトークンを貼り付けてEnter: '; read -rs MANUAL_UPLOAD_TOKEN; echo; export MANUAL_UPLOAD_TOKEN
+```
+
+そのうえでアップロードする。
+
+```bash
 curl -X PUT "https://seeft-api.nutfes.net/manuals/en-nichi" -H "Authorization: Bearer $MANUAL_UPLOAD_TOKEN" -H "Content-Type: text/html" --data-binary @docs/manuals/45th_企画マニュアル_縁日/slide_claude.card-strict.html
 ```
+
+作業が終わったらターミナルを閉じる。環境変数はそのウィンドウにしか残らないため、閉じれば消える。
 
 ### レスポンス
 
@@ -333,10 +342,12 @@ Web管理画面のタスク編集は `manual_url` を更新対象から意図的
 
 ```bash
 cd gas && npm install
-gas/node_modules/.bin/clasp clone 10tkh3yiMzbEmYjs0I6nmUFfu7_GTnozZnWtCxzL6G43rNLHd4IMCXxJC
+node_modules/.bin/clasp clone <スクリプトID>
 ```
 
-`.clasp.json` はスクリプトIDを含むため `gas/.gitignore` で除外されている。作業はスクラッチパッドで行う。
+スクリプトIDは、対象スプレッドシートの `拡張機能 > Apps Script` を開いたときのURLから取る。`.clasp.json` はスクリプトIDを含むため `gas/.gitignore` で除外されており、本リポジトリは public のため文書にも書かない。作業はスクラッチパッドで行い、`gas/` を汚さない。
+
+詳しくは `gas/README.md` を参照。
 
 ## トラブル対応
 
@@ -358,7 +369,7 @@ gas/node_modules/.bin/clasp clone 10tkh3yiMzbEmYjs0I6nmUFfu7_GTnozZnWtCxzL6G43rN
   api/lib/internals/controller/manual_controller.go  アップロード・配信エンドポイント
   api/lib/usecase/manual_usecase.go               認証・保存ロジック
 
-ライブのApps Script（スクリプトID 10tkh3yiMzbEmYjs0I6nmUFfu7_GTnozZnWtCxzL6G43rNLHd4IMCXxJC）
+ライブのApps Script（45th_シフト_ver0 の 拡張機能 > Apps Script から開く）
   名簿タスク送信.js      タスク送信本体。TASK_COL_MANUAL_URL = 19（S列）
   調査_マニュアルURL.js  fillManualUrlFormulas / inspectManualUrlLookup
 
