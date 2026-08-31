@@ -16,7 +16,7 @@ GAS を触る作業は、リポジトリを読むことからではなく **実�
 
 ```bash
 cd gas && npm install
-gas/node_modules/.bin/clasp clone <スクリプトID>
+node_modules/.bin/clasp clone <スクリプトID>
 ```
 
 `clasp clone` は空ディレクトリで実行する必要があるため、作業はスクラッチパッド等リポジトリ外で行い、`gas/` を汚さない。取得したものとリポジトリを `diff` して、乖離の有無を先に把握してから方針を立てる。
