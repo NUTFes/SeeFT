@@ -6,9 +6,16 @@
 #
 # 使い方:
 #   scripts/automation/run_pipeline.sh <zipのパス> --id <公開ID> --doc-url <ドキュメントURL> [--prompt card-strict] [--model claude-opus-4-7]
+#   scripts/automation/run_pipeline.sh --manual-dir <既存のdocs/manuals/{名前}/> --id <公開ID> --doc-url <ドキュメントURL>   # 再生成（①スキップ）
 #
 # 例:
 #   scripts/automation/run_pipeline.sh docs/manuals/_zips/45th_企画マニュアル_縁日.zip \
+#     --id en-nichi \
+#     --doc-url "https://docs.google.com/document/d/xxxx/edit"
+#
+# 再生成（元のGoogleドキュメントを直したがzipを取り直したくない、
+# instructions.md に修正指示を足したなど）は --manual-dir で①をスキップできる:
+#   scripts/automation/run_pipeline.sh --manual-dir docs/manuals/45th_企画マニュアル_縁日 \
 #     --id en-nichi \
 #     --doc-url "https://docs.google.com/document/d/xxxx/edit"
 #
@@ -25,10 +32,12 @@ MODEL="claude-opus-4-7"
 MANUAL_ID=""
 DOC_URL=""
 ZIP_PATH=""
+MANUAL_DIR_ARG=""
 ASSUME_YES=0
 
 usage() {
   echo "使い方: $0 <zipのパス> --id <公開ID> --doc-url <ドキュメントURL> [--prompt <variant>] [--model <モデル>] [--yes]" >&2
+  echo "      : $0 --manual-dir <既存のdocs/manuals/{名前}/> --id <公開ID> --doc-url <ドキュメントURL> [--yes]   # 再生成（①スキップ）" >&2
   exit 1
 }
 
@@ -38,6 +47,7 @@ while [[ $# -gt 0 ]]; do
     --doc-url) DOC_URL="$2"; shift 2 ;;
     --prompt) PROMPT_VARIANT="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
+    --manual-dir) MANUAL_DIR_ARG="$2"; shift 2 ;;
     --yes) ASSUME_YES=1; shift ;;
     -h|--help) usage ;;
     *)
@@ -51,8 +61,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ -z "$ZIP_PATH" ]] && usage
+if [[ -n "$MANUAL_DIR_ARG" && -n "$ZIP_PATH" ]]; then
+  echo "ERROR: <zipのパス> と --manual-dir は同時に指定できません" >&2
+  usage
+fi
+[[ -z "$MANUAL_DIR_ARG" && -z "$ZIP_PATH" ]] && usage
 [[ -z "$MANUAL_ID" ]] && { echo "ERROR: --id は必須です" >&2; usage; }
+
+if [[ -n "$MANUAL_DIR_ARG" && ! -d "$MANUAL_DIR_ARG" ]]; then
+  echo "ERROR: ディレクトリがありません: $MANUAL_DIR_ARG" >&2
+  exit 1
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -64,22 +83,34 @@ for cmd in python3 uv; do
   fi
 done
 
-echo "########################################"
-echo "# ① Googleドキュメントを展開"
-echo "########################################"
-PREPARE_OUTPUT="$(python3 "$SCRIPT_DIR/prepare_manual.py" "$ZIP_PATH")"
-echo "$PREPARE_OUTPUT"
+if [[ -n "$MANUAL_DIR_ARG" ]]; then
+  echo "########################################"
+  echo "# ① Googleドキュメントを展開（再生成のためスキップ）"
+  echo "########################################"
+  MANUAL_DIR="$(cd "$MANUAL_DIR_ARG" && pwd)"
+  MANUAL_NAME="$(basename "$MANUAL_DIR")"
+  echo "  → 既存のマニュアルディレクトリを使用: $MANUAL_DIR"
+  if [[ -f "$MANUAL_DIR/instructions.md" ]]; then
+    echo "  → instructions.md あり。この回の追加・修正指示として②に反映されます"
+  fi
+else
+  echo "########################################"
+  echo "# ① Googleドキュメントを展開"
+  echo "########################################"
+  PREPARE_OUTPUT="$(python3 "$SCRIPT_DIR/prepare_manual.py" "$ZIP_PATH")"
+  echo "$PREPARE_OUTPUT"
 
-MANUAL_DIR="$(printf '%s\n' "$PREPARE_OUTPUT" | sed -n 's/^  配置: //p')"
-if [[ -z "$MANUAL_DIR" ]]; then
-  echo "ERROR: prepare_manual.py の出力からマニュアルディレクトリを特定できませんでした" >&2
-  exit 1
+  MANUAL_DIR="$(printf '%s\n' "$PREPARE_OUTPUT" | sed -n 's/^  配置: //p')"
+  if [[ -z "$MANUAL_DIR" ]]; then
+    echo "ERROR: prepare_manual.py の出力からマニュアルディレクトリを特定できませんでした" >&2
+    exit 1
+  fi
+  MANUAL_NAME="$(basename "$MANUAL_DIR")"
+
+  echo
+  echo "  → マニュアル名: $MANUAL_NAME"
+  echo "  この名前がシフトスプシ「タスク一覧」M列の値と一致しているか、後で必ず確認してください。"
 fi
-MANUAL_NAME="$(basename "$MANUAL_DIR")"
-
-echo
-echo "  → マニュアル名: $MANUAL_NAME"
-echo "  この名前がシフトスプシ「タスク一覧」M列の値と一致しているか、後で必ず確認してください。"
 
 if [[ "$ASSUME_YES" -ne 1 ]]; then
   read -r -p "続行しますか？ [y/N] " reply
