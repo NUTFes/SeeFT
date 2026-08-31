@@ -33,7 +33,8 @@ class ShiftCard extends StatelessWidget {
       ),
       elevation: 0.5,
       shadowColor: null,
-      color: AppColors.base,
+      // 休憩は情報量が少なく操作もできないため、背景を落として通常シフトと見分けられるようにする
+      color: data.isBreak ? AppColors.grayLight : AppColors.base,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -60,7 +61,8 @@ class ShiftCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                _cardMenu(context),
+                // 休憩のメニュー項目(担当者一覧・レビュー)はどちらも対象が無いため出さない
+                if (!data.isBreak) _cardMenu(context),
               ],
             ),
             Row(
@@ -82,41 +84,44 @@ class ShiftCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6.0),
-            const Divider(
-              height: 1,
-              color: AppColors.grayLight,
-            ),
-            const SizedBox(height: 6.0),
-            Row(
-              children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  color: AppColors.textBlack,
-                  size: 16,
-                ),
-                const SizedBox(width: 2.0),
-                Flexible(
-                  child: Text(
-                    data.place,
-                    style: const TextStyle(
-                      fontSize: AppFontSizes.sm,
-                      color: AppColors.textBlack,
+            // 休憩に集合場所とマニュアルは無いため、時刻とタスク名だけのカードにする
+            if (!data.isBreak) ...[
+              const SizedBox(height: 6.0),
+              const Divider(
+                height: 1,
+                color: AppColors.grayLight,
+              ),
+              const SizedBox(height: 6.0),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.location_on_outlined,
+                    color: AppColors.textBlack,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 2.0),
+                  Flexible(
+                    child: Text(
+                      data.place,
+                      style: const TextStyle(
+                        fontSize: AppFontSizes.sm,
+                        color: AppColors.textBlack,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4.0),
-            _ManualToggle(
-              url: data.url,
-              manualUrl: data.manualUrl,
-              onOpened: () {
-                if (isNew && onOpened != null) {
-                  onOpened!();
-                }
-              },
-            ),
+                ],
+              ),
+              const SizedBox(height: 4.0),
+              _ManualToggle(
+                url: data.url,
+                manualUrl: data.manualUrl,
+                onOpened: () {
+                  if (isNew && onOpened != null) {
+                    onOpened!();
+                  }
+                },
+              ),
+            ],
           ],
         ),
       ),

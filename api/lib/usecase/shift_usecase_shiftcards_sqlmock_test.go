@@ -255,3 +255,48 @@ func TestToShiftMembers_MapsGradeAndBureau(t *testing.T) {
 	assert.Equal(t, "M1", members[1].Grade)
 	assert.Equal(t, "企画局", members[1].Bureau)
 }
+
+// TestGetShiftCardsByUserAndDateAndWeather_BreakCardSkipsMemberFetch は、休憩カードが
+// 担当者取得クエリを一切発行しないことを検証する。UsersByTimesへの期待値を登録しないため、
+// 休憩でメンバーを引く回帰が入れば「unexpected call」で即座に失敗する。
+//
+// 休憩には全スタッフの大半が同じtask_idでぶら下がるため、ここを素通しにすると
+// 15分スロットごとに数百人を引くことになる(#488)。
+func TestGetShiftCardsByUserAndDateAndWeather_BreakCardSkipsMemberFetch(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+	mock.MatchExpectationsInOrder(false)
+	uc := newFullShiftUseCase(client)
+
+	mock.ExpectQuery(`(?i)FROM grades`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "grade", "created_at", "updated_at"}).
+			AddRow(1, "B4", fixedTestTime, fixedTestTime))
+	mock.ExpectQuery(`(?i)FROM bureaus`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "bureau", "color", "created_at", "updated_at"}).
+			AddRow(1, "総務局", "#000", fixedTestTime, fixedTestTime))
+
+	shiftRows := sqlmock.NewRows(shiftCardCols).
+		AddRow(shiftCardDataRow(300, 10, 9, 43, 2, 1, 1, breakTaskName, "12:00")...).
+		AddRow(shiftCardDataRow(301, 10, 9, 43, 2, 2, 1, breakTaskName, "12:15")...)
+	mock.ExpectQuery(`(?i)FROM\s+"shifts"`).WillReturnRows(shiftRows)
+
+	// EndTime算出のための次スロット(time_id=3)の問い合わせだけは短絡の前に発生する
+	mock.ExpectQuery(`(?i)FROM times WHERE id =`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "time", "created_at", "updated_at"}).
+			AddRow(3, "12:30", fixedTestTime, fixedTestTime))
+
+	cards, err := uc.GetShiftCardsByUserAndDateAndWeather(context.Background(), "10", "2", "1")
+	require.NoError(t, err)
+	require.Len(t, cards, 1)
+
+	card := cards[0]
+	assert.Equal(t, breakTaskName, card.TaskName)
+	assert.Equal(t, "12:00", card.StartTime)
+	assert.Equal(t, "12:30", card.EndTime)
+	// 「誰が休憩中か」は見せない運用方針のため、担当者は前後を含めて空で返す
+	assert.Empty(t, card.ShiftMembers)
+	assert.Empty(t, card.BeforeMembers.Members)
+	assert.Empty(t, card.AfterMembers.Members)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

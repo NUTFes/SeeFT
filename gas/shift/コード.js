@@ -139,11 +139,11 @@ function buildShiftChanges_(sheet, targetCols) {
       const timeID = timeStrToTimeID_(timeCells[t][0]);
       if (timeID === null) continue; // 時刻として読めない行は送らない
 
-      // タスク名(セルの背景色が黒色の場合は'NG'にする. 「休憩」は空白として送信する)
+      // タスク名(セルの背景色が黒色の場合は'NG'にする)
+      // 44thでは「休憩」を空白に潰していたが、モバイルで休憩カードを出すためそのまま送る。
+      // 「誰が休憩中か」を見せない扱いはAPI側(createShiftCardFromGroup)で行う
       const taskName = backGrounds[t][p] != '#000000'
-        ? (values[t][p] != '休憩'
-          ? String(values[t][p]).trim()
-          : '')
+        ? String(values[t][p]).trim()
         : 'NG';
 
       // 空欄は送っても既存シフトを消せない(APIに削除の概念が無い)ので既定では送らない
@@ -773,7 +773,7 @@ function checkNamesAgainstDB() {
 //
 // 総数だけの一致では「別のタスクが同数入れ替わっている」可能性を排除できないため、
 // タスク名ごとの内訳まで比べる。集計はbuildShiftChanges_の結果をそのまま使い、
-// 送信ロジックと同じ変換(黒背景→NG、休憩→空欄)を必ず経由させる。
+// 送信ロジックと同じ変換(黒背景→NG)を必ず経由させる。
 function countTasksInSheet() {
   ui = ui || SpreadsheetApp.getUi();
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();

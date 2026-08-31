@@ -17,6 +17,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// 休憩タスクの名前。シフト表(スプレッドシート)とタスク一覧の表記に一致させる必要がある。
+// 休憩は他のタスクと違い、担当者一覧を組み立てずにカードを返す(createShiftCardFromGroup参照)
+const breakTaskName = "休憩"
+
 type shiftUseCase struct {
 	rep           rep.ShiftRepository
 	shiftCardRep  rep.ShiftCardRepository
@@ -630,6 +634,16 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 		Url:          first.Task.Url,
 		ManualUrl:    first.Task.ManualUrl,
 		ShiftMembers: []entity.ShiftMembers{}, // 空配列で初期化
+	}
+
+	// 休憩は担当者一覧を組み立てずに返す。
+	// 休憩には全スタッフの大半が同じtask_idでぶら下がるため、getUsersByTimesが15分スロット
+	// ごとに数百人を引いてレスポンスが肥大し、負荷試験(#434)で問題になったN+1を悪化させる。
+	// 加えて「誰が休憩中か」は見せない運用方針(44thでの議論)のため、そもそも取得しない。
+	if first.Task.Task == breakTaskName {
+		shiftCard.BeforeMembers = entity.ShiftMembers{Members: []entity.ShiftMember{}}
+		shiftCard.AfterMembers = entity.ShiftMembers{Members: []entity.ShiftMember{}}
+		return shiftCard
 	}
 
 	// 必要なtime_id（各スロット＋前後1枠）を先に集め、メンバー取得を1回のバッチクエリにまとめる

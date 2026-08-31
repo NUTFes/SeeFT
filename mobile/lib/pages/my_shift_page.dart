@@ -324,6 +324,11 @@ class _MyShiftPageState extends State<MyShiftPage>
 
     // 各シフトカードに対するレビュー処理
     for (var shiftCard in shiftCardDataList.data) {
+      // 休憩はレビューの対象外。除外しないと休憩が終わるたびにボトムシートが出る
+      if (shiftCard.isBreak) {
+        continue;
+      }
+
       // シフトカードのタスクが既にレビュー済みかどうかを確認
       final isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
       if(isReviewed){
@@ -401,6 +406,10 @@ class _MyShiftPageState extends State<MyShiftPage>
   }
   
   // ShiftCardDataListをMap<カードキー, ShiftCardData>に変換
+  //
+  // New判定(_detectNewOrUpdatedCardKeys)専用のため、休憩は除外する。
+  // 休憩はシフトの無い時間帯すべてに出るので、含めるとバッジだらけになって
+  // 「本当に新しくなったシフト」が埋もれる
   Map<String, ShiftCardData> _buildCardMap(
     int dayID,
     ShiftCardDataList? list,
@@ -409,6 +418,7 @@ class _MyShiftPageState extends State<MyShiftPage>
     if (list == null) return map;
 
     for (final card in list.data) {
+      if (card.isBreak) continue;
       final key = _cardKeyFromShiftCardData(dayID, card);
       map[key] = card;
     }
