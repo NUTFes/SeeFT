@@ -24,19 +24,19 @@ Googleドキュメントで書かれたマニュアルを、スマホ最適化�
 
 ```
 [Googleドキュメント]
-      │ ①「ウェブページ(.html, zip)」でダウンロード
+      │ ①「ウェブページ(.html, zip)」でダウンロード → prepare_manual.py
       ▼
-[docs/manuals/{マニュアル名}/ に展開]  source.html + images/
+[docs/manuals/{マニュアル名}/]  source.html + images/
       │ ② generate_slide.py（Claudeが変換）
       ▼
 [slide_claude.card-strict.html]  自己完結HTML（CSS・JS・画像を1ファイルに内包）
       │ ③ 目視 + 機械検証
-      │ ④ curl で PUT /manuals/{id}
+      │ ④ upload_manual.py → PUT /manuals/{id}
       ▼
-[https://seeft-api.nutfes.net/manuals/{id}]  ← レスポンスで manual_url が返る
-      │ ⑤ シフトスプシ「マニュアルURL」シートC列へ貼る → タスク送信
+[https://seeft-api.nutfes.net/manuals/{id}]  ← manual_url と、対応表へ貼る1行が返る
+      │ ⑤ シフトスプシ「マニュアルURL」シートへ貼る → タスク送信
       ▼
-[tasks.manual_url]  → mobileのシフトカードに「HTML版」ボタンが出る
+[tasks.url / tasks.manual_url]  → mobileのシフトカードにボタンが出る
 ```
 
 ## 必要な権限とアカウント
@@ -56,17 +56,31 @@ Googleドキュメントで書かれたマニュアルを、スマホ最適化�
 
 対象のドキュメントを開き、`ファイル > ダウンロード > ウェブページ（.html、zip形式）` を選ぶ。PDFやWordではなくHTMLである点が重要で、これ以外の形式では画像が取り出せない。
 
-ダウンロードしたzipを展開し、リポジトリの `docs/manuals/` の下にマニュアル名のディレクトリを作って配置する。
+ダウンロードしたzipを、そのまま次のコマンドに渡す。展開・リネーム・配置をまとめて行う。
+
+```bash
+python3 scripts/automation/prepare_manual.py ~/Downloads/45th_企画マニュアル_縁日.zip
+```
+
+`docs/manuals/{マニュアル名}/` に次の形で配置される。マニュアル名はzipのファイル名から取る（`--name` で明示もできる）。
 
 ```
 docs/manuals/45th_企画マニュアル_縁日/
-├── source.html        ← zip内のHTMLをこの名前にリネームする
-└── images/            ← zip内の画像フォルダをそのまま置く
+├── source.html        ← zip内のHTMLをリネームしたもの
+└── images/            ← zip内の画像
     ├── image1.png
     └── image2.jpg
 ```
 
-`source.html` という名前にする理由は、生成スクリプトが「`slide` と `verify` で始まらない `.html`」を入力として探すためで、複数あると曖昧だとして停止するからである（`scripts/claude-slide/generate_slide.py` の `load_source()`）。
+手作業でやらないのは、次の3点を毎回間違えるためである。
+
+zip内のHTMLは名前が切り詰められている。実例として `45th_企画マニュアル_ホールインワン.zip` の中身は `45th_.html` だった。zip名はタイトルを保つが、中のファイル名は保たない。
+
+`source.html` という名前が必要なのは、生成スクリプトが「`slide` と `verify` で始まらない `.html`」を入力として探すためで、複数あると曖昧だとして停止する（`scripts/claude-slide/generate_slide.py` の `load_source()`）。
+
+`images/` の位置がずれると画像が埋め込まれない。
+
+実行後、表示されたマニュアル名が**タスク一覧M列の値と完全に一致しているか確認する**。ここがずれていると⑤で紐付けが静かに失敗する。
 
 ## ② 解説HTMLに変換する
 
@@ -136,13 +150,33 @@ PUT https://seeft-api.nutfes.net/manuals/{id}
 
 ### コマンド
 
-トークンを環境変数に読み込む。`export TOKEN='値'` と直接書かないのは、コマンドがシェルの履歴ファイルに残り、トークンが平文で保存されるためである。次の書き方なら入力は画面にも履歴にも残らない。
+`--doc-url` にはGoogleドキュメントの共有URLを渡す。⑤で対応表のB列に入れる値になる。
+
+```bash
+python3 scripts/automation/upload_manual.py --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit" docs/manuals/45th_企画マニュアル_縁日
+```
+
+トークンは訊かれるので貼り付ける。入力は画面にもシェルの履歴にも残らない。環境変数 `MANUAL_UPLOAD_TOKEN` を設定してあればそちらが使われる。
+
+送信前にHTMLが `</html>` で閉じているかとサイズ上限を検査するので、壊れたファイルや大きすぎるファイルを配信してしまうことはない。
+
+成功すると公開URLと、⑤で対応表にそのまま貼れるタブ区切りの1行が表示される。
+
+```
+成功: https://seeft-api.nutfes.net/manuals/en-nichi
+
+「マニュアルURL」シートに貼る行（タブ区切り）:
+
+45th_企画マニュアル_縁日	https://docs.google.com/document/d/xxxx/edit	https://seeft-api.nutfes.net/manuals/en-nichi
+```
+
+### curl で送る場合
+
+スクリプトを使わずに送ることもできる。トークンは `export TOKEN='値'` と直接書かない。コマンドがシェルの履歴ファイルに残り、トークンが平文で保存されるためである。
 
 ```bash
 printf 'アップロードトークンを貼り付けてEnter: '; read -rs MANUAL_UPLOAD_TOKEN; echo; export MANUAL_UPLOAD_TOKEN
 ```
-
-そのうえでアップロードする。
 
 ```bash
 curl -X PUT "https://seeft-api.nutfes.net/manuals/en-nichi" -H "Authorization: Bearer $MANUAL_UPLOAD_TOKEN" -H "Content-Type: text/html" --data-binary @docs/manuals/45th_企画マニュアル_縁日/slide_claude.card-strict.html
@@ -198,11 +232,13 @@ curl -X PUT "https://seeft-api.nutfes.net/manuals/en-nichi" -H "Authorization: B
 
 ### 手順
 
-「マニュアルURL」シートに行を追加する。
+「マニュアルURL」シートに行を追加する。④の `upload_manual.py` が出力したタブ区切りの1行を、空き行のA列に貼れば3列が一度に埋まる。
 
-- A列: タスク一覧のM列から**コピーして貼る**。手で打たない
+- A列: マニュアル名
 - B列: Googleドキュメントの共有URL（ドキュメント版ボタン用）
 - C列: ④のレスポンスの `manual_url`（HTML版ボタン用）
+
+**貼った後、A列がタスク一覧M列と完全に一致しているか必ず確認する。** スクリプトが組み立てるA列はディレクトリ名の写しであって、M列の値である保証はない。一致していなければM列のセルをコピーして貼り直す。手で打ち直さない。
 
 B列とC列は別のDBカラムに入る。名前が似ていて紛らわしいので、確認するときは対応を間違えないこと。
 
@@ -363,8 +399,11 @@ node_modules/.bin/clasp clone <スクリプトID>
 
 ```
 リポジトリ
-  scripts/claude-slide/generate_slide.py          変換スクリプト
-  scripts/claude-slide/verify_slide_mechanical.py 機械検証
+  scripts/automation/prepare_manual.py            zipの展開・配置（①）
+  scripts/claude-slide/generate_slide.py          変換スクリプト（②）
+  scripts/claude-slide/verify_slide_mechanical.py 機械検証（③）
+  scripts/claude-slide/embed_images.py            画像埋め込み・完全性検査（③、依存ゼロ）
+  scripts/automation/upload_manual.py             アップロードと貼付行の出力（④）
   .claude/manual-prompt-card-strict.md            変換プロンプト（文章不変版）
   api/lib/internals/controller/manual_controller.go  アップロード・配信エンドポイント
   api/lib/usecase/manual_usecase.go               認証・保存ロジック
