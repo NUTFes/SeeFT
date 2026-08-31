@@ -195,6 +195,23 @@ curl -X PUT "https://seeft-api.nutfes.net/manuals/en-nichi" -H "Authorization: B
 - B列: Googleドキュメントの共有URL（ドキュメント版ボタン用）
 - C列: ④のレスポンスの `manual_url`（HTML版ボタン用）
 
+B列とC列は別のDBカラムに入る。名前が似ていて紛らわしいので、確認するときは対応を間違えないこと。
+
+| 対応表 | タスク一覧 | DBカラム | シフトカードのボタン |
+| --- | --- | --- | --- |
+| B列 ドキュメントURL | R列 | `tasks.url` | ドキュメント版 |
+| C列 スライドURL | S列 | `tasks.manual_url` | HTML版 |
+
+B列だけ埋めた状態は正常な運用形態である。HTMLを生成していないマニュアルでも、ドキュメント版のボタンは出せる。このときC列は空で、`tasks.manual_url` も空のままになる。
+
+```sql
+-- ドキュメント版が入ったか（B列の結果）
+SELECT id, task, COALESCE(url,'') AS doc_url FROM tasks WHERE task LIKE '%カジノ%' ORDER BY id;
+
+-- 両方の埋まり具合をまとめて見る
+SELECT COALESCE(url,'') <> '' AS has_doc, COALESCE(manual_url,'') <> '' AS has_slide, count(*) FROM tasks GROUP BY 1,2 ORDER BY 3 DESC;
+```
+
 タスク一覧のR/S列にVLOOKUPの数式が入っていない場合は、`SeeFTメニュー` から `fillManualUrlFormulas` を実行する。4行目から最終行+50行まで数式を貼るので、行が増えても追従する。
 
 引けているかを `inspectManualUrlLookup` で確認する。対応表の中身と、タスク一覧でM列が埋まっている行のR/S列が表示される。
