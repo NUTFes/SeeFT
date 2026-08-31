@@ -152,9 +152,12 @@ func (mc *manualController) UploadManual(c echo.Context) error {
 	}
 
 	log.Printf("manual_gate: uploaded id=%s size=%d", id, size)
+	// キー名を manual_url にしているのは、この値の行き先が tasks.manual_url だから。
+	// 運用者はレスポンスの manual_url をそのままシフトスプシの「マニュアルURL」シートC列
+	// （スライド版URL）へ貼る。名前を揃えることで貼り先の取り違えを防ぐ。
 	return c.JSON(http.StatusCreated, map[string]any{
-		"id":  id,
-		"url": mc.u.PublicManualURL(id),
+		"id":         id,
+		"manual_url": mc.u.PublicManualURL(id),
 	})
 }
 
