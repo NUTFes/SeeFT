@@ -14,12 +14,19 @@ Go には `go-lint.yml` と go-test があり、Flutter には analyze がある
 
 GAS を触る作業は、リポジトリを読むことからではなく **実体を取得すること** から始める。
 
+`clasp clone` は空ディレクトリでしか実行できないため、リポジトリ外の一時ディレクトリで取得する。以下はリポジトリルートで実行する。
+
 ```bash
-cd gas && npm install
-node_modules/.bin/clasp clone <スクリプトID>
+npm --prefix gas install
+repo_root=$(pwd); workdir=$(mktemp -d); echo "$workdir"
+(cd "$workdir" && "$repo_root/gas/node_modules/.bin/clasp" clone <スクリプトID>)
 ```
 
-`clasp clone` は空ディレクトリで実行する必要があるため、作業はスクラッチパッド等リポジトリ外で行い、`gas/` を汚さない。取得したものとリポジトリを `diff` して、乖離の有無を先に把握してから方針を立てる。
+取得したものとリポジトリを `diff` して、乖離の有無を先に把握してから方針を立てる。
+
+```bash
+diff -r "$workdir" gas/shift --exclude=.clasp.json
+```
 
 スクリプトIDは、対象スプレッドシートの `拡張機能 > Apps Script` を開いたときのURLから取る。`.clasp.json` はスクリプトIDを含むため `.gitignore` で除外している（本リポジトリは public のため）。
 
@@ -38,11 +45,22 @@ node_modules/.bin/clasp clone <スクリプトID>
 
 ## 反映する
 
-エディタへのコピペは不要で、`clasp push` で反映できる。ただし GAS は全ファイルが同一スコープで評価されるため、`const` の重複定義があるとスクリプト全体が読み込み不能になり、スプレッドシートのメニューごと消える。push 前に必ず構文検査する。
+エディタへのコピペは不要で、`clasp push` で反映できる。
+
+**編集も push も、clone した一時ディレクトリ（`$workdir`）で行う。** `gas/shift/` から push はできない。`clasp` はカレントディレクトリの `.clasp.json` で対象スクリプトを判断するが、そのファイルはスクリプトIDを含むため `.gitignore` で除外されており、リポジトリ側には存在しないためである。
+
+GAS は全ファイルが同一スコープで評価されるため、`const` の重複定義があるとスクリプト全体が読み込み不能になり、スプレッドシートのメニューごと消える。push 前に必ず構文検査する。
 
 ```bash
+cd "$workdir"
 cat *.js > /tmp/all.js && node --check /tmp/all.js
-npx @google/clasp push -f
+"$repo_root/gas/node_modules/.bin/clasp" push -f
+```
+
+push が通ったら、同じファイルをリポジトリへ写して commit する。これが「同期」にあたる。
+
+```bash
+cp -f "$workdir"/*.js "$workdir"/appsscript.json "$repo_root/gas/shift/"
 ```
 
 ## 同期のタイミング
