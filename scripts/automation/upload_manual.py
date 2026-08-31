@@ -1,0 +1,307 @@
+"""生成済みマニュアルHTMLを配信APIへアップロードし、対応表へ貼る行を出力する。
+
+`PUT /manuals/:id` を実行して公開URL（`manual_url`）を受け取り、シフトスプシの
+「マニュアルURL」シートへそのまま貼れるタブ区切り1行を組み立てる。
+
+手作業の curl を置き換えるのは、2026-08-31 の実運用で事故が紐付け工程に集中したため。
+生成やアップロード自体では失敗しておらず、失敗したのは「どの値をどの列に書くか」だった。
+
+  - マニュアル名を手で打ち、末尾スペースで VLOOKUP が静かに外れた
+  - ドキュメント版(tasks.url)とスライド版(tasks.manual_url)の列を取り違えた
+
+そこで、貼る内容を機械が組み立てて列順を固定する。
+
+トークンは環境変数 MANUAL_UPLOAD_TOKEN から読む。未設定なら入力を促す（画面にもシェルの
+履歴にも残らない）。`export MANUAL_UPLOAD_TOKEN=...` と直接書くと履歴に平文で残るため。
+
+依存は標準ライブラリのみ。python3 だけで動く。
+
+使い方:
+  python3 scripts/automation/upload_manual.py --id en-nichi docs/manuals/45th_企画マニュアル_縁日
+  python3 scripts/automation/upload_manual.py --id en-nichi --doc-url https://docs.google.com/... docs/manuals/45th_企画マニュアル_縁日
+"""
+
+import argparse
+import getpass
+import json
+import os
+import re
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
+
+# HTMLの探索と完全性検査は embed_images.py と同じ規則を使う。重複させると
+# 片方だけ直したときに挙動がずれるため、実装を1つに保つ
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "scripts", "claude-slide"))
+from embed_images import find_slide_html, is_complete_html  # noqa: E402
+
+DEFAULT_BASE_URL = "https://seeft-api.nutfes.net"
+
+# urllib の既定 User-Agent (`Python-urllib/3.x`) は Cloudflare にブラウザ署名で遮断され、
+# アプリに届く前に 403 (Cloudflare error 1010) が返る。curl や独自の値なら通るため、
+# このツールを名乗る値を明示する。2026-08-31 に seeft-api.nutfes.net で確認した。
+USER_AGENT = "seeft-upload-manual/1.0"
+
+# api/lib/usecase/manual_usecase.go の manualIDRe と揃える。
+# サーバ側でも弾かれるが、20MBを送ってから400を受け取るのは無駄なので手前で検査する
+MANUAL_ID_RE = re.compile(r"^[a-z0-9_-]{1,64}$")
+
+# api/lib/internals/controller/manual_controller.go の manualUploadMaxBytes と揃える
+MAX_UPLOAD_BYTES = 20 << 20
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """リダイレクトを拒否する。
+
+    urllib は既定でリダイレクトを追い、そのとき Authorization ヘッダーも
+    引き継ぐ。転送先が別ホストならトークンがそのまま渡ってしまうため、
+    黙って追わずにエラーにする。
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(
+            req.full_url, code,
+            f"リダイレクトは許可していません（転送先: {newurl}）。"
+            "トークンが別ホストへ渡るのを防ぐためです",
+            headers, fp,
+        )
+
+
+def validate_base_url(base_url: str) -> str:
+    """トークンの送信先を検証する。
+
+    このURLへ `Authorization: Bearer` を送るため、平文の http で任意のホストを
+    指定できると、トークンがネットワーク上に露出する。https を必須とし、
+    例外はローカルのモックサーバ（テスト用）だけに限る。
+    """
+    parsed = urllib.parse.urlparse(base_url)
+    if parsed.scheme == "https":
+        return base_url
+    if parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}:
+        return base_url
+    raise ValueError(
+        f"送信先として使えないURLです: {base_url}\n"
+        "         https を指定してください（http はローカルのモックのみ許可）"
+    )
+
+
+# Google Sheets はセルの先頭がこれらの文字だと数式として評価する
+SHEET_FORMULA_PREFIXES = ("=", "+", "-", "@")
+
+
+def sheet_cell(value: str) -> str:
+    """対応表へ貼るセルの値を安全な形にする。
+
+    タブ・改行が混じると貼り付け時に列や行がずれる。先頭が数式扱いされる文字なら
+    `'` を付けて文字列として扱わせる（`'` はGoogle Sheets上で値に含まれないため、
+    VLOOKUPの一致判定には影響しない）。
+    """
+    if any(c in value for c in ("\t", "\r", "\n")):
+        raise ValueError(
+            f"タブまたは改行を含む値は対応表に貼れません: {value!r}"
+        )
+    if value.startswith(SHEET_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
+
+def resolve_manual_dir(arg: str) -> str:
+    arg = arg.rstrip("/")
+    if os.path.isabs(arg):
+        return arg
+    if os.path.isdir(arg):
+        return os.path.abspath(arg)
+    return os.path.join(PROJECT_ROOT, arg)
+
+
+def read_token() -> str:
+    """トークンを取得する。環境変数になければ入力を促す（履歴に残さないため）。"""
+    token = os.environ.get("MANUAL_UPLOAD_TOKEN", "").strip()
+    if token:
+        return token
+    return getpass.getpass("アップロードトークンを貼り付けてEnter（表示されません）: ").strip()
+
+
+def upload(base_url: str, manual_id: str, html_path: str, token: str) -> dict:
+    """PUT /manuals/:id を実行し、レスポンスのJSONを返す。"""
+    with open(html_path, "rb") as f:
+        body = f.read()
+
+    url = f"{base_url.rstrip('/')}/manuals/{manual_id}"
+    req = urllib.request.Request(url, data=body, method="PUT")
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Content-Type", "text/html")
+    req.add_header("User-Agent", USER_AGENT)
+
+    opener = urllib.request.build_opener(_NoRedirectHandler)
+    with opener.open(req, timeout=180) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def describe_http_error(e: urllib.error.HTTPError) -> str:
+    """サーバが返すエラーを、運用者が次の手を判断できる文言に変える。
+
+    APIが返さないステータス（403など）は手前のCloudflareが返している。切り分けが
+    つくよう、想定内の説明に加えて本文の冒頭も必ず出す。
+    """
+    hints = {
+        401: "トークンが違うか、サーバ側で MANUAL_UPLOAD_TOKEN が未設定です"
+             "（設定漏れで素通りするのを防ぐため、未設定でも401になります）",
+        400: "マニュアルIDが不正です。a-z 0-9 _ - の1〜64文字のみ使えます",
+        403: "APIはこのステータスを返しません。手前のCloudflareに遮断されています"
+             "（error 1010 ならブラウザ署名による拒否。User-Agentを確認してください）",
+        413: "ファイルが20MBを超えています。画像の枚数やサイズを確認してください",
+        500: "サーバ側の保存に失敗しました。APIのログを確認してください",
+    }
+    lines = [f"HTTP {e.code}"]
+    if hint := hints.get(e.code, ""):
+        lines.append(f"         {hint}")
+    elif reason := str(getattr(e, "reason", "") or ""):
+        # リダイレクト拒否などの独自エラーは reason に説明を入れている。
+        # 想定外のコードほど手がかりが必要なので、hint が無いときは必ず出す
+        lines.append(f"         {reason}")
+    try:
+        detail = e.read().decode("utf-8", "replace").strip()
+    except Exception:  # noqa: BLE001 - 本文が読めなくてもエラー報告は続ける
+        detail = ""
+    if detail:
+        lines.append(f"         応答: {detail[:200]}")
+    return "\n".join(lines)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="マニュアルHTMLを配信APIへアップロードし、対応表へ貼る行を出力する",
+    )
+    parser.add_argument("manual_dir", help="マニュアルディレクトリ")
+    parser.add_argument(
+        "--id",
+        required=True,
+        help="公開URLに使う識別子（例: en-nichi）。a-z 0-9 _ - の1〜64文字",
+    )
+    parser.add_argument(
+        "--doc-url",
+        default=None,
+        help="Googleドキュメントの共有URL。渡すと対応表のB列も埋めた行を出力する",
+    )
+    parser.add_argument(
+        "--file",
+        default=None,
+        help="アップロードするHTMLを明示する（省略時は manual_dir 内の slide*.html を自動検出）",
+    )
+    parser.add_argument(
+        "--base-url",
+        default=os.environ.get("SEEFT_API_BASE_URL", DEFAULT_BASE_URL),
+        help=f"APIのベースURL（既定: {DEFAULT_BASE_URL}）",
+    )
+    args = parser.parse_args()
+
+    try:
+        base_url = validate_base_url(args.base_url)
+    except ValueError as e:
+        print(f"  ERROR: {e}", file=sys.stderr)
+        return 1
+
+    if not MANUAL_ID_RE.match(args.id):
+        print(
+            f"  ERROR: --id が命名規則に反しています: {args.id!r}\n"
+            "         a-z 0-9 _ - の1〜64文字のみ（日本語・大文字・スラッシュは不可）",
+            file=sys.stderr,
+        )
+        return 1
+
+    manual_dir = resolve_manual_dir(args.manual_dir)
+    if not os.path.isdir(manual_dir):
+        print(f"  ERROR: ディレクトリがありません: {manual_dir}", file=sys.stderr)
+        return 1
+
+    try:
+        html_path = args.file or find_slide_html(manual_dir)
+    except (FileNotFoundError, RuntimeError) as e:
+        print(f"  ERROR: {e}", file=sys.stderr)
+        return 1
+
+    size = os.path.getsize(html_path)
+    print("=== マニュアルのアップロード ===")
+    print(f"  対象: {html_path} ({size//1024}KB)")
+    print(f"  ID  : {args.id}")
+
+    with open(html_path, "r", encoding="utf-8") as f:
+        html = f.read()
+
+    # 途中で切れたHTMLを配信すると、閲覧者には白紙や崩れたページが見える。
+    # アップロードは即時反映されるため、送る前に止める
+    if not is_complete_html(html):
+        sys.stdout.flush()
+        print(
+            "  ERROR: HTMLが </html> で閉じていません。応答が途中で切れています。\n"
+            "         生成をやり直してください",
+            file=sys.stderr,
+        )
+        return 1
+
+    if size > MAX_UPLOAD_BYTES:
+        sys.stdout.flush()
+        print(
+            f"  ERROR: {size//1024//1024}MB は上限の20MBを超えています",
+            file=sys.stderr,
+        )
+        return 1
+
+    token = read_token()
+    if not token:
+        print("  ERROR: トークンが空です", file=sys.stderr)
+        return 1
+
+    try:
+        result = upload(base_url, args.id, html_path, token)
+    except urllib.error.HTTPError as e:
+        sys.stdout.flush()
+        print(f"  ERROR: アップロードに失敗しました: {describe_http_error(e)}", file=sys.stderr)
+        return 1
+    except urllib.error.URLError as e:
+        sys.stdout.flush()
+        print(f"  ERROR: APIに接続できません: {e.reason}", file=sys.stderr)
+        return 1
+
+    # レスポンスのキーは #480 で url から manual_url へ改名した（貼り先の tasks.manual_url と
+    # 揃えるため）。本番へのデプロイ前は旧キーで返るので、どちらでも受け取る。
+    manual_url = result.get("manual_url") or result.get("url") or ""
+    if not manual_url:
+        print(f"  ERROR: レスポンスにURLがありません: {result}", file=sys.stderr)
+        return 1
+
+    print(f"  成功: {manual_url}")
+    print()
+
+    try:
+        manual_name = sheet_cell(os.path.basename(manual_dir))
+        doc_url = sheet_cell(args.doc_url or "")
+    except ValueError as e:
+        sys.stdout.flush()
+        print(f"  ERROR: {e}", file=sys.stderr)
+        print(f"         アップロードは成功しています: {manual_url}", file=sys.stderr)
+        return 1
+
+    print("  「マニュアルURL」シートに貼る行（タブ区切り）:")
+    print()
+    print(f"{manual_name}\t{doc_url}\t{manual_url}")
+    print()
+    # A列はタスク一覧M列と完全一致していなければ VLOOKUP が外れる。ここで組み立てた
+    # 名前はディレクトリ名の写しであって、M列の値である保証はない
+    print("  貼る前に確認すること:")
+    print("    1行目の値がタスク一覧M列と完全に一致しているか。ずれていると")
+    print("    エラーを出さずにS列が空になり、シフトカードにボタンが出ない")
+    if not doc_url:
+        print("    B列（ドキュメントURL）が空。--doc-url を渡すか、手で埋める")
+    print("=== 完了 ===")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
