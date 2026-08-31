@@ -197,6 +197,8 @@ curl -X PUT "https://seeft-api.nutfes.net/manuals/en-nichi" -H "Authorization: B
 
 `manual_url` の値をそのまま⑤で使う。キー名がDBの `tasks.manual_url` と揃えてあるのは、貼り先を取り違えないためである。
 
+このキー名は issue #479 で `url` から改名した。**本番APIへデプロイされるまでは旧キー `url` で返る**（2026-08-31 時点で本番は改名前のビルド）。`upload_manual.py` は両方を受け付けるため、デプロイの前後どちらでも動く。curl で直接叩く場合は、返ってきたキーがどちらかを見て読み替えること。
+
 失敗時は次のいずれかが返る。
 
 | ステータス | ボディ | 原因 |

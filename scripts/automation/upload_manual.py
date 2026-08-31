@@ -41,6 +41,11 @@ from embed_images import find_slide_html, is_complete_html  # noqa: E402
 
 DEFAULT_BASE_URL = "https://seeft-api.nutfes.net"
 
+# urllib の既定 User-Agent (`Python-urllib/3.x`) は Cloudflare にブラウザ署名で遮断され、
+# アプリに届く前に 403 (Cloudflare error 1010) が返る。curl や独自の値なら通るため、
+# このツールを名乗る値を明示する。2026-08-31 に seeft-api.nutfes.net で確認した。
+USER_AGENT = "seeft-upload-manual/1.0"
+
 # api/lib/usecase/manual_usecase.go の manualIDRe と揃える。
 # サーバ側でも弾かれるが、20MBを送ってから400を受け取るのは無駄なので手前で検査する
 MANUAL_ID_RE = re.compile(r"^[a-z0-9_-]{1,64}$")
@@ -75,22 +80,37 @@ def upload(base_url: str, manual_id: str, html_path: str, token: str) -> dict:
     req = urllib.request.Request(url, data=body, method="PUT")
     req.add_header("Authorization", f"Bearer {token}")
     req.add_header("Content-Type", "text/html")
+    req.add_header("User-Agent", USER_AGENT)
 
     with urllib.request.urlopen(req, timeout=180) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
 def describe_http_error(e: urllib.error.HTTPError) -> str:
-    """サーバが返すエラーを、運用者が次の手を判断できる文言に変える。"""
+    """サーバが返すエラーを、運用者が次の手を判断できる文言に変える。
+
+    APIが返さないステータス（403など）は手前のCloudflareが返している。切り分けが
+    つくよう、想定内の説明に加えて本文の冒頭も必ず出す。
+    """
     hints = {
         401: "トークンが違うか、サーバ側で MANUAL_UPLOAD_TOKEN が未設定です"
              "（設定漏れで素通りするのを防ぐため、未設定でも401になります）",
         400: "マニュアルIDが不正です。a-z 0-9 _ - の1〜64文字のみ使えます",
+        403: "APIはこのステータスを返しません。手前のCloudflareに遮断されています"
+             "（error 1010 ならブラウザ署名による拒否。User-Agentを確認してください）",
         413: "ファイルが20MBを超えています。画像の枚数やサイズを確認してください",
         500: "サーバ側の保存に失敗しました。APIのログを確認してください",
     }
-    hint = hints.get(e.code, "")
-    return f"HTTP {e.code}" + (f"\n         {hint}" if hint else "")
+    lines = [f"HTTP {e.code}"]
+    if hint := hints.get(e.code, ""):
+        lines.append(f"         {hint}")
+    try:
+        detail = e.read().decode("utf-8", "replace").strip()
+    except Exception:  # noqa: BLE001 - 本文が読めなくてもエラー報告は続ける
+        detail = ""
+    if detail:
+        lines.append(f"         応答: {detail[:200]}")
+    return "\n".join(lines)
 
 
 def main() -> int:
@@ -182,9 +202,11 @@ def main() -> int:
         print(f"  ERROR: APIに接続できません: {e.reason}", file=sys.stderr)
         return 1
 
-    manual_url = result.get("manual_url", "")
+    # レスポンスのキーは #480 で url から manual_url へ改名した（貼り先の tasks.manual_url と
+    # 揃えるため）。本番へのデプロイ前は旧キーで返るので、どちらでも受け取る。
+    manual_url = result.get("manual_url") or result.get("url") or ""
     if not manual_url:
-        print(f"  ERROR: レスポンスに manual_url がありません: {result}", file=sys.stderr)
+        print(f"  ERROR: レスポンスにURLがありません: {result}", file=sys.stderr)
         return 1
 
     print(f"  成功: {manual_url}")
