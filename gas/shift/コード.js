@@ -166,7 +166,7 @@ function buildShiftChanges_(sheet, targetCols) {
 // 実測では1件あたり約22ミリ秒かかっている(10,669件が4分弱で完了)。
 // Cloudflareは100秒で接続を切る(エラー524)ので、1,500件(約34秒)にして余裕を66%確保する。
 // 小さくしても総処理時間は変わらないため、安全側に倒している。
-const SHIFT_CHUNK_SIZE = 1500;
+const SHIFT_CHUNK_SIZE = 1000;
 
 // 割り当ての無い(空欄の)セルを送信対象から除くかどうか。
 //
