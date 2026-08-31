@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
-# auto.md の①〜④（Googleドキュメントのzip → 解説HTML → 検証 → アップロード）を
-# 通しで実行するラッパー。⑤（シフトスプシへの紐付け）はスプシ・GAS側の作業なので
-# 対象外。最後に④の出力（対応表に貼る1行）をそのまま表示する。
+# docs/development/manual-generation-guide.md の①〜④（Googleドキュメントのzip →
+# 解説HTML → 検証 → アップロード）を通しで実行するラッパー。⑤（シフトスプシへの
+# 紐付け）はスプシ・GAS側の作業なので対象外。最後に④の出力（対応表に貼る1行）を
+# そのまま表示する。
 #
 # 使い方:
 #   scripts/automation/run_pipeline.sh <zipのパス> --id <公開ID> --doc-url <ドキュメントURL> [--prompt card-strict] [--model claude-opus-4-7]
 #
 # 例:
-#   scripts/automation/run_pipeline.sh ~/Downloads/45th_企画マニュアル_縁日.zip \
+#   scripts/automation/run_pipeline.sh docs/manuals/_zips/45th_企画マニュアル_縁日.zip \
 #     --id en-nichi \
 #     --doc-url "https://docs.google.com/document/d/xxxx/edit"
 #
 # ③（中身の確認）だけは目視が要るため、確認用にブラウザで開いたあと
 # 続行してよいか一度だけ確認を挟む。 --yes を付けるとその確認をスキップする。
+#
+# ④のアップロードトークンは環境変数 MANUAL_UPLOAD_TOKEN があれば自動で使う
+# （upload_manual.py の挙動）。未設定なら対話入力になる。
 
 set -euo pipefail
 
@@ -55,7 +59,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 for cmd in python3 uv; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "ERROR: $cmd が見つかりません。'brew install pandoc uv' などで準備してください（auto.md参照）" >&2
+    echo "ERROR: $cmd が見つかりません。'brew install pandoc uv' などで準備してください（docs/development/manual-generation-guide.md参照）" >&2
     exit 1
   fi
 done
@@ -106,7 +110,7 @@ if command -v open >/dev/null 2>&1; then
 fi
 
 echo
-echo "  verify_report.card-strict.md（文章差分レポート）と、開いたブラウザの見た目"
+echo "  文章チェック結果.card-strict.md（文章差分レポート）と、開いたブラウザの見た目"
 echo "  （スマホ幅・375px程度）を確認してください。"
 
 if [[ "$ASSUME_YES" -ne 1 ]]; then
@@ -129,4 +133,4 @@ echo "# ⑤ タスクへの紐づけ（手作業）"
 echo "########################################"
 echo "  上に表示された「マニュアルURL」シートに貼る行をコピーして、"
 echo "  シフトスプシ 45th_シフト_ver0 の「マニュアルURL」シートに貼ってください。"
-echo "  以降は auto.md の「⑤ タスクに紐づける」を参照してください。"
+echo "  以降は docs/development/manual-generation-guide.md の「⑤ タスクに紐づける」を参照してください。"

@@ -33,3 +33,7 @@ api/docs/schemaspy/
 
 # Claude Code working files
 .claude/
+
+# マニュアル変換パイプラインに渡すGoogleドキュメントのエクスポートzip（個別に配布されるためリポジトリには含めない）
+docs/manuals/_zips/*
+!docs/manuals/_zips/.gitkeep

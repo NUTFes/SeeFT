@@ -59,7 +59,7 @@ Googleドキュメントで書かれたマニュアルを、スマホ最適化�
 ダウンロードしたzipを、そのまま次のコマンドに渡す。展開・リネーム・配置をまとめて行う。
 
 ```bash
-python3 scripts/automation/prepare_manual.py ~/Downloads/45th_企画マニュアル_縁日.zip
+python3 scripts/automation/prepare_manual.py docs/manuals/_zips/45th_企画マニュアル_縁日.zip
 ```
 
 `docs/manuals/{マニュアル名}/` に次の形で配置される。マニュアル名はzipのファイル名から取る（`--name` で明示もできる）。
@@ -120,7 +120,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide
 uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_mechanical.py docs/manuals/45th_企画マニュアル_縁日
 ```
 
-`verify_report.card-strict.md` が部門長に見せられる日本語サマリ、`verify_mechanical.card-strict.txt` が開発用の詳細である。
+`文章チェック結果.card-strict.md` が部門長に見せられる日本語サマリ、`verify_mechanical.card-strict.txt` が開発用の詳細である。
 
 最後にブラウザで開き、スマホ幅（開発者ツールの375px程度）で目次・折りたたみ・画像の表示を見る。
 

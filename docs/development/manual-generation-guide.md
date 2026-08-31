@@ -14,6 +14,8 @@ Googleドキュメントで書かれたマニュアルを、スマホ向けの�
 
 閲覧は技大祭のGoogleアカウント（`〜.nutfes@gmail.com`）を持つ委員全員が可能です。
 
+ダウンロードしたzipは `docs/manuals/_zips/` に置いてください。このディレクトリはgit管理外（`.gitignore`）なので、リポジトリを汚しません。
+
 ---
 
 ## まとめて実行する（①〜④）
@@ -21,7 +23,7 @@ Googleドキュメントで書かれたマニュアルを、スマホ向けの�
 ①〜④を1人で担当するなら、通しで実行するスクリプトがあります。
 
 ```bash
-scripts/automation/run_pipeline.sh ~/Downloads/45th_企画マニュアル_縁日.zip \
+scripts/automation/run_pipeline.sh docs/manuals/_zips/45th_企画マニュアル_縁日.zip \
   --id en-nichi \
   --doc-url "https://docs.google.com/document/d/xxxx/edit"
 ```
@@ -29,7 +31,7 @@ scripts/automation/run_pipeline.sh ~/Downloads/45th_企画マニュアル_縁日
 - ③（見た目・文章の確認）の後に一度だけ確認を挟みます。問題なければ `y` でアップロードへ進みます
 - `--prompt` / `--model` で②の設定を変えられます（省略時は `card-strict` / `claude-opus-4-7`）
 - `--yes` を付けると確認をすべてスキップします（自動化・CI向け。人手での見た目確認を省略することになるので通常は非推奨）
-- ④のトークン入力は通常どおり対話式で聞かれます
+- ④のトークンは環境変数 `MANUAL_UPLOAD_TOKEN` を設定しておけば対話入力なしで進みます（後述）。未設定なら通常どおり貼り付けを求められます
 - ⑤（シフトスプシへの紐付け）はスプシ・GAS側の作業のため対象外です。スクリプトの最後に④の出力（対応表に貼る行）が表示されるので、それを「⑤ タスクに紐づける」の手順1で貼ってください
 
 個別に工程ごと実行したい場合は、以下の①〜⑤をそれぞれ参照してください。
@@ -58,10 +60,10 @@ uv sync --project scripts/claude-slide
 
 **PDFやWordでは画像が取り出せません。必ずzipです。**
 
-ダウンロードしたzipをそのまま渡します。
+ダウンロードしたzipを `docs/manuals/_zips/` に置いてから渡します。
 
 ```bash
-python3 scripts/automation/prepare_manual.py ~/Downloads/45th_企画マニュアル_縁日.zip
+python3 scripts/automation/prepare_manual.py docs/manuals/_zips/45th_企画マニュアル_縁日.zip
 ```
 
 `docs/manuals/{マニュアル名}/` に展開されます。マニュアル名はzipのファイル名から決まります。
@@ -106,7 +108,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
   docs/manuals/45th_企画マニュアル_縁日
 ```
 
-`verify_report.card-strict.md` が出ます。部門長にそのまま渡せる日本語のレポートです。
+`文章チェック結果.card-strict.md` が出ます。部門長にそのまま渡せる日本語のレポートです。
 
 見るのは「確認してほしい本文差」だけで構いません。「確認不要の差」は見出し番号やレイアウトの違いで、内容は変わっていません。
 
@@ -137,6 +139,12 @@ python3 scripts/automation/upload_manual.py \
 - `-doc-url` はGoogleドキュメントの共有URLです。⑤で使います
 
 トークンを訊かれるので貼り付けます。画面にも履歴にも残りません。
+
+毎回貼るのが面倒なら、環境変数 `MANUAL_UPLOAD_TOKEN` にあらかじめ設定しておけば、この確認をスキップして自動で読みに行きます。シェルの履歴に平文で残さないよう、`read -rs` で受けてから `export` してください。
+
+```bash
+printf 'トークン: '; read -rs MANUAL_UPLOAD_TOKEN; echo; export MANUAL_UPLOAD_TOKEN
+```
 
 送信前にHTMLが壊れていないかとサイズを検査するので、不完全なファイルが公開されることはありません。
 

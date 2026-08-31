@@ -746,7 +746,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--report-name",
-        default="verify_report.card-strict.md",
+        default="文章チェック結果.card-strict.md",
         help="部門長向け文章チェック結果の出力ファイル名（Slack 貼り付け用）",
     )
     args = parser.parse_args()

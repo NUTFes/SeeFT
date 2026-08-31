@@ -14,7 +14,7 @@ Google ドキュメントの「ウェブページ (.html, zip)」でダウンロ
 依存は標準ライブラリのみ。uv も claude_agent_sdk も不要で、python3 だけで動く。
 
 使い方:
-  python3 scripts/automation/prepare_manual.py ~/Downloads/45th_企画マニュアル_縁日.zip
+  python3 scripts/automation/prepare_manual.py docs/manuals/_zips/45th_企画マニュアル_縁日.zip
   python3 scripts/automation/prepare_manual.py --name 45th_企画マニュアル_縁日 path/to/export.zip
 """
 
