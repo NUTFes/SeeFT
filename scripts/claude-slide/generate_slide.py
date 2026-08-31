@@ -18,9 +18,12 @@ scripts/sakura-slide/generate_slide.py (Sakura版) の Claude Agent SDK 版。
 import anyio
 import argparse
 import base64
+import glob
 import mimetypes
 import os
+import platform
 import re
+import shutil
 import subprocess
 import sys
 
@@ -35,6 +38,32 @@ from claude_agent_sdk import (
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
+
+
+def _find_native_cli_path() -> str | None:
+    """PATH上の claude、無ければ VS Code拡張が同梱するネイティブバイナリを探す。
+
+    claude_agent_sdk はまず自分のパッケージに同梱された claude CLI を使おうとするが、
+    そのバイナリは x86_64 でビルドされている。Apple Silicon 上では Rosetta 経由になり、
+    Bunランタイムが「CPU lacks AVX support, strange crashes may occur」という警告を出し
+    実際に生成が無言のまま止まる（ハングする）事象を確認している。
+    このスクリプト自身が uv の x86_64 版 Python venv 経由で動いていても、実機が arm64 なら
+    spawn する子プロセスはネイティブ arm64 で問題なく動く（Rosetta変換は自プロセスのみ）ため、
+    platform.machine() では判定しない。
+    VS Code の Claude Code 拡張は実機のアーキテクチャに合ったネイティブ claude バイナリを
+    同梱しているため、それを見つけて明示的に使うことで同梱の壊れたバイナリを回避する。
+    """
+    if cli := shutil.which("claude"):
+        return cli
+
+    if platform.system() != "Darwin":
+        return None
+
+    pattern = os.path.expanduser(
+        "~/.vscode*/extensions/anthropic.claude-code-*-darwin-*/resources/native-binary/claude"
+    )
+    candidates = sorted(glob.glob(pattern))
+    return candidates[-1] if candidates else None
 
 PROMPT_VARIANTS = {
     "default": "manual-prompt.md",
@@ -218,6 +247,8 @@ async def call_claude_sdk(
     }
     if model:
         options_kwargs["model"] = model
+    if native_cli_path := _find_native_cli_path():
+        options_kwargs["cli_path"] = native_cli_path
 
     options = ClaudeAgentOptions(**options_kwargs)
 
