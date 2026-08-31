@@ -128,8 +128,20 @@ echo
 echo "########################################"
 echo "# ③ 中身を確認"
 echo "########################################"
-uv run --project "$PROJECT_ROOT/scripts/claude-slide" python "$PROJECT_ROOT/scripts/claude-slide/verify_slide_mechanical.py" \
-  "$MANUAL_DIR"
+# VERDICT: NG は本文差分があったことを表す終了コード 1。③で人がレポートと
+# 見た目を確認してから④へ進む運用なので、このケースだけは停止せず続行する。
+# 実行不能などの終了コード 2 以上は、従来どおり中断する。
+if uv run --project "$PROJECT_ROOT/scripts/claude-slide" python "$PROJECT_ROOT/scripts/claude-slide/verify_slide_mechanical.py" \
+  "$MANUAL_DIR"; then
+  :
+else
+  VERIFY_STATUS=$?
+  if [[ "$VERIFY_STATUS" -ne 1 ]]; then
+    exit "$VERIFY_STATUS"
+  fi
+  echo
+  echo "  文章差分があります。レポートを確認してから続行してください。"
+fi
 
 SLIDE_HTML="$MANUAL_DIR/slide_claude.${PROMPT_VARIANT}.html"
 if [[ "$PROMPT_VARIANT" == "default" ]]; then
