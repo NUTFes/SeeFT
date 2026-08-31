@@ -1,8 +1,16 @@
 # 解説マニュアル 実運用手順（Slack スレッド中心）
 
-ステータス: 現行運用の正本
-最終更新: 2026-06-18
+ステータス: 生成・検証・部門長レビューの手順として有効。配信と紐付けは `../development/manual-html-operations.md` が正
+最終更新: 2026-08-31（初版 2026-06-18。配信経路の記述を 2026-08-20 の自前APIゲート導入に合わせて差し替えた）
 担当: 上林（PM）
+
+> 注（2026-08-31）: 本書の手順4「GitHub Pages へ配置して URL 発行」は、issue #444 / #448 で
+> 実装した自前の配信・アップロードAPI（`PUT /manuals/:id`）と、シフトスプシ経由の
+> `tasks.manual_url` 紐付けに置き換わった。**アップロードから紐付けまでは
+> `docs/development/manual-html-operations.md` を参照すること。**
+> 旧手順（`publish.py` で GitHub Pages へ配置する経路）は `tasks.manual_url` を更新しないため、
+> 実行するとアプリからマニュアルが見えない状態になる。本書からは削除した。
+> 手順1〜3（生成・画像確認・機械検証）と手順5〜7（Slack投稿・部門長レビュー・執行部チェック）は現在も有効。
 
 このドキュメントは「解説マニュアル生成パイプライン」を **実際に回すときの手順書** である。
 状態管理を Google Sheets で行う設計（`manual-proposal-v4-slides/automation-design.md`）に対し、
@@ -29,8 +37,8 @@ drive_client）は当面使わない（[スプシ自動化との関係](#スプ�
    │  scripts/claude-slide/verify_slide_mechanical.py
    │  → 部門長向けレポート verify_report.card-strict.md を生成
    ▼
-[SeeFT] GitHub Pages リポジトリへ配置して URL 発行
-   │  scripts/automation/publish.py
+[SeeFT] アップロードして URL 発行
+   │  → ../development/manual-html-operations.md の手順4
    ▼
 [SeeFT] Slack スレッドに「URL」+「部門長向けレポート本文」を投稿
    ▼
@@ -49,13 +57,8 @@ claude login
 uv sync --project scripts/claude-slide
 ```
 
-GitHub Pages 用リポジトリ（解説 HTML の公開先。private で可）をローカルに clone し、環境変数で指す。
-公開先パスと URL はリポジトリにハードコードしない。
-
-```bash
-export SEEFT_PAGES_REPO=~/work/seeft-manuals-pages
-export SEEFT_PAGES_BASE_URL=https://nutfes.github.io/seeft-manuals
-```
+アップロードに必要な準備（トークンの受け取り方を含む）は
+`../development/manual-html-operations.md` を参照。
 
 ## ステップ詳細
 
@@ -96,16 +99,14 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 - `verify_report.card-strict.md` — 部門長向け。Slack にそのまま貼れる日本語サマリ。本文の「消えた・書き換わった・増えた」だけを示し、見出し番号や図番号の整理などレイアウト差は「確認不要」に畳んである。
 - `verify_mechanical.card-strict.txt` — 開発デバッグ用の詳細（文字レベル差分・件数）。Slack には貼らない。
 
-### 4. GitHub Pages へ配置して URL 発行
+### 4. アップロードして URL 発行
 
-マニュアルは番号で識別する（`01_…` → `01`）。先頭が数字でないマニュアルは `--number` で明示する。
+**手順は `../development/manual-html-operations.md` の「④ サーバーへアップロードする」を参照。**
 
-```bash
-python3 scripts/automation/publish.py docs/manuals/01_44th_のぼり広告設置マニュアル --push
-```
-
-`<pages-repo>/manuals/01/index.html` に配置・commit・push し、`https://…/manuals/01/` を出力する。
-`--push` を付けなければ commit で止まり、push コマンドを表示する（確認してから公開したいとき用）。
+旧版はここで `scripts/automation/publish.py` を使い GitHub Pages リポジトリへ配置していたが、
+その経路は `tasks.manual_url` を更新しないため、アプリのシフトカードからマニュアルが見えない。
+現在は自前の配信APIへ `PUT /manuals/:id` でアップロードし、返ってきた `manual_url` を
+シフトスプシ経由でタスクに紐づける。混同を避けるため旧手順は本書から削除した。
 
 ### 5. Slack スレッドに投稿
 
@@ -145,10 +146,10 @@ instructions.md の例:
 ```bash
 uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide.py --prompt card-strict --model claude-opus-4-7 docs/manuals/01_44th_のぼり広告設置マニュアル
 uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_mechanical.py docs/manuals/01_44th_のぼり広告設置マニュアル
-python3 scripts/automation/publish.py docs/manuals/01_44th_のぼり広告設置マニュアル --push
 ```
 
-このあと、出力された URL と `verify_report.card-strict.md` を Slack スレッドへ貼る。
+このあとアップロードする（`../development/manual-html-operations.md` の手順4）。
+返ってきた `manual_url` と `verify_report.card-strict.md` を Slack スレッドへ貼る。
 
 ## 部門長向けレポートの読み方
 
@@ -175,6 +176,7 @@ python3 scripts/automation/publish.py docs/manuals/01_44th_のぼり広告設置
 
 ## 関連ドキュメント
 
+- `../development/manual-html-operations.md` — **アップロードとタスク紐付けの正**。5工程の権限、エンドポイント仕様、スプシのVLOOKUP機構
 - `manual-slide-pipeline.md` — パイプラインの技術リファレンス
 - `agent-sdk-usage.md` — 生成エンジンが使う Claude Agent SDK の使い方
 - `manual-proposal-v4-slides/automation-design.md` — スプシ軸の自動化設計（保留中の将来案）
