@@ -28,6 +28,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
@@ -52,6 +53,61 @@ MANUAL_ID_RE = re.compile(r"^[a-z0-9_-]{1,64}$")
 
 # api/lib/internals/controller/manual_controller.go の manualUploadMaxBytes と揃える
 MAX_UPLOAD_BYTES = 20 << 20
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """リダイレクトを拒否する。
+
+    urllib は既定でリダイレクトを追い、そのとき Authorization ヘッダーも
+    引き継ぐ。転送先が別ホストならトークンがそのまま渡ってしまうため、
+    黙って追わずにエラーにする。
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(
+            req.full_url, code,
+            f"リダイレクトは許可していません（転送先: {newurl}）。"
+            "トークンが別ホストへ渡るのを防ぐためです",
+            headers, fp,
+        )
+
+
+def validate_base_url(base_url: str) -> str:
+    """トークンの送信先を検証する。
+
+    このURLへ `Authorization: Bearer` を送るため、平文の http で任意のホストを
+    指定できると、トークンがネットワーク上に露出する。https を必須とし、
+    例外はローカルのモックサーバ（テスト用）だけに限る。
+    """
+    parsed = urllib.parse.urlparse(base_url)
+    if parsed.scheme == "https":
+        return base_url
+    if parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}:
+        return base_url
+    raise ValueError(
+        f"送信先として使えないURLです: {base_url}\n"
+        "         https を指定してください（http はローカルのモックのみ許可）"
+    )
+
+
+# Google Sheets はセルの先頭がこれらの文字だと数式として評価する
+SHEET_FORMULA_PREFIXES = ("=", "+", "-", "@")
+
+
+def sheet_cell(value: str) -> str:
+    """対応表へ貼るセルの値を安全な形にする。
+
+    タブ・改行が混じると貼り付け時に列や行がずれる。先頭が数式扱いされる文字なら
+    `'` を付けて文字列として扱わせる（`'` はGoogle Sheets上で値に含まれないため、
+    VLOOKUPの一致判定には影響しない）。
+    """
+    if any(c in value for c in ("\t", "\r", "\n")):
+        raise ValueError(
+            f"タブまたは改行を含む値は対応表に貼れません: {value!r}"
+        )
+    if value.startswith(SHEET_FORMULA_PREFIXES):
+        return "'" + value
+    return value
 
 
 def resolve_manual_dir(arg: str) -> str:
@@ -82,7 +138,8 @@ def upload(base_url: str, manual_id: str, html_path: str, token: str) -> dict:
     req.add_header("Content-Type", "text/html")
     req.add_header("User-Agent", USER_AGENT)
 
-    with urllib.request.urlopen(req, timeout=180) as resp:
+    opener = urllib.request.build_opener(_NoRedirectHandler)
+    with opener.open(req, timeout=180) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
@@ -104,6 +161,10 @@ def describe_http_error(e: urllib.error.HTTPError) -> str:
     lines = [f"HTTP {e.code}"]
     if hint := hints.get(e.code, ""):
         lines.append(f"         {hint}")
+    elif reason := str(getattr(e, "reason", "") or ""):
+        # リダイレクト拒否などの独自エラーは reason に説明を入れている。
+        # 想定外のコードほど手がかりが必要なので、hint が無いときは必ず出す
+        lines.append(f"         {reason}")
     try:
         detail = e.read().decode("utf-8", "replace").strip()
     except Exception:  # noqa: BLE001 - 本文が読めなくてもエラー報告は続ける
@@ -139,6 +200,12 @@ def main() -> int:
         help=f"APIのベースURL（既定: {DEFAULT_BASE_URL}）",
     )
     args = parser.parse_args()
+
+    try:
+        base_url = validate_base_url(args.base_url)
+    except ValueError as e:
+        print(f"  ERROR: {e}", file=sys.stderr)
+        return 1
 
     if not MANUAL_ID_RE.match(args.id):
         print(
@@ -192,7 +259,7 @@ def main() -> int:
         return 1
 
     try:
-        result = upload(args.base_url, args.id, html_path, token)
+        result = upload(base_url, args.id, html_path, token)
     except urllib.error.HTTPError as e:
         sys.stdout.flush()
         print(f"  ERROR: アップロードに失敗しました: {describe_http_error(e)}", file=sys.stderr)
@@ -212,8 +279,15 @@ def main() -> int:
     print(f"  成功: {manual_url}")
     print()
 
-    manual_name = os.path.basename(manual_dir)
-    doc_url = args.doc_url or ""
+    try:
+        manual_name = sheet_cell(os.path.basename(manual_dir))
+        doc_url = sheet_cell(args.doc_url or "")
+    except ValueError as e:
+        sys.stdout.flush()
+        print(f"  ERROR: {e}", file=sys.stderr)
+        print(f"         アップロードは成功しています: {manual_url}", file=sys.stderr)
+        return 1
+
     print("  「マニュアルURL」シートに貼る行（タブ区切り）:")
     print()
     print(f"{manual_name}\t{doc_url}\t{manual_url}")
