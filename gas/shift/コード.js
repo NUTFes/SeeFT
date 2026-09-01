@@ -61,6 +61,7 @@ function onOpen() {
         .addItem("【修正】名簿シートに学籍番号の列を追加", "addStudentNumberColumnToRoster")
         .addItem("【調査】タスクの管轄局を点検する", "checkTaskBureaus")
         .addItem("【調査】タスクのドキュメント一覧を調べる", "inspectTaskDocSource")
+        .addItem("【事前確認】マニュアルURLの紐付けを点検する", "checkManualUrlMapping")
     )
     .addSeparator()
     .addSubMenu(
