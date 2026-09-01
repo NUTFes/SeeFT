@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# docs/development/manual-generation-guide.md の①〜④（Googleドキュメントのzip →
+# docs/development/manual-html-operations.md の①〜④（Googleドキュメントのzip →
 # 解説HTML → 検証 → アップロード）を通しで実行するラッパー。⑤（シフトスプシへの
 # 紐付け）はスプシ・GAS側の作業なので対象外。最後に④の出力（対応表に貼る1行）を
 # そのまま表示する。
@@ -78,7 +78,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 for cmd in python3 uv; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "ERROR: $cmd が見つかりません。'brew install pandoc uv' などで準備してください（docs/development/manual-generation-guide.md参照）" >&2
+    echo "ERROR: $cmd が見つかりません。'brew install pandoc uv' などで準備してください（docs/development/manual-html-operations.md参照）" >&2
     exit 1
   fi
 done
@@ -176,4 +176,4 @@ echo "# ⑤ タスクへの紐づけ（手作業）"
 echo "########################################"
 echo "  上に表示された「マニュアルURL」シートに貼る行をコピーして、"
 echo "  シフトスプシ 45th_シフト_ver0 の「マニュアルURL」シートに貼ってください。"
-echo "  以降は docs/development/manual-generation-guide.md の「⑤ タスクに紐づける」を参照してください。"
+echo "  以降は docs/development/manual-html-operations.md の「⑤ タスクに紐づける」を参照してください。"

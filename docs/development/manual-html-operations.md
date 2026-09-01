@@ -52,6 +52,30 @@ Googleドキュメントで書かれたマニュアルを、スマホ最適化�
 
 ②のClaude契約が個人サブスクの共用になっている点は、9月以降のPM不在期間に向けて体制を決め直す必要がある。他の4工程は権限の受け渡しだけで分担できる。
 
+## まとめて実行する（①〜④）
+
+①〜④を1人で担当するなら、通しで実行するスクリプトがある。工程ごとに実行したい場合は以降の①〜⑤を参照する。
+
+```bash
+scripts/automation/run_pipeline.sh docs/manuals/_zips/45th_企画マニュアル_縁日.zip --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit"
+```
+
+判断が必要な2箇所で確認を挟む。①の後に「マニュアル名がタスク一覧M列と一致しているか」、③の後に「内容を見て問題ないか」。どちらも間違えたまま進むと後で静かに失敗する。
+
+- `--prompt` / `--model` で②の設定を変えられる（既定は `card-strict` / `claude-opus-4-7`）
+- ④のトークンは `MANUAL_UPLOAD_TOKEN` を設定しておけば対話入力なしで進む。**`--yes` は確認を飛ばすだけでトークン入力は省略しないため、無人実行するならこの環境変数の設定が前提になる**
+- ⑤（シフトスプシへの紐付け）は対象外。最後に④の出力（対応表に貼る行）が表示されるので、それを「⑤ タスクに紐づける」の手順1で貼る
+
+### 再生成する（①をやり直さない）
+
+元のGoogleドキュメントを直したがzipを取り直したくない、`instructions.md` に修正指示を足して作り直したい、というときは `--manual-dir` で①をスキップできる。
+
+```bash
+scripts/automation/run_pipeline.sh --manual-dir docs/manuals/45th_企画マニュアル_縁日 --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit"
+```
+
+②〜④だけが回り、出力HTMLは無条件に上書きされる。
+
 ## ① Googleドキュメントを取得する
 
 対象のドキュメントを開き、`ファイル > ダウンロード > ウェブページ（.html、zip形式）` を選ぶ。PDFやWordではなくHTMLである点が重要で、これ以外の形式では画像が取り出せない。

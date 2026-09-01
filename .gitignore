@@ -37,3 +37,31 @@ api/docs/schemaspy/
 # マニュアル変換パイプラインに渡すGoogleドキュメントのエクスポートzip（個別に配布されるためリポジトリには含めない）
 docs/manuals/_zips/*
 !docs/manuals/_zips/.gitkeep
+
+# マニュアル変換パイプラインの生成物。
+# 元のGoogleドキュメントが正であり、ここに出るものは誰でも作り直せるため追跡しない。
+# 以前は .git/info/exclude に置いていたが、あれはローカル専用で共有されないため、
+# 担当者ごとに設定しない限り生成物が未追跡ファイルとして溜まっていた。
+docs/manuals/*/images/
+docs/manuals/*/images_original/
+docs/manuals/*/audio/
+docs/manuals/*/videos/_work_*/
+docs/manuals/*/videos/preview.html
+docs/manuals/*/*.html
+!docs/manuals/*/slide_api.html
+docs/manuals/*/*.raw.md
+docs/manuals/*/*.bak
+docs/manuals/*/verify_*.txt
+docs/manuals/*/verify_*.md
+docs/manuals/*/文章チェック結果*.md
+docs/manuals/*/instructions.md
+
+# Python の作業ファイル
+__pycache__/
+scripts/**/__pycache__/
+scripts/**/.venv/
+scripts/automation/out/
+scripts/_debug_last_envelope.json
+
+# Flutter Web のビルド時に複製されるマニュアル
+mobile/web/manuals/
