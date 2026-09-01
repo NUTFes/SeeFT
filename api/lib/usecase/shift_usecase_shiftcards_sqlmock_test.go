@@ -257,8 +257,10 @@ func TestToShiftMembers_MapsGradeAndBureau(t *testing.T) {
 }
 
 // TestGetShiftCardsByUserAndDateAndWeather_BreakCardSkipsMemberFetch は、休憩カードが
-// 担当者取得クエリを一切発行しないことを検証する。UsersByTimesへの期待値を登録しないため、
-// 休憩でメンバーを引く回帰が入れば「unexpected call」で即座に失敗する。
+// 担当者取得クエリを一切発行しないことを検証する。UsersByTimesへの期待値は登録しないが、
+// 回帰で呼ばれてもgetUsersByTimesがsqlmockのエラーを握り潰して空フォールバックするため
+// 「unexpected call」では落ちない。回帰の検出は下のShiftMembers空アサーションが担う
+// (短絡を無効化して失敗することを確認済み)。
 //
 // 休憩には全スタッフの大半が同じtask_idでぶら下がるため、ここを素通しにすると
 // 15分スロットごとに数百人を引くことになる(#488)。
@@ -297,6 +299,42 @@ func TestGetShiftCardsByUserAndDateAndWeather_BreakCardSkipsMemberFetch(t *testi
 	assert.Empty(t, card.ShiftMembers)
 	assert.Empty(t, card.BeforeMembers.Members)
 	assert.Empty(t, card.AfterMembers.Members)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// TestGetShiftCardsByUserAndDateAndWeather_BreakNameWithWhitespaceSkipsMemberFetch は、
+// DB上のタスク名に空白(全角含む)が紛れていても休憩判定が効くことを検証する。
+// mobile側の判定(ShiftCardData.isBreak)はtrimして比較するため、API側だけ素通りすると
+// 「見た目は休憩カードなのに担当者数百人分のレスポンスが返る」静かな劣化になる。
+func TestGetShiftCardsByUserAndDateAndWeather_BreakNameWithWhitespaceSkipsMemberFetch(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+	mock.MatchExpectationsInOrder(false)
+	uc := newFullShiftUseCase(client)
+
+	mock.ExpectQuery(`(?i)FROM grades`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "grade", "created_at", "updated_at"}).
+			AddRow(1, "B4", fixedTestTime, fixedTestTime))
+	mock.ExpectQuery(`(?i)FROM bureaus`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "bureau", "color", "created_at", "updated_at"}).
+			AddRow(1, "総務局", "#000", fixedTestTime, fixedTestTime))
+
+	shiftRows := sqlmock.NewRows(shiftCardCols).
+		AddRow(shiftCardDataRow(310, 10, 9, 43, 2, 1, 1, breakTaskName+"　", "12:00")...)
+	mock.ExpectQuery(`(?i)FROM\s+"shifts"`).WillReturnRows(shiftRows)
+
+	// EndTime算出のための次スロットの問い合わせだけは短絡の前に発生する
+	mock.ExpectQuery(`(?i)FROM times WHERE id =`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "time", "created_at", "updated_at"}).
+			AddRow(2, "12:15", fixedTestTime, fixedTestTime))
+
+	cards, err := uc.GetShiftCardsByUserAndDateAndWeather(context.Background(), "10", "2", "1")
+	require.NoError(t, err)
+	require.Len(t, cards, 1)
+	assert.Empty(t, cards[0].ShiftMembers)
+	assert.Empty(t, cards[0].BeforeMembers.Members)
+	assert.Empty(t, cards[0].AfterMembers.Members)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

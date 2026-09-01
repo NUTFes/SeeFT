@@ -408,8 +408,8 @@ class _MyShiftPageState extends State<MyShiftPage>
   // ShiftCardDataListをMap<カードキー, ShiftCardData>に変換
   //
   // New判定(_detectNewOrUpdatedCardKeys)専用のため、休憩は除外する。
-  // 休憩はシフトの無い時間帯すべてに出るので、含めるとバッジだらけになって
-  // 「本当に新しくなったシフト」が埋もれる
+  // 休憩カードには開くべきマニュアルも集合場所も無くバッジで知らせる価値が無いうえ、
+  // 件数が多いので含めると「本当に新しくなったシフト」が埋もれる
   Map<String, ShiftCardData> _buildCardMap(
     int dayID,
     ShiftCardDataList? list,

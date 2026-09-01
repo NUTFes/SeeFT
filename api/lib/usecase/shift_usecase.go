@@ -640,7 +640,9 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 	// 休憩には全スタッフの大半が同じtask_idでぶら下がるため、getUsersByTimesが15分スロット
 	// ごとに数百人を引いてレスポンスが肥大し、負荷試験(#434)で問題になったN+1を悪化させる。
 	// 加えて「誰が休憩中か」は見せない運用方針(44thでの議論)のため、そもそも取得しない。
-	if first.Task.Task == breakTaskName {
+	// 比較はmobile側(ShiftCardData.isBreak)と同様に前後の空白を無視する。タスク名に空白が
+	// 紛れたときにここだけ素通りすると、担当者数百人入りの休憩カードが静かに配信される
+	if strings.TrimSpace(first.Task.Task) == breakTaskName {
 		shiftCard.BeforeMembers = entity.ShiftMembers{Members: []entity.ShiftMember{}}
 		shiftCard.AfterMembers = entity.ShiftMembers{Members: []entity.ShiftMember{}}
 		return shiftCard
@@ -1040,7 +1042,9 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 				var oldTask entity.Task
 				oldTaskName := "（不明）"
 				if oldTaskRow != nil {
-					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.ManualUrl, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil {
+					// 旧タスクが空文字(未割当)なら既定の「（不明）」を保つ。newTaskName側のガードと対で、
+					// Slack通知の本文が「 → 休憩」のように左側の欠けた表示になるのを防ぐ
+					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.ManualUrl, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil && oldTask.Task != "" {
 						oldTaskName = oldTask.Task
 					}
 				}

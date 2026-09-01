@@ -8,7 +8,7 @@ import 'package:seeft_mobile/widgets/shift_card.dart';
 // mobile側でそれを表示しないことを確かめたいので、あえてplaceを埋めておく
 ShiftCardData _breakData() {
   return ShiftCardData(
-    taskName: '休憩',
+    taskName: breakTaskName,
     startTime: '12:00',
     endTime: '13:00',
     place: '本部(電気棟1F)',
@@ -26,8 +26,8 @@ ShiftCardData _normalData() {
     startTime: '10:00',
     endTime: '12:00',
     place: '正門',
-    url: '',
-    manualUrl: '',
+    url: 'https://example.com/doc',
+    manualUrl: 'https://example.com/manual.html',
     shiftMembers: [
       ShiftMembers(sTime: '10:00', eTime: '12:00', members: const []),
     ],
@@ -62,10 +62,14 @@ void main() {
     expect(find.text('12:00~13:00'), findsOneWidget);
     expect(find.text('休憩'), findsOneWidget);
 
-    // 集合場所とマニュアルは休憩に存在しないため出さない
+    // 集合場所とマニュアルは休憩に存在しないため出さない。
+    // マニュアルは_ManualToggleが実際に描画する文言で確認する
+    // ('マニュアル'という素の文字列はどの状態でも描画されないため)
     expect(find.text('本部(電気棟1F)'), findsNothing);
     expect(find.byIcon(Icons.location_on_outlined), findsNothing);
-    expect(find.text('マニュアル'), findsNothing);
+    expect(find.text('ドキュメント版を開く'), findsNothing);
+    expect(find.text('ドキュメント版なし'), findsNothing);
+    expect(find.text('スライド版を別のタブで開く'), findsNothing);
   });
 
   testWidgets('休憩カードには三点メニューを出さない', (tester) async {
@@ -76,13 +80,15 @@ void main() {
     expect(find.byIcon(Icons.more_vert), findsNothing);
   });
 
-  testWidgets('通常のシフトカードは集合場所と三点メニューを出す', (tester) async {
+  testWidgets('通常のシフトカードは集合場所・マニュアル・三点メニューを出す', (tester) async {
     await tester.pumpWidget(_wrap(_normalData()));
     await tester.pumpAndSettle();
 
     expect(find.text('正門'), findsOneWidget);
     expect(find.byIcon(Icons.location_on_outlined), findsOneWidget);
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    expect(find.text('ドキュメント版を開く'), findsOneWidget);
+    expect(find.text('スライド版を別のタブで開く'), findsOneWidget);
   });
 
   testWidgets('休憩カードは背景色で通常シフトと区別される', (tester) async {
