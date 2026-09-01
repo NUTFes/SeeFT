@@ -35,7 +35,7 @@ drive_client）は当面使わない（[スプシ自動化との関係](#スプ�
    ▼
 [SeeFT] 文章の機械検証（AI なし・決定的）
    │  scripts/claude-slide/verify_slide_mechanical.py
-   │  → 部門長向けレポート verify_report.card-strict.md を生成
+   │  → 部門長向けレポート 文章チェック結果.card-strict.md を生成
    ▼
 [SeeFT] アップロードして URL 発行
    │  → ../development/manual-html-operations.md の手順4
@@ -96,7 +96,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 
 2 つのファイルが出る。
 
-- `verify_report.card-strict.md` — 部門長向け。Slack にそのまま貼れる日本語サマリ。本文の「消えた・書き換わった・増えた」だけを示し、見出し番号や図番号の整理などレイアウト差は「確認不要」に畳んである。
+- `文章チェック結果.card-strict.md` — 部門長向け。Slack にそのまま貼れる日本語サマリ。本文の「消えた・書き換わった・増えた」だけを示し、見出し番号や図番号の整理などレイアウト差は「確認不要」に畳んである。
 - `verify_mechanical.card-strict.txt` — 開発デバッグ用の詳細（文字レベル差分・件数）。Slack には貼らない。
 
 ### 4. アップロードして URL 発行
@@ -113,7 +113,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 当該マニュアルのスレッドに、SeeFT 担当が次の 2 つを続けて投稿する。
 
 - 公開 URL（手順 4 の出力）
-- 部門長向けレポート `verify_report.card-strict.md` の本文
+- 部門長向けレポート `文章チェック結果.card-strict.md` の本文
 
 投稿時に部門長へメンションして確認を依頼する。状態管理はスプシではなくこのスレッドで完結させる。
 
@@ -149,7 +149,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 ```
 
 このあとアップロードする（`../development/manual-html-operations.md` の手順4）。
-返ってきた `manual_url` と `verify_report.card-strict.md` を Slack スレッドへ貼る。
+返ってきた `manual_url` と `文章チェック結果.card-strict.md` を Slack スレッドへ貼る。
 
 ## 部門長向けレポートの読み方
 

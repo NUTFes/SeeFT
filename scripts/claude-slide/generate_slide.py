@@ -18,9 +18,12 @@ scripts/sakura-slide/generate_slide.py (Sakura版) の Claude Agent SDK 版。
 import anyio
 import argparse
 import base64
+import glob
 import mimetypes
 import os
+import platform
 import re
+import shutil
 import subprocess
 import sys
 
@@ -35,6 +38,52 @@ from claude_agent_sdk import (
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
+
+
+def _mac_hardware_is_arm64() -> bool:
+    """実機が Apple Silicon かを Rosetta の影響を受けずに判定する。
+
+    platform.machine() は Rosetta 変換下のプロセスから呼ぶと x86_64 を返すため、
+    実機の判定には使えない。uv が x86_64 版 Python を選ぶと、Apple Silicon 上でも
+    このスクリプト自身が変換下で動くため、実際にその状況が起きる。
+    hw.optional.arm64 はハードウェアの属性なので変換の有無に影響されない。
+    """
+    try:
+        result = subprocess.run(
+            ["sysctl", "-n", "hw.optional.arm64"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.stdout.strip() == "1"
+
+
+def _find_native_cli_path() -> str | None:
+    """PATH上の claude、無ければ VS Code拡張が同梱するネイティブバイナリを探す。
+
+    claude_agent_sdk はまず自分のパッケージに同梱された claude CLI を使おうとするが、
+    そのバイナリは x86_64 でビルドされている。Apple Silicon 上では Rosetta 経由になり、
+    Bunランタイムが「CPU lacks AVX support, strange crashes may occur」という警告を出し
+    実際に生成が無言のまま止まる（ハングする）事象を確認している。
+    VS Code の Claude Code 拡張はアーキテクチャ別にバイナリを同梱しているため、
+    実機に合うものを見つけて明示的に使うことで同梱の壊れたバイナリを回避する。
+
+    アーキテクチャで候補を絞るのは、両方の拡張が入っている環境で darwin-x64 を
+    引いてしまうと、避けたかった Rosetta 経由の停止をそのまま再現するため。
+    辞書順の最後を取ると 'x64' > 'arm64' で必ず x64 側が選ばれる。
+    """
+    if cli := shutil.which("claude"):
+        return cli
+
+    if platform.system() != "Darwin":
+        return None
+
+    arch = "arm64" if _mac_hardware_is_arm64() else "x64"
+    pattern = os.path.expanduser(
+        f"~/.vscode*/extensions/anthropic.claude-code-*-darwin-{arch}/resources/native-binary/claude"
+    )
+    candidates = sorted(glob.glob(pattern))
+    return candidates[-1] if candidates else None
 
 PROMPT_VARIANTS = {
     "default": "manual-prompt.md",
@@ -218,6 +267,8 @@ async def call_claude_sdk(
     }
     if model:
         options_kwargs["model"] = model
+    if native_cli_path := _find_native_cli_path():
+        options_kwargs["cli_path"] = native_cli_path
 
     options = ClaudeAgentOptions(**options_kwargs)
 
