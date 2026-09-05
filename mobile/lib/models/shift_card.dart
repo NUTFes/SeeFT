@@ -1,3 +1,7 @@
+// 休憩タスクの名前。シフト表・タスク一覧の表記、およびAPI側のbreakTaskName
+// (api/lib/usecase/shift_usecase.go)と一致させる必要がある
+const String breakTaskName = '休憩';
+
 // シフトカードのデータモデル
 class ShiftMember {
   final String name;
@@ -32,6 +36,10 @@ class ShiftCardData {
   final List<ShiftMembers> shiftMembers;
   final ShiftMembers beforeMembers;
   final ShiftMembers afterMembers;
+
+  // 休憩は通常のシフトと扱いを変える。集合場所・マニュアル・担当者一覧を持たず、
+  // Newバッジもレビューも出さない(#488)
+  bool get isBreak => taskName.trim() == breakTaskName;
 
   ShiftCardData({
     required this.taskName,

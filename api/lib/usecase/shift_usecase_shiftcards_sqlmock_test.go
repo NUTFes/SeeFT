@@ -255,3 +255,151 @@ func TestToShiftMembers_MapsGradeAndBureau(t *testing.T) {
 	assert.Equal(t, "M1", members[1].Grade)
 	assert.Equal(t, "企画局", members[1].Bureau)
 }
+
+// TestGetShiftCardsByUserAndDateAndWeather_BreakCardSkipsMemberFetch は、休憩カードが
+// 担当者取得クエリを一切発行しないことを検証する。UsersByTimesへの期待値は登録しないが、
+// 回帰で呼ばれてもgetUsersByTimesがsqlmockのエラーを握り潰して空フォールバックするため
+// 「unexpected call」では落ちない。回帰の検出は下のShiftMembers空アサーションが担う
+// (短絡を無効化して失敗することを確認済み)。
+//
+// 休憩には全スタッフの大半が同じtask_idでぶら下がるため、ここを素通しにすると
+// 15分スロットごとに数百人を引くことになる(#488)。
+func TestGetShiftCardsByUserAndDateAndWeather_BreakCardSkipsMemberFetch(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+	mock.MatchExpectationsInOrder(false)
+	uc := newFullShiftUseCase(client)
+
+	mock.ExpectQuery(`(?i)FROM grades`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "grade", "created_at", "updated_at"}).
+			AddRow(1, "B4", fixedTestTime, fixedTestTime))
+	mock.ExpectQuery(`(?i)FROM bureaus`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "bureau", "color", "created_at", "updated_at"}).
+			AddRow(1, "総務局", "#000", fixedTestTime, fixedTestTime))
+
+	shiftRows := sqlmock.NewRows(shiftCardCols).
+		AddRow(shiftCardDataRow(300, 10, 9, 43, 2, 1, 1, breakTaskName, "12:00")...).
+		AddRow(shiftCardDataRow(301, 10, 9, 43, 2, 2, 1, breakTaskName, "12:15")...)
+	mock.ExpectQuery(`(?i)FROM\s+"shifts"`).WillReturnRows(shiftRows)
+
+	// EndTime算出のための次スロット(time_id=3)の問い合わせだけは短絡の前に発生する
+	mock.ExpectQuery(`(?i)FROM times WHERE id =`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "time", "created_at", "updated_at"}).
+			AddRow(3, "12:30", fixedTestTime, fixedTestTime))
+
+	cards, err := uc.GetShiftCardsByUserAndDateAndWeather(context.Background(), "10", "2", "1")
+	require.NoError(t, err)
+	require.Len(t, cards, 1)
+
+	card := cards[0]
+	assert.Equal(t, breakTaskName, card.TaskName)
+	assert.Equal(t, "12:00", card.StartTime)
+	assert.Equal(t, "12:30", card.EndTime)
+	// 「誰が休憩中か」は見せない運用方針のため、担当者は前後を含めて空で返す
+	assert.Empty(t, card.ShiftMembers)
+	assert.Empty(t, card.BeforeMembers.Members)
+	assert.Empty(t, card.AfterMembers.Members)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// TestGetShiftCardsByUserAndDateAndWeather_BreakNameWithWhitespaceSkipsMemberFetch は、
+// DB上のタスク名に空白(全角含む)が紛れていても休憩判定が効くことを検証する。
+// mobile側の判定(ShiftCardData.isBreak)はtrimして比較するため、API側だけ素通りすると
+// 「見た目は休憩カードなのに担当者数百人分のレスポンスが返る」静かな劣化になる。
+func TestGetShiftCardsByUserAndDateAndWeather_BreakNameWithWhitespaceSkipsMemberFetch(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+	mock.MatchExpectationsInOrder(false)
+	uc := newFullShiftUseCase(client)
+
+	mock.ExpectQuery(`(?i)FROM grades`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "grade", "created_at", "updated_at"}).
+			AddRow(1, "B4", fixedTestTime, fixedTestTime))
+	mock.ExpectQuery(`(?i)FROM bureaus`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "bureau", "color", "created_at", "updated_at"}).
+			AddRow(1, "総務局", "#000", fixedTestTime, fixedTestTime))
+
+	shiftRows := sqlmock.NewRows(shiftCardCols).
+		AddRow(shiftCardDataRow(310, 10, 9, 43, 2, 1, 1, breakTaskName+"　", "12:00")...)
+	mock.ExpectQuery(`(?i)FROM\s+"shifts"`).WillReturnRows(shiftRows)
+
+	// EndTime算出のための次スロットの問い合わせだけは短絡の前に発生する
+	mock.ExpectQuery(`(?i)FROM times WHERE id =`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "time", "created_at", "updated_at"}).
+			AddRow(2, "12:15", fixedTestTime, fixedTestTime))
+
+	cards, err := uc.GetShiftCardsByUserAndDateAndWeather(context.Background(), "10", "2", "1")
+	require.NoError(t, err)
+	require.Len(t, cards, 1)
+	assert.Empty(t, cards[0].ShiftMembers)
+	assert.Empty(t, cards[0].BeforeMembers.Members)
+	assert.Empty(t, cards[0].AfterMembers.Members)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// TestGetUsersByShift_BreakTaskReturnsNoUsers は、休憩タスクを指定した担当者一覧API
+// (GET /shifts/tasks/:task_id/...)が担当者を一切返さないことを検証する。
+// 「誰が休憩中かを見せない」境界はシフトカードだけでなくこのエンドポイントにも必要(#488)。
+// 担当者クエリ(rep.Users)には期待値を登録しないため、ガードが消えるとsqlmockのエラーが
+// そのまま返り、require.NoErrorで失敗する。
+func TestGetUsersByShift_BreakTaskReturnsNoUsers(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+
+	crud := abstract.NewCrud(client)
+	uc := &shiftUseCase{
+		rep:     repository.NewShiftRepository(client, crud),
+		taskRep: repository.NewTaskRepository(client, crud),
+	}
+
+	taskCols := []string{"id", "task", "place_id", "url", "manual_url", "bureau_id", "max_member", "color", "remark", "year_id", "created_at", "updated_at"}
+	mock.ExpectQuery(`(?i)FROM tasks WHERE id =`).
+		WillReturnRows(sqlmock.NewRows(taskCols).
+			AddRow(9, "休憩", 1, "", "", 1, 999, "CCCCCC", "", 45, fixedTestTime, fixedTestTime))
+
+	result, err := uc.GetUsersByShift(context.Background(), "9", "45", "2", "40", "1")
+	require.NoError(t, err)
+	// JSONでnullにならないよう空配列で返ることまで確認する
+	assert.NotNil(t, result.Users)
+	assert.Empty(t, result.Users)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// TestIsUnassignedToBreakChange は、action_logを記録しない遷移の判定を検証する。
+// 「未割当→休憩」だけが対象で、シフト取り消しに相当する「通常タスク→休憩」や
+// 新規割り当ての「未割当→通常タスク」は従来どおり記録(=Slack通知)される。
+func TestIsUnassignedToBreakChange(t *testing.T) {
+	assert.True(t, isUnassignedToBreakChange(true, "休憩"))
+	assert.True(t, isUnassignedToBreakChange(true, " 休憩　")) // 空白はtrimして比較する
+	assert.False(t, isUnassignedToBreakChange(true, "受付"))  // 新規割り当ては通知する
+	assert.False(t, isUnassignedToBreakChange(false, "休憩")) // 受付→休憩(取り消し)は通知する
+}
+
+// TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery は、タスクが引けないときに
+// 担当者クエリへ進まず空配列で返ること(fail-closed)を検証する。
+// 判定失敗のまま担当者取得へ進むと、タスク読み取りの失敗が休憩境界の素通りになる。
+func TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+
+	crud := abstract.NewCrud(client)
+	uc := &shiftUseCase{
+		rep:     repository.NewShiftRepository(client, crud),
+		taskRep: repository.NewTaskRepository(client, crud),
+	}
+
+	taskCols := []string{"id", "task", "place_id", "url", "manual_url", "bureau_id", "max_member", "color", "remark", "year_id", "created_at", "updated_at"}
+	// タスクが存在しない(0行)。担当者クエリ(rep.Users)には期待値を登録しない
+	mock.ExpectQuery(`(?i)FROM tasks WHERE id =`).
+		WillReturnRows(sqlmock.NewRows(taskCols))
+
+	result, err := uc.GetUsersByShift(context.Background(), "9999", "45", "2", "40", "1")
+	require.NoError(t, err)
+	assert.NotNil(t, result.Users)
+	assert.Empty(t, result.Users)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

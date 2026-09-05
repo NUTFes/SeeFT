@@ -17,6 +17,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+// 休憩タスクの名前。シフト表(スプレッドシート)とタスク一覧の表記に一致させる必要がある。
+// 休憩は他のタスクと違い、担当者一覧を組み立てずにカードを返す(createShiftCardFromGroup参照)
+const breakTaskName = "休憩"
+
+// 未割当(空タスク)から休憩への変更か。この変更だけはaction_logに記録しない。
+// 休憩の追加は受け手に行動を求めない通知であるうえ、GAS修正(#488)後の初回シフト再送信では
+// 全休憩セルがこの遷移を踏む。記録すると5分間隔のschedulerがSlack DMとして全スタッフに
+// 流してしまうため、運用手順(通知停止→既読化)が守られなかった場合でも氾濫しないよう
+// コード側でも塞ぐ。休憩→通常タスク等、それ以外の変更は従来どおり記録する
+func isUnassignedToBreakChange(oldTaskWasUnassigned bool, newTaskName string) bool {
+	return oldTaskWasUnassigned && strings.TrimSpace(newTaskName) == breakTaskName
+}
+
 type shiftUseCase struct {
 	rep           rep.ShiftRepository
 	shiftCardRep  rep.ShiftCardRepository
@@ -73,6 +86,25 @@ func (a ByTime) Less(i, j int) bool { return a[i].Time.ID < a[j].Time.ID }
 func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year string, date string, time string, weather string) (entity.ShiftUsers, error) {
 	users := entity.User{}
 	var shiftUsers entity.ShiftUsers
+
+	// 休憩は「誰が休憩中か」を見せない方針(#488)のため、担当者を返さない。
+	// シフトカード側(createShiftCardFromGroup)と同じ境界をこのエンドポイントにも張る。
+	// 判定に失敗したまま担当者取得へ進む(fail-open)と、タスク読み取りの失敗がそのまま
+	// 境界の素通りになるため、休憩でないと確定できるまで担当者は返さない
+	taskRow, taskErr := a.taskRep.Find(c, task)
+	if taskErr != nil {
+		return shiftUsers, taskErr
+	}
+	var breakCheckTask entity.Task
+	if scanErr := taskRow.Scan(&breakCheckTask.ID, &breakCheckTask.Task, &breakCheckTask.PlaceID, &breakCheckTask.Url, &breakCheckTask.ManualUrl, &breakCheckTask.BureauID, &breakCheckTask.MaxMember, &breakCheckTask.Color, &breakCheckTask.Remark, &breakCheckTask.YearID, &breakCheckTask.CreatedAt, &breakCheckTask.UpdatedAt); scanErr != nil {
+		// タスクが存在しない(ErrNoRows等)。存在しないタスクに担当者は居ないので空で返す
+		shiftUsers.Users = []entity.User{}
+		return shiftUsers, nil
+	}
+	if strings.TrimSpace(breakCheckTask.Task) == breakTaskName {
+		shiftUsers.Users = []entity.User{}
+		return shiftUsers, nil
+	}
 
 	// クエリー実行
 	rows, err := a.rep.Users(c, task, year, date, time, weather)
@@ -632,6 +664,18 @@ func (a *shiftUseCase) createShiftCardFromGroup(c context.Context, group []entit
 		ShiftMembers: []entity.ShiftMembers{}, // 空配列で初期化
 	}
 
+	// 休憩は担当者一覧を組み立てずに返す。
+	// 休憩には全スタッフの大半が同じtask_idでぶら下がるため、getUsersByTimesが15分スロット
+	// ごとに数百人を引いてレスポンスが肥大し、負荷試験(#434)で問題になったN+1を悪化させる。
+	// 加えて「誰が休憩中か」は見せない運用方針(44thでの議論)のため、そもそも取得しない。
+	// 比較はmobile側(ShiftCardData.isBreak)と同様に前後の空白を無視する。タスク名に空白が
+	// 紛れたときにここだけ素通りすると、担当者数百人入りの休憩カードが静かに配信される
+	if strings.TrimSpace(first.Task.Task) == breakTaskName {
+		shiftCard.BeforeMembers = entity.ShiftMembers{Members: []entity.ShiftMember{}}
+		shiftCard.AfterMembers = entity.ShiftMembers{Members: []entity.ShiftMember{}}
+		return shiftCard
+	}
+
 	// 必要なtime_id（各スロット＋前後1枠）を先に集め、メンバー取得を1回のバッチクエリにまとめる
 	// （shift-cardsのN+1解消。前後スロットの存在確認は既存のgetPreviousTimeString/
 	// getNextTimeStringのロジックをそのまま使う）
@@ -1025,9 +1069,17 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 				oldTaskRow, _ := u.taskRep.Find(ctx, strconv.Itoa(oldTaskID))
 				var oldTask entity.Task
 				oldTaskName := "（不明）"
+				// 「未割当(空タスク)だった」ことはスキャン成功時にのみ確定させ、読み取り失敗と混同しない
+				oldTaskWasUnassigned := false
 				if oldTaskRow != nil {
+					// 旧タスクが空文字(未割当)なら既定の「（不明）」を保つ。newTaskName側のガードと対で、
+					// Slack通知の本文が「 → 休憩」のように左側の欠けた表示になるのを防ぐ
 					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.ManualUrl, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil {
-						oldTaskName = oldTask.Task
+						if oldTask.Task == "" {
+							oldTaskWasUnassigned = true
+						} else {
+							oldTaskName = oldTask.Task
+						}
 					}
 				}
 
@@ -1036,15 +1088,17 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 					newTaskName = "（不明）"
 				}
 
-				// action_logに記録
-				diffPayload := map[string]interface{}{
-					"changes": []map[string]string{
-						{"field": "task_name", "old": oldTaskName, "new": newTaskName},
-					},
-				}
-				if u.actionLogRepo != nil {
-					if logErr := u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload); logErr != nil {
-						log.Printf("action_log記録失敗(UPDATE): %v", logErr)
+				// action_logに記録(未割当→休憩だけは記録しない。isUnassignedToBreakChange参照)
+				if !isUnassignedToBreakChange(oldTaskWasUnassigned, task.Task) {
+					diffPayload := map[string]interface{}{
+						"changes": []map[string]string{
+							{"field": "task_name", "old": oldTaskName, "new": newTaskName},
+						},
+					}
+					if u.actionLogRepo != nil {
+						if logErr := u.actionLogRepo.Create(ctx, existShift.ID, user.ID, dateIDInt, "UPDATE", diffPayload); logErr != nil {
+							log.Printf("action_log記録失敗(UPDATE): %v", logErr)
+						}
 					}
 				}
 			}
