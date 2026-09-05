@@ -54,7 +54,7 @@ func Test_notificationUseCase_formatTimeRange(t *testing.T) {
 		},
 		{
 	
-			name:        "要判断: startTimeID がマップに存在しない（非対称な挙動: issue #）",
+			name:        "要判断: startTimeID がマップに存在しない（非対称な挙動: issue #499）",
 			timeMap:     map[int]entity.Time{2: {Time: "10:00"}},
 			startTimeID: 5,
 			endTimeID:   1,
