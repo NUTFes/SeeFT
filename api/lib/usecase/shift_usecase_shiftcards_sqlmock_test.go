@@ -338,3 +338,42 @@ func TestGetShiftCardsByUserAndDateAndWeather_BreakNameWithWhitespaceSkipsMember
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+// TestGetUsersByShift_BreakTaskReturnsNoUsers は、休憩タスクを指定した担当者一覧API
+// (GET /shifts/tasks/:task_id/...)が担当者を一切返さないことを検証する。
+// 「誰が休憩中かを見せない」境界はシフトカードだけでなくこのエンドポイントにも必要(#488)。
+// 担当者クエリ(rep.Users)には期待値を登録しないため、ガードが消えるとsqlmockのエラーが
+// そのまま返り、require.NoErrorで失敗する。
+func TestGetUsersByShift_BreakTaskReturnsNoUsers(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+
+	crud := abstract.NewCrud(client)
+	uc := &shiftUseCase{
+		rep:     repository.NewShiftRepository(client, crud),
+		taskRep: repository.NewTaskRepository(client, crud),
+	}
+
+	taskCols := []string{"id", "task", "place_id", "url", "manual_url", "bureau_id", "max_member", "color", "remark", "year_id", "created_at", "updated_at"}
+	mock.ExpectQuery(`(?i)FROM tasks WHERE id =`).
+		WillReturnRows(sqlmock.NewRows(taskCols).
+			AddRow(9, "休憩", 1, "", "", 1, 999, "CCCCCC", "", 45, fixedTestTime, fixedTestTime))
+
+	result, err := uc.GetUsersByShift(context.Background(), "9", "45", "2", "40", "1")
+	require.NoError(t, err)
+	// JSONでnullにならないよう空配列で返ることまで確認する
+	assert.NotNil(t, result.Users)
+	assert.Empty(t, result.Users)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// TestIsUnassignedToBreakChange は、action_logを記録しない遷移の判定を検証する。
+// 「未割当→休憩」だけが対象で、シフト取り消しに相当する「通常タスク→休憩」や
+// 新規割り当ての「未割当→通常タスク」は従来どおり記録(=Slack通知)される。
+func TestIsUnassignedToBreakChange(t *testing.T) {
+	assert.True(t, isUnassignedToBreakChange(true, "休憩"))
+	assert.True(t, isUnassignedToBreakChange(true, " 休憩　")) // 空白はtrimして比較する
+	assert.False(t, isUnassignedToBreakChange(true, "受付"))  // 新規割り当ては通知する
+	assert.False(t, isUnassignedToBreakChange(false, "休憩")) // 受付→休憩(取り消し)は通知する
+}

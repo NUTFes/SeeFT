@@ -46,8 +46,12 @@ class RescueRequestTabShorthandedPage extends StatelessWidget {
         taskName: 'タスクを選択してください',
       ));
       
-      // idが1と2のタスクを除外
-      taskList.removeWhere((element) => element.id == 1 || element.id == 2);
+      // 空タスク(id=1)・NG(id=2)と休憩を除外する。
+      // 休憩は45thからシフトとしてDBに入るが、レスキューを要請する対象ではない
+      taskList.removeWhere((element) =>
+          element.id == 1 ||
+          element.id == 2 ||
+          element.taskName.trim() == breakTaskName);
 
       return taskList;
     } catch (err) {
