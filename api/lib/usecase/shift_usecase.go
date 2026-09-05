@@ -89,13 +89,21 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 
 	// 休憩は「誰が休憩中か」を見せない方針(#488)のため、担当者を返さない。
 	// シフトカード側(createShiftCardFromGroup)と同じ境界をこのエンドポイントにも張る。
-	// タスクが引けない場合は通常経路に流す(存在しないtask_idなら担当者も0件になるだけ)
-	if taskRow, taskErr := a.taskRep.Find(c, task); taskErr == nil {
-		var t entity.Task
-		if scanErr := taskRow.Scan(&t.ID, &t.Task, &t.PlaceID, &t.Url, &t.ManualUrl, &t.BureauID, &t.MaxMember, &t.Color, &t.Remark, &t.YearID, &t.CreatedAt, &t.UpdatedAt); scanErr == nil && strings.TrimSpace(t.Task) == breakTaskName {
-			shiftUsers.Users = []entity.User{}
-			return shiftUsers, nil
-		}
+	// 判定に失敗したまま担当者取得へ進む(fail-open)と、タスク読み取りの失敗がそのまま
+	// 境界の素通りになるため、休憩でないと確定できるまで担当者は返さない
+	taskRow, taskErr := a.taskRep.Find(c, task)
+	if taskErr != nil {
+		return shiftUsers, taskErr
+	}
+	var breakCheckTask entity.Task
+	if scanErr := taskRow.Scan(&breakCheckTask.ID, &breakCheckTask.Task, &breakCheckTask.PlaceID, &breakCheckTask.Url, &breakCheckTask.ManualUrl, &breakCheckTask.BureauID, &breakCheckTask.MaxMember, &breakCheckTask.Color, &breakCheckTask.Remark, &breakCheckTask.YearID, &breakCheckTask.CreatedAt, &breakCheckTask.UpdatedAt); scanErr != nil {
+		// タスクが存在しない(ErrNoRows等)。存在しないタスクに担当者は居ないので空で返す
+		shiftUsers.Users = []entity.User{}
+		return shiftUsers, nil
+	}
+	if strings.TrimSpace(breakCheckTask.Task) == breakTaskName {
+		shiftUsers.Users = []entity.User{}
+		return shiftUsers, nil
 	}
 
 	// クエリー実行

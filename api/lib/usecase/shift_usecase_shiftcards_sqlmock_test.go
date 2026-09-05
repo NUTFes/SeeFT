@@ -377,3 +377,29 @@ func TestIsUnassignedToBreakChange(t *testing.T) {
 	assert.False(t, isUnassignedToBreakChange(true, "受付"))  // 新規割り当ては通知する
 	assert.False(t, isUnassignedToBreakChange(false, "休憩")) // 受付→休憩(取り消し)は通知する
 }
+
+// TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery は、タスクが引けないときに
+// 担当者クエリへ進まず空配列で返ること(fail-closed)を検証する。
+// 判定失敗のまま担当者取得へ進むと、タスク読み取りの失敗が休憩境界の素通りになる。
+func TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+
+	crud := abstract.NewCrud(client)
+	uc := &shiftUseCase{
+		rep:     repository.NewShiftRepository(client, crud),
+		taskRep: repository.NewTaskRepository(client, crud),
+	}
+
+	taskCols := []string{"id", "task", "place_id", "url", "manual_url", "bureau_id", "max_member", "color", "remark", "year_id", "created_at", "updated_at"}
+	// タスクが存在しない(0行)。担当者クエリ(rep.Users)には期待値を登録しない
+	mock.ExpectQuery(`(?i)FROM tasks WHERE id =`).
+		WillReturnRows(sqlmock.NewRows(taskCols))
+
+	result, err := uc.GetUsersByShift(context.Background(), "9999", "45", "2", "40", "1")
+	require.NoError(t, err)
+	assert.NotNil(t, result.Users)
+	assert.Empty(t, result.Users)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
