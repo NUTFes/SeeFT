@@ -97,9 +97,14 @@ func (a *shiftUseCase) GetUsersByShift(c context.Context, task string, year stri
 	}
 	var breakCheckTask entity.Task
 	if scanErr := taskRow.Scan(&breakCheckTask.ID, &breakCheckTask.Task, &breakCheckTask.PlaceID, &breakCheckTask.Url, &breakCheckTask.ManualUrl, &breakCheckTask.BureauID, &breakCheckTask.MaxMember, &breakCheckTask.Color, &breakCheckTask.Remark, &breakCheckTask.YearID, &breakCheckTask.CreatedAt, &breakCheckTask.UpdatedAt); scanErr != nil {
-		// タスクが存在しない(ErrNoRows等)。存在しないタスクに担当者は居ないので空で返す
-		shiftUsers.Users = []entity.User{}
-		return shiftUsers, nil
+		// タスクが存在しない。存在しないタスクに担当者は居ないので空で返す
+		if errors.Is(scanErr, sql.ErrNoRows) {
+			shiftUsers.Users = []entity.User{}
+			return shiftUsers, nil
+		}
+		// それ以外(接続エラー・NULLの変換失敗等)は空の成功に変えずに返す。
+		// Findは*sql.Rowを返すため、クエリ自体の失敗もここ(Scan)で初めて表に出る
+		return shiftUsers, errors.Wrapf(scanErr, "休憩判定のタスク取得失敗: task=%s", task)
 	}
 	if strings.TrimSpace(breakCheckTask.Task) == breakTaskName {
 		shiftUsers.Users = []entity.User{}

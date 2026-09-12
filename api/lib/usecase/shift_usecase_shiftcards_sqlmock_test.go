@@ -378,7 +378,7 @@ func TestIsUnassignedToBreakChange(t *testing.T) {
 	assert.False(t, isUnassignedToBreakChange(false, "休憩")) // 受付→休憩(取り消し)は通知する
 }
 
-// TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery は、タスクが引けないときに
+// TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery は、タスクが存在しない(0行)ときに
 // 担当者クエリへ進まず空配列で返ること(fail-closed)を検証する。
 // 判定失敗のまま担当者取得へ進むと、タスク読み取りの失敗が休憩境界の素通りになる。
 func TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery(t *testing.T) {
@@ -399,6 +399,31 @@ func TestGetUsersByShift_UnknownTaskReturnsEmptyWithoutUserQuery(t *testing.T) {
 	result, err := uc.GetUsersByShift(context.Background(), "9999", "45", "2", "40", "1")
 	require.NoError(t, err)
 	assert.NotNil(t, result.Users)
+	assert.Empty(t, result.Users)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// TestGetUsersByShift_TaskLookupErrorReturnsError は、タスクの読み取りがタスク不在(ErrNoRows)
+// 以外の理由で失敗したとき、空の成功に変えずエラーを返すことを検証する。
+// Findは*sql.Rowを返すため、クエリの失敗はScanで初めて表に出る。ここを空配列で返すと、
+// DB障害が「担当者0人」という正常な応答に見えてしまう。
+func TestGetUsersByShift_TaskLookupErrorReturnsError(t *testing.T) {
+	client, mock := newFakeDBClient(t)
+	defer client.CloseDB()
+
+	crud := abstract.NewCrud(client)
+	uc := &shiftUseCase{
+		rep:     repository.NewShiftRepository(client, crud),
+		taskRep: repository.NewTaskRepository(client, crud),
+	}
+
+	// タスクの読み取りが接続エラーで失敗する。担当者クエリ(rep.Users)には期待値を登録しない
+	mock.ExpectQuery(`(?i)FROM tasks WHERE id =`).
+		WillReturnError(sql.ErrConnDone)
+
+	result, err := uc.GetUsersByShift(context.Background(), "9", "45", "2", "40", "1")
+	require.ErrorIs(t, err, sql.ErrConnDone)
 	assert.Empty(t, result.Users)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
