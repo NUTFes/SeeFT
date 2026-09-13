@@ -1,6 +1,5 @@
 import 'package:seeft_mobile/configs/importer.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
-import 'package:seeft_mobile/widgets/manual_viewer.dart';
 import 'package:seeft_mobile/widgets/new_badge.dart';
 import 'package:seeft_mobile/widgets/review_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -439,150 +438,78 @@ class _ManualToggle extends StatefulWidget {
 }
 
 class _ManualToggleState extends State<_ManualToggle> {
-  bool _isExpanded = false;
-
   bool get _hasDocument => widget.url.isNotEmpty;
   bool get _hasSlide => widget.manualUrl.isNotEmpty;
 
-  void _toggleManual() {
-    if (!_hasDocument) return;
-    final willExpand = !_isExpanded;
-    setState(() => _isExpanded = willExpand);
-    if (willExpand && widget.onOpened != null) {
-      widget.onOpened!();
-    }
-  }
-
-  // スライド版は認証付き配信のためiframe埋め込みができない。常に別タブで開く
-  Future<void> _openSlide() async {
+  // ドキュメント版もスライド版も閲覧を技大祭アカウントに限定しているため、iframe に埋め込むと開けない
+  // （他サイトの枠には Google のログイン情報が渡らず、ドライブの /view は X-Frame-Options で枠に出せない）。
+  // どちらも常に別タブで開く
+  Future<void> _open(String url, String errorMessage) async {
     if (widget.onOpened != null) {
       widget.onOpened!();
     }
     var launched = false;
     try {
       launched = await launchUrl(
-        Uri.parse(widget.manualUrl),
+        Uri.parse(url),
         mode: LaunchMode.externalApplication,
       );
     } catch (_) {
       launched = false;
     }
     if (!launched && mounted) {
-      showCustomErrorSnackBar(context, 'マニュアル（スライド版）を開けませんでした');
+      showCustomErrorSnackBar(context, errorMessage);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final textColor = _hasDocument ? AppColors.link : AppColors.grayDark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(4.0),
-          onTap: _hasDocument ? _toggleManual : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _isExpanded ? Icons.expand_less : Icons.expand_more,
-                  size: 16,
-                  color: textColor,
-                ),
-                const SizedBox(width: 4.0),
-                Text(
-                  _manualText,
-                  style: TextStyle(
-                    fontSize: AppFontSizes.xs,
-                    color: textColor,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        _link(
+          icon: Icons.description,
+          label: _hasDocument ? 'ドキュメント版を別のタブで開く' : 'ドキュメント版なし',
+          onTap:
+              _hasDocument ? () => _open(widget.url, 'マニュアルを開けませんでした') : null,
         ),
-        if (_isExpanded) ...[
-          const SizedBox(height: 8.0),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.link),
-              borderRadius: BorderRadius.circular(AppBorderRadius.normal),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppBorderRadius.normal),
-              child: Column(
-                children: [
-                  ManualViewer(url: widget.url),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () async {
-                        var launched = false;
-                        try {
-                          launched = await launchUrl(
-                            Uri.parse(widget.url),
-                            mode: LaunchMode.externalApplication,
-                          );
-                        } catch (_) {
-                          launched = false;
-                        }
-                        if (!launched && context.mounted) {
-                          showCustomErrorSnackBar(
-                            context,
-                            'マニュアルを開けませんでした',
-                          );
-                        }
-                      },
-                      child: const Text(
-                        'ドキュメント版を別のタブで開く',
-                        style: TextStyle(
-                          fontSize: AppFontSizes.xs,
-                          color: AppColors.link,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
         if (_hasSlide)
-          InkWell(
-            borderRadius: BorderRadius.circular(4.0),
-            onTap: _openSlide,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 4.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.slideshow,
-                    size: 16,
-                    color: AppColors.link,
-                  ),
-                  SizedBox(width: 4.0),
-                  Text(
-                    'スライド版を別のタブで開く',
-                    style: TextStyle(
-                      fontSize: AppFontSizes.xs,
-                      color: AppColors.link,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          _link(
+            icon: Icons.slideshow,
+            label: 'スライド版を別のタブで開く',
+            onTap: () => _open(widget.manualUrl, 'マニュアル（スライド版）を開けませんでした'),
           ),
       ],
     );
   }
 
-  String get _manualText {
-    if (!_hasDocument) return 'ドキュメント版なし';
-    return _isExpanded ? 'ドキュメント版を閉じる' : 'ドキュメント版を開く';
+  Widget _link({
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    final color = onTap != null ? AppColors.link : AppColors.grayDark;
+    return InkWell(
+      borderRadius: BorderRadius.circular(4.0),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 4.0),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: AppFontSizes.xs,
+                color: color,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
