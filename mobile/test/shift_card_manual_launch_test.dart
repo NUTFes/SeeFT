@@ -48,11 +48,20 @@ ShiftCardData _fakeData({
   );
 }
 
-Widget _wrap(ShiftCardData data) {
+Widget _wrap(
+  ShiftCardData data, {
+  bool isNew = false,
+  VoidCallback? onOpened,
+}) {
   return MaterialApp(
     home: Scaffold(
       body: SingleChildScrollView(
-        child: ShiftCard(data: data, userID: 1),
+        child: ShiftCard(
+          data: data,
+          userID: 1,
+          isNew: isNew,
+          onOpened: onOpened,
+        ),
       ),
     ),
   );
@@ -74,6 +83,58 @@ Future<void> _tapText(WidgetTester tester, String text) async {
 }
 
 void main() {
+  // onOpened は New バッジを消し、開封済みとして端末に保存する処理につながる。
+  // 開けなかったのに既読にすると、中身を見ていないカードの New が戻らなくなる
+  for (final label in ['ドキュメント版を別のタブで開く', 'スライド版を別のタブで開く']) {
+    testWidgets('$label：起動に失敗したら既読にしない', (tester) async {
+      _installFakePlatform(false);
+      var openedCount = 0;
+
+      await tester.pumpWidget(
+        _wrap(_fakeData(), isNew: true, onOpened: () => openedCount++),
+      );
+      await tester.pumpAndSettle();
+
+      await _tapText(tester, label);
+
+      expect(openedCount, 0);
+    });
+
+    testWidgets('$label：起動に成功したら1回だけ既読にする', (tester) async {
+      _installFakePlatform(true);
+      var openedCount = 0;
+
+      await tester.pumpWidget(
+        _wrap(_fakeData(), isNew: true, onOpened: () => openedCount++),
+      );
+      await tester.pumpAndSettle();
+
+      await _tapText(tester, label);
+
+      expect(openedCount, 1);
+    });
+  }
+
+  // Web の launchUrl は javascript: 以外で false を返さないので、本番で失敗扱いになるのは主に URL の解析エラー
+  testWidgets('URLが壊れていて開けなかったら既読にせずエラーを出す', (tester) async {
+    _installFakePlatform(true);
+    var openedCount = 0;
+
+    await tester.pumpWidget(
+      _wrap(
+        _fakeData(url: 'https://[broken'),
+        isNew: true,
+        onOpened: () => openedCount++,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await _tapText(tester, 'ドキュメント版を別のタブで開く');
+
+    expect(openedCount, 0);
+    expect(find.text('マニュアルを開けませんでした'), findsOneWidget);
+  });
+
   testWidgets('ドキュメント版の起動成功時はエラーを出さず外部アプリモードで開く', (tester) async {
     final fake = _installFakePlatform(true);
 

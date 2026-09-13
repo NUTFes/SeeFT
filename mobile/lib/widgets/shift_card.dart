@@ -445,9 +445,6 @@ class _ManualToggleState extends State<_ManualToggle> {
   // （他サイトの枠には Google のログイン情報が渡らず、ドライブの /view は X-Frame-Options で枠に出せない）。
   // どちらも常に別タブで開く
   Future<void> _open(String url, String errorMessage) async {
-    if (widget.onOpened != null) {
-      widget.onOpened!();
-    }
     var launched = false;
     try {
       launched = await launchUrl(
@@ -457,7 +454,12 @@ class _ManualToggleState extends State<_ManualToggle> {
     } catch (_) {
       launched = false;
     }
-    if (!launched && mounted) {
+    if (launched) {
+      // 開けたときだけ既読にする。onOpened は New バッジを消し、開封済みとして端末に保存する
+      if (widget.onOpened != null) {
+        widget.onOpened!();
+      }
+    } else if (mounted) {
       showCustomErrorSnackBar(context, errorMessage);
     }
   }
