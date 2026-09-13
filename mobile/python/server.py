@@ -59,10 +59,20 @@ class MyHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def accepts_gzip(self):
+        # gzip に付いた q の値が 0 なら（q=0.0 や Q=0 も含む）、圧縮を受け付けない指定として扱う
         for part in self.headers.get("Accept-Encoding", "").split(","):
-            coding, _, params = part.partition(";")
-            if coding.strip().lower() == "gzip" and params.replace(" ", "") != "q=0":
-                return True
+            coding, *params = part.split(";")
+            if coding.strip().lower() != "gzip":
+                continue
+            quality = 1.0
+            for param in params:
+                name, _, value = param.partition("=")
+                if name.strip().lower() == "q":
+                    try:
+                        quality = float(value)
+                    except ValueError:
+                        return False
+            return 0 < quality <= 1
         return False
 
     def send_gzip_head(self, path):
