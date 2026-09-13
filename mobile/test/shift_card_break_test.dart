@@ -67,7 +67,7 @@ void main() {
     // ('マニュアル'という素の文字列はどの状態でも描画されないため)
     expect(find.text('本部(電気棟1F)'), findsNothing);
     expect(find.byIcon(Icons.location_on_outlined), findsNothing);
-    expect(find.text('ドキュメント版を開く'), findsNothing);
+    expect(find.text('ドキュメント版を別のタブで開く'), findsNothing);
     expect(find.text('ドキュメント版なし'), findsNothing);
     expect(find.text('スライド版を別のタブで開く'), findsNothing);
   });
@@ -87,7 +87,7 @@ void main() {
     expect(find.text('正門'), findsOneWidget);
     expect(find.byIcon(Icons.location_on_outlined), findsOneWidget);
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
-    expect(find.text('ドキュメント版を開く'), findsOneWidget);
+    expect(find.text('ドキュメント版を別のタブで開く'), findsOneWidget);
     expect(find.text('スライド版を別のタブで開く'), findsOneWidget);
   });
 
