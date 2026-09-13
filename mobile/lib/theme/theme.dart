@@ -340,7 +340,10 @@ class MaterialTheme {
     useMaterial3: true,
     brightness: colorScheme.brightness,
     colorScheme: colorScheme,
+    // 日本語の太字を疑似ボールドで崩さないよう、Bold を同梱した NotoSansJP を使う（#513）。
+    // ThemeData(fontFamily:) は Typography の fontFamily に上書きされて効かないので、ここで指定する
     textTheme: textTheme.apply(
+      fontFamily: 'NotoSansJP',
       bodyColor: colorScheme.onSurface,
       displayColor: colorScheme.onSurface,
     ),
