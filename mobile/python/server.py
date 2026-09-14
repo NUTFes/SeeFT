@@ -108,6 +108,12 @@ class MyHandler(SimpleHTTPRequestHandler):
 
 # ThreadingHTTPServer はリクエストごとにスレッドを立てる。
 # 1 本のスレッドで順番に返すと、初めて開く人が重なったときに後ろの人が待たされるため
-with ThreadingHTTPServer(("", PORT), MyHandler) as httpd:
+class Server(ThreadingHTTPServer):
+    # 受け付けるまで OS に待たせておける接続の数（listen の backlog）。
+    # 標準の 5 だと、多くの接続が一度に来たときに溢れて、その接続は切られる
+    request_queue_size = 1024
+
+
+with Server(("", PORT), MyHandler) as httpd:
     print(f"Serving at port {PORT}")
     httpd.serve_forever()
