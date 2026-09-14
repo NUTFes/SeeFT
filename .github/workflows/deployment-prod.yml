@@ -1,51 +1,41 @@
 name: CD
 
 on:
-  workflow_call:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: デプロイするブランチ名
+        required: true
+        type: string
+
+concurrency:
+  group: seeft-production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    name: Deploy to production
+
+    # 本番環境のself-hosted-runnerで
+    runs-on: 
+      - self-hosted
+      - linux
+      - seeft-prod
     
-    permissions:
-      contents: read
-      packages: read
+    environment: production
+    timeout-minutes: 60
 
-    steps:
-      - name: Add deploy host key
+    env:
+      DEPLOY_BRANCH: ${{ inputs.branch }}
+      DEPLOY_DIRECTORY: ${{ vars.DEPLOY_DIRECTORY }}
+      COMPOSE_FILE: ${{ vars.COMPOSE_FILE }}
+      CONTAINER_IP: ${{ vars.CONTAINER_IP }}
+
+    steps:      
+      - name: Deploy
         run: |
-          mkdir -p ~/.ssh
-          ssh-keygen -R "${{ secrets.CONTAINER_IP }}" 2>/dev/null || true
-          echo "${{ secrets.DEPLOY_HOST_KEY }}" >> ~/.ssh/known_hosts
-
-      - name: SSH and Deploy
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHCR_USERNAME: ${{ github.actor }}
-        run: |
-          IMAGE_TAG="${GITHUB_SHA::7}"
-
-          {
-            printf 'export GHCR_TOKEN=%q\n' "$GHCR_TOKEN"
-            printf 'export GHCR_USERNAME=%q\n' "$GHCR_USERNAME"
-            printf 'export IMAGE_TAG=%q\n' "$IMAGE_TAG"
-
-            cat <<'EOF'
-            set -e
-
-            cd /home/deploy-user/SeeFT
-
-            git fetch origin feat/mitomen/261/CI-CD-Pipeline
-            git reset --hard origin/feat/mitomen/261/CI-CD-Pipeline
-            git checkout -B feat/mitomen/261/CI-CD-Pipeline origin/feat/mitomen/261/CI-CD-Pipeline
-
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
-
-            docker compose -f docker-compose.cd.yml pull
-            docker compose -f docker-compose.cd.yml up -d --wait --wait-timeout 120
-
-            docker image prune -a -f --filter "until=168h"
-
-          EOF
-          } | ssh deploy-user@${{ secrets.CONTAINER_IP }} -T bash -s
+          ssh deploy-user@"$CONTAINER_IP" \
+            "cd '$DEPLOY_DIRECTORY' && /opt/deploy/deploy.sh '$DEPLOY_BRANCH' '$GITHUB_RUN_ID' '$COMPOSE_FILE'"
