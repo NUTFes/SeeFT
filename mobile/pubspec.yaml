@@ -75,6 +75,15 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # 太字の日本語が疑似ボールドで崩れないよう、Regular と Bold を同じファミリー名で登録する（#513）
+  # フォントは tool/subset_noto_sans_jp.py で、使う字だけに削ったもの
+  fonts:
+    - family: NotoSansJP
+      fonts:
+        - asset: lib/assets/fonts/NotoSansJP-Regular.ttf
+        - asset: lib/assets/fonts/NotoSansJP-Bold.ttf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
