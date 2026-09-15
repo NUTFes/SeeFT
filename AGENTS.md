@@ -47,7 +47,7 @@ mobile/lib/
 ├── configs/    # importer.dart（共通 import 集約）
 └── theme/      # tokens.dart（AppColors, AppFontSizes）
 
-gas/{shift,task,user,rescue}/   # ドメイン別。コード.js / onChange.js 等
+gas/{shift,task,user,rescue,manual-assignment}/   # ドメイン別。コード.js / onChange.js 等
 ```
 
 ## 通知の定期実行
