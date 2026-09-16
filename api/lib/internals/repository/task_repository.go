@@ -126,6 +126,15 @@ func (b *taskRepository) FindByName(c context.Context, name string) (*sql.Row, e
 }
 
 // 複数のタスク名から一括でタスクを取得する（N+1問題対策）
+//
+// 同名の行が複数あっても、どれを採るかが実行ごとに変わらないようid昇順で返す。
+// 呼び出し側(shiftUseCase.UpdateShiftsFromGAS)は先に読んだ行を採用するので、
+// 同名なら最も古い(idの小さい)行に紐づく。
+//
+// year_idでは絞り込まない。seed.sql由来のタスクがyear_id=43のまま45thの運用データに
+// なっており(空文字=未割当が12,289件・NGが8,950件のシフトから参照されている)、
+// 年度で絞ると既存タスクを見つけられず45年度版を新規作成してしまうため。
+// 絞り込むなら、先にこれらの年度をそろえる必要がある(issue #506)
 func (b *taskRepository) FindByNames(c context.Context, names []string) (*sql.Rows, error) {
 	if len(names) == 0 {
 		// 空の結果を返す
@@ -133,7 +142,7 @@ func (b *taskRepository) FindByNames(c context.Context, names []string) (*sql.Ro
 		return b.client.DB().QueryContext(c, query)
 	}
 
-	query := "SELECT " + taskColumns + " FROM tasks WHERE task = ANY($1::text[])"
+	query := "SELECT " + taskColumns + " FROM tasks WHERE task = ANY($1::text[]) ORDER BY id"
 	return b.client.DB().QueryContext(c, query, pq.Array(names))
 }
 

@@ -30,6 +30,15 @@ func isUnassignedToBreakChange(oldTaskWasUnassigned bool, newTaskName string) bo
 	return oldTaskWasUnassigned && strings.TrimSpace(newTaskName) == breakTaskName
 }
 
+// GASから届くタスク名の表記ゆれ(全角スペース)を吸収する。
+// tasksへの保存・DBからの照合・taskMapのキーを、すべてこの形にそろえること。
+// 引くキーと入れるキーがずれると、マップが永久にヒットせず同じタスクが
+// シフト1行につき1件ずつ作られ続ける(issue #506。45th本番で2504行が作られた)。
+// タスク送信側(taskUseCase.UpdateTasksAndPlacesFromGAS)も同じ正規化で保存している
+func normalizeTaskName(name string) string {
+	return strings.ReplaceAll(name, "　", " ")
+}
+
 type shiftUseCase struct {
 	rep           rep.ShiftRepository
 	shiftCardRep  rep.ShiftCardRepository
@@ -908,8 +917,7 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 
 	for _, change := range req.Changes {
 		userNameSet[change.UserName] = true
-		taskName := strings.ReplaceAll(change.TaskName, "　", " ")
-		taskNameSet[taskName] = true
+		taskNameSet[normalizeTaskName(change.TaskName)] = true
 	}
 
 	// ユーザー名のリストを作成
@@ -960,7 +968,12 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			if err := taskRows.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.ManualUrl, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
 				continue
 			}
-			taskMap[task.Task] = task
+			// 同名の行が複数あるときは、先に読んだ(=idの小さい)行を採用する。
+			// FindByNamesがid昇順で返すので、後勝ちにすると後から増えた重複行を掴んでしまう
+			key := normalizeTaskName(task.Task)
+			if _, ok := taskMap[key]; !ok {
+				taskMap[key] = task
+			}
 		}
 	}
 
@@ -1021,11 +1034,13 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 		userID := strconv.Itoa(user.ID)
 
 		// マップからタスクを取得（N+1問題を回避）
-		taskName := strings.ReplaceAll(change.TaskName, "　", " ")
+		taskName := normalizeTaskName(change.TaskName)
 		task, exists := taskMap[taskName]
 		if !exists {
-			// タスクが存在しない場合は新規作成
-			name := change.TaskName
+			// タスクが存在しない場合は新規作成。
+			// 保存する名前・再取得の条件・マップのキーは、照合に使ったtaskNameで統一する。
+			// ここだけchange.TaskName(正規化前)に戻すと、次のループでtaskMapを引けず
+			// 同じタスクを作り続ける(issue #506)
 			placeID := "1"
 			url := ""
 			// シフト送信はマニュアル情報を持たないため、紐付けはタスク送信側に任せる
@@ -1034,16 +1049,16 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 			maxMember := "1"
 			color := "000000"
 			remark := ""
-			createErr := u.taskRep.Create(ctx, name, placeID, url, manualURL, bureauID, maxMember, color, remark, yearID)
+			createErr := u.taskRep.Create(ctx, taskName, placeID, url, manualURL, bureauID, maxMember, color, remark, yearID)
 			if createErr != nil {
 				return errors.Wrapf(createErr, "タスク新規作成失敗: %v", change.TaskName)
 			}
 			// 新規作成したタスクを再取得してマップに追加
-			taskRow, _ := u.taskRep.FindByName(ctx, change.TaskName)
+			taskRow, _ := u.taskRep.FindByName(ctx, taskName)
 			if err := taskRow.Scan(&task.ID, &task.Task, &task.PlaceID, &task.Url, &task.ManualUrl, &task.BureauID, &task.MaxMember, &task.Color, &task.Remark, &task.YearID, &task.CreatedAt, &task.UpdatedAt); err != nil {
 				return errors.Wrapf(err, "タスク再取得失敗: %v", change.TaskName)
 			}
-			taskMap[task.Task] = task
+			taskMap[taskName] = task
 		}
 		taskID := strconv.Itoa(task.ID)
 
