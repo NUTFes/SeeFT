@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql/driver"
+	"strings"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -77,7 +78,7 @@ func TestUpdateShiftsFromGAS_全角スペースのタスク名でも作成は1�
 
 	expectTwoUsers(mock)
 	// DBにこのタスクはまだ無い
-	mock.ExpectQuery(`FROM tasks`).WillReturnRows(sqlmock.NewRows(taskColumnNames))
+	mock.ExpectQuery(`(?s)FROM tasks.*ORDER BY id`).WillReturnRows(sqlmock.NewRows(taskColumnNames))
 
 	// 1件目でだけタスクが作られる。保存される名前は半角に正規化されている
 	mock.ExpectExec(`INSERT INTO tasks`).
@@ -106,7 +107,7 @@ func TestUpdateShiftsFromGAS_既存の半角タスクに全角の名前が届い
 
 	expectTwoUsers(mock)
 	// タスク送信が先に走り、半角版が既にある状態
-	mock.ExpectQuery(`FROM tasks`).WillReturnRows(
+	mock.ExpectQuery(`(?s)FROM tasks.*ORDER BY id`).WillReturnRows(
 		sqlmock.NewRows(taskColumnNames).AddRow(taskValues(10, hankakuTaskName)...))
 
 	expectShiftInsert(mock)
@@ -126,12 +127,52 @@ func TestUpdateShiftsFromGAS_同名タスクが複数あるとき最も古い行
 	defer closeDB()
 
 	expectTwoUsers(mock)
-	mock.ExpectQuery(`FROM tasks`).WillReturnRows(
+	mock.ExpectQuery(`(?s)FROM tasks.*ORDER BY id`).WillReturnRows(
 		sqlmock.NewRows(taskColumnNames).
 			AddRow(taskValues(10, hankakuTaskName)...).
 			AddRow(taskValues(999, hankakuTaskName)...))
 
 	// task_id は後から読んだ999ではなく10になる
+	for i := 0; i < 2; i++ {
+		mock.ExpectQuery(`SELECT \* FROM shifts`).WillReturnRows(sqlmock.NewRows([]string{
+			"id", "task_id", "user_id", "year_id", "date_id", "time_id", "weather_id",
+			"is_attendance", "created_at", "updated_at",
+		}))
+		mock.ExpectQuery(`INSERT INTO shifts .* VALUES \(10,`).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+	}
+
+	err := uc.UpdateShiftsFromGAS(context.Background(), twoChangesWithSameTask(zenkakuTaskName))
+
+	require.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// FindByNames に渡す名前の配列（pq.Array）に、指定した名前が含まれることを見る。
+// taskNameSet は map なので順序が決まらず、配列そのものとは比較できない
+type arrayContaining struct {
+	want string
+}
+
+func (a arrayContaining) Match(v driver.Value) bool {
+	s, ok := v.(string)
+	return ok && strings.Contains(s, a.want)
+}
+
+// adminからの手動登録などでDBに全角スペース入りの行しか無い場合。
+// 正規化後の名前だけで引くと既存行を取得できず、半角版を作って並存させてしまう。
+// 照合には正規化前の名前も含める必要がある。
+func TestUpdateShiftsFromGAS_DBに全角スペースの行しか無くても再利用する(t *testing.T) {
+	uc, mock, closeDB := newTaskNormTestUseCase(t)
+	defer closeDB()
+
+	expectTwoUsers(mock)
+	// 全角のままの名前も検索対象に含まれていなければ、この行は取得できない
+	mock.ExpectQuery(`(?s)FROM tasks.*ORDER BY id`).
+		WithArgs(arrayContaining{want: zenkakuTaskName}).
+		WillReturnRows(sqlmock.NewRows(taskColumnNames).AddRow(taskValues(10, zenkakuTaskName)...))
+
+	// 既存行を再利用するので INSERT INTO tasks は走らず、task_id は10になる
 	for i := 0; i < 2; i++ {
 		mock.ExpectQuery(`SELECT \* FROM shifts`).WillReturnRows(sqlmock.NewRows([]string{
 			"id", "task_id", "user_id", "year_id", "date_id", "time_id", "weather_id",

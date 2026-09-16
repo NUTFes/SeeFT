@@ -917,6 +917,10 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 
 	for _, change := range req.Changes {
 		userNameSet[change.UserName] = true
+		// 正規化前の名前も照合対象に入れる。DBに全角スペースのままの行が残っていると、
+		// 正規化後の名前だけで引いてもその行を取得できず、半角版を作って並存させてしまう。
+		// 取得後はnormalizeTaskNameでキーをそろえるので、どちらで当たっても扱いは同じ
+		taskNameSet[change.TaskName] = true
 		taskNameSet[normalizeTaskName(change.TaskName)] = true
 	}
 
