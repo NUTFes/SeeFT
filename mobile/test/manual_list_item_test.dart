@@ -6,9 +6,13 @@ import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 class _FakeUrlLauncherPlatform extends UrlLauncherPlatform {
-  _FakeUrlLauncherPlatform(this.launchResult);
+  _FakeUrlLauncherPlatform(this.launchResult, {this.throwOnLaunch = false});
 
   final bool launchResult;
+
+  // プラットフォーム側が例外を投げる場合。_open は戻り値だけでなく例外も
+  // 失敗として扱うので、その経路を通すために使う
+  final bool throwOnLaunch;
 
   // 直近のlaunchUrl呼び出しの引数（URL・起動モード）を検証用に記録する
   String? lastLaunchedUrl;
@@ -26,6 +30,9 @@ class _FakeUrlLauncherPlatform extends UrlLauncherPlatform {
   Future<bool> launchUrl(String url, LaunchOptions options) async {
     lastLaunchedUrl = url;
     lastLaunchOptions = options;
+    if (throwOnLaunch) {
+      throw Exception('launch failed');
+    }
     return launchResult;
   }
 }
@@ -49,9 +56,15 @@ Widget _wrap({
   );
 }
 
-_FakeUrlLauncherPlatform _installFakePlatform(bool launchResult) {
+_FakeUrlLauncherPlatform _installFakePlatform(
+  bool launchResult, {
+  bool throwOnLaunch = false,
+}) {
   final originalPlatform = UrlLauncherPlatform.instance;
-  final fake = _FakeUrlLauncherPlatform(launchResult);
+  final fake = _FakeUrlLauncherPlatform(
+    launchResult,
+    throwOnLaunch: throwOnLaunch,
+  );
   UrlLauncherPlatform.instance = fake;
   addTearDown(() => UrlLauncherPlatform.instance = originalPlatform);
   return fake;
@@ -126,6 +139,20 @@ void main() {
 
     testWidgets('起動に失敗したらエラーメッセージを出す', (tester) async {
       _installFakePlatform(false);
+
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(_taskName));
+      await tester.pumpAndSettle();
+
+      expect(find.text('マニュアルを開けませんでした'), findsOneWidget);
+    });
+
+    // _open の try/catch は Uri.parse と launchUrl の両方の例外を拾う。
+    // こちらは launchUrl 側が投げた場合
+    testWidgets('launchUrlが例外を投げたらエラーメッセージを出す', (tester) async {
+      _installFakePlatform(true, throwOnLaunch: true);
 
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
