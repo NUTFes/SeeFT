@@ -204,7 +204,8 @@ function attachSlackUserIds_(changes) {
 
   const cache = loadSlackIdSheet_();
   const newRows = [];
-  const started = Date.now();
+  const deadline = Date.now() + SLACK_LOOKUP_BUDGET_MS;
+  let budgetOver = false;
   try {
     for (let i = 0; i < changes.length; i++) {
       const change = changes[i];
@@ -214,16 +215,22 @@ function attachSlackUserIds_(changes) {
         result.cached++;
         continue;
       }
-      if (result.skipped || Date.now() - started > SLACK_LOOKUP_BUDGET_MS) {
+      if (result.skipped || budgetOver || Date.now() > deadline) {
         result.pending++;
         continue;
       }
       let id;
       try {
-        id = lookupSlackUserIdByEmail_(token, change.mail);
+        id = lookupSlackUserIdByEmail_(token, change.mail, deadline);
       } catch (e) {
         // トークン不正・スコープ不足など。ここで止めると名簿が送れなくなるので残りは空で続ける
         result.skipped = "Slack の照会に失敗したため、残りは紐付けていません: " + e.message;
+        result.pending++;
+        continue;
+      }
+      if (id === null) {
+        // レート制限の待ち時間が期限を越えるので、この人以降は次回に回す
+        budgetOver = true;
         result.pending++;
         continue;
       }
@@ -266,8 +273,10 @@ function loadSlackIdSheet_() {
 }
 
 // users.lookupByEmail を1件叩く。ワークスペースに居なければ ""。
-// 429 が返ったら Retry-After 秒待って同じ人をやり直す（Tier 3: 50+回/分）
-function lookupSlackUserIdByEmail_(token, mail) {
+// 429 が返ったら Retry-After 秒待って同じ人をやり直す（Tier 3: 50+回/分）。
+// 待つと deadline を越える場合は待たずに null を返す（待機中に GAS の6分制限へ達すると
+// 名簿送信まで進めなくなるため）
+function lookupSlackUserIdByEmail_(token, mail, deadline) {
   const url = "https://slack.com/api/users.lookupByEmail?email=" + encodeURIComponent(mail);
   for (let attempt = 0; attempt < 5; attempt++) {
     const res = UrlFetchApp.fetch(url, {
@@ -276,8 +285,9 @@ function lookupSlackUserIdByEmail_(token, mail) {
     });
     if (res.getResponseCode() === 429) {
       const headers = res.getHeaders();
-      const wait = Number(headers["Retry-After"] || headers["retry-after"] || 5);
-      Utilities.sleep(wait * 1000);
+      const waitMs = Number(headers["Retry-After"] || headers["retry-after"] || 5) * 1000;
+      if (Date.now() + waitMs > deadline) return null;
+      Utilities.sleep(waitMs);
       continue;
     }
     const body = JSON.parse(res.getContentText());
