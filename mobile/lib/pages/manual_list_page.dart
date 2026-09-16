@@ -3,8 +3,8 @@
 import 'package:seeft_mobile/configs/importer.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:seeft_mobile/pages/wait_page.dart';
+import 'package:seeft_mobile/widgets/manual_list_item.dart';
 
 class ManualListPage extends StatefulWidget {
   const ManualListPage({super.key});
@@ -168,9 +168,14 @@ class _ManualListPageState extends State<ManualListPage> {
                   : ListView.builder(
                       itemCount: manuals.length,
                       itemBuilder: (BuildContext context, int index) {
+                        final manual = manuals[index];
                         return SizedBox(
                           height: 40,
-                          child: _manualItem(manuals, index, context),
+                          child: ManualListItem(
+                            taskName: manual["task"].toString(),
+                            url: (manual["url"] ?? '').toString(),
+                            manualUrl: (manual["manualUrl"] ?? '').toString(),
+                          ),
                         );
                       },
                     ),
@@ -208,47 +213,6 @@ class _ManualListPageState extends State<ManualListPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _manualItem(var manuals, index, context) {
-    // スライド版マニュアルのURL。未設定のタスクではボタンを出さない
-    final manualUrl = (manuals[index]["manualUrl"] ?? '').toString();
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(
-          width: 1.0,
-          color: AppColors.grayLight,
-        )),
-      ),
-      child: ListTile(
-        title: Text(
-          manuals[index]["task"].toString(),
-          style: TextStyle(
-            color: AppColors.textBlack,
-            fontSize: AppFontSizes.md,
-          ),
-        ),
-        trailing: manualUrl.isEmpty
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.slideshow),
-                onPressed: () async {
-                  if (await canLaunchUrl(Uri.parse(manualUrl))) {
-                    // スライド版は認証付き配信のため埋め込み不可。必ず別タブで開く
-                    await launchUrl(
-                      Uri.parse(manualUrl),
-                      mode: LaunchMode.externalApplication,
-                    );
-                  }
-                },
-              ),
-        onTap: () async {
-          if (await canLaunchUrl(Uri.parse(manuals[index]["url"].toString()))) {
-            await launchUrl(Uri.parse((manuals[index]["url"].toString())));
-          }
-        },
       ),
     );
   }
