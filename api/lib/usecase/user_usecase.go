@@ -118,7 +118,7 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 	if err != nil {
 		return latastUser, err
 	}
-	if err = u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword)); err != nil {
+	if err = u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword), ""); err != nil {
 		return latastUser, err
 	}
 	row, err := u.userRep.FindNewRecord(c)
@@ -372,21 +372,30 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 		var user entity.User
 		var slackUserID sql.NullString
 		if err := userRow.Scan(&user.ID, &user.Name, &user.Mail, &user.GradeID, &user.DepartmentID, &user.BureauID, &user.RoleID, &user.StudentNumber, &user.Tel, &user.Password, &user.CreatedAt, &user.UpdatedAt, &slackUserID); err == nil {
-			// ユーザーが存在すれば更新
-			if err := u.userRep.Update(ctx, strconv.Itoa(user.ID), change.Name, user.Mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password); err != nil {
+			// ユーザーが存在すれば更新。
+			// mail と slackUserID は名簿送信が空で送ってきたら既存値を保持する
+			// (Slack IDの取得が時間切れで途中の回や、SLACK_BOT_TOKEN未設定の回で消えないように)
+			mail := change.Mail
+			if mail == "" {
+				mail = user.Mail
+			}
+			newSlackUserID := change.SlackUserID
+			if newSlackUserID == "" && slackUserID.Valid {
+				newSlackUserID = slackUserID.String
+			}
+			if err := u.userRep.UpdateWithSlackUserID(ctx, strconv.Itoa(user.ID), change.Name, mail, gradeID, departmentID, bureauID, strconv.Itoa(user.RoleID), studentNumber, tel, user.Password, newSlackUserID); err != nil {
 				return errors.Wrapf(err, "ユーザー更新失敗: %v", change.Name)
 			}
 		} else if errors.Is(err, sql.ErrNoRows) {
 			// ユーザーがいなければ新規作成
 			name := change.Name
-			mail := ""
 			roleID := "1"
 			password := userDefaultPassword
 			hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 			if err != nil {
 				return errors.Wrapf(err, "パスワードハッシュ化失敗: %v", change.Name)
 			}
-			createErr := u.userRep.Create(ctx, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed))
+			createErr := u.userRep.Create(ctx, name, change.Mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed), change.SlackUserID)
 			if createErr != nil {
 				return errors.Wrapf(createErr, "ユーザー新規作成失敗: %v", change.Name)
 			}

@@ -33,6 +33,15 @@ const TASK_COL_MANUAL_URL = 19;  // S列 マニュアル(スライド版)のURL
 // 読み取る列数。列を足したときに取得範囲を広げ忘れないよう定数から導出する
 const TASK_READ_WIDTH = TASK_COL_MANUAL_URL;
 
+// Slack IDの取得結果を置くシート（無ければ名簿送信時に作る）。
+// users.lookupByEmail は Tier 3（50+回/分）で、353人を毎回引くと GAS の6分制限に当たる。
+// 一度引けた人はここに書き残し、名簿を再送するたびに Slack を叩き直さないようにする。
+// 引き直したい人はその行を消してから名簿を送信する。
+const SLACK_ID_SHEET = "SlackID";
+const SLACK_ID_HEADER = ["メールアドレス", "Slack ユーザーID", "名前", "取得日時"];
+// Slack を引くのに使ってよい時間。残りは名簿の組み立てと送信に使う（GAS 全体で6分）
+const SLACK_LOOKUP_BUDGET_MS = 4 * 60 * 1000;
+
 // 名簿をSeeFTに送信する
 function updateUsers() {
   ui = ui || SpreadsheetApp.getUi();
@@ -64,8 +73,14 @@ function updateUsers() {
       return;
     }
 
+    // Slack IDを付けてから送る。引けなかった人は空で送り、APIは既存値を保持する。
+    // Slack 側の失敗で名簿送信そのものを止めない（シフト送信の前提が崩れるため）
+    const slack = attachSlackUserIds_(built.changes);
+    const slackSummary = formatSlackLookupSummary_(slack);
+    Logger.log(slackSummary);
+
     postToSeeFT_("/api/update_users", built.changes);
-    ui.alert(`名簿を送信しました\n${built.changes.length} 件`);
+    ui.alert(`名簿を送信しました\n${built.changes.length} 件\n\n${slackSummary}`);
   } catch (error) {
     ui.alert(`エラーが発生しました\n
       エラーを修正して再実行してください\n
@@ -146,6 +161,12 @@ function buildUserChanges_(sheet) {
       errors.push(`${name}: 学籍番号「${src.studentNumber}」が8桁ではありません`);
       continue;
     }
+    // メールアドレスは Slack ID の紐付けに使う。無いとシフト変更の DM が届かないので、
+    // 学籍番号と同様に送信前に止める
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(src.mail)) {
+      errors.push(`${name}: メールアドレス「${src.mail}」が不正です`);
+      continue;
+    }
     // 電話番号はハイフン付きで入力されることがあるため数字だけにする
     const tel = String(src.tel || "").replace(/[^0-9]/g, "");
 
@@ -158,11 +179,131 @@ function buildUserChanges_(sheet) {
       department: "未所属",
       studentNumber: Number(src.studentNumber),
       tel: tel,
-      // 技大祭メールアドレス。Slack ID紐付け(users.lookupByEmail)で使う
-      mail: src.mail
+      // 技大祭メールアドレス。users.mail に保存し、Slack ID の紐付けキーにする
+      mail: src.mail,
+      // attachSlackUserIds_ が埋める。引けなかった人は空のまま送る
+      slackUserID: ""
     });
   }
   return { changes: changes, errors: errors };
+}
+
+// 名簿の各行に Slack ユーザーIDを付ける。SlackID シートに残っている人は Slack を叩かず、
+// 残りだけ users.lookupByEmail で引いてシートに書き足す。
+// 時間切れ・トークン未設定・Slack 側のエラーでは残りを空のままにして送信は続ける
+// （API は空で送られた slackUserID を既存値のまま保持する）。
+function attachSlackUserIds_(changes) {
+  const result = { fetched: 0, cached: 0, pending: 0, notFound: [], skipped: "" };
+
+  const token = properties.getProperty("SLACK_BOT_TOKEN");
+  if (!token) {
+    result.skipped = "スクリプトプロパティ SLACK_BOT_TOKEN が未設定のため、Slack ID は紐付けていません";
+    result.pending = changes.length;
+    return result;
+  }
+
+  const cache = loadSlackIdSheet_();
+  const newRows = [];
+  const started = Date.now();
+  try {
+    for (let i = 0; i < changes.length; i++) {
+      const change = changes[i];
+      const key = String(change.mail || "").trim().toLowerCase();
+      if (cache.map[key]) {
+        change.slackUserID = cache.map[key];
+        result.cached++;
+        continue;
+      }
+      if (result.skipped || Date.now() - started > SLACK_LOOKUP_BUDGET_MS) {
+        result.pending++;
+        continue;
+      }
+      let id;
+      try {
+        id = lookupSlackUserIdByEmail_(token, change.mail);
+      } catch (e) {
+        // トークン不正・スコープ不足など。ここで止めると名簿が送れなくなるので残りは空で続ける
+        result.skipped = "Slack の照会に失敗したため、残りは紐付けていません: " + e.message;
+        result.pending++;
+        continue;
+      }
+      if (!id) {
+        result.notFound.push(`${change.name} (${change.mail})`);
+        continue;
+      }
+      change.slackUserID = id;
+      cache.map[key] = id;
+      newRows.push([change.mail, id, change.name, new Date()]);
+      result.fetched++;
+    }
+  } finally {
+    // 途中で例外が出ても引けた分は残す（次回は Slack を叩かずに済む）
+    if (newRows.length) {
+      cache.sheet.getRange(cache.sheet.getLastRow() + 1, 1, newRows.length, newRows[0].length).setValues(newRows);
+    }
+  }
+  return result;
+}
+
+// SlackID シートを読み、メールアドレス(小文字)→Slack ユーザーID のマップを返す。無ければ作る
+function loadSlackIdSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SLACK_ID_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(SLACK_ID_SHEET);
+    sheet.getRange(1, 1, 1, SLACK_ID_HEADER.length).setValues([SLACK_ID_HEADER]);
+  }
+  const map = {};
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2) {
+    sheet.getRange(2, 1, lastRow - 1, 2).getValues().forEach(function (row) {
+      const mail = String(row[0] || "").trim().toLowerCase();
+      const id = String(row[1] || "").trim();
+      if (mail && id) map[mail] = id;
+    });
+  }
+  return { sheet: sheet, map: map };
+}
+
+// users.lookupByEmail を1件叩く。ワークスペースに居なければ ""。
+// 429 が返ったら Retry-After 秒待って同じ人をやり直す（Tier 3: 50+回/分）
+function lookupSlackUserIdByEmail_(token, mail) {
+  const url = "https://slack.com/api/users.lookupByEmail?email=" + encodeURIComponent(mail);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = UrlFetchApp.fetch(url, {
+      headers: { Authorization: "Bearer " + token },
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() === 429) {
+      const headers = res.getHeaders();
+      const wait = Number(headers["Retry-After"] || headers["retry-after"] || 5);
+      Utilities.sleep(wait * 1000);
+      continue;
+    }
+    const body = JSON.parse(res.getContentText());
+    if (body.ok) return body.user.id;
+    if (body.error === "users_not_found") return "";
+    throw new Error(`users.lookupByEmail: ${body.error}`);
+  }
+  throw new Error("Slack のレート制限が解除されませんでした");
+}
+
+// 送信後のダイアログとログに出す Slack ID の紐付け結果
+function formatSlackLookupSummary_(slack) {
+  const lines = [
+    `Slack ID: 今回取得 ${slack.fetched} 件 / 取得済み ${slack.cached} 件 / ` +
+    `Slack に見つからない ${slack.notFound.length} 件 / 未取得 ${slack.pending} 件`
+  ];
+  if (slack.skipped) lines.push(slack.skipped);
+  if (slack.notFound.length) {
+    lines.push("Slack に見つからない人（技大祭メールアドレスと Slack の登録メールが違う可能性）:");
+    lines.push(slack.notFound.slice(0, 20).join("\n"));
+    if (slack.notFound.length > 20) lines.push(`...他${slack.notFound.length - 20}件`);
+  }
+  if (slack.pending && !slack.skipped) {
+    lines.push("未取得の分は時間切れです。もう一度「名簿を送信」を実行すると続きから取得します");
+  }
+  return lines.join("\n");
 }
 
 // タスクと集合場所をSeeFTに送信する
