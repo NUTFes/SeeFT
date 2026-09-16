@@ -69,3 +69,31 @@ cp -f "$workdir"/*.js "$workdir"/appsscript.json "$repo_root/gas/shift/"
 ライブを変更したら、同じ作業の中でリポジトリにも取り込む。「あとでまとめて」は必ず忘れる。実際、PR #469 でライブを取り込んだ直後にライブが先に進み、数日で再び乖離した。
 
 取り込みのコミットは実体の丸写しにとどめ、コメントの修正やリファクタは混ぜない。混ぜるとその瞬間からリポジトリが実体と違うものになり、次に読む人が同じ罠を踏む。直したい箇所があるなら、取り込みとは別のコミットで直した上で `clasp push` して実体にも反映する。
+
+## 名簿送信と Slack ID の紐付け（`shift/名簿タスク送信.js`）
+
+「1. 名簿を送信」は、名簿作成アンケートの技大祭メールアドレスを `users.mail` に保存し、あわせて Slack の `users.lookupByEmail` で引いたユーザーIDを `users.slack_user_id` に保存する。API はシフト変更の DM をこの ID 宛てに送る。
+
+### 事前準備
+
+スクリプトプロパティに `SLACK_BOT_TOKEN` を置く（`API_BASE_URL` と同じ場所）。値は SeeFT の Slack アプリの Bot User OAuth Token で、スコープ `users:read.email` が要る。未設定のときは名簿送信は通常どおり動き、Slack ID だけ紐付けずに終わる（ダイアログにその旨が出る）。
+
+### 動き
+
+- 引けた人は `SlackID` シート（無ければ自動で作る）に「メールアドレス / Slack ユーザーID / 名前 / 取得日時」で残し、次回以降は Slack を叩かない。353 人を毎回引くと Tier 3（50+回/分）の制限で GAS の 6 分制限に当たるため。
+- Slack の照会に使うのは 4 分まで。時間切れの分は空で送り、もう一度「1. 名簿を送信」を実行すると続きから引く。API は空で送られた `mail` / `slackUserID` を既存値のまま保持するので、途中の回で消えることはない。
+- Slack に見つからない人（技大祭メールアドレスと Slack の登録メールが違う等）は送信後のダイアログに名前が出る。Slack 側のメールを確認して、必要なら `SlackID` シートに手で行を足す。
+- 引き直したい人は `SlackID` シートのその行を消してから名簿を送信する。
+
+### 本番で通知を有効にする順序
+
+`users.slack_user_id` が入った状態で API に `SLACK_BOT_TOKEN` を入れると、それまで `action_logs` に溜まっていた未送信ログが一斉に DM で飛ぶ。逆に、`slack_user_id` が空のうちにトークンを入れると、溜まっていた分は「送らずに既読化」される（2026-08-27 の CT200 リハーサルで 90,368 件を確認）。この性質を使って、過去分の DM 洪水を避ける。
+
+1. シフト送信を終える（`action_logs` に過去分が溜まった状態にする）
+2. この紐付けを含む develop を本番に反映し、API の `seeft.env` に `SLACK_BOT_TOKEN` を入れて起動し直す → 5 分以内に溜まっていた分が既読化される
+3. スクリプトプロパティに `SLACK_BOT_TOKEN` を入れ、「1. 名簿を送信」を実行して `slack_user_id` を埋める
+4. 以後のシフト変更だけが DM になる
+
+### clasp が `oauth2.googleapis.com` で固まるとき
+
+Node が IPv6 を先に試して到達できない環境では、`clasp` が `request to https://oauth2.googleapis.com/token failed` で止まる（`curl` は通る）。`NODE_OPTIONS=--no-network-family-autoselection` を付けて実行すると通る。

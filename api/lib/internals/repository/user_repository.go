@@ -22,8 +22,9 @@ type UserRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	FindByStudentNumber(context.Context, string) *sql.Row
-	Create(context.Context, string, string, string, string, string, string, string, string, string) error
+	Create(context.Context, string, string, string, string, string, string, string, string, string, string) error
 	Update(context.Context, string, string, string, string, string, string, string, string, string, string) error
+	UpdateWithSlackUserID(context.Context, string, string, string, string, string, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
 	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
@@ -57,12 +58,13 @@ func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber s
 }
 
 // 作成
-func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string) error {
+// slack_user_id は UNIQUE 制約があるため、空文字は NULL にして複数人が衝突しないようにする
+func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string, slackUserID string) error {
 	query := `
 		INSERT INTO
-			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, password)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
-	return ur.crud.UpdateDB(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password)
+			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, password, slack_user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULLIF($10, ''))`
+	return ur.crud.UpdateDB(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password, slackUserID)
 }
 
 // 編集
@@ -82,6 +84,27 @@ func (ur *userRepository) Update(c context.Context, id string, name string, mail
 			password = $9
 		WHERE id = $10`
 	return ur.crud.UpdateDB(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password, id)
+}
+
+// 編集(名簿送信用)。Update と違い slack_user_id も更新する。
+// 空文字は NULL にして UNIQUE 制約に触れないようにする。既存値を保持する判断は呼び出し側で行う
+func (ur *userRepository) UpdateWithSlackUserID(c context.Context, id string, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string, slackUserID string) error {
+	query := `
+		UPDATE
+			users
+		SET
+			name = $1,
+			mail = $2,
+			grade_id = $3,
+			department_id = $4,
+			bureau_id = $5,
+			role_id = $6,
+			student_number = $7,
+			tel = $8,
+			password = $9,
+			slack_user_id = NULLIF($10, '')
+		WHERE id = $11`
+	return ur.crud.UpdateDB(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password, slackUserID, id)
 }
 
 // 削除

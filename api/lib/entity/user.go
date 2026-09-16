@@ -34,6 +34,8 @@ type UserChange struct {
 	Department    string `json:"department"`
 	StudentNumber int    `json:"studentNumber"`
 	Tel           string `json:"tel"`
+	Mail          string `json:"mail"`
+	SlackUserID   string `json:"slackUserID"`
 }
 
 type UserChangeRequest struct {
