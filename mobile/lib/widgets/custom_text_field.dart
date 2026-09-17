@@ -42,6 +42,11 @@ class CustomTextField extends StatelessWidget {
         fontSize: AppFontSizes.md,
       ),
       decoration: InputDecoration(
+        // maxLength 指定時に出るカウンタも、他の装飾と同じトークンで揃える
+        counterStyle: const TextStyle(
+          color: AppColors.grayDark,
+          fontSize: AppFontSizes.xs,
+        ),
         // 枠線の色を指定
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeft_mobile/widgets/review_bottom_sheet.dart';
 
-// 星は2問×5個の計10個。前半5個がシフトの人数、後半5個がマニュアルの評価
-const _staffingFirstStarIndex = 0;
-const _manualFirstStarIndex = 5;
-
 Widget _wrap() => const MaterialApp(
   home: Scaffold(
     body: SingleChildScrollView(
@@ -24,9 +20,18 @@ ElevatedButton _submitButton(WidgetTester tester) {
   );
 }
 
-Future<void> _tapStar(WidgetTester tester, int firstIndex, int stars) async {
-  await tester.tap(find.byType(IconButton).at(firstIndex + stars - 1));
+// 星は行ごとにキーで特定する。位置で数えるとウィジェットが増えたときに黙ってずれる
+Future<void> _tapStar(WidgetTester tester, Key rowKey, int stars) async {
+  await tester.tap(
+    find
+      .descendant(of: find.byKey(rowKey), matching: find.byType(IconButton))
+      .at(stars - 1),
+  );
   await tester.pump();
+}
+
+TextEditingController _commentController(WidgetTester tester) {
+  return tester.widget<TextField>(find.byType(TextField)).controller!;
 }
 
 void main() {
@@ -44,7 +49,7 @@ void main() {
   testWidgets('片方だけ選んでも送信ボタンは押せない', (tester) async {
     await tester.pumpWidget(_wrap());
 
-    await _tapStar(tester, _staffingFirstStarIndex, 3);
+    await _tapStar(tester, staffingRatingRowKey, 3);
 
     expect(find.byIcon(Icons.star), findsNWidgets(3));
     expect(_submitButton(tester).onPressed, isNull);
@@ -53,17 +58,43 @@ void main() {
   testWidgets('2問とも選ぶと送信ボタンが押せるようになる', (tester) async {
     await tester.pumpWidget(_wrap());
 
-    await _tapStar(tester, _staffingFirstStarIndex, 3);
-    await _tapStar(tester, _manualFirstStarIndex, 4);
+    await _tapStar(tester, staffingRatingRowKey, 3);
+    await _tapStar(tester, manualRatingRowKey, 4);
 
     expect(find.byIcon(Icons.star), findsNWidgets(7));
     expect(_submitButton(tester).onPressed, isNotNull);
     expect(find.text('星を選ぶと送信できます。'), findsNothing);
   });
 
-  testWidgets('コメント欄はDBのVARCHAR(255)に合わせて255文字で打ち切る', (tester) async {
+  testWidgets('コメント欄は255文字を超える入力を打ち切る', (tester) async {
     await tester.pumpWidget(_wrap());
 
-    expect(tester.widget<TextField>(find.byType(TextField)).maxLength, 255);
+    await tester.enterText(find.byType(TextField), 'あ' * 300);
+    await tester.pump();
+
+    expect(_commentController(tester).text.characters.length, 255);
+  });
+
+  group('clampToCodePoints', () {
+    test('上限以下はそのまま返す', () {
+      expect(clampToCodePoints('マニュアルが分かりやすかった', 255), 'マニュアルが分かりやすかった');
+    });
+
+    // Web では IME 変換中の文字が maxLength の対象外になるため、
+    // 送信時にもコードポイント数で切り詰める
+    test('上限を超えたらコードポイント数で切り詰める', () {
+      expect(clampToCodePoints('あ' * 300, 255).runes.length, 255);
+    });
+
+    // 書記素クラスタで数える maxLength を満たしていても、
+    // PostgreSQL が数えるコードポイントでは超えることがある
+    test('結合文字を含んでもコードポイント数で収まる', () {
+      const family = '👨‍👩‍👧‍👦'; // 1書記素 / 11コードポイント
+      final input = family * 255;
+
+      expect(input.characters.length, 255);
+      expect(input.runes.length, greaterThan(255));
+      expect(clampToCodePoints(input, 255).runes.length, 255);
+    });
   });
 }

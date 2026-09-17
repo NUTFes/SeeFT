@@ -5,6 +5,26 @@ import 'package:seeft_mobile/widgets/custom_elevated_button_outlined.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 import 'package:seeft_mobile/widgets/custom_snack_bar.dart';
 
+// DB の reviews.comment は VARCHAR(255)。PostgreSQL はコードポイント数で数える。
+const int reviewCommentMaxLength = 255;
+
+// コードポイント数で切り詰める。
+// TextField の maxLength は Web だと truncateAfterCompositionEnds が既定で、
+// IME 変換中の文字は対象外になる。さらに数え方が書記素クラスタなので、絵文字や
+// 結合文字を含むと maxLength を満たしていてもコードポイント数は超えうる。
+// 送信直前にここで揃えて、INSERT が落ちてコメントごと失われるのを防ぐ。
+String clampToCodePoints(String value, int maxCodePoints) {
+  final runes = value.runes.toList();
+  if (runes.length <= maxCodePoints) {
+    return value;
+  }
+  return String.fromCharCodes(runes.take(maxCodePoints));
+}
+
+// 星の行を特定するためのキー
+const Key staffingRatingRowKey = ValueKey('staffing_rating_row');
+const Key manualRatingRowKey = ValueKey('manual_rating_row');
+
 // レビューを入力するボトムシートのウィジェット
 class ReviewBottomSheet {
   // ボトムシートを表示するメソッド
@@ -55,9 +75,20 @@ class _ReviewFormState extends State<ReviewForm> {
   bool _isFailed = false;     // 送信失敗フラグ
   final TextEditingController _controller = TextEditingController();
 
-  // 星による5段階評価の行を作成するウィジェット
-  Widget buildStarRow(int currentValue, ValueChanged<int> onChanged) {
+  // 表示と送信可否で条件がずれないよう、判定はここだけに置く
+  bool get _isUnrated => staffingRating == 0 || manualRating == 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // 星による5段階評価の行を作成するウィジェット。
+  // key は、どちらの設問の星かをテストから特定するために使う
+  Widget buildStarRow(int currentValue, ValueChanged<int> onChanged, {Key? key}) {
     return Row(
+      key: key,
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
         return IconButton(
@@ -114,7 +145,7 @@ class _ReviewFormState extends State<ReviewForm> {
       widget.taskName,
       staffingRating,
       manualRating,
-      _controller.text,
+      clampToCodePoints(_controller.text, reviewCommentMaxLength),
     );
     if (!mounted) return;
     if(isSuccess){  // 送信成功時
@@ -151,10 +182,18 @@ class _ReviewFormState extends State<ReviewForm> {
             color: AppColors.grayLight,
           ),
           const Text("シフトの人数は適切でしたか？", style: TextStyle(color: AppColors.textBlack, fontSize: AppFontSizes.md)),
-          buildStarRow(staffingRating, (value) => staffingRating = value),
+          buildStarRow(
+            staffingRating,
+            (value) => staffingRating = value,
+            key: staffingRatingRowKey,
+          ),
           const SizedBox(height: 8),
           const Text("マニュアルは分かりやすかったですか？", style: TextStyle(color: AppColors.textBlack, fontSize: AppFontSizes.md)),
-          buildStarRow(manualRating, (value) => manualRating = value),
+          buildStarRow(
+            manualRating,
+            (value) => manualRating = value,
+            key: manualRatingRowKey,
+          ),
           const SizedBox(height: 8),
           const Text("他にもあれば教えてください。", style: TextStyle(color: AppColors.textBlack, fontSize: AppFontSizes.md)),
           CustomTextField(
@@ -162,29 +201,27 @@ class _ReviewFormState extends State<ReviewForm> {
             hintText: "例：マニュアルが分かりやすくて良かった",
             // DB の comment は VARCHAR(255)。超えると INSERT が落ちて入力が失われるため、
             // 入力側で打ち切る
-            maxLength: 255,
+            maxLength: reviewCommentMaxLength,
           ),
           const SizedBox(height: 8),
-          Visibility(
-            visible: staffingRating == 0 || manualRating == 0,
-            child: Text(
+          // Visibility で隠しても Column の spacing は入るため、
+          // 条件付きで子ごと外して余白が残らないようにする
+          if (_isUnrated)
+            const Text(
               "星を選ぶと送信できます。",
               style: TextStyle(
                 color: AppColors.grayDark,
                 fontSize: AppFontSizes.sm,
-              )
+              ),
             ),
-          ),
-          Visibility(
-            visible: _isFailed,
-            child: Text(
+          if (_isFailed)
+            const Text(
               "送信に失敗しました。もう一度お試しください。",
               style: TextStyle(
                 color: AppColors.error,
                 fontSize: AppFontSizes.sm,
-              )
+              ),
             ),
-          ),
           Row(
             spacing: 8.0,
             children: [
@@ -203,7 +240,7 @@ class _ReviewFormState extends State<ReviewForm> {
                 child: CustomElevatedButton(
                   onPressed: _onSubmit,
                   label: "送信",
-                  isDisabled: _isSubmitting || staffingRating == 0 || manualRating == 0,
+                  isDisabled: _isSubmitting || _isUnrated,
                   isExpanded: true,
                 ),
               ),
