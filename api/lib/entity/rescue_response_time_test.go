@@ -20,11 +20,16 @@ func TestFormatRescueTime_ReturnsJST(t *testing.T) {
 }
 
 // DBから返る値のロケーションに関係なく、表示は常にJSTで揃える。
+// formatRescueTime同士を比べると、実装が t.In(x).Format(y) の形である限り必ず一致してしまい、
+// JSTでない場所に落ちていても緑になる。リテラルの期待値で固定する。
 func TestFormatRescueTime_NormalizesOtherLocations(t *testing.T) {
 	utc := time.Date(2026, 9, 17, 15, 16, 56, 0, time.UTC)
 	sameInstantElsewhere := utc.In(time.FixedZone("UTC+7", 7*60*60))
 
-	if got, want := formatRescueTime(sameInstantElsewhere), formatRescueTime(utc); got != want {
-		t.Fatalf("同じ瞬間なのに表示が違う: %q と %q", got, want)
+	got := formatRescueTime(sameInstantElsewhere)
+
+	const want = "2026/09/18 00:16:56"
+	if got != want {
+		t.Fatalf("formatRescueTime(%s) = %q, want %q", sameInstantElsewhere, got, want)
 	}
 }

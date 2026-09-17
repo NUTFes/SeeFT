@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"strconv"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -48,13 +49,15 @@ func TestQuestionRescueRepositoryCreate_ReturnsIDFromInsert(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
-// user_id が数値でないときはSQLを投げない。
+// user_id が数値でないときはSQLを投げずに弾く。
+// 「エラーが返ること」だけを見ると、バリデーションより先にSQLを投げる実装でも
+// sqlmockが未宣言のクエリでエラーを返すため通ってしまう。変換エラーそのものを確認する。
 func TestQuestionRescueRepositoryCreate_RejectsNonNumericUserID(t *testing.T) {
 	repo, mock := newQuestionRescueRepoWithMock(t)
 
 	id, err := repo.Create(context.Background(), "abc", "テスト質問", "todo")
 
-	require.Error(t, err)
+	require.ErrorIs(t, err, strconv.ErrSyntax)
 	assert.Equal(t, 0, id)
 	require.NoError(t, mock.ExpectationsWereMet())
 }
