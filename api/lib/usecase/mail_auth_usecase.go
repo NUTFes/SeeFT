@@ -80,10 +80,11 @@ func (u *mailAuthUseCase) WebSignUp(c context.Context, name string, mail string,
 	if err != nil {
 		return token, errors.Wrapf(err, "パスワードハッシュ化失敗")
 	}
-	if err = u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed), ""); err != nil {
+	id, err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed), "")
+	if err != nil {
 		return token, err
 	}
-	row, err := u.userRep.FindNewRecord(c)
+	row, err := u.userRep.Find(c, strconv.Itoa(id))
 	if err != nil {
 		return token, err
 	}

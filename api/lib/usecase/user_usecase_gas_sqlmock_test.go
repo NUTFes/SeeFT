@@ -56,10 +56,11 @@ func TestUpdateUsersFromGAS_新規ユーザーはmailとslackUserIDを保存す�
 
 	mock.ExpectQuery(`FROM users WHERE name`).WithArgs("新入 太郎").
 		WillReturnRows(sqlmock.NewRows(gasUserCols))
-	mock.ExpectExec(`INSERT INTO\s+users`).
+	// 採番はINSERTのRETURNINGで受け取り、再取得は名前ではなくそのidで引く
+	mock.ExpectQuery(`(?s)INSERT INTO\s+users.*RETURNING id`).
 		WithArgs("新入 太郎", "taro@example.com", "1", "1", "4", "1", "12345678", "09012345678", sqlmock.AnyArg(), "U0NEW").
-		WillReturnResult(sqlmock.NewResult(10, 1))
-	mock.ExpectQuery(`FROM users WHERE name`).WithArgs("新入 太郎").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(10))
+	mock.ExpectQuery(`FROM users WHERE id`).WithArgs("10").
 		WillReturnRows(sqlmock.NewRows(gasUserCols).AddRow(existingUserRow(10, "新入 太郎", "taro@example.com", "U0NEW")...))
 
 	err := uc.UpdateUsersFromGAS(context.Background(), gasUserChange("新入 太郎", "taro@example.com", "U0NEW"))
