@@ -106,13 +106,13 @@ func (qu *questionRescueUseCase) CreateQuestionRescue(c context.Context, userID 
 		return nil, errors.New("invalid user ID")
 	}
 
-	err := qu.questionRescueRepository.Create(c, userID, question, status)
+	id, err := qu.questionRescueRepository.Create(c, userID, question, status)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create question rescue")
 	}
 
 	// 作成したレコードを取得
-	row, err := qu.questionRescueRepository.FindNewRecord(c)
+	row, err := qu.questionRescueRepository.Find(c, strconv.Itoa(id))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get created question rescue")
 	}

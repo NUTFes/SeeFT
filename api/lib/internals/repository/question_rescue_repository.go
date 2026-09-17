@@ -19,10 +19,9 @@ type QuestionRescueRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	FindByUserID(context.Context, string) (*sql.Rows, error)
-	Create(context.Context, string, string, string) error
+	Create(context.Context, string, string, string) (int, error)
 	Update(context.Context, string, string, string) error
 	Delete(context.Context, string) error
-	FindNewRecord(context.Context) (*sql.Row, error)
 }
 
 func NewQuestionRescueRepository(c db.Client, ac abstract.Crud) QuestionRescueRepository {
@@ -48,19 +47,24 @@ func (qr *questionRescueRepository) FindByUserID(c context.Context, userID strin
 }
 
 // 作成（セキュリティ強化：プレースホルダーを使用）
-func (qr *questionRescueRepository) Create(c context.Context, userID string, question string, status string) error {
+func (qr *questionRescueRepository) Create(c context.Context, userID string, question string, status string) (int, error) {
 	query := `
 		INSERT INTO question_rescues (user_id, question, status, time, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)`
-	
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id`
+
 	userIDInt, err := strconv.Atoi(userID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	
+
 	now := time.Now()
-	_, err = qr.client.DB().ExecContext(c, query, userIDInt, question, status, now, now, now)
-	return err
+	var id int
+	// RETURNINGで採番を受け取る。INSERT後に最新行を読み直すと同時送信で取り違える（#536）
+	if err := qr.client.DB().QueryRowContext(c, query, userIDInt, question, status, now, now, now).Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 // 更新（レスポンスとステータスを更新）
@@ -82,8 +86,3 @@ func (qr *questionRescueRepository) Delete(c context.Context, id string) error {
 	return err
 }
 
-// 最新レコード取得
-func (qr *questionRescueRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
-	query := "SELECT * FROM question_rescues ORDER BY id DESC LIMIT 1"
-	return qr.crud.ReadByID(c, query)
-}

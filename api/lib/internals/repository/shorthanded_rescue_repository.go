@@ -20,10 +20,9 @@ type ShorthandedRescueRepository interface {
 	Find(context.Context, string) (*sql.Row, error)
 	FindByUserID(context.Context, string) (*sql.Rows, error)
 	FindByTaskID(context.Context, string) (*sql.Rows, error)
-	Create(context.Context, string, string, string, string, string) error
+	Create(context.Context, string, string, string, string, string) (int, error)
 	Update(context.Context, string, string, string) error
 	Delete(context.Context, string) error
-	FindNewRecord(context.Context) (*sql.Row, error)
 }
 
 func NewShorthandedRescueRepository(c db.Client, ac abstract.Crud) ShorthandedRescueRepository {
@@ -55,34 +54,39 @@ func (sr *shorthandedRescueRepository) FindByTaskID(c context.Context, taskID st
 }
 
 // 作成（セキュリティ強化：プレースホルダーを使用）
-func (sr *shorthandedRescueRepository) Create(c context.Context, userID string, taskID string, missingNumber string, place string, status string) error {
+func (sr *shorthandedRescueRepository) Create(c context.Context, userID string, taskID string, missingNumber string, place string, status string) (int, error) {
 	query := `
 		INSERT INTO shorthanded_rescues (user_id, task_id, missing_number, place, status, time, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
-	
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id`
+
 	userIDInt, err := strconv.Atoi(userID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	
+
 	taskIDInt, err := strconv.Atoi(taskID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	
+
 	missingNumberInt, err := strconv.Atoi(missingNumber)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	
-	now := time.Now()
+
 	var placePtr *string
 	if place != "" {
 		placePtr = &place
 	}
-	
-	_, err = sr.client.DB().ExecContext(c, query, userIDInt, taskIDInt, missingNumberInt, placePtr, status, now, now, now)
-	return err
+
+	now := time.Now()
+	var id int
+	// RETURNINGで採番を受け取る。INSERT後に最新行を読み直すと同時送信で取り違える（#536）
+	if err := sr.client.DB().QueryRowContext(c, query, userIDInt, taskIDInt, missingNumberInt, placePtr, status, now, now, now).Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 // 更新（レスポンスとステータスを更新）
@@ -109,8 +113,3 @@ func (sr *shorthandedRescueRepository) Delete(c context.Context, id string) erro
 	return err
 }
 
-// 最新レコード取得
-func (sr *shorthandedRescueRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
-	query := "SELECT * FROM shorthanded_rescues ORDER BY id DESC LIMIT 1"
-	return sr.crud.ReadByID(c, query)
-}

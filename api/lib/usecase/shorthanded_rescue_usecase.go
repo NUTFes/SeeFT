@@ -142,13 +142,13 @@ func (su *shorthandedRescueUseCase) CreateShorthandedRescue(c context.Context, u
 		return nil, errors.New("invalid missing number")
 	}
 
-	err := su.shorthandedRescueRepository.Create(c, userID, taskID, missingNumber, place, status)
+	id, err := su.shorthandedRescueRepository.Create(c, userID, taskID, missingNumber, place, status)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create shorthanded rescue")
 	}
 
 	// 作成したレコードを取得
-	row, err := su.shorthandedRescueRepository.FindNewRecord(c)
+	row, err := su.shorthandedRescueRepository.Find(c, strconv.Itoa(id))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get created shorthanded rescue")
 	}
