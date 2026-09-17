@@ -1,5 +1,23 @@
 package entity
 
+import "time"
+
+// レスキューの時刻はJSTで返す。スプレッドシートへ送る時刻（rescue_unified_controller）も
+// Asia/Tokyoで整形しているので、表示に使う時刻をここで揃える。
+// タイムゾーンデータを読めない環境ではUTCのままにする。
+var rescueTimeLocation = func() *time.Location {
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		return time.UTC
+	}
+	return loc
+}()
+
+// DBのtimestamptzを表示用の文字列に整形する
+func formatRescueTime(t time.Time) string {
+	return t.In(rescueTimeLocation).Format("2006/01/02 15:04:05")
+}
+
 // 統一レスキューレスポンス用の構造体
 type RescueResponse struct {
 	Type     string      `json:"type"`
@@ -34,7 +52,7 @@ func NewTroubleRescueResponse(tr *TroubleRescueForGet, userName string, taskName
 		Type:     "trouble",
 		ID:       tr.ID,
 		UserName: userName,
-		Time:     tr.Time.Format("2006/01/02 15:04:05"),
+		Time:     formatRescueTime(tr.Time),
 		Content: TroubleResponseContent{
 			Task:   taskName,
 			Place:  tr.Place,
@@ -50,7 +68,7 @@ func NewQuestionRescueResponse(qr *QuestionRescueForGet, userName string) *Rescu
 		Type:     "question",
 		ID:       qr.ID,
 		UserName: userName,
-		Time:     qr.Time.Format("2006/01/02 15:04:05"),
+		Time:     formatRescueTime(qr.Time),
 		Content: QuestionResponseContent{
 			Question: qr.Question,
 		},
@@ -64,7 +82,7 @@ func NewShorthandedRescueResponse(sr *ShorthandedRescueForGet, userName string, 
 		Type:     "shorthanded",
 		ID:       sr.ID,
 		UserName: userName,
-		Time:     sr.Time.Format("2006/01/02 15:04:05"),
+		Time:     formatRescueTime(sr.Time),
 		Content: ShorthandedResponseContent{
 			Task:          taskName,
 			MissingNumber: sr.MissingNumber,

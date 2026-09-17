@@ -138,13 +138,13 @@ func (tu *troubleRescueUseCase) CreateTroubleRescue(c context.Context, userID st
 		return nil, errors.New("invalid task ID")
 	}
 
-	err := tu.troubleRescueRepository.Create(c, userID, taskID, place, detail, status)
+	id, err := tu.troubleRescueRepository.Create(c, userID, taskID, place, detail, status)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create trouble rescue")
 	}
 
 	// 作成したレコードを取得
-	row, err := tu.troubleRescueRepository.FindNewRecord(c)
+	row, err := tu.troubleRescueRepository.Find(c, strconv.Itoa(id))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get created trouble rescue")
 	}

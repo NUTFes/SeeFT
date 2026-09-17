@@ -20,10 +20,9 @@ type TroubleRescueRepository interface {
 	Find(context.Context, string) (*sql.Row, error)
 	FindByUserID(context.Context, string) (*sql.Rows, error)
 	FindByTaskID(context.Context, string) (*sql.Rows, error)
-	Create(context.Context, string, string, string, string, string) error
+	Create(context.Context, string, string, string, string, string) (int, error)
 	Update(context.Context, string, string, string) error
 	Delete(context.Context, string) error
-	FindNewRecord(context.Context) (*sql.Row, error)
 }
 
 func NewTroubleRescueRepository(c db.Client, ac abstract.Crud) TroubleRescueRepository {
@@ -55,29 +54,34 @@ func (tr *troubleRescueRepository) FindByTaskID(c context.Context, taskID string
 }
 
 // 作成（セキュリティ強化：プレースホルダーを使用）
-func (tr *troubleRescueRepository) Create(c context.Context, userID string, taskID string, place string, detail string, status string) error {
+func (tr *troubleRescueRepository) Create(c context.Context, userID string, taskID string, place string, detail string, status string) (int, error) {
 	query := `
 		INSERT INTO trouble_rescues (user_id, task_id, place, detail, status, time, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
-	
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id`
+
 	userIDInt, err := strconv.Atoi(userID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	
+
 	taskIDInt, err := strconv.Atoi(taskID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	
-	now := time.Now()
+
 	var placePtr *string
 	if place != "" {
 		placePtr = &place
 	}
-	
-	_, err = tr.client.DB().ExecContext(c, query, userIDInt, taskIDInt, placePtr, detail, status, now, now, now)
-	return err
+
+	now := time.Now()
+	var id int
+	// RETURNINGで採番を受け取る。INSERT後に最新行を読み直すと同時送信で取り違える（#536）
+	if err := tr.client.DB().QueryRowContext(c, query, userIDInt, taskIDInt, placePtr, detail, status, now, now, now).Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 // 更新（レスポンスとステータスを更新）
@@ -104,8 +108,3 @@ func (tr *troubleRescueRepository) Delete(c context.Context, id string) error {
 	return err
 }
 
-// 最新レコード取得
-func (tr *troubleRescueRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
-	query := "SELECT * FROM trouble_rescues ORDER BY id DESC LIMIT 1"
-	return tr.crud.ReadByID(c, query)
-}
