@@ -75,10 +75,11 @@ func (r *reviewRepository) FindWithDetails(c context.Context, id string) (*sql.R
 
 // 作成
 func (r *reviewRepository) Create(c context.Context, userID string, taskID string, staffingRating string, manualRating string, comment string) error {
+	// 引数はいずれも string で受けるため、数値カラムへは明示的にキャストして型推論に頼らない
 	query := `
-		INSERT INTO	reviews (user_id, task_id, staffing_rating, manual_rating, comment)
-			VALUES (` + userID + ", " + taskID + ", " + staffingRating + ", " + manualRating + ", '" + comment + "')"
-	return r.crud.UpdateDB(c, query)
+		INSERT INTO reviews (user_id, task_id, staffing_rating, manual_rating, comment)
+			VALUES ($1::int, $2::int, $3::int, $4::int, $5)`
+	return r.crud.UpdateDB(c, query, userID, taskID, staffingRating, manualRating, comment)
 }
 
 // 編集
@@ -87,18 +88,19 @@ func (r *reviewRepository) Update(c context.Context, ID string, userID string, t
 		UPDATE
 			reviews
 		SET
-			user_id = ` + userID +
-		", task_id = " + taskID +
-		", staffing_rating = " + staffing_rating +
-		", manual_rating = " + manual_rating +
-		", comment = '" + comment + "' WHERE id = " + ID
-	return r.crud.UpdateDB(c, query)
+			user_id = $1::int,
+			task_id = $2::int,
+			staffing_rating = $3::int,
+			manual_rating = $4::int,
+			comment = $5
+		WHERE id = $6::int`
+	return r.crud.UpdateDB(c, query, userID, taskID, staffing_rating, manual_rating, comment, ID)
 }
 
 // 削除
 func (r *reviewRepository) Delete(c context.Context, id string) error {
-	query := "DELETE FROM reviews WHERE id = " + id
-	return r.crud.UpdateDB(c, query)
+	query := "DELETE FROM reviews WHERE id = $1::int"
+	return r.crud.UpdateDB(c, query, id)
 }
 
 // FindNewRecord 最新のレビューを取得する
