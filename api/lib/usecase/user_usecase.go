@@ -118,10 +118,11 @@ func (u *userUseCase) CreateUser(c context.Context, name string, mail string, gr
 	if err != nil {
 		return latastUser, err
 	}
-	if err = u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword), ""); err != nil {
+	id, err := u.userRep.Create(c, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashedPassword), "")
+	if err != nil {
 		return latastUser, err
 	}
-	row, err := u.userRep.FindNewRecord(c)
+	row, err := u.userRep.Find(c, strconv.Itoa(id))
 	if err != nil {
 		return latastUser, err
 	}
@@ -395,12 +396,12 @@ func (u *userUseCase) UpdateUsersFromGAS(ctx context.Context, req entity.UserCha
 			if err != nil {
 				return errors.Wrapf(err, "パスワードハッシュ化失敗: %v", change.Name)
 			}
-			createErr := u.userRep.Create(ctx, name, change.Mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed), change.SlackUserID)
+			newID, createErr := u.userRep.Create(ctx, name, change.Mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, string(hashed), change.SlackUserID)
 			if createErr != nil {
 				return errors.Wrapf(createErr, "ユーザー新規作成失敗: %v", change.Name)
 			}
-			// 再取得
-			userRow, err = u.userRep.FindByName(ctx, change.Name)
+			// 再取得。名前ではなく採番したidで引く（同名や表記ゆれの影響を受けない）
+			userRow, err = u.userRep.Find(ctx, strconv.Itoa(newID))
 			if err != nil {
 				return errors.Wrapf(err, "ユーザー再検索失敗: %v", change.Name)
 			}

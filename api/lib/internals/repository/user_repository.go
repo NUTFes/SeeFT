@@ -22,11 +22,10 @@ type UserRepository interface {
 	All(context.Context) (*sql.Rows, error)
 	Find(context.Context, string) (*sql.Row, error)
 	FindByStudentNumber(context.Context, string) *sql.Row
-	Create(context.Context, string, string, string, string, string, string, string, string, string, string) error
+	Create(context.Context, string, string, string, string, string, string, string, string, string, string) (int, error)
 	Update(context.Context, string, string, string, string, string, string, string, string, string, string) error
 	UpdateWithSlackUserID(context.Context, string, string, string, string, string, string, string, string, string, string, string) error
 	Delete(context.Context, string) error
-	FindNewRecord(context.Context) (*sql.Row, error)
 	FindByName(context.Context, string) (*sql.Row, error)
 	FindByNames(context.Context, []string) (*sql.Rows, error)
 }
@@ -59,12 +58,20 @@ func (ur *userRepository) FindByStudentNumber(c context.Context, studentNumber s
 
 // 作成
 // slack_user_id は UNIQUE 制約があるため、空文字は NULL にして複数人が衝突しないようにする
-func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string, slackUserID string) error {
+func (ur *userRepository) Create(c context.Context, name string, mail string, gradeID string, departmentID string, bureauID string, roleID string, studentNumber string, tel string, password string, slackUserID string) (int, error) {
 	query := `
 		INSERT INTO
 			users (name, mail, grade_id, department_id, bureau_id, role_id, student_number, tel, password, slack_user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULLIF($10, ''))`
-	return ur.crud.UpdateDB(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password, slackUserID)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULLIF($10, ''))
+		RETURNING id`
+
+	var id int
+	// 採番はINSERTのRETURNINGから受け取る。作成後に最新行を読み直すと、
+	// 同時に作成された別のレコードを掴む（レスキュー3テーブルは #536 で同じ修正を適用済み）
+	if err := ur.client.DB().QueryRowContext(c, query, name, mail, gradeID, departmentID, bureauID, roleID, studentNumber, tel, password, slackUserID).Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 // 編集
@@ -111,11 +118,6 @@ func (ur *userRepository) UpdateWithSlackUserID(c context.Context, id string, na
 func (ur *userRepository) Delete(c context.Context, id string) error {
 	query := "DELETE FROM users WHERE id = $1"
 	return ur.crud.UpdateDB(c, query, id)
-}
-
-func (ur *userRepository) FindNewRecord(c context.Context) (*sql.Row, error) {
-	query := "SELECT * FROM users ORDER BY id DESC LIMIT 1"
-	return ur.crud.ReadByID(c, query)
 }
 
 // ユーザ名からユーザを取得する
