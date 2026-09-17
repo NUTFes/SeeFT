@@ -3,7 +3,6 @@ import 'package:seeft_mobile/widgets/shift_card.dart';
 import 'package:collection/collection.dart';
 import 'package:seeft_mobile/widgets/custom_error_snack_bar.dart';
 import 'package:seeft_mobile/widgets/refresh_button.dart';
-import 'package:seeft_mobile/widgets/review_bottom_sheet.dart';
 
 
 Future<List<dynamic>?> _getShiftCardDataList(int userID, int dayID, int weatherID) async {
@@ -253,9 +252,6 @@ class _MyShiftPageState extends State<MyShiftPage>
           });
         }
         
-        // ここにレビューの処理を挟む
-        _showReviewFormIfNeeded(cashedShiftCardDataList, dayID);
-
         return;
       }
       // フェッチデータが新しい場合はキャッシュデータと表示データを更新
@@ -280,9 +276,6 @@ class _MyShiftPageState extends State<MyShiftPage>
       // 最新データに存在しない既読キーを掃除
       _cleanupStaleOpenedKeys(dayID, fetchedShiftCardDataList);
       
-      // ここにレビューの処理を挟む
-      _showReviewFormIfNeeded(fetchedShiftCardDataList, dayID);
-
       // 表示データとNew状態をフェッチデータで更新
       if (mounted && requestId == _latestLoadRequestId) {
         setState(() {
@@ -295,66 +288,6 @@ class _MyShiftPageState extends State<MyShiftPage>
     });
   }
   
-  // レビューを表示する
-  void _showReviewFormIfNeeded(ShiftCardDataList? shiftCardDataList, int dayID) {
-    if(shiftCardDataList == null) {
-      logger.w("シフトカードデータがありません. レビューを表示しません.");
-      return;
-    }
-    
-    // 現在時刻を取得
-    DateTime now = DateTime.now();
-    
-    // dayIDから日付を取得
-    String targetDate = '2025-09-12';
-    switch (dayID) {
-      case 1:
-        targetDate = constant.nutfesPreparationDay;
-        break;
-      case 2:
-        targetDate = constant.nutfesDay1;
-        break;
-      case 3:
-        targetDate = constant.nutfesDay2;
-        break;
-      case 4:
-        targetDate = constant.nutfesTidyingUpDay;
-        break;
-    }
-
-    // 各シフトカードに対するレビュー処理
-    for (var shiftCard in shiftCardDataList.data) {
-      // 休憩はレビューの対象外。除外しないと休憩が終わるたびにボトムシートが出る
-      if (shiftCard.isBreak) {
-        continue;
-      }
-
-      // シフトカードのタスクが既にレビュー済みかどうかを確認
-      final isReviewed = reviewedTaskNameBox.get(shiftCard.taskName, defaultValue: false) == true;
-      if(isReviewed){
-        logger.d("タスク「${shiftCard.taskName}」は既にレビュー済みです. レビューを表示しません。");
-        continue;
-      }
-      logger.d("タスク「${shiftCard.taskName}」は未レビューです. レビューを表示します。");
-      
-      // シフトカードからタスクの終了時刻を取得
-      final String endTime = shiftCard.endTime.padLeft(5, '0'); // 1桁時間の場合に備えて0埋め
-      DateTime shiftEndTime = DateTime.parse("$targetDate $endTime");
-      logger.d("現在時刻: $now, シフト終了時刻: $shiftEndTime");
-      
-      // 対象のタスクが終了しているかどうかを判定
-      final isFinished = now.isAfter(shiftEndTime);
-      if (isFinished) {
-        // 各シフトカードに対するレビュー処理を実行
-        ReviewBottomSheet.show(
-          context,
-          shiftCard.taskName,
-          _userID
-        );
-      }
-    }
-  }
-
   // ========== New表示のためのヘルパー関数 ==========
 
   String get _openedKeysStorageKey => 'opened_keys_$_userID';
