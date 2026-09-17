@@ -8,6 +8,9 @@ class CustomTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final bool obscureText;
   final TextInputType? keyboardType;
+  // 指定すると入力をその文字数で打ち切り、残り文字数のカウンタを表示する。
+  // 未指定なら従来どおり上限なし。
+  final int? maxLength;
 
   const CustomTextField({
     super.key,
@@ -17,6 +20,7 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.obscureText = false,
     this.keyboardType,
+    this.maxLength,
   });
 
   @override
@@ -26,6 +30,7 @@ class CustomTextField extends StatelessWidget {
       obscureText: obscureText, // パスワード入力などで使用
       onChanged: onChanged,
       keyboardType: keyboardType,
+      maxLength: maxLength,
       // keyboardTypeがTextInputType.numberの場合数字のみの入力に制限する
       inputFormatters: keyboardType == TextInputType.number ? <TextInputFormatter>[
         FilteringTextInputFormatter.digitsOnly,
@@ -37,6 +42,11 @@ class CustomTextField extends StatelessWidget {
         fontSize: AppFontSizes.md,
       ),
       decoration: InputDecoration(
+        // maxLength 指定時に出るカウンタも、他の装飾と同じトークンで揃える
+        counterStyle: const TextStyle(
+          color: AppColors.grayDark,
+          fontSize: AppFontSizes.xs,
+        ),
         // 枠線の色を指定
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
