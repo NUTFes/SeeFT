@@ -4,14 +4,9 @@ import "time"
 
 // レスキューの時刻はJSTで返す。スプレッドシートへ送る時刻（rescue_unified_controller）も
 // Asia/Tokyoで整形しているので、表示に使う時刻をここで揃える。
-// タイムゾーンデータを読めない環境ではUTCのままにする。
-var rescueTimeLocation = func() *time.Location {
-	loc, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		return time.UTC
-	}
-	return loc
-}()
+// LoadLocationを使わないのは、ゾーン情報を読めない環境で黙ってUTCに落ち、
+// 直したはずの9時間ズレが再発するため。日本標準時は夏時間を持たないので固定オフセットで表せる。
+var rescueTimeLocation = time.FixedZone("JST", 9*60*60)
 
 // DBのtimestamptzを表示用の文字列に整形する
 func formatRescueTime(t time.Time) string {
