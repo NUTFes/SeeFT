@@ -47,8 +47,10 @@ class ReviewForm extends StatefulWidget {
 }
 
 class _ReviewFormState extends State<ReviewForm> {
-  int staffingRating = 3;     // シフトの人数評価
-  int manualRating = 3;       // マニュアルの評価
+  // 0 は未選択。初期値を入れてしまうと、無操作で送信した人と「普通」と答えた人が
+  // 同じ値になり集計で区別できなくなるため、選ぶまで送信させない
+  int staffingRating = 0;     // シフトの人数評価
+  int manualRating = 0;       // マニュアルの評価
   bool _isSubmitting = false; // 送信中フラグ
   bool _isFailed = false;     // 送信失敗フラグ
   final TextEditingController _controller = TextEditingController();
@@ -158,8 +160,21 @@ class _ReviewFormState extends State<ReviewForm> {
           CustomTextField(
             controller: _controller,
             hintText: "例：マニュアルが分かりやすくて良かった",
+            // DB の comment は VARCHAR(255)。超えると INSERT が落ちて入力が失われるため、
+            // 入力側で打ち切る
+            maxLength: 255,
           ),
           const SizedBox(height: 8),
+          Visibility(
+            visible: staffingRating == 0 || manualRating == 0,
+            child: Text(
+              "星を選ぶと送信できます。",
+              style: TextStyle(
+                color: AppColors.grayDark,
+                fontSize: AppFontSizes.sm,
+              )
+            ),
+          ),
           Visibility(
             visible: _isFailed,
             child: Text(
@@ -188,7 +203,7 @@ class _ReviewFormState extends State<ReviewForm> {
                 child: CustomElevatedButton(
                   onPressed: _onSubmit,
                   label: "送信",
-                  isDisabled: _isSubmitting,
+                  isDisabled: _isSubmitting || staffingRating == 0 || manualRating == 0,
                   isExpanded: true,
                 ),
               ),
