@@ -11,7 +11,8 @@ import (
 )
 
 type troubleRescueUseCase struct {
-	troubleRescueRepository repository.TroubleRescueRepository
+	troubleRescueRepository      repository.TroubleRescueRepository
+	rescueNotificationRepository repository.RescueNotificationRepository
 }
 
 type TroubleRescueUseCase interface {
@@ -24,8 +25,9 @@ type TroubleRescueUseCase interface {
 	DeleteTroubleRescue(context.Context, string) error
 }
 
-func NewTroubleRescueUseCase(tr repository.TroubleRescueRepository) TroubleRescueUseCase {
-	return &troubleRescueUseCase{tr}
+// rnはnilでよい(レスキュー通知が無効な環境では対応状況の変化を記録しない)
+func NewTroubleRescueUseCase(tr repository.TroubleRescueRepository, rn repository.RescueNotificationRepository) TroubleRescueUseCase {
+	return &troubleRescueUseCase{tr, rn}
 }
 
 // 全件取得
@@ -175,13 +177,23 @@ func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string
 		return nil, errors.New("invalid ID")
 	}
 
+	// 通知の要否を更新前後の差分で決めるため、先に今の値を読んでおく
+	before, beforeErr := tu.GetTroubleRescueByID(c, id)
+
 	err := tu.troubleRescueRepository.Update(c, id, status, response)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to update trouble rescue")
 	}
 
 	// 更新したレコードを取得
-	return tu.GetTroubleRescueByID(c, id)
+	after, err := tu.GetTroubleRescueByID(c, id)
+	if err != nil {
+		return nil, err
+	}
+	if beforeErr == nil {
+		recordRescueNotification(c, tu.rescueNotificationRepository, entity.RescueTypeTrouble, after.ID, after.UserID, before.Status, before.Response, after.Status, after.Response)
+	}
+	return after, nil
 }
 
 // 削除

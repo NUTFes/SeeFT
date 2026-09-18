@@ -254,7 +254,12 @@ func (ru *rescueUnifiedUseCase) getUserName(c context.Context, userID string) (s
 
 // タスク名取得
 func (ru *rescueUnifiedUseCase) getTaskName(c context.Context, taskID string) (string, error) {
-	row, err := ru.taskRepository.Find(c, taskID)
+	return findTaskName(c, ru.taskRepository, taskID)
+}
+
+// タスク名取得（レスキュー通知と共用）
+func findTaskName(c context.Context, taskRepository repository.TaskRepository, taskID string) (string, error) {
+	row, err := taskRepository.Find(c, taskID)
 	if err != nil {
 		return "", err
 	}

@@ -11,7 +11,8 @@ import (
 )
 
 type questionRescueUseCase struct {
-	questionRescueRepository repository.QuestionRescueRepository
+	questionRescueRepository     repository.QuestionRescueRepository
+	rescueNotificationRepository repository.RescueNotificationRepository
 }
 
 type QuestionRescueUseCase interface {
@@ -23,8 +24,9 @@ type QuestionRescueUseCase interface {
 	DeleteQuestionRescue(context.Context, string) error
 }
 
-func NewQuestionRescueUseCase(qr repository.QuestionRescueRepository) QuestionRescueUseCase {
-	return &questionRescueUseCase{qr}
+// rnはnilでよい(レスキュー通知が無効な環境では対応状況の変化を記録しない)
+func NewQuestionRescueUseCase(qr repository.QuestionRescueRepository, rn repository.RescueNotificationRepository) QuestionRescueUseCase {
+	return &questionRescueUseCase{qr, rn}
 }
 
 // 全件取得
@@ -142,13 +144,23 @@ func (qu *questionRescueUseCase) UpdateQuestionRescue(c context.Context, id stri
 		return nil, errors.New("invalid ID")
 	}
 
+	// 通知の要否を更新前後の差分で決めるため、先に今の値を読んでおく
+	before, beforeErr := qu.GetQuestionRescueByID(c, id)
+
 	err := qu.questionRescueRepository.Update(c, id, status, response)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to update question rescue")
 	}
 
 	// 更新したレコードを取得
-	return qu.GetQuestionRescueByID(c, id)
+	after, err := qu.GetQuestionRescueByID(c, id)
+	if err != nil {
+		return nil, err
+	}
+	if beforeErr == nil {
+		recordRescueNotification(c, qu.rescueNotificationRepository, entity.RescueTypeQuestion, after.ID, after.UserID, before.Status, before.Response, after.Status, after.Response)
+	}
+	return after, nil
 }
 
 // 削除

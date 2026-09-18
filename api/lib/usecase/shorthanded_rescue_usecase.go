@@ -11,7 +11,8 @@ import (
 )
 
 type shorthandedRescueUseCase struct {
-	shorthandedRescueRepository repository.ShorthandedRescueRepository
+	shorthandedRescueRepository  repository.ShorthandedRescueRepository
+	rescueNotificationRepository repository.RescueNotificationRepository
 }
 
 type ShorthandedRescueUseCase interface {
@@ -24,8 +25,9 @@ type ShorthandedRescueUseCase interface {
 	DeleteShorthandedRescue(context.Context, string) error
 }
 
-func NewShorthandedRescueUseCase(sr repository.ShorthandedRescueRepository) ShorthandedRescueUseCase {
-	return &shorthandedRescueUseCase{sr}
+// rnはnilでよい(レスキュー通知が無効な環境では対応状況の変化を記録しない)
+func NewShorthandedRescueUseCase(sr repository.ShorthandedRescueRepository, rn repository.RescueNotificationRepository) ShorthandedRescueUseCase {
+	return &shorthandedRescueUseCase{sr, rn}
 }
 
 // 全件取得
@@ -179,13 +181,23 @@ func (su *shorthandedRescueUseCase) UpdateShorthandedRescue(c context.Context, i
 		return nil, errors.New("invalid ID")
 	}
 
+	// 通知の要否を更新前後の差分で決めるため、先に今の値を読んでおく
+	before, beforeErr := su.GetShorthandedRescueByID(c, id)
+
 	err := su.shorthandedRescueRepository.Update(c, id, status, response)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to update shorthanded rescue")
 	}
 
 	// 更新したレコードを取得
-	return su.GetShorthandedRescueByID(c, id)
+	after, err := su.GetShorthandedRescueByID(c, id)
+	if err != nil {
+		return nil, err
+	}
+	if beforeErr == nil {
+		recordRescueNotification(c, su.rescueNotificationRepository, entity.RescueTypeShorthanded, after.ID, after.UserID, before.Status, before.Response, after.Status, after.Response)
+	}
+	return after, nil
 }
 
 // 削除

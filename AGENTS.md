@@ -54,6 +54,8 @@ gas/{shift,task,user,rescue,manual-assignment}/   # ドメイン別。コード.
 
 未送信の通知ログ（`action_logs` の `is_sent = false`）は、`externals/scheduler` の ticker ループが API プロセス内で5分間隔に `NotificationUseCase.ProcessUnsentNotifications` を呼び、Slack DM へ flush します（`di.go` で配線。`cmd/send-notifications` は手動 flush 用として併存）。
 
+レスキューの対応状況（未対応→対応中→対応済み）や本部からの返答が変わると、`*RescueUseCase.Update*Rescue` が更新前後の差分を見て `rescue_notifications` に積み、同じく scheduler が30秒間隔で `RescueNotificationUseCase.ProcessUnsentRescueNotifications` を呼んで送信者本人に Slack DM します。同じレスキューへの書き込みは最後の書き込みから15秒待って1通にまとめ、戻る変更（対応済み→未対応など）は通知しません。`SLACK_BOT_TOKEN` が無いか `RESCUE_NOTIFICATION_DISABLED=true` のときは記録も送信もしません（`cmd/send-rescue-notifications` は手動 flush 用）。
+
 **API は単一インスタンス前提**です。複数レプリカで動かすと各プロセスの ticker が同じ未送信ログを拾って二重送信します。本番（`docker-compose.prod.yml`）は API を1レプリカで運用しているため現状は問題ありません。複数レプリカ化する場合はリーダー選出や排他制御が必要です。
 
 ## Code Style
