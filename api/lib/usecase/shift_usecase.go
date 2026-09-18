@@ -30,6 +30,21 @@ func isUnassignedToBreakChange(oldTaskWasUnassigned bool, newTaskName string) bo
 	return oldTaskWasUnassigned && strings.TrimSpace(newTaskName) == breakTaskName
 }
 
+// Slack通知で「割り当てが無い」ことを表す文言。スプシの空欄セルは空文字のタスクとして届く。
+// 以前は空欄も「（不明）」と表示しており、セルを消しただけの変更が
+// 「朝 食事 → （不明）」とエラーのように見えて問い合わせになった(issue #543)。
+// 「（不明）」は旧タスクを読み取れなかったときだけに残す。
+// 文言はaction_logのdiff_payloadへ書き込んだ時点で固定され、表示時には変換されない
+const unassignedTaskLabel = "（割り当てなし）"
+
+// 通知に載せるタスク名。空文字(未割当)は割り当てなしと表示する
+func taskNameForNotification(name string) string {
+	if name == "" {
+		return unassignedTaskLabel
+	}
+	return name
+}
+
 // GASから届くタスク名の表記ゆれ(全角スペース)を吸収する。
 // tasksへの保存・DBからの照合・taskMapのキーを、すべてこの形にそろえること。
 // 引くキーと入れるキーがずれると、マップが永久にヒットせず同じタスクが
@@ -1096,21 +1111,15 @@ func (u *shiftUseCase) UpdateShiftsFromGAS(ctx context.Context, req entity.Shift
 				// 「未割当(空タスク)だった」ことはスキャン成功時にのみ確定させ、読み取り失敗と混同しない
 				oldTaskWasUnassigned := false
 				if oldTaskRow != nil {
-					// 旧タスクが空文字(未割当)なら既定の「（不明）」を保つ。newTaskName側のガードと対で、
-					// Slack通知の本文が「 → 休憩」のように左側の欠けた表示になるのを防ぐ
+					// 読み取れなかったときだけ「（不明）」のまま残す。空文字(未割当)は割り当てなしと表示し、
+					// Slack通知の本文が「 → 休憩」のように片側の欠けた表示になるのを防ぐ
 					if err := oldTaskRow.Scan(&oldTask.ID, &oldTask.Task, &oldTask.PlaceID, &oldTask.Url, &oldTask.ManualUrl, &oldTask.BureauID, &oldTask.MaxMember, &oldTask.Color, &oldTask.Remark, &oldTask.YearID, &oldTask.CreatedAt, &oldTask.UpdatedAt); err == nil {
-						if oldTask.Task == "" {
-							oldTaskWasUnassigned = true
-						} else {
-							oldTaskName = oldTask.Task
-						}
+						oldTaskWasUnassigned = oldTask.Task == ""
+						oldTaskName = taskNameForNotification(oldTask.Task)
 					}
 				}
 
-				newTaskName := task.Task
-				if newTaskName == "" {
-					newTaskName = "（不明）"
-				}
+				newTaskName := taskNameForNotification(task.Task)
 
 				// action_logに記録(未割当→休憩だけは記録しない。isUnassignedToBreakChange参照)
 				if !isUnassignedToBreakChange(oldTaskWasUnassigned, task.Task) {
