@@ -99,7 +99,7 @@ func (qr *questionRescueController) UpdateQuestionRescue(c echo.Context) error {
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	updatedQuestionRescue, err := qr.u.UpdateQuestionRescue(c.Request().Context(), id, req.Status, req.Response)
+	updatedQuestionRescue, err := qr.u.UpdateQuestionRescue(c.Request().Context(), id, req.Status, req.Response, req.ShouldNotify())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

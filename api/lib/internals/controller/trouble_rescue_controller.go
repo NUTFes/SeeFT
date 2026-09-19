@@ -118,7 +118,7 @@ func (tr *troubleRescueController) UpdateTroubleRescue(c echo.Context) error {
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	updatedTroubleRescue, err := tr.u.UpdateTroubleRescue(c.Request().Context(), id, req.Status, req.Response)
+	updatedTroubleRescue, err := tr.u.UpdateTroubleRescue(c.Request().Context(), id, req.Status, req.Response, req.ShouldNotify())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

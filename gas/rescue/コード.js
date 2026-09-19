@@ -131,6 +131,8 @@ function closeDuplicateInDb_(rescueType, duplicateId, firstId) {
       payload: JSON.stringify({
         status: "done",
         response: "同じ内容の送信が重なったため、対応番号" + firstId + "にまとめました。返答は対応番号" + firstId + "をご覧ください",
+        // 本部が対応していないのに「対応が完了しました」のDMが送信者へ届かないよう、APIに通知を止めさせる
+        notify: false,
       }),
       muteHttpExceptions: true,
     });

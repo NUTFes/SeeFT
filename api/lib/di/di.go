@@ -47,6 +47,20 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	reviewRepository := repository.NewReviewRepository(client, crud)
 	actionLogRepository := repository.NewActionLogRepository(client)
 
+	// Slack通知。SLACK_BOT_TOKENが無い環境ではシフト変更通知・レスキュー通知とも無効になる
+	slackService, slackErr := slack.NewSlackService()
+	if slackErr != nil {
+		log.Printf("slack init failed, notification scheduler disabled: %v", slackErr)
+	}
+
+	// レスキュー通知。RESCUE_NOTIFICATION_DISABLED=true でレスキュー通知だけを止められる
+	var rescueNotifier usecase.RescueNotifier
+	if slackErr == nil && os.Getenv("RESCUE_NOTIFICATION_DISABLED") != "true" {
+		rescueNotifier = usecase.NewRescueNotifier(slackService, taskRepository, userRepository)
+	} else if slackErr == nil {
+		log.Printf("RESCUE_NOTIFICATION_DISABLED=true のため、レスキュー通知を無効化します")
+	}
+
 	// UseCase
 	mailAuthUseCase := usecase.NewAuthUseCase(userRepository, sessionRepository)
 	bureauUseCase := usecase.NewBureauUseCase(bureauRepository)
@@ -57,9 +71,9 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	taskUseCase := usecase.NewTaskUseCase(taskRepository, placeRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
-	questionRescueUseCase := usecase.NewQuestionRescueUseCase(questionRescueRepository)
-	shorthandedRescueUseCase := usecase.NewShorthandedRescueUseCase(shorthandedRescueRepository)
-	troubleRescueUseCase := usecase.NewTroubleRescueUseCase(troubleRescueRepository)
+	questionRescueUseCase := usecase.NewQuestionRescueUseCase(questionRescueRepository, rescueNotifier)
+	shorthandedRescueUseCase := usecase.NewShorthandedRescueUseCase(shorthandedRescueRepository, rescueNotifier)
+	troubleRescueUseCase := usecase.NewTroubleRescueUseCase(troubleRescueRepository, rescueNotifier)
 	rescueUnifiedUseCase := usecase.NewRescueUnifiedUseCase(questionRescueRepository, shorthandedRescueRepository, troubleRescueRepository, userRepository, taskRepository)
 	reviewUseCase := usecase.NewReviewUseCase(reviewRepository, taskRepository)
 
@@ -130,11 +144,7 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	)
 
 	// Scheduler: 5分間隔で未送信通知を flush する（goroutine で起動し即 return）
-	slackService, err := slack.NewSlackService()
-	if err != nil {
-		log.Printf("slack init failed, notification scheduler disabled: %v", err)
-	}
-	if err == nil {
+	if slackErr == nil {
 		notificationUseCase := usecase.NewNotificationUseCase(
 			actionLogRepository, slackService,
 			userRepository, dateRepository, timeRepository,

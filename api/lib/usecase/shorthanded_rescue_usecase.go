@@ -12,6 +12,7 @@ import (
 
 type shorthandedRescueUseCase struct {
 	shorthandedRescueRepository repository.ShorthandedRescueRepository
+	rescueNotifier              RescueNotifier
 }
 
 type ShorthandedRescueUseCase interface {
@@ -20,12 +21,13 @@ type ShorthandedRescueUseCase interface {
 	GetShorthandedRescuesByUserID(context.Context, string) ([]entity.ShorthandedRescueForGet, error)
 	GetShorthandedRescuesByTaskID(context.Context, string) ([]entity.ShorthandedRescueForGet, error)
 	CreateShorthandedRescue(context.Context, string, string, string, string, string) (*entity.ShorthandedRescueForGet, error)
-	UpdateShorthandedRescue(context.Context, string, string, string) (*entity.ShorthandedRescueForGet, error)
+	UpdateShorthandedRescue(context.Context, string, string, string, bool) (*entity.ShorthandedRescueForGet, error)
 	DeleteShorthandedRescue(context.Context, string) error
 }
 
-func NewShorthandedRescueUseCase(sr repository.ShorthandedRescueRepository) ShorthandedRescueUseCase {
-	return &shorthandedRescueUseCase{sr}
+// rnはnilでよい(レスキュー通知が無効な環境では知らせない)
+func NewShorthandedRescueUseCase(sr repository.ShorthandedRescueRepository, rn RescueNotifier) ShorthandedRescueUseCase {
+	return &shorthandedRescueUseCase{sr, rn}
 }
 
 // 全件取得
@@ -165,7 +167,8 @@ func (su *shorthandedRescueUseCase) CreateShorthandedRescue(c context.Context, u
 }
 
 // 更新
-func (su *shorthandedRescueUseCase) UpdateShorthandedRescue(c context.Context, id string, status string, response string) (*entity.ShorthandedRescueForGet, error) {
+// notifyがfalseなら送信者に知らせない(GASが押し直しの重複をまとめるとき)
+func (su *shorthandedRescueUseCase) UpdateShorthandedRescue(c context.Context, id string, status string, response string, notify bool) (*entity.ShorthandedRescueForGet, error) {
 	// 入力バリデーション
 	if id == "" {
 		return nil, errors.New("ID is required")
@@ -179,13 +182,28 @@ func (su *shorthandedRescueUseCase) UpdateShorthandedRescue(c context.Context, i
 		return nil, errors.New("invalid ID")
 	}
 
+	// 通知の要否を更新前後の差分で決めるため、先に今の値を読んでおく
+	var before *entity.ShorthandedRescueForGet
+	if notify && su.rescueNotifier != nil {
+		if b, err := su.GetShorthandedRescueByID(c, id); err == nil {
+			before = b
+		}
+	}
+
 	err := su.shorthandedRescueRepository.Update(c, id, status, response)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to update shorthanded rescue")
 	}
 
 	// 更新したレコードを取得
-	return su.GetShorthandedRescueByID(c, id)
+	after, err := su.GetShorthandedRescueByID(c, id)
+	if err != nil {
+		return nil, err
+	}
+	if before != nil {
+		su.rescueNotifier.ShorthandedRescueUpdated(c, before, after)
+	}
+	return after, nil
 }
 
 // 削除

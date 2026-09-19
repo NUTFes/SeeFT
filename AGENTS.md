@@ -56,6 +56,8 @@ gas/{shift,task,user,rescue,manual-assignment}/   # ドメイン別。コード.
 
 **API は単一インスタンス前提**です。複数レプリカで動かすと各プロセスの ticker が同じ未送信ログを拾って二重送信します。本番（`docker-compose.prod.yml`）は API を1レプリカで運用しているため現状は問題ありません。複数レプリカ化する場合はリーダー選出や排他制御が必要です。
 
+レスキューの対応状況（未対応→対応中→対応済み）や本部からの返答が変わると、`*RescueUseCase.Update*Rescue` が更新前後の値を `RescueNotifier` に渡し、知らせるべき変化ならその場で送信者本人に Slack DM します（キューや scheduler は使いません。送信は goroutine で裏に回し、失敗しても送り直しません）。戻る変更（対応済み→未対応など）や返答を消しただけの変更は通知しません。GAS が押し直しの重複を「対応済み」にしてまとめる書き込みは `"notify": false` を付けて送り、通知しません。`SLACK_BOT_TOKEN` が無いか `RESCUE_NOTIFICATION_DISABLED=true` のときは通知しません。
+
 ## Code Style
 
 ### Go (`api/`)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -114,4 +115,67 @@ func (s *SlackService) BuildMessageBlocks(params MessageParams) []slack.Block {
 	blocks = append(blocks, dividerBlock)
 
 	return blocks
+}
+
+// RescueMessageParams BuildRescueMessageBlocksに渡すメッセージパラメータ
+type RescueMessageParams struct {
+	Title     string   // 見出し(絵文字込み)
+	Number    string   // 対応番号(T12 / Q3 / S5)。アプリの「本部からの返答」タブの表記に合わせる
+	TypeLabel string   // トラブル / 質問 / 人が来ない
+	Status    string   // 未対応 / 対応中 / 対応済
+	Time      string   // 送信時刻(JST)
+	Details   []string // 送信内容。「発生タスク: 受付」のような1行ずつ
+	Response  string   // 本部からの返答(空なら載せない)
+}
+
+// mrkdwnで意味を持つ文字をエスケープする。送信内容や返答は利用者の入力なので、
+// < や & がそのまま渡るとリンクやメンションとして解釈され表示が崩れる
+var mrkdwnEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
+
+func escapeMrkdwn(s string) string {
+	return mrkdwnEscaper.Replace(s)
+}
+
+// BuildRescueMessageBlocks レスキューの対応状況を知らせるメッセージを作成
+func (s *SlackService) BuildRescueMessageBlocks(params RescueMessageParams) []slack.Block {
+	headerBlock := slack.NewHeaderBlock(slack.NewTextBlockObject("plain_text", params.Title, false, false))
+
+	fields := []*slack.TextBlockObject{
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("対応番号: %s", params.Number), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("種類: %s", params.TypeLabel), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("対応状況: %s", params.Status), false, false),
+		slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("送信時刻: %s", params.Time), false, false),
+	}
+	blocks := []slack.Block{headerBlock, slack.NewSectionBlock(nil, fields, nil)}
+
+	if len(params.Details) > 0 {
+		lines := make([]string, len(params.Details))
+		for i, d := range params.Details {
+			lines[i] = escapeMrkdwn(d)
+		}
+		blocks = append(blocks, slack.NewSectionBlock(
+			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*送信内容*\n%s", strings.Join(lines, "\n")), false, false),
+			nil,
+			nil,
+		))
+	}
+
+	if params.Response != "" {
+		blocks = append(blocks, slack.NewSectionBlock(
+			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*本部からの返答*\n%s", escapeMrkdwn(params.Response)), false, false),
+			nil,
+			nil,
+		))
+	}
+
+	blocks = append(blocks,
+		slack.NewContextBlock("", slack.NewTextBlockObject("mrkdwn", "アプリの「本部からの返答」タブでも確認できます", false, false)),
+		slack.NewDividerBlock(),
+	)
+	return blocks
+}
+
+// SendRescueMessage レスキューの対応状況を送信者本人にDMする
+func (s *SlackService) SendRescueMessage(params RescueMessageParams, slackUserID string) error {
+	return s.SendMessage(s.BuildRescueMessageBlocks(params), slackUserID)
 }

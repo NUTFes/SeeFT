@@ -12,6 +12,7 @@ import (
 
 type troubleRescueUseCase struct {
 	troubleRescueRepository repository.TroubleRescueRepository
+	rescueNotifier          RescueNotifier
 }
 
 type TroubleRescueUseCase interface {
@@ -20,12 +21,13 @@ type TroubleRescueUseCase interface {
 	GetTroubleRescuesByUserID(context.Context, string) ([]entity.TroubleRescueForGet, error)
 	GetTroubleRescuesByTaskID(context.Context, string) ([]entity.TroubleRescueForGet, error)
 	CreateTroubleRescue(context.Context, string, string, string, string, string) (*entity.TroubleRescueForGet, error)
-	UpdateTroubleRescue(context.Context, string, string, string) (*entity.TroubleRescueForGet, error)
+	UpdateTroubleRescue(context.Context, string, string, string, bool) (*entity.TroubleRescueForGet, error)
 	DeleteTroubleRescue(context.Context, string) error
 }
 
-func NewTroubleRescueUseCase(tr repository.TroubleRescueRepository) TroubleRescueUseCase {
-	return &troubleRescueUseCase{tr}
+// rnはnilでよい(レスキュー通知が無効な環境では知らせない)
+func NewTroubleRescueUseCase(tr repository.TroubleRescueRepository, rn RescueNotifier) TroubleRescueUseCase {
+	return &troubleRescueUseCase{tr, rn}
 }
 
 // 全件取得
@@ -161,7 +163,8 @@ func (tu *troubleRescueUseCase) CreateTroubleRescue(c context.Context, userID st
 }
 
 // 更新
-func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string, status string, response string) (*entity.TroubleRescueForGet, error) {
+// notifyがfalseなら送信者に知らせない(GASが押し直しの重複をまとめるとき)
+func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string, status string, response string, notify bool) (*entity.TroubleRescueForGet, error) {
 	// 入力バリデーション
 	if id == "" {
 		return nil, errors.New("ID is required")
@@ -175,13 +178,28 @@ func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string
 		return nil, errors.New("invalid ID")
 	}
 
+	// 通知の要否を更新前後の差分で決めるため、先に今の値を読んでおく
+	var before *entity.TroubleRescueForGet
+	if notify && tu.rescueNotifier != nil {
+		if b, err := tu.GetTroubleRescueByID(c, id); err == nil {
+			before = b
+		}
+	}
+
 	err := tu.troubleRescueRepository.Update(c, id, status, response)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to update trouble rescue")
 	}
 
 	// 更新したレコードを取得
-	return tu.GetTroubleRescueByID(c, id)
+	after, err := tu.GetTroubleRescueByID(c, id)
+	if err != nil {
+		return nil, err
+	}
+	if before != nil {
+		tu.rescueNotifier.TroubleRescueUpdated(c, before, after)
+	}
+	return after, nil
 }
 
 // 削除
