@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -9,40 +10,57 @@ import (
 	"testing"
 )
 
-// GASのウェブアプリを真似る。POST /macros/s/{デプロイID}/exec → 302 → GET /macros/echo
-func newFakeGAS(t *testing.T, postStatus, echoStatus int) *httptest.Server {
+const fakeGASPath = "/macros/s/AKfycbSECRET/exec"
+
+// GASのPOSTを真似る。respond で応答（302の飛び先や、404・200のエラーページ）を決める
+func newFakeGAS(t *testing.T, respond func(w http.ResponseWriter, r *http.Request)) *httptest.Server {
 	t.Helper()
 	mux := http.NewServeMux()
-	mux.HandleFunc("/macros/s/AKfycbSECRET/exec", func(w http.ResponseWriter, r *http.Request) {
-		if postStatus != http.StatusFound {
-			w.WriteHeader(postStatus)
-			_, _ = w.Write([]byte("<html><head><title>ページが見つかりません</title></head></html>"))
-			return
-		}
-		http.Redirect(w, r, "/macros/echo?user_content_key=ONE_TIME_KEY&lib=x", http.StatusFound)
-	})
-	mux.HandleFunc("/macros/echo", func(w http.ResponseWriter, r *http.Request) {
-		if echoStatus != http.StatusOK {
-			w.WriteHeader(echoStatus)
-			_, _ = w.Write([]byte("<html><head><title>Google Drive - Page Not Found</title></head></html>"))
-			return
-		}
-		_, _ = w.Write([]byte("Success"))
-	})
+	mux.HandleFunc(fakeGASPath, respond)
 	ts := httptest.NewTLSServer(mux)
 	t.Cleanup(ts.Close)
 	return ts
 }
 
-// postToGASを呼び、戻り値とログ出力を返す
-func callPostToGAS(t *testing.T, ts *httptest.Server) (string, error) {
+func redirectTo(location string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, location, http.StatusFound)
+	}
+}
+
+func errorPage(status int, title string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(status)
+		_, _ = fmt.Fprintf(w, "<html><head><title>%s</title></head></html>", title)
+	}
+}
+
+// 送ったリクエストを数える。テスト用サーバー以外（本物のGoogle）へは出さない
+type recordingTransport struct {
+	base     http.RoundTripper
+	testHost string
+	requests []string
+}
+
+func (rt *recordingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	rt.requests = append(rt.requests, r.Method+" "+r.URL.Host+r.URL.Path)
+	if r.URL.Host != rt.testHost {
+		return nil, fmt.Errorf("テスト用サーバー以外へのリクエスト: %s", r.URL)
+	}
+	return rt.base.RoundTrip(r)
+}
+
+// postToGASを呼び、ログ出力・送ったリクエスト・戻り値を返す
+func callPostToGAS(t *testing.T, ts *httptest.Server) (string, []string, error) {
 	t.Helper()
 	var buf bytes.Buffer
 	orig := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(orig) })
-	err := postToGAS(ts.Client(), ts.URL+"/macros/s/AKfycbSECRET/exec", []byte(`{"rescue_type":"question"}`))
-	return buf.String(), err
+
+	rt := &recordingTransport{base: ts.Client().Transport, testHost: strings.TrimPrefix(ts.URL, "https://")}
+	err := postToGAS(&http.Client{Transport: rt}, ts.URL+fakeGASPath, []byte(`{"rescue_type":"question"}`))
+	return buf.String(), rt.requests, err
 }
 
 func assertNoSecrets(t *testing.T, logs string) {
@@ -54,45 +72,55 @@ func assertNoSecrets(t *testing.T, logs string) {
 	}
 }
 
-func TestPostToGAS_302のあと200なら成功し両段階をログに出す(t *testing.T) {
-	ts := newFakeGAS(t, http.StatusFound, http.StatusOK)
-	logs, err := callPostToGAS(t, ts)
+func TestPostToGAS_結果置き場への302で成功とし取りに行かない(t *testing.T) {
+	ts := newFakeGAS(t, redirectTo("https://script.googleusercontent.com/macros/echo?user_content_key=ONE_TIME_KEY&lib=x"))
+	logs, requests, err := callPostToGAS(t, ts)
 	if err != nil {
 		t.Fatalf("成功のはずがエラー: %v", err)
 	}
-	for _, want := range []string{"POST ", "/macros/s/…/exec → 302", "GET ", "/macros/echo → 200", `body="Success"`} {
-		if !strings.Contains(logs, want) {
-			t.Errorf("ログに %q が無い: %s", want, logs)
-		}
+	if len(requests) != 1 || !strings.HasPrefix(requests[0], "POST ") {
+		t.Errorf("POSTの1回だけのはず: %v", requests)
+	}
+	if !strings.Contains(logs, `/macros/s/…/exec" → 302 "script.googleusercontent.com/macros/echo"`) {
+		t.Errorf("ログに段階と飛び先が無い: %s", logs)
 	}
 	assertNoSecrets(t, logs)
 }
 
-func TestPostToGAS_リダイレクト先のGETが404なら段階とタイトルが分かる(t *testing.T) {
-	ts := newFakeGAS(t, http.StatusFound, http.StatusNotFound)
-	logs, err := callPostToGAS(t, ts)
-	if err == nil || !strings.Contains(err.Error(), "404 (GET ") {
-		t.Fatalf("GET段階の404エラーになるはず: %v", err)
+func TestPostToGAS_ログイン画面への302は失敗(t *testing.T) {
+	// デプロイのアクセス権が「ログインが必要」に変わると、doPostは動かずログイン画面へ飛ばされる
+	ts := newFakeGAS(t, redirectTo("https://accounts.google.com/ServiceLogin?continue=x"))
+	logs, requests, err := callPostToGAS(t, ts)
+	if err == nil || !strings.Contains(err.Error(), "302 accounts.google.com/ServiceLogin") {
+		t.Fatalf("失敗になるはず: %v", err)
 	}
-	for _, want := range []string{"/macros/s/…/exec → 302", "/macros/echo → 404", `title="Google Drive - Page Not Found"`} {
-		if !strings.Contains(logs, want) {
-			t.Errorf("ログに %q が無い: %s", want, logs)
-		}
+	if len(requests) != 1 {
+		t.Errorf("ログイン画面へは行かないはず: %v", requests)
 	}
 	assertNoSecrets(t, logs)
 }
 
-func TestPostToGAS_POST自体が404ならリダイレクト前の段階と分かる(t *testing.T) {
-	ts := newFakeGAS(t, http.StatusNotFound, http.StatusOK)
-	logs, err := callPostToGAS(t, ts)
-	if err == nil || !strings.Contains(err.Error(), "404 (POST ") {
-		t.Fatalf("POST段階の404エラーになるはず: %v", err)
+func TestPostToGAS_POSTが404なら失敗しタイトルを残す(t *testing.T) {
+	ts := newFakeGAS(t, errorPage(http.StatusNotFound, "ページが見つかりません"))
+	logs, _, err := callPostToGAS(t, ts)
+	if err == nil || !strings.Contains(err.Error(), "404") {
+		t.Fatalf("失敗になるはず: %v", err)
 	}
-	if strings.Contains(logs, "/macros/echo") {
-		t.Errorf("リダイレクトしていないのにechoが出ている: %s", logs)
+	if !strings.Contains(logs, `→ 404`) || !strings.Contains(logs, `title="ページが見つかりません"`) {
+		t.Errorf("ログにステータスとタイトルが無い: %s", logs)
 	}
-	if !strings.Contains(logs, `title="ページが見つかりません"`) {
-		t.Errorf("エラーページのタイトルが無い: %s", logs)
+	assertNoSecrets(t, logs)
+}
+
+func TestPostToGAS_POSTに200が直接返るのは失敗(t *testing.T) {
+	// 9/19の計測で、エラーページが200で返ることがあった。200だけでは成功と判断しない
+	ts := newFakeGAS(t, errorPage(http.StatusOK, "エラー"))
+	logs, _, err := callPostToGAS(t, ts)
+	if err == nil || !strings.Contains(err.Error(), "200") {
+		t.Fatalf("失敗になるはず: %v", err)
+	}
+	if !strings.Contains(logs, `title="エラー"`) {
+		t.Errorf("ログにタイトルが無い: %s", logs)
 	}
 	assertNoSecrets(t, logs)
 }

@@ -309,10 +309,11 @@ func (ru *rescueUnifiedUseCase) SendRescueToGAS(data map[string]interface{}) err
 	return postToGAS(&http.Client{}, gasURL, jsonData)
 }
 
-// GASへPOSTし、リダイレクトの各段階をログに出す。
-// GASのウェブアプリは「POST → 302」「リダイレクト先のGET → 200」の2段階で応答する。
-// 2026-09-19に書き込み済みなのに404で失敗扱いになったとき、どちらの段階の404かが
-// ログから分からなかったので、段階ごとのステータスと経過時間を残す（#547）
+// GASへPOSTし、doPostが終わった合図の302を受けた時点で成功とする。
+// GASのウェブアプリは「POST → 302（doPost実行済み）」「リダイレクト先のGET → doPostの戻り値」の
+// 2段階で応答する。2段階目は戻り値の文字列を受け取るだけだが、ときどき10〜35秒待たされて404になったり、
+// エラーページへ飛ばされたりする。2026-09-19はこの404で書き込み済みのレスキューが失敗扱いになり、
+// 押し直しで重複した。戻り値は使っていないので、2段階目には行かない（#547）
 func postToGAS(client *http.Client, gasURL string, body []byte) error {
 	req, err := http.NewRequest("POST", gasURL, bytes.NewReader(body)) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
 	if err != nil {
@@ -320,40 +321,39 @@ func postToGAS(client *http.Client, gasURL string, body []byte) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	start := time.Now()
-	var hops []string
-	traced := *client
-	traced.CheckRedirect = func(next *http.Request, via []*http.Request) error {
-		// next.Response はこのリダイレクトを起こした直前の応答
-		prev := via[len(via)-1]
-		hops = append(hops, fmt.Sprintf("%s %s → %d (%.2fs)", prev.Method, gasLogURL(prev.URL), next.Response.StatusCode, time.Since(start).Seconds()))
-		if client.CheckRedirect != nil {
-			return client.CheckRedirect(next, via)
-		}
-		// CheckRedirectを設定すると既定の上限が外れるので、既定と同じ10回で止める
-		if len(via) >= 10 {
-			return errors.New("stopped after 10 redirects")
-		}
-		return nil
+	noFollow := *client
+	noFollow.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
 	}
 
-	resp, err := traced.Do(req) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
+	start := time.Now()
+	resp, err := noFollow.Do(req) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
 	if err != nil {
-		log.Printf("GAS送信: %s → エラー (%.2fs): %v", strings.Join(hops, " / "), time.Since(start).Seconds(), err)
+		log.Printf("GAS送信: POST %s → エラー (%.2fs): %s", strconv.Quote(gasLogURL(req.URL)), time.Since(start).Seconds(), strconv.Quote(err.Error()))
 		return errors.Wrap(err, "GASへの送信失敗")
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	hops = append(hops, fmt.Sprintf("%s %s → %d (%.2fs)", resp.Request.Method, gasLogURL(resp.Request.URL), resp.StatusCode, time.Since(start).Seconds()))
-	if resp.StatusCode != http.StatusOK {
-		// エラーページのタイトルで、Googleのどの種類の404かを見分ける
-		log.Printf("GAS送信: %s title=%q", strings.Join(hops, " / "), gasPageTitle(resp.Body))
-		return errors.Errorf("GASが非OKステータスを返しました: %d (%s %s)", resp.StatusCode, resp.Request.Method, gasLogURL(resp.Request.URL))
+	location, _ := resp.Location()
+	if isGASResultRedirect(resp.StatusCode, location) {
+		log.Printf("GAS送信: POST %s → %d %s (%.2fs)", strconv.Quote(gasLogURL(req.URL)), resp.StatusCode, strconv.Quote(gasLogURL(location)), time.Since(start).Seconds())
+		return nil
 	}
-	// 200の本文はdoPostの戻り値（Success / Duplicate of N / Error: ...）
-	head, _ := io.ReadAll(io.LimitReader(resp.Body, 100))
-	log.Printf("GAS送信: %s body=%q", strings.Join(hops, " / "), string(head))
-	return nil
+
+	// 302でもログイン画面など結果置き場以外への転送は、doPostが動いていないので失敗にする。
+	// 200が直接返るのも正常な応答ではない（エラーページが200で返ることがある）
+	dest := ""
+	if location != nil {
+		dest = " " + gasLogURL(location)
+	}
+	log.Printf("GAS送信: POST %s → %d %s (%.2fs) title=%s", strconv.Quote(gasLogURL(req.URL)), resp.StatusCode, strconv.Quote(strings.TrimSpace(dest)), time.Since(start).Seconds(), strconv.Quote(gasPageTitle(resp.Body)))
+	return errors.Errorf("GASが想定外の応答を返しました: %d%s", resp.StatusCode, dest)
+}
+
+// doPostの戻り値の置き場（script.googleusercontent.com/macros/echo）への302なら、doPostは実行済み
+func isGASResultRedirect(status int, location *url.URL) bool {
+	return status == http.StatusFound && location != nil &&
+		location.Host == "script.googleusercontent.com" && location.Path == "/macros/echo"
 }
 
 // ウェブアプリのURLは知っていれば誰でもスプシに書き込めるので、パス中のデプロイIDを伏せる。
