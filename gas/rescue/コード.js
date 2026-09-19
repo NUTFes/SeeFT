@@ -74,10 +74,69 @@ function doPost(e) {
       row[PHONE_INDEX] = "'" + String(row[PHONE_INDEX]);
     }
 
+    // 押し直しによる重複はスプシに追記せず、DB側の重複行を「まとめた」と閉じる
+    const firstId = findRecentDuplicate_(data);
+    if (firstId) {
+      closeDuplicateInDb_(data.rescue_type, nextId, firstId);
+      return ContentService.createTextOutput('Duplicate of ' + firstId).setMimeType(ContentService.MimeType.TEXT);
+    }
+
     sheet.appendRow(row);
+    rememberRescue_(data, nextId);
     return ContentService.createTextOutput('Success').setMimeType(ContentService.MimeType.TEXT);
   } catch (err) {
     return ContentService.createTextOutput('Error: ' + err).setMimeType(ContentService.MimeType.TEXT);
+  }
+}
+
+// 同じ人・同じ種類・同じ内容の送信をこの秒数のあいだ1件として扱う。
+// GASの応答が遅れてAPIが失敗扱いにし、アプリの「送信に失敗しました」を見た人が押し直す。
+// 押し直しは数十秒〜1分で来るので、それより長く、意図した再送を潰さない長さにしている
+const DUPLICATE_WINDOW_SECONDS = 180;
+
+// 重複判定のキー。対応番号(rescue_id)は押し直すたびに新しく振られるので含めない
+function duplicateKey_(data) {
+  const parts = [data.rescue_type, data.student_number, data.question, data.task_name, data.place, data.detail, data.missing_number];
+  const raw = parts.map(function (v) { return v === undefined || v === null ? "" : String(v).trim(); }).join("\u0001");
+  // CacheServiceのキーは250文字までなので、内容が長くても収まるようにハッシュにする
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, raw, Utilities.Charset.UTF_8);
+  return "dup:" + Utilities.base64EncodeWebSafe(digest);
+}
+
+// 直前に同じ内容を追記していれば、その対応番号を返す。判定に失敗したら追記する側に倒す（取りこぼさない）
+function findRecentDuplicate_(data) {
+  try {
+    return CacheService.getScriptCache().get(duplicateKey_(data));
+  } catch (err) {
+    Logger.log("重複判定に失敗したため追記します: " + err);
+    return null;
+  }
+}
+
+function rememberRescue_(data, id) {
+  try {
+    CacheService.getScriptCache().put(duplicateKey_(data), String(id), DUPLICATE_WINDOW_SECONDS);
+  } catch (err) {
+    Logger.log("重複判定の記録に失敗しました: " + err);
+  }
+}
+
+// 送った人のアプリに返答の来ない行が残らないよう、DBの重複行を対応済みにしてまとめ先を書く
+function closeDuplicateInDb_(rescueType, duplicateId, firstId) {
+  try {
+    const baseUrl = PropertiesService.getScriptProperties().getProperty("API_BASE_URL");
+    const res = UrlFetchApp.fetch(baseUrl + "/" + rescueType + "-rescues/" + duplicateId, {
+      method: "put",
+      contentType: "application/json",
+      payload: JSON.stringify({
+        status: "done",
+        response: "同じ内容の送信が重なったため、対応番号" + firstId + "にまとめました。返答は対応番号" + firstId + "をご覧ください",
+      }),
+      muteHttpExceptions: true,
+    });
+    Logger.log("重複 " + rescueType + " " + duplicateId + " → " + firstId + " / API " + res.getResponseCode());
+  } catch (err) {
+    Logger.log("重複行のDB更新に失敗しました: " + err);
   }
 }
 
