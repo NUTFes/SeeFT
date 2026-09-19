@@ -329,6 +329,7 @@ func postToGAS(client *http.Client, gasURL string, body []byte) error {
 	start := time.Now()
 	resp, err := noFollow.Do(req) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
 	if err != nil {
+		err = maskGASURLError(err)
 		log.Printf("GAS送信: POST %s → エラー (%.2fs): %s", strconv.Quote(gasLogURL(req.URL)), time.Since(start).Seconds(), strconv.Quote(err.Error()))
 		return errors.Wrap(err, "GASへの送信失敗")
 	}
@@ -362,6 +363,20 @@ var gasDeploymentIDPattern = regexp.MustCompile(`/s/[^/]+`)
 
 func gasLogURL(u *url.URL) string {
 	return u.Host + gasDeploymentIDPattern.ReplaceAllString(u.Path, "/s/…")
+}
+
+// 通信エラーのとき http.Client.Do はデプロイID入りのURLを持つ *url.Error を返す。
+// このエラーはログだけでなくコントローラーの sheet_error としてアプリにも返るので、URLを伏せた形に作り直す
+func maskGASURLError(err error) error {
+	var uerr *url.Error
+	if !errors.As(err, &uerr) {
+		return err
+	}
+	masked := "(GASのURL)"
+	if u, perr := url.Parse(uerr.URL); perr == nil {
+		masked = gasLogURL(u)
+	}
+	return &url.Error{Op: uerr.Op, URL: masked, Err: uerr.Err}
 }
 
 var htmlTitlePattern = regexp.MustCompile(`(?is)<title[^>]*>(.*?)</title>`)

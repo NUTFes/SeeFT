@@ -124,3 +124,21 @@ func TestPostToGAS_POSTに200が直接返るのは失敗(t *testing.T) {
 	}
 	assertNoSecrets(t, logs)
 }
+
+func TestPostToGAS_通信エラーでもデプロイIDをログと戻り値に出さない(t *testing.T) {
+	// 通信エラーのとき http.Client.Do は URL 入りの *url.Error を返す。
+	// 戻り値はコントローラーの sheet_error としてアプリにも返るので、どちらにも出してはいけない
+	ts := newFakeGAS(t, redirectTo("https://script.googleusercontent.com/macros/echo"))
+	ts.Close()
+	logs, _, err := callPostToGAS(t, ts)
+	if err == nil {
+		t.Fatal("通信エラーになるはず")
+	}
+	if strings.Contains(err.Error(), "AKfycbSECRET") {
+		t.Errorf("戻り値にデプロイIDが出ている: %v", err)
+	}
+	if !strings.Contains(err.Error(), "/macros/s/…/exec") {
+		t.Errorf("伏せた形のURLは残るはず: %v", err)
+	}
+	assertNoSecrets(t, logs)
+}
