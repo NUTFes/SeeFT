@@ -6,11 +6,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/NUTFes/SeeFT/api/lib/internals/repository"
@@ -301,21 +306,71 @@ func (ru *rescueUnifiedUseCase) SendRescueToGAS(data map[string]interface{}) err
 		return errors.Wrap(err, "レスキューデータのJSON変換失敗")
 	}
 
-	req, err := http.NewRequest("POST", gasURL, bytes.NewBuffer(jsonData)) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
+	return postToGAS(&http.Client{}, gasURL, jsonData)
+}
+
+// GASへPOSTし、リダイレクトの各段階をログに出す。
+// GASのウェブアプリは「POST → 302」「リダイレクト先のGET → 200」の2段階で応答する。
+// 2026-09-19に書き込み済みなのに404で失敗扱いになったとき、どちらの段階の404かが
+// ログから分からなかったので、段階ごとのステータスと経過時間を残す（#547）
+func postToGAS(client *http.Client, gasURL string, body []byte) error {
+	req, err := http.NewRequest("POST", gasURL, bytes.NewReader(body)) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
 	if err != nil {
 		return errors.Wrap(err, "GASリクエスト作成失敗")
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
+	start := time.Now()
+	var hops []string
+	traced := *client
+	traced.CheckRedirect = func(next *http.Request, via []*http.Request) error {
+		// next.Response はこのリダイレクトを起こした直前の応答
+		prev := via[len(via)-1]
+		hops = append(hops, fmt.Sprintf("%s %s → %d (%.2fs)", prev.Method, gasLogURL(prev.URL), next.Response.StatusCode, time.Since(start).Seconds()))
+		if client.CheckRedirect != nil {
+			return client.CheckRedirect(next, via)
+		}
+		// CheckRedirectを設定すると既定の上限が外れるので、既定と同じ10回で止める
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		return nil
+	}
+
+	resp, err := traced.Do(req) //nolint:gosec // G704: gasURL はhttps スキームを検証済みの環境変数
 	if err != nil {
+		log.Printf("GAS送信: %s → エラー (%.2fs): %v", strings.Join(hops, " / "), time.Since(start).Seconds(), err)
 		return errors.Wrap(err, "GASへの送信失敗")
 	}
 	defer func() { _ = resp.Body.Close() }()
 
+	hops = append(hops, fmt.Sprintf("%s %s → %d (%.2fs)", resp.Request.Method, gasLogURL(resp.Request.URL), resp.StatusCode, time.Since(start).Seconds()))
 	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("GASが非OKステータスを返しました: %d", resp.StatusCode)
+		// エラーページのタイトルで、Googleのどの種類の404かを見分ける
+		log.Printf("GAS送信: %s title=%q", strings.Join(hops, " / "), gasPageTitle(resp.Body))
+		return errors.Errorf("GASが非OKステータスを返しました: %d (%s %s)", resp.StatusCode, resp.Request.Method, gasLogURL(resp.Request.URL))
 	}
+	// 200の本文はdoPostの戻り値（Success / Duplicate of N / Error: ...）
+	head, _ := io.ReadAll(io.LimitReader(resp.Body, 100))
+	log.Printf("GAS送信: %s body=%q", strings.Join(hops, " / "), string(head))
 	return nil
+}
+
+// ウェブアプリのURLは知っていれば誰でもスプシに書き込めるので、パス中のデプロイIDを伏せる。
+// クエリ（リダイレクト先のuser_content_key）も出さない
+var gasDeploymentIDPattern = regexp.MustCompile(`/s/[^/]+`)
+
+func gasLogURL(u *url.URL) string {
+	return u.Host + gasDeploymentIDPattern.ReplaceAllString(u.Path, "/s/…")
+}
+
+var htmlTitlePattern = regexp.MustCompile(`(?is)<title[^>]*>(.*?)</title>`)
+
+func gasPageTitle(body io.Reader) string {
+	b, _ := io.ReadAll(io.LimitReader(body, 64*1024))
+	m := htmlTitlePattern.FindSubmatch(b)
+	if m == nil {
+		return ""
+	}
+	return strings.TrimSpace(string(m[1]))
 }
