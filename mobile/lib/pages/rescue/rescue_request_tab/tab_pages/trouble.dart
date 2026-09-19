@@ -65,12 +65,14 @@ class RescueRequestTabTroublePage extends StatelessWidget {
   }
   
   // トラブルのレスキューを送信する関数
+  // place と detail はどちらも String なので、位置引数だと順番を取り違えてもコンパイラが気づかない。
+  // 実際に取り違えて、発生場所と詳細が入れ替わって届いていた（#551）ので名前付き引数にしている
   Future<bool> _sendRescueRequest(
-    BuildContext context, 
-    RescueTaskDropdownMenuItem selectedTask,
-    String detail,
-    String place,
-  ) async {
+    BuildContext context,
+    RescueTaskDropdownMenuItem selectedTask, {
+    required String place,
+    required String detail,
+  }) async {
     if(
       detail == "" || 
       place == ""
@@ -350,8 +352,8 @@ class RescueRequestTabTroublePage extends StatelessWidget {
                       final isSuccess = await _sendRescueRequest(
                         context,
                         selectedTask,
-                        place,
-                        detail
+                        place: place,
+                        detail: detail,
                       );
                       if (!context.mounted) return;
                       logger.i("レスキューを送信しました");
