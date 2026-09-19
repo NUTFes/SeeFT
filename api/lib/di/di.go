@@ -53,13 +53,10 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 		log.Printf("slack init failed, notification scheduler disabled: %v", slackErr)
 	}
 
-	// レスキュー通知は、送れる環境のときだけ対応状況の変化を記録する。
-	// 送れないまま記録だけ溜めると、有効にした瞬間に過去分がまとめてDMで飛ぶため。
-	// RESCUE_NOTIFICATION_DISABLED=true でレスキュー通知だけを止められる
-	var rescueNotificationRepository repository.RescueNotificationRepository
-	rescueNotificationEnabled := slackErr == nil && os.Getenv("RESCUE_NOTIFICATION_DISABLED") != "true"
-	if rescueNotificationEnabled {
-		rescueNotificationRepository = repository.NewRescueNotificationRepository(client)
+	// レスキュー通知。RESCUE_NOTIFICATION_DISABLED=true でレスキュー通知だけを止められる
+	var rescueNotifier usecase.RescueNotifier
+	if slackErr == nil && os.Getenv("RESCUE_NOTIFICATION_DISABLED") != "true" {
+		rescueNotifier = usecase.NewRescueNotifier(slackService, taskRepository, userRepository)
 	} else if slackErr == nil {
 		log.Printf("RESCUE_NOTIFICATION_DISABLED=true のため、レスキュー通知を無効化します")
 	}
@@ -74,9 +71,9 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 	taskUseCase := usecase.NewTaskUseCase(taskRepository, placeRepository)
 	timeUsecase := usecase.NewTimeUseCase(timeRepository)
 	userUseCase := usecase.NewUserUseCase(userRepository, sessionRepository)
-	questionRescueUseCase := usecase.NewQuestionRescueUseCase(questionRescueRepository, rescueNotificationRepository)
-	shorthandedRescueUseCase := usecase.NewShorthandedRescueUseCase(shorthandedRescueRepository, rescueNotificationRepository)
-	troubleRescueUseCase := usecase.NewTroubleRescueUseCase(troubleRescueRepository, rescueNotificationRepository)
+	questionRescueUseCase := usecase.NewQuestionRescueUseCase(questionRescueRepository, rescueNotifier)
+	shorthandedRescueUseCase := usecase.NewShorthandedRescueUseCase(shorthandedRescueRepository, rescueNotifier)
+	troubleRescueUseCase := usecase.NewTroubleRescueUseCase(troubleRescueRepository, rescueNotifier)
 	rescueUnifiedUseCase := usecase.NewRescueUnifiedUseCase(questionRescueRepository, shorthandedRescueRepository, troubleRescueRepository, userRepository, taskRepository)
 	reviewUseCase := usecase.NewReviewUseCase(reviewRepository, taskRepository)
 
@@ -155,16 +152,6 @@ func InitializeServer(ctx context.Context) (db.Client, error) {
 		)
 		scheduler.New("notification", 5*time.Minute, notificationUseCase.ProcessUnsentNotifications).Start(ctx)
 
-	}
-
-	// Scheduler: レスキューは急ぎなので30秒間隔で flush する
-	if rescueNotificationEnabled {
-		rescueNotificationUseCase := usecase.NewRescueNotificationUseCase(
-			rescueNotificationRepository, slackService,
-			questionRescueUseCase, shorthandedRescueUseCase, troubleRescueUseCase,
-			taskRepository, userRepository,
-		)
-		scheduler.New("rescue-notification", 30*time.Second, rescueNotificationUseCase.ProcessUnsentRescueNotifications).Start(ctx)
 	}
 
 	// Server

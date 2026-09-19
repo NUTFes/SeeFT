@@ -119,7 +119,7 @@ func (sr *shorthandedRescueController) UpdateShorthandedRescue(c echo.Context) e
 	if _, err := strconv.Atoi(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
 	}
-	updatedShorthandedRescue, err := sr.u.UpdateShorthandedRescue(c.Request().Context(), id, req.Status, req.Response)
+	updatedShorthandedRescue, err := sr.u.UpdateShorthandedRescue(c.Request().Context(), id, req.Status, req.Response, req.ShouldNotify())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

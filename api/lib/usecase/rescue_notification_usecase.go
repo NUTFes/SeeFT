@@ -6,18 +6,12 @@ import (
 	"fmt"
 	logpkg "log"
 	"strconv"
-	"time"
 
 	"github.com/NUTFes/SeeFT/api/lib/entity"
 	"github.com/NUTFes/SeeFT/api/lib/externals/slack"
 	rep "github.com/NUTFes/SeeFT/api/lib/internals/repository"
 	"github.com/pkg/errors"
 )
-
-// 最後の書き込みからこの時間が経つまで送らずに待つ。
-// 本部が「対応状況」と「返答」を続けて書き換えたとき、DMを2通に分けず最後の状態で1通にまとめるため。
-// schedulerの間隔(30秒)と合わせても、書き込みから1分以内に届く
-const rescueNotificationSettle = 15 * time.Second
 
 // 対応状況の進み具合。戻る変更(対応済み→未対応など)はスプシの消し間違いとみなして通知しない
 var rescueStatusRank = map[string]int{
@@ -34,16 +28,10 @@ var rescueStatusLabel = map[string]string{
 }
 
 var rescueNotificationTitle = map[string]string{
-	entity.RescueNotificationInProgress: "👀 本部がレスキューを確認しました",
-	entity.RescueNotificationDone:       "✅ レスキューの対応が完了しました",
-	entity.RescueNotificationResponse:   "💬 本部から返答が届きました",
-}
-
-// 同じレスキューの通知をまとめたとき、見出しに使う種別の強さ
-var rescueNotificationKindRank = map[string]int{
-	entity.RescueNotificationResponse:   0,
-	entity.RescueNotificationInProgress: 1,
-	entity.RescueNotificationDone:       2,
+	entity.RescueNotificationInProgress:     "👀 本部がレスキューを確認しました",
+	entity.RescueNotificationDone:           "✅ レスキューの対応が完了しました",
+	entity.RescueNotificationResponse:       "💬 本部から返答が届きました",
+	entity.RescueNotificationResponseEdited: "✏️ 本部からの返答が編集されました",
 }
 
 // 更新前後の値から、送信者に知らせるべき変更かを判定する。
@@ -64,32 +52,14 @@ func rescueNotificationKind(oldStatus, oldResponse, newStatus, newResponse strin
 		}
 		return entity.RescueNotificationInProgress, true
 	case newResponse != oldResponse && newResponse != "":
-		return entity.RescueNotificationResponse, true
+		// 返答欄が空だったところに書かれたら「届きました」、書いてあった返答の書き換えなら「編集されました」。
+		// 一度消してから書き直した場合は空からの書き込みになるので「届きました」になる
+		if oldResponse == "" {
+			return entity.RescueNotificationResponse, true
+		}
+		return entity.RescueNotificationResponseEdited, true
 	}
 	return "", false
-}
-
-// レスキューの更新時に呼び、通知すべき変更なら未送信キューに積む。
-// 通知の記録に失敗してもPUTは失敗させない(GAS側でエラーのアラートが出て本部の作業が止まるため)
-func recordRescueNotification(ctx context.Context, repo rep.RescueNotificationRepository, rescueType string, rescueID, userID int, oldStatus, oldResponse, newStatus, newResponse string) {
-	if repo == nil {
-		return
-	}
-	kind, ok := rescueNotificationKind(oldStatus, oldResponse, newStatus, newResponse)
-	if !ok {
-		return
-	}
-	err := repo.Create(ctx, entity.RescueNotification{
-		RescueType: rescueType,
-		RescueID:   rescueID,
-		UserID:     userID,
-		Kind:       kind,
-		Status:     newStatus,
-		Response:   newResponse,
-	})
-	if err != nil {
-		logpkg.Printf("rescue_notification記録失敗(%s #%d): %v", rescueType, rescueID, err)
-	}
 }
 
 // RescueMessageSender レスキュー通知の送り先。本番は *slack.SlackService
@@ -97,200 +67,105 @@ type RescueMessageSender interface {
 	SendRescueMessage(slack.RescueMessageParams, string) error
 }
 
-type rescueNotificationUseCase struct {
-	repo                     rep.RescueNotificationRepository
-	sender                   RescueMessageSender
-	questionRescueUseCase    QuestionRescueUseCase
-	shorthandedRescueUseCase ShorthandedRescueUseCase
-	troubleRescueUseCase     TroubleRescueUseCase
-	taskRep                  rep.TaskRepository
-	userRep                  rep.UserRepository
-	now                      func() time.Time
+// RescueNotifier レスキューの対応状況・返答が変わったことを送信者本人にSlack DMで知らせる。
+// 各Update*Rescueが更新前後の値を渡し、知らせるべき変化ならその場で送る
+type RescueNotifier interface {
+	TroubleRescueUpdated(ctx context.Context, before, after *entity.TroubleRescueForGet)
+	QuestionRescueUpdated(ctx context.Context, before, after *entity.QuestionRescueForGet)
+	ShorthandedRescueUpdated(ctx context.Context, before, after *entity.ShorthandedRescueForGet)
 }
 
-type RescueNotificationUseCase interface {
-	ProcessUnsentRescueNotifications(ctx context.Context) error
+type rescueNotifier struct {
+	sender  RescueMessageSender
+	taskRep rep.TaskRepository
+	userRep rep.UserRepository
+	// 送信の走らせ方。本番はgoroutineで裏に回し、テストではその場で実行して結果を確かめる
+	run func(func())
 }
 
-func NewRescueNotificationUseCase(
-	repo rep.RescueNotificationRepository,
-	sender RescueMessageSender,
-	questionRescueUseCase QuestionRescueUseCase,
-	shorthandedRescueUseCase ShorthandedRescueUseCase,
-	troubleRescueUseCase TroubleRescueUseCase,
-	taskRep rep.TaskRepository,
-	userRep rep.UserRepository,
-) RescueNotificationUseCase {
-	return &rescueNotificationUseCase{
-		repo:                     repo,
-		sender:                   sender,
-		questionRescueUseCase:    questionRescueUseCase,
-		shorthandedRescueUseCase: shorthandedRescueUseCase,
-		troubleRescueUseCase:     troubleRescueUseCase,
-		taskRep:                  taskRep,
-		userRep:                  userRep,
-		now:                      time.Now,
+func NewRescueNotifier(sender RescueMessageSender, taskRep rep.TaskRepository, userRep rep.UserRepository) RescueNotifier {
+	return &rescueNotifier{
+		sender:  sender,
+		taskRep: taskRep,
+		userRep: userRep,
+		run:     func(f func()) { go f() },
 	}
 }
 
-// ProcessUnsentRescueNotifications 未送信の通知をレスキューごとに1通にまとめて送信者へDMする
-func (u *rescueNotificationUseCase) ProcessUnsentRescueNotifications(ctx context.Context) error {
-	notifications, err := u.loadUnsent(ctx)
-	if err != nil {
-		return err
-	}
-
-	now := u.now()
-	for _, group := range groupRescueNotifications(notifications) {
-		latest := group[len(group)-1]
-		// まだ書き換えが続いているかもしれないので次の回に回す
-		if now.Sub(latest.CreatedAt) < rescueNotificationSettle {
-			continue
-		}
-
-		if err := u.sendGroup(ctx, group); err != nil {
-			if !errors.Is(err, sql.ErrNoRows) {
-				// 未送信のまま残し、次の回に再送する
-				logpkg.Printf("レスキュー通知の送信失敗(%s #%d): %v", latest.RescueType, latest.RescueID, err)
-				continue
-			}
-			// レスキュー自体が削除されていて送れない。残すと毎回失敗し続けるので送信済みにする
-			logpkg.Printf("レスキューが見つからないため通知を破棄(%s #%d)", latest.RescueType, latest.RescueID)
-		}
-
-		ids := make([]int, len(group))
-		for i, n := range group {
-			ids[i] = n.ID
-		}
-		if err := u.repo.MarkAsSent(ctx, ids); err != nil {
-			return errors.Wrapf(err, "failed to mark rescue notifications as sent")
-		}
-	}
-	return nil
-}
-
-func (u *rescueNotificationUseCase) loadUnsent(ctx context.Context) ([]entity.RescueNotification, error) {
-	rows, err := u.repo.FindUnsent(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	var notifications []entity.RescueNotification
-	for rows.Next() {
-		var n entity.RescueNotification
-		var userID sql.NullInt64
-		var response sql.NullString
-		if err := rows.Scan(&n.ID, &n.RescueType, &n.RescueID, &userID, &n.Kind, &n.Status, &response, &n.IsSent, &n.CreatedAt); err != nil {
-			return nil, errors.Wrapf(err, "failed to scan rescue notification")
-		}
-		if userID.Valid {
-			n.UserID = int(userID.Int64)
-		}
-		n.Response = response.String
-		notifications = append(notifications, n)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, errors.Wrapf(err, "failed to read rescue notifications")
-	}
-	return notifications, nil
-}
-
-// 同じレスキュー(種類+ID)の通知をまとめる。各グループ内も、グループの並びも古い順を保つ
-func groupRescueNotifications(notifications []entity.RescueNotification) [][]entity.RescueNotification {
-	var groups [][]entity.RescueNotification
-	index := make(map[string]int)
-	for _, n := range notifications {
-		key := fmt.Sprintf("%s_%d", n.RescueType, n.RescueID)
-		i, ok := index[key]
-		if !ok {
-			i = len(groups)
-			index[key] = i
-			groups = append(groups, nil)
-		}
-		groups[i] = append(groups[i], n)
-	}
-	return groups
-}
-
-// まとめた通知から1通のDMを組み立てて送る
-func (u *rescueNotificationUseCase) sendGroup(ctx context.Context, group []entity.RescueNotification) error {
-	// 見出しはまとめた中で一番強い変化にし、対応状況と返答は最後の状態を載せる
-	kind := group[0].Kind
-	for _, n := range group[1:] {
-		if rescueNotificationKindRank[n.Kind] > rescueNotificationKindRank[kind] {
-			kind = n.Kind
-		}
-	}
-	latest := group[len(group)-1]
-
-	params, userID, err := u.buildRescueMessage(ctx, latest.RescueType, latest.RescueID)
-	if err != nil {
-		return err
-	}
-	params.Title = rescueNotificationTitle[kind]
-	params.Status = rescueStatusLabel[latest.Status]
-	params.Response = latest.Response
-
-	slackUserID, err := findSlackUserID(ctx, u.userRep, userID)
-	if err != nil {
-		return err
-	}
-	// Slack IDが無い人にはシフト変更通知と同じく何も送らない(SendMessage側で黙ってスキップされる)
-	return u.sender.SendRescueMessage(params, slackUserID)
-}
-
-// レスキューの送信内容を読み、メッセージの番号・種類・送信時刻・内容を埋める。
 // 送信時刻の整形とタスク名の補完は「本部からの返答」タブ(GET /rescues)と同じものを使う
-func (u *rescueNotificationUseCase) buildRescueMessage(ctx context.Context, rescueType string, rescueID int) (slack.RescueMessageParams, int, error) {
-	id := strconv.Itoa(rescueID)
-	switch rescueType {
-	case entity.RescueTypeTrouble:
-		r, err := u.troubleRescueUseCase.GetTroubleRescueByID(ctx, id)
-		if err != nil {
-			return slack.RescueMessageParams{}, 0, err
-		}
-		taskName, err := findTaskName(ctx, u.taskRep, strconv.Itoa(r.TaskID))
+func (n *rescueNotifier) TroubleRescueUpdated(ctx context.Context, before, after *entity.TroubleRescueForGet) {
+	n.notify(ctx, before.Status, before.Response, after.Status, after.Response, after.UserID, func(ctx context.Context) slack.RescueMessageParams {
+		taskName, err := findTaskName(ctx, n.taskRep, strconv.Itoa(after.TaskID))
 		if err != nil {
 			taskName = "タスク外"
 		}
-		res := entity.NewTroubleRescueResponse(r, "", taskName)
+		res := entity.NewTroubleRescueResponse(after, "", taskName)
 		return slack.RescueMessageParams{
-			Number:    fmt.Sprintf("T%d", r.ID),
+			Number:    fmt.Sprintf("T%d", after.ID),
 			TypeLabel: "トラブル",
 			Time:      res.Time,
-			Details:   nonEmptyLines("発生タスク", taskName, "発生場所", r.Place, "内容", r.Detail),
-		}, r.UserID, nil
-	case entity.RescueTypeQuestion:
-		r, err := u.questionRescueUseCase.GetQuestionRescueByID(ctx, id)
-		if err != nil {
-			return slack.RescueMessageParams{}, 0, err
+			Details:   nonEmptyLines("発生タスク", taskName, "発生場所", after.Place, "内容", after.Detail),
 		}
-		res := entity.NewQuestionRescueResponse(r, "")
+	})
+}
+
+func (n *rescueNotifier) QuestionRescueUpdated(ctx context.Context, before, after *entity.QuestionRescueForGet) {
+	n.notify(ctx, before.Status, before.Response, after.Status, after.Response, after.UserID, func(context.Context) slack.RescueMessageParams {
+		res := entity.NewQuestionRescueResponse(after, "")
 		return slack.RescueMessageParams{
-			Number:    fmt.Sprintf("Q%d", r.ID),
+			Number:    fmt.Sprintf("Q%d", after.ID),
 			TypeLabel: "質問",
 			Time:      res.Time,
-			Details:   nonEmptyLines("質問", r.Question),
-		}, r.UserID, nil
-	case entity.RescueTypeShorthanded:
-		r, err := u.shorthandedRescueUseCase.GetShorthandedRescueByID(ctx, id)
-		if err != nil {
-			return slack.RescueMessageParams{}, 0, err
+			Details:   nonEmptyLines("質問", after.Question),
 		}
-		taskName, err := findTaskName(ctx, u.taskRep, strconv.Itoa(r.TaskID))
+	})
+}
+
+func (n *rescueNotifier) ShorthandedRescueUpdated(ctx context.Context, before, after *entity.ShorthandedRescueForGet) {
+	n.notify(ctx, before.Status, before.Response, after.Status, after.Response, after.UserID, func(ctx context.Context) slack.RescueMessageParams {
+		taskName, err := findTaskName(ctx, n.taskRep, strconv.Itoa(after.TaskID))
 		if err != nil {
 			taskName = "不明なタスク"
 		}
-		res := entity.NewShorthandedRescueResponse(r, "", taskName)
+		res := entity.NewShorthandedRescueResponse(after, "", taskName)
 		return slack.RescueMessageParams{
-			Number:    fmt.Sprintf("S%d", r.ID),
+			Number:    fmt.Sprintf("S%d", after.ID),
 			TypeLabel: "人が来ない",
 			Time:      res.Time,
-			Details:   nonEmptyLines("発生タスク", taskName, "送り先の場所", r.Place, "足りない人数", strconv.Itoa(r.MissingNumber)+"人"),
-		}, r.UserID, nil
+			Details:   nonEmptyLines("発生タスク", taskName, "送り先の場所", after.Place, "足りない人数", strconv.Itoa(after.MissingNumber)+"人"),
+		}
+	})
+}
+
+// 知らせるべき変化なら、メッセージを組み立てて送信者にDMする。
+// 本部の書き込み(GASのPUT)をSlackの応答待ちで遅らせないよう、組み立てと送信は裏で行う。
+// 送信に失敗しても送り直さない。返答はアプリの「本部からの返答」タブで見られるため
+func (n *rescueNotifier) notify(ctx context.Context, oldStatus, oldResponse, newStatus, newResponse string, userID int, build func(context.Context) slack.RescueMessageParams) {
+	kind, ok := rescueNotificationKind(oldStatus, oldResponse, newStatus, newResponse)
+	if !ok {
+		return
 	}
-	return slack.RescueMessageParams{}, 0, errors.Errorf("unknown rescue type: %s", rescueType)
+	// リクエストのctxはPUTの応答を返した時点でキャンセルされるので、裏の処理からは切り離す
+	ctx = context.WithoutCancel(ctx)
+	n.run(func() {
+		params := build(ctx)
+		params.Title = rescueNotificationTitle[kind]
+		params.Status = rescueStatusLabel[newStatus]
+		params.Response = newResponse
+
+		slackUserID, err := findSlackUserID(ctx, n.userRep, userID)
+		if err != nil {
+			logpkg.Printf("レスキュー通知の送信先を取得できませんでした(%s): %v", params.Number, err)
+			return
+		}
+		// Slack IDが無い人にはシフト変更通知と同じく何も送らない
+		if slackUserID == "" {
+			return
+		}
+		if err := n.sender.SendRescueMessage(params, slackUserID); err != nil {
+			logpkg.Printf("レスキュー通知の送信に失敗しました(%s): %v", params.Number, err)
+		}
+	})
 }
 
 // 「見出し, 値」の組から「見出し: 値」の行を作る。値が空の行は載せない

@@ -11,8 +11,8 @@ import (
 )
 
 type troubleRescueUseCase struct {
-	troubleRescueRepository      repository.TroubleRescueRepository
-	rescueNotificationRepository repository.RescueNotificationRepository
+	troubleRescueRepository repository.TroubleRescueRepository
+	rescueNotifier          RescueNotifier
 }
 
 type TroubleRescueUseCase interface {
@@ -21,12 +21,12 @@ type TroubleRescueUseCase interface {
 	GetTroubleRescuesByUserID(context.Context, string) ([]entity.TroubleRescueForGet, error)
 	GetTroubleRescuesByTaskID(context.Context, string) ([]entity.TroubleRescueForGet, error)
 	CreateTroubleRescue(context.Context, string, string, string, string, string) (*entity.TroubleRescueForGet, error)
-	UpdateTroubleRescue(context.Context, string, string, string) (*entity.TroubleRescueForGet, error)
+	UpdateTroubleRescue(context.Context, string, string, string, bool) (*entity.TroubleRescueForGet, error)
 	DeleteTroubleRescue(context.Context, string) error
 }
 
-// rnはnilでよい(レスキュー通知が無効な環境では対応状況の変化を記録しない)
-func NewTroubleRescueUseCase(tr repository.TroubleRescueRepository, rn repository.RescueNotificationRepository) TroubleRescueUseCase {
+// rnはnilでよい(レスキュー通知が無効な環境では知らせない)
+func NewTroubleRescueUseCase(tr repository.TroubleRescueRepository, rn RescueNotifier) TroubleRescueUseCase {
 	return &troubleRescueUseCase{tr, rn}
 }
 
@@ -163,7 +163,8 @@ func (tu *troubleRescueUseCase) CreateTroubleRescue(c context.Context, userID st
 }
 
 // 更新
-func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string, status string, response string) (*entity.TroubleRescueForGet, error) {
+// notifyがfalseなら送信者に知らせない(GASが押し直しの重複をまとめるとき)
+func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string, status string, response string, notify bool) (*entity.TroubleRescueForGet, error) {
 	// 入力バリデーション
 	if id == "" {
 		return nil, errors.New("ID is required")
@@ -178,7 +179,12 @@ func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string
 	}
 
 	// 通知の要否を更新前後の差分で決めるため、先に今の値を読んでおく
-	before, beforeErr := tu.GetTroubleRescueByID(c, id)
+	var before *entity.TroubleRescueForGet
+	if notify && tu.rescueNotifier != nil {
+		if b, err := tu.GetTroubleRescueByID(c, id); err == nil {
+			before = b
+		}
+	}
 
 	err := tu.troubleRescueRepository.Update(c, id, status, response)
 	if err != nil {
@@ -190,8 +196,8 @@ func (tu *troubleRescueUseCase) UpdateTroubleRescue(c context.Context, id string
 	if err != nil {
 		return nil, err
 	}
-	if beforeErr == nil {
-		recordRescueNotification(c, tu.rescueNotificationRepository, entity.RescueTypeTrouble, after.ID, after.UserID, before.Status, before.Response, after.Status, after.Response)
+	if before != nil {
+		tu.rescueNotifier.TroubleRescueUpdated(c, before, after)
 	}
 	return after, nil
 }

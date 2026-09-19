@@ -11,8 +11,8 @@ import (
 )
 
 type questionRescueUseCase struct {
-	questionRescueRepository     repository.QuestionRescueRepository
-	rescueNotificationRepository repository.RescueNotificationRepository
+	questionRescueRepository repository.QuestionRescueRepository
+	rescueNotifier           RescueNotifier
 }
 
 type QuestionRescueUseCase interface {
@@ -20,12 +20,12 @@ type QuestionRescueUseCase interface {
 	GetQuestionRescueByID(context.Context, string) (*entity.QuestionRescueForGet, error)
 	GetQuestionRescuesByUserID(context.Context, string) ([]entity.QuestionRescueForGet, error)
 	CreateQuestionRescue(context.Context, string, string, string) (*entity.QuestionRescueForGet, error)
-	UpdateQuestionRescue(context.Context, string, string, string) (*entity.QuestionRescueForGet, error)
+	UpdateQuestionRescue(context.Context, string, string, string, bool) (*entity.QuestionRescueForGet, error)
 	DeleteQuestionRescue(context.Context, string) error
 }
 
-// rnはnilでよい(レスキュー通知が無効な環境では対応状況の変化を記録しない)
-func NewQuestionRescueUseCase(qr repository.QuestionRescueRepository, rn repository.RescueNotificationRepository) QuestionRescueUseCase {
+// rnはnilでよい(レスキュー通知が無効な環境では知らせない)
+func NewQuestionRescueUseCase(qr repository.QuestionRescueRepository, rn RescueNotifier) QuestionRescueUseCase {
 	return &questionRescueUseCase{qr, rn}
 }
 
@@ -130,7 +130,8 @@ func (qu *questionRescueUseCase) CreateQuestionRescue(c context.Context, userID 
 }
 
 // 更新
-func (qu *questionRescueUseCase) UpdateQuestionRescue(c context.Context, id string, status string, response string) (*entity.QuestionRescueForGet, error) {
+// notifyがfalseなら送信者に知らせない(GASが押し直しの重複をまとめるとき)
+func (qu *questionRescueUseCase) UpdateQuestionRescue(c context.Context, id string, status string, response string, notify bool) (*entity.QuestionRescueForGet, error) {
 	// 入力バリデーション
 	if id == "" {
 		return nil, errors.New("ID is required")
@@ -145,7 +146,12 @@ func (qu *questionRescueUseCase) UpdateQuestionRescue(c context.Context, id stri
 	}
 
 	// 通知の要否を更新前後の差分で決めるため、先に今の値を読んでおく
-	before, beforeErr := qu.GetQuestionRescueByID(c, id)
+	var before *entity.QuestionRescueForGet
+	if notify && qu.rescueNotifier != nil {
+		if b, err := qu.GetQuestionRescueByID(c, id); err == nil {
+			before = b
+		}
+	}
 
 	err := qu.questionRescueRepository.Update(c, id, status, response)
 	if err != nil {
@@ -157,8 +163,8 @@ func (qu *questionRescueUseCase) UpdateQuestionRescue(c context.Context, id stri
 	if err != nil {
 		return nil, err
 	}
-	if beforeErr == nil {
-		recordRescueNotification(c, qu.rescueNotificationRepository, entity.RescueTypeQuestion, after.ID, after.UserID, before.Status, before.Response, after.Status, after.Response)
+	if before != nil {
+		qu.rescueNotifier.QuestionRescueUpdated(c, before, after)
 	}
 	return after, nil
 }
