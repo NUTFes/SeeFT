@@ -135,7 +135,7 @@ SELECT is_sent, count(*) FROM action_logs GROUP BY 1;
 ## 罠
 
 - **開発用と本番用の compose が、同じイメージ名 `seeft-api` を使う。** 同じサーバーで本番用を build すると開発用のイメージが上書きされ、開発用の API が `air: command not found` で起動しなくなる。検証環境では開発用の compose だけを使う。
-- **API の通信の許可（CORS）は、`curl` で 200 が返っても保証にならない。** ブラウザが送る事前の問い合わせ（プリフライト）が通るかを確かめる。
+- **API の通信の許可（CORS）は、`curl` で 200 が返っても保証にならない。** ブラウザが送る事前の問い合わせ（プリフライト）が通るかを確かめる。要求するヘッダーに `access-control-allow-origin` を入れているのは誤りではない。本来はレスポンスのヘッダーだが、アプリ（`mobile/lib/utils/api.dart`）がリクエストに付けて送っているので、ブラウザは実際にこのヘッダーの許可を問い合わせる。アプリがこのヘッダーを送らなくなったら、ここからも外す。
 
 ```bash
 curl -s -i -X OPTIONS -H "Origin: http://localhost:45029" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type,access-control-allow-origin" "<APIのURL>/mail_auth/signin" | grep -i "^HTTP/\|access-control-"

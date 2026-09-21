@@ -90,7 +90,15 @@ api と mobile を1回 build すると約2.8GB 減る（45th の実測）。
 
 ### 3. 今のイメージを退避する
 
-戻せるように、今動いているイメージに別名を付けておく。**名前には日付ではなくコミットのハッシュを使う。** 同じ日に2回デプロイすると、日付の名前は警告なしに上書きされる。
+戻せるように、入れ替えるサービスの今のイメージに別名を付けておく。**名前には日付ではなくコミットのハッシュを使う。** 同じ日に2回デプロイすると、日付の名前は警告なしに上書きされる。
+
+イメージの名前は、compose のプロジェクト名（既定では作業ディレクトリの名前）から決まる。`docker-compose.prod.yml` には `image:` を書いていないので、ディレクトリの名前が変わるとイメージの名前も変わる。退避の前に、compose が実際に使う名前を確かめる。
+
+```bash
+docker compose config --images
+```
+
+45th の本番では `seeft-api` と `seeft-mobile` だった。以下の例はこの名前で書く。違う名前が出たら、そちらに読み替える。
 
 ```bash
 docker tag seeft-api:latest seeft-api:before-<本番のコミット>
@@ -106,13 +114,17 @@ docker tag seeft-mobile:latest seeft-mobile:before-<本番のコミット>
 git pull --ff-only origin develop
 ```
 
+手順1で決めた、入れ替えるサービスだけを build する。
+
 ```bash
-docker compose build api mobile
+docker compose build <入れ替えるサービス>
 ```
+
+api と mobile の両方を入れ替えるなら `docker compose build api mobile` になる。入れ替えないサービスまで build すると、時間とディスクを無駄に使う（mobile の build は数分かかり、容量も減る）。
 
 build のあいだは古いコンテナが動き続けるので、本番は止まらない。
 
-### 5. api を入れ替えて確かめる
+### 5. api を入れ替えるときは、入れ替えて確かめる
 
 ```bash
 docker compose up -d api
@@ -132,7 +144,7 @@ docker exec nutfes-seeft-api grep -c <今回の変更にしかない文字列> <
 
 コンテナのログや `docker inspect` の時刻は UTC である。日本時間は9時間足す。
 
-### 6. mobile を入れ替えて確かめる
+### 6. mobile を入れ替えるときは、入れ替えて確かめる
 
 ```bash
 docker compose up -d mobile
@@ -144,8 +156,16 @@ mobile の配信元はイメージの中の `build/web` である。compose の 
 
 確かめ方は2つある。
 
-- `https://seeft.nutfes.net/main.dart.js` の `Last-Modified` が、build した時刻になっている
+- `main.dart.js` の `Last-Modified` が、build した時刻になっている
 - `main.dart.js` に、今回の変更にしかない文字列がある。**日本語は `\uXXXX` の形で埋め込まれている**ので、生の日本語では検索できない。英数字の識別子で探すか、エスケープした形で探す
+
+**公開 URL の応答は、Cloudflare に残った古いキャッシュのことがある。** 配信サーバーは `Cache-Control` を返さず、Cloudflare は JS ファイルを既定でキャッシュする。URL の末尾に毎回違うクエリを付けて、キャッシュを通さずに確かめる。応答の `cf-cache-status` が `HIT` でなければ、配信サーバーから直接来ている。
+
+```bash
+curl -sI "https://seeft.nutfes.net/main.dart.js?v=$(date +%s)" | grep -i "last-modified\|cf-cache-status"
+```
+
+同じ理由で、入れ替えた直後は、委員の端末にも古いアプリ本体が届くことがある。
 
 `up` の直後は配信サーバーの準備ができておらず、空の応答が返ることがある。数秒待ってから確かめる。
 
@@ -240,19 +260,27 @@ docker compose up -d --force-recreate --no-build api
 
 ### migrate と seed
 
+migrate は `postgresql/db/schema/` の `create*.sql` を番号順に流し、続けて `postgresql/db/migrations/` を当てる。API の起動時には migrate は走らない。
+
+**DDL は、接続プールを迂回する DDL 用のポートで流す。** これは DB 基盤の決まりである。migrate は `NUTMEG_DB_PORT` のポートに接続するが、`seeft.env` のこの値はアプリ用の接続プール経由のポートを指している。そのため migrate のときだけ、`-e` で DDL 用のポートに上書きする。ポートの値は別紙にある。値が変わっていないかは、流す前に DB 基盤の担当者に確かめる。
+
+流す前に、上書きが効いていることを確かめる。
+
 ```bash
-docker compose run --rm --no-deps api go run ./cmd/migrate
+docker compose run --rm --no-deps -e NUTMEG_DB_PORT=<DDL用のポート> api printenv NUTMEG_DB_PORT
 ```
+
+```bash
+docker compose run --rm --no-deps -e NUTMEG_DB_PORT=<DDL用のポート> api go run ./cmd/migrate
+```
+
+Makefile の `prod-migrate` はポートを上書きしないので、そのままでは使わない。
+
+seed はデータの投入なので、アプリ用のポートのままでよい。
 
 ```bash
 docker compose run --rm --no-deps api go run ./cmd/seed
 ```
-
-（Makefile の `prod-migrate`・`prod-seed` と同じ中身。）
-
-migrate は `postgresql/db/schema/` の `create*.sql` を番号順に流し、続けて `postgresql/db/migrations/` を当てる。API の起動時には migrate は走らない。
-
-migrate は `NUTMEG_DB_PORT` のポートに接続する。`seeft.env` のこの値はアプリ用の接続プール経由のポートを指している。DDL は接続プールを迂回するポートで流すのが DB 基盤の決まりなので、どちらで流すかは DB 基盤の担当者に確かめる。45th で実際にどちらを使ったかは要確認。
 
 ## 環境変数
 
@@ -288,12 +316,26 @@ migrate は `NUTMEG_DB_PORT` のポートに接続する。`seeft.env` のこの
 
 ### 何が落ちているかを見分ける
 
-ブラウザで `https://seeft-api.nutfes.net` を開いたときの Cloudflare のエラーで分かる。
+ブラウザで `https://seeft-api.nutfes.net` を開いたときの Cloudflare のエラーで、見当を付けられる。
 
 | 表示 | 意味 |
 | --- | --- |
-| 1033 | cloudflared（トンネル）自体が落ちている。サーバーかコンテナ全体が止まっている |
-| 502 | トンネルは生きていて、API が落ちている |
+| 1033 | Cloudflare が、つながっているトンネル（cloudflared）を見つけられない。cloudflared のコンテナだけが落ちている場合も、サーバーごと止まっている場合もある |
+| 502 | トンネルはつながっているが、その先の API に届かない。API が落ちている場合と、cloudflared から API へつながらない場合がある |
+
+エラー番号だけで落ちた場所を決めつけない。サーバーに入れるなら、コンテナの状態とログで確かめる。サーバーに入れないなら、サーバーそのもの（またはその下の物理ノード）が止まっている。
+
+```bash
+docker compose ps
+```
+
+```bash
+docker compose logs --tail 50 cloudflare
+```
+
+```bash
+docker compose logs --tail 50 api
+```
 
 アプリ・API・管理画面の3つが同時に落ちるのは、1本のトンネルを共有しているからである。全部のコンテナが同時に `Exited (255)` になっていたら、アプリの不具合ではなく、外側（サーバーやその下の物理ノード）が止まった印である。
 

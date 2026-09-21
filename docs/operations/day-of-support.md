@@ -27,7 +27,7 @@
 
 ### アプリが開かない、すべての画面でエラーになる
 
-ブラウザで `https://seeft-api.nutfes.net` を開き、Cloudflare のエラー番号を見る。1033 ならサーバーごと止まっている、502 なら API だけが止まっている。復旧の手順は [本番へのデプロイ](deploy.md) の「止まったときの復旧」にある。
+ブラウザで `https://seeft-api.nutfes.net` を開き、Cloudflare のエラー番号を見る。1033 はトンネル（cloudflared）が Cloudflare につながっていない、502 はトンネルの先の API に届かない、という意味である。ただし番号だけでは落ちた場所を決めつけられない（cloudflared のコンテナだけが落ちた、サーバーごと止まった、など）。サーバーでコンテナの状態とログを確かめてから直す。確かめ方と復旧の手順は [本番へのデプロイ](deploy.md) の「止まったときの復旧」にある。
 
 特定の人だけが開けず、アドレスバーが `/layout` などになっている場合は、トップ（`https://seeft.nutfes.net/`）から開き直してもらう。再読み込みで404になる不具合は #512 で直したが、古いアプリ本体が残っている端末では起きうる。
 
@@ -49,7 +49,11 @@ SELECT id, name, student_number FROM users WHERE student_number = <学籍番号>
 
 2つの可能性がある。スプシを編集したあとに送信していない場合と、アプリが古いデータを表示している場合である。
 
-DB のシフトがいつ書かれたかを日程ごとに見る。
+DB のシフトがいつ書かれたかを日程ごとに見る。「今日」を日本時間の日付で数えるため、先にタイムゾーンを固定する。
+
+```sql
+SET TIME ZONE 'Asia/Tokyo';
+```
 
 ```sql
 SELECT date_id, count(*) FILTER (WHERE updated_at >= CURRENT_DATE) AS touched_today, count(*) AS total, max(updated_at) AS last_write FROM shifts WHERE weather_id = 1 GROUP BY date_id ORDER BY date_id;
@@ -107,11 +111,17 @@ SELECT name, mail, slack_user_id FROM users WHERE student_number = <学籍番号
 
 **失敗と出ても、届いていることがある。** 45th では、失敗の表示を見た人が押し直して、同じレスキューが2〜3件届いた。押し直してもらう前に、届いているかを確かめる。
 
+問い合わせてきた人の学籍番号と、送ったおおよその時刻で絞る。当日は他の人のレスキューも次々に入るので、「新しい順に数件」を見るだけでは本人の分を見落とす。
+
 ```sql
-SELECT id, user_id, status, created_at FROM question_rescues ORDER BY id DESC LIMIT 5;
+SET TIME ZONE 'Asia/Tokyo';
 ```
 
-トラブルは `trouble_rescues`、人が来ないは `shorthanded_rescues` を見る。DB に行があれば、レスキュースプシにも行があるかを確かめる。
+```sql
+SELECT '質問' AS kind, r.id, r.status, r.created_at FROM question_rescues r JOIN users u ON u.id = r.user_id WHERE u.student_number = <学籍番号> AND r.created_at >= '<送った時刻の少し前>' AND r.created_at < '<送った時刻の少し後>' UNION ALL SELECT 'トラブル', r.id, r.status, r.created_at FROM trouble_rescues r JOIN users u ON u.id = r.user_id WHERE u.student_number = <学籍番号> AND r.created_at >= '<送った時刻の少し前>' AND r.created_at < '<送った時刻の少し後>' UNION ALL SELECT '人が来ない', r.id, r.status, r.created_at FROM shorthanded_rescues r JOIN users u ON u.id = r.user_id WHERE u.student_number = <学籍番号> AND r.created_at >= '<送った時刻の少し前>' AND r.created_at < '<送った時刻の少し後>' ORDER BY created_at DESC;
+```
+
+時刻は `'2026-09-19 10:25'` のように書く（タイムゾーンを固定したので日本時間として読まれる）。DB に行があれば、レスキュースプシにも行があるかを確かめる。
 
 スプシへの転記が失敗したかどうかは、API のログで分かる（時刻は UTC で指定する）。
 
