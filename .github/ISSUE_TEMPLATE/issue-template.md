@@ -42,6 +42,7 @@ assignees: uchida189
 5. Helpは余裕のある人がいれば巻き取る。いなければ期日を変更する
 
 ### リンク
+- [開発の進め方（最新）](https://github.com/NUTFes/SeeFT/blob/develop/docs/development/workflow.md)：下の Wiki は 2024 年の版です。食い違うときはこちらに従ってください
 - [開発のやり方](https://github.com/NUTFes/SeeFT/wiki/Git%E3%81%A8GitHub%E3%81%AE%E4%BD%BF%E3%81%84%E6%96%B9%EF%BC%88SeeFT%EF%BC%89#%E3%82%88%E3%81%97%E9%96%8B%E7%99%BA%E3%81%97%E3%82%88%E3%81%86%E3%81%A3%E3%81%A6%E3%81%AA%E3%81%A3%E3%81%9F%E3%81%A8%E3%81%8D)
 - [SeeFTのタスク管理のルール](https://github.com/NUTFes/SeeFT/wiki/SeeFT%E3%81%AE%E3%82%BF%E3%82%B9%E3%82%AF%E7%AE%A1%E7%90%86%E3%81%AE%E3%83%AB%E3%83%BC%E3%83%AB)
 - [環境構築](https://github.com/NUTFes/SeeFT/wiki/%E7%92%B0%E5%A2%83%E6%A7%8B%E7%AF%89)
