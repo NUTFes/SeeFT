@@ -82,3 +82,16 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | 番号 | 題 | 状態 |
 | --- | --- | --- |
 | [0001](0001-record-decisions.md) | 判断の理由を ADR としてリポジトリに残す | 採用 |
+| [0002](0002-docs-through-pr.md) | 文書の変更も issue → ブランチ → PR を通す | 採用 |
+| [0003](0003-di-wiring-only.md) | di.go は配線だけにし、定期実行などは externals の下に切る | 採用 |
+| [0004](0004-poc-spike-branch.md) | PoC は試作用のブランチで試し、完成形が見えてから新しいブランチに持ち込む | 採用 |
+| [0005](0005-takeover-pr-in-place.md) | ほかの人の PR は、元のブランチに積んで引き継ぐ | 採用 |
+| [0006](0006-verify-close-keywords.md) | Close #N を書くときは、番号の issue の中身と照らし合わせる | 採用 |
+| [0007](0007-self-review-whole-pr.md) | PR を出す前の点検は差分全体にかけ、直したことはほかの場所にも広げる | 採用 |
+| [0008](0008-coderabbit-rereview-threshold.md) | 指摘への小さな修正では、CodeRabbit に再レビューを頼まない | 採用 |
+| [0009](0009-code-citation-in-issues.md) | issue と PR でコードを引用するときは、言語を指定したコードブロックに入れる | 採用 |
+| [0010](0010-public-docs-roles-only.md) | 公開の文書には個人名を書かず役職で書き、委員会の中の言葉の意味も書かない | 採用 |
+| [0011](0011-task-handoff-in-channel.md) | タスクの割り振りは DM ではなくチャンネルでし、対面は相手が望んだときに設ける | 採用 |
+| [0012](0012-exec-audience-no-prior-knowledge.md) | 執行部向けの説明は、技術の前提知識がない人向けに組む | 採用 |
+| [0013](0013-value-ordered-tasks.md) | 作業は価値の高い順に並べる | 採用 |
+| [0014](0014-command-location-headings.md) | 本番で打つコマンドは、打つ場所を見出しで分けて書く | 採用 |
