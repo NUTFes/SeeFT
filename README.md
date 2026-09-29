@@ -1,5 +1,7 @@
 # SeeFT
 
+新しく入った人は、まず [技術オンボーディング](docs/development/onboarding.md) を読んでください。
+
 ## Installation
 ``` fish
 make build
