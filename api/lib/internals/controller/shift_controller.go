@@ -22,7 +22,6 @@ type ShiftController interface {
 	ShowShiftAdminByDateAndWeather(echo.Context) error
 	ShowShiftAdminByDateAndWeatherAndTime(echo.Context) error
 	SerachMaxID(echo.Context) error
-	SubmitShift(echo.Context) error
 	UpdateShiftsFromGAS(echo.Context) error
 }
 
@@ -149,25 +148,6 @@ func (b *shiftController) SerachMaxID(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, id)
-}
-
-func (sc *shiftController) SubmitShift(c echo.Context) error {
-	var req entity.ShiftRequest
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid request")
-	}
-
-	// DBに保存
-	if err := sc.u.SaveShiftData(c.Request().Context(), req); err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to save shift data")
-	}
-
-	// GASに送信
-	if err := sc.u.SendToGAS(c.Request().Context(), req); err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to send data to GAS")
-	}
-
-	return c.JSON(http.StatusOK, "Shift data submitted successfully")
 }
 
 // GASからのシフト変更通知を受け取るエンドポイント

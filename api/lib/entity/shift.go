@@ -66,30 +66,6 @@ type ShiftCard struct {
 	AfterMembers  ShiftMembers   `json:"after_members"`
 }
 
-// シフト希望
-type ShiftRequest struct {
-	Name  string `json:"name"` // ユーザーID
-	Shift []struct {
-		Date     int `json:"date"` // 日付
-		Contents []struct {
-			TimeID   int  `json:"timeID"`   // 時間ID
-			IsAttend bool `json:"isAttend"` // 出席フラグ
-		} `json:"contents"`
-	} `json:"shift"`
-}
-
-type GASShiftData struct {
-	Name  string `json:"name"` // ユーザー名
-	Shift []struct {
-		Date     int `json:"date"` // 日付
-		Contents []struct {
-			Row    int  `json:"row"`    // 行番号
-			Column int  `json:"column"` // 列番号
-			Value  bool `json:"value"`  // セルの値
-		} `json:"contents"`
-	} `json:"shift"`
-}
-
 // GASから送られてくるシフトの変更内容
 type ShiftChange struct {
 	YearID   int    `json:"yearID"`   // yearID

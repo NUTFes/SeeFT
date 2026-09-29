@@ -30,6 +30,8 @@
 
 `api/lib/router/router.go` の `ProvideRouter` に 73 ルートが定義されている。ルーター外では、サーバー起動処理が `/swagger/*` を直接登録しており、合計 74 エンドポイントが公開される。
 
+> 追記（2026-09-29）：この節の件数と一覧は調査時点（2026-07-17、`2dd901a`）のもの。その後、マニュアル配信の3ルート（`GET /manuals/:id`・`GET /manuals/oauth/callback`・`PUT /manuals/:id`。`MANUAL_OAUTH_*` の設定時だけ登録）が 2026-08-20 に追加され、`POST /request_shifts` が #565 で削除された。2026-09-29 時点では router に 75 ルート、`/swagger/*` を含めて 76 エンドポイントである。
+
 ```go
 // api/lib/externals/server/server.go:42
 e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -77,7 +79,7 @@ e.GET("/swagger/*", echoSwagger.WrapHandler)
 | `GET /shifts/tasks/:task_id/years/:year_id/dates/:date_id/times/:time_id/weathers/:weather_id` | `shift_controller.go:33` → `shift_usecase.go:73` | 不要 | mobile（シフト表セルタップで最大3連続） |
 | `GET /shift-cards/users/:user_id/dates/:date_id/weathers/:weather_id` | `shift_controller.go:46` → `shift_usecase.go:365` | 不要 | mobile（ホーム画面。**最重要**） |
 | `POST /shift-cards` | `shift_controller.go:57` → `shift_usecase.go:365` | 不要 | なし（GET と同一処理の body 版。呼び出しゼロ） |
-| `POST /request_shifts` | `shift_controller.go:154` → `shift_usecase.go:836,842` | 不要 | なし（デッド。後述） |
+| `POST /request_shifts` | `shift_controller.go:154` → `shift_usecase.go:836,842` | 不要 | なし（デッド。後述。#565 で削除） |
 
 #### シフト（admin 向け）
 
@@ -137,6 +139,8 @@ e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 74 エンドポイントの内訳は、**実際にトラフィックが流れるのが mobile 発 9 ルート + GAS 発 6 ルートの計 15 ルート**、admin(凍結) 専用が 30 ルート（`web_signin`/`web_signup`/`web_signout` を含む。本番でほぼ無トラフィック）、監視・開発用（healthcheck / swagger）が 2 ルート、そして残り 27 ルートは呼び出し元が存在しないデッドルートである。負荷試験のシナリオは現役の 15 ルートに絞ってよい。
 
+> 追記（2026-09-29）：この内訳も調査時点のもの。#565 で `POST /request_shifts` を削除したので、デッドルートは 26 になった。調査後に追加されたマニュアル配信の3ルートは、この内訳に含めていない。
+
 `POST /request_shifts` は特筆に値する。mobile・admin のどちらからも呼ばれておらず（grep ゼロ）、実装は DB 保存が no-op で、ハードコードされた GAS URL への同期送信だけを行う。
 
 ```go
@@ -149,6 +153,8 @@ func (u *shiftUseCase) SaveShiftData(ctx context.Context, req entity.ShiftReques
 ```
 
 テストロードマップの調査でも、この GAS URL（`shift_usecase.go:885`）に対応する `doPost` が `gas/shift/` に存在しないことが指摘済みであり、エンドポイントごと閉塞する判断ができる（7章の issue 提案参照）。
+
+> 追記：#565 でエンドポイントごと削除した。送信先は `gas/` に写しの無い別プロジェクト（44th のテスト用スプレッドシートに紐づくもの）で、`doPost` はそちらにあった。45th 以降は使っていない。
 
 ### 2.2 認証の実装
 
@@ -459,7 +465,7 @@ pass/fail 基準（段階ごとに全条件を満たして PASS）:
 | `SLACK_BOT_TOKEN` | 未設定 | 通知スケジューラごと無効化（`di.go:102-114` で安全にスキップされる） |
 | `NUTMEG_DB_*` | 隔離 DB | 共有クラスタへの接続 |
 
-注意点が3つ。第一に、`RESCUE_GAS_URL` は実装が `https` スキームを検証する（`rescue_unified_usecase.go:293-295`）ため、スタブも https で立てる必要がある。第二に、送信処理は `&http.Client{}` の既定 TLS 検証をそのまま使う（`rescue_unified_usecase.go:310`）ため、自己署名証明書をそのまま使うと `x509: certificate signed by unknown authority` で失敗する。スタブ証明書を発行した CA を試験用 API コンテナの信頼ストアに追加する（ローカル CA を発行し `update-ca-certificates` を通す等）ことで解決し、`InsecureSkipVerify` は使わない。第三に、`POST /request_shifts` はハードコード URL（`shift_usecase.go:885`）のため環境変数では遮断できないが、呼び出し元が存在しないため試験対象から除外すれば実害はない。
+注意点が3つ。第一に、`RESCUE_GAS_URL` は実装が `https` スキームを検証する（`rescue_unified_usecase.go:293-295`）ため、スタブも https で立てる必要がある。第二に、送信処理は `&http.Client{}` の既定 TLS 検証をそのまま使う（`rescue_unified_usecase.go:310`）ため、自己署名証明書をそのまま使うと `x509: certificate signed by unknown authority` で失敗する。スタブ証明書を発行した CA を試験用 API コンテナの信頼ストアに追加する（ローカル CA を発行し `update-ca-certificates` を通す等）ことで解決し、`InsecureSkipVerify` は使わない。第三に、`POST /request_shifts` はハードコード URL（`shift_usecase.go:885`）のため環境変数では遮断できないが、呼び出し元が存在しないため試験対象から除外すれば実害はない（#565 でエンドポイントごと削除済み）。
 
 ### 4.7 既知の制約と扱い
 
@@ -523,4 +529,4 @@ DB 接続プール上限の設定（`db.go` に `SetMaxOpenConns` / `SetMaxIdleC
 
 **issue 7（任意・整理）: デッドエンドポイントの閉塞**
 
-`POST /request_shifts`（ハードコード GAS URL・宛先 doPost 不在）、救援個別系の未使用 17 ルート、`GET /reviews` 系ほか。攻撃面の縮小と棚卸しの固定化が目的で、負荷試験の前提条件ではない。
+`POST /request_shifts`（ハードコード GAS URL。#565 で削除済み）、救援個別系の未使用 17 ルート、`GET /reviews` 系ほか。攻撃面の縮小と棚卸しの固定化が目的で、負荷試験の前提条件ではない。
