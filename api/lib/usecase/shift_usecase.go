@@ -1,13 +1,9 @@
 package usecase
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
-	"fmt"
 	"log"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -79,8 +75,6 @@ type ShiftUseCase interface {
 	GetShiftsAdminByDateAndWeather(context.Context, string, string) ([]entity.ShiftAdmin, error)
 	GetShiftsAdminByDateAndWeatherAndTime(context.Context, string, string, string, string) ([]entity.ShiftAdmin, error)
 	GetMaxID(context.Context) (int, error)
-	SaveShiftData(context.Context, entity.ShiftRequest) error
-	SendToGAS(context.Context, entity.ShiftRequest) error
 	UpdateShiftsFromGAS(context.Context, entity.ShiftChangeRequest) error
 }
 
@@ -847,81 +841,6 @@ func (a *shiftUseCase) GetMaxID(c context.Context) (int, error) {
 	}
 
 	return maxID, nil
-}
-
-func (u *shiftUseCase) SaveShiftData(ctx context.Context, req entity.ShiftRequest) error {
-	// DB保存処理（仮実装）
-	// 実際にはリポジトリを通じてDBに保存する
-	return nil
-}
-
-func (u *shiftUseCase) SendToGAS(ctx context.Context, req entity.ShiftRequest) error {
-	var gasData entity.GASShiftData
-	gasData.Name = req.Name // ユーザー名を設定（必要に応じて変更）
-
-	for _, shift := range req.Shift {
-		var gasShift struct {
-			Date     int `json:"date"`
-			Contents []struct {
-				Row    int  `json:"row"`
-				Column int  `json:"column"`
-				Value  bool `json:"value"`
-			} `json:"contents"`
-		}
-
-		gasShift.Date = shift.Date
-		for _, content := range shift.Contents {
-			// TimeID を基に列番号を計算 (TimeID=1 が G列=7)
-			column := content.TimeID
-
-			gasShift.Contents = append(gasShift.Contents, struct {
-				Row    int  `json:"row"`
-				Column int  `json:"column"`
-				Value  bool `json:"value"`
-			}{
-				Row:    0,      // ユーザーIDを行番号として使用
-				Column: column, // 計算した列番号
-				Value:  content.IsAttend,
-			})
-		}
-
-		gasData.Shift = append(gasData.Shift, gasShift)
-	}
-
-	// JSONに変換して送信
-	jsonData, err := json.Marshal(gasData)
-	if err != nil {
-		log.Printf("failed to marshal GAS data: %v", err)
-		return err
-	}
-
-	fmt.Printf("Sending data to GAS: %s\n", string(jsonData))
-
-	// GASエンドポイントに送信
-	url := "https://script.google.com/macros/s/AKfycbxjhHW10LZPgfvnUD2wzPqECq-k49fFt02ggx5RGivfhdenMvtFnSFKEdLSO37QVGQh/exec" // GASのエンドポイントURLを設定
-	reqBody := bytes.NewBuffer(jsonData)
-	httpReq, err := http.NewRequest("POST", url, reqBody)
-	if err != nil {
-		log.Printf("failed to create request: %v", err)
-		return err
-	}
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		log.Printf("failed to send request to GAS: %v", err)
-		return err
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("GAS returned non-OK status: %d", resp.StatusCode)
-		return fmt.Errorf("GAS returned non-OK status: %d", resp.StatusCode)
-	}
-
-	log.Println("Data successfully sent to GAS")
-	return nil
 }
 
 // GASからのシフト変更通知を受けてDBを更新

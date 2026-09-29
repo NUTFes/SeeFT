@@ -77,7 +77,7 @@ e.GET("/swagger/*", echoSwagger.WrapHandler)
 | `GET /shifts/tasks/:task_id/years/:year_id/dates/:date_id/times/:time_id/weathers/:weather_id` | `shift_controller.go:33` → `shift_usecase.go:73` | 不要 | mobile（シフト表セルタップで最大3連続） |
 | `GET /shift-cards/users/:user_id/dates/:date_id/weathers/:weather_id` | `shift_controller.go:46` → `shift_usecase.go:365` | 不要 | mobile（ホーム画面。**最重要**） |
 | `POST /shift-cards` | `shift_controller.go:57` → `shift_usecase.go:365` | 不要 | なし（GET と同一処理の body 版。呼び出しゼロ） |
-| `POST /request_shifts` | `shift_controller.go:154` → `shift_usecase.go:836,842` | 不要 | なし（デッド。後述） |
+| `POST /request_shifts` | `shift_controller.go:154` → `shift_usecase.go:836,842` | 不要 | なし（デッド。後述。#565 で削除） |
 
 #### シフト（admin 向け）
 
@@ -149,6 +149,8 @@ func (u *shiftUseCase) SaveShiftData(ctx context.Context, req entity.ShiftReques
 ```
 
 テストロードマップの調査でも、この GAS URL（`shift_usecase.go:885`）に対応する `doPost` が `gas/shift/` に存在しないことが指摘済みであり、エンドポイントごと閉塞する判断ができる（7章の issue 提案参照）。
+
+> 追記：#565 でエンドポイントごと削除した。送信先は `gas/` に写しの無い別プロジェクト（44th のテスト用スプレッドシートに紐づくもの）で、`doPost` はそちらにあった。45th 以降は使っていない。
 
 ### 2.2 認証の実装
 
@@ -459,7 +461,7 @@ pass/fail 基準（段階ごとに全条件を満たして PASS）:
 | `SLACK_BOT_TOKEN` | 未設定 | 通知スケジューラごと無効化（`di.go:102-114` で安全にスキップされる） |
 | `NUTMEG_DB_*` | 隔離 DB | 共有クラスタへの接続 |
 
-注意点が3つ。第一に、`RESCUE_GAS_URL` は実装が `https` スキームを検証する（`rescue_unified_usecase.go:293-295`）ため、スタブも https で立てる必要がある。第二に、送信処理は `&http.Client{}` の既定 TLS 検証をそのまま使う（`rescue_unified_usecase.go:310`）ため、自己署名証明書をそのまま使うと `x509: certificate signed by unknown authority` で失敗する。スタブ証明書を発行した CA を試験用 API コンテナの信頼ストアに追加する（ローカル CA を発行し `update-ca-certificates` を通す等）ことで解決し、`InsecureSkipVerify` は使わない。第三に、`POST /request_shifts` はハードコード URL（`shift_usecase.go:885`）のため環境変数では遮断できないが、呼び出し元が存在しないため試験対象から除外すれば実害はない。
+注意点が3つ。第一に、`RESCUE_GAS_URL` は実装が `https` スキームを検証する（`rescue_unified_usecase.go:293-295`）ため、スタブも https で立てる必要がある。第二に、送信処理は `&http.Client{}` の既定 TLS 検証をそのまま使う（`rescue_unified_usecase.go:310`）ため、自己署名証明書をそのまま使うと `x509: certificate signed by unknown authority` で失敗する。スタブ証明書を発行した CA を試験用 API コンテナの信頼ストアに追加する（ローカル CA を発行し `update-ca-certificates` を通す等）ことで解決し、`InsecureSkipVerify` は使わない。第三に、`POST /request_shifts` はハードコード URL（`shift_usecase.go:885`）のため環境変数では遮断できないが、呼び出し元が存在しないため試験対象から除外すれば実害はない（#565 でエンドポイントごと削除済み）。
 
 ### 4.7 既知の制約と扱い
 
@@ -523,4 +525,4 @@ DB 接続プール上限の設定（`db.go` に `SetMaxOpenConns` / `SetMaxIdleC
 
 **issue 7（任意・整理）: デッドエンドポイントの閉塞**
 
-`POST /request_shifts`（ハードコード GAS URL・宛先 doPost 不在）、救援個別系の未使用 17 ルート、`GET /reviews` 系ほか。攻撃面の縮小と棚卸しの固定化が目的で、負荷試験の前提条件ではない。
+`POST /request_shifts`（ハードコード GAS URL。#565 で削除済み）、救援個別系の未使用 17 ルート、`GET /reviews` 系ほか。攻撃面の縮小と棚卸しの固定化が目的で、負荷試験の前提条件ではない。
