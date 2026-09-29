@@ -1,5 +1,7 @@
 # SeeFT
 
+新しく入った人は、まず [技術オンボーディング](docs/development/onboarding.md) を読んでください。
+
 ## Installation
 ``` fish
 make build
@@ -15,11 +17,16 @@ make up-api
 ```
 
 ## mobileの起動
+初回だけ、設定ファイルの雛形をコピーし、`fvm` で Flutter を入れる。
 ``` fish
-cd ./mobile
-docker build ./ -t seeft-mobile
-docker run --detach --publish 45029:45029 seeft-mobile
+cp mobile/env/.env.example mobile/env/.env
+cd mobile && fvm install && cd ..
 ```
+
+``` fish
+make mobile-up
+```
+http://localhost:45029 で開く（45029 は `make mobile-up` の既定ポート）。API は CORS で許可するオリジンを列挙しており（`api/lib/externals/server/server.go`）、`127.0.0.1` で開いたり、列挙に無いポートに変えたりすると、API の応答が画面に届かない。
 
 ## データベースの削除
 ``` fish
@@ -46,9 +53,6 @@ make up-db
 ``` fish
 make migrate-down N=<整数|all>
 ```
-
-### Develop
-git submodule update --init
 
 ### diを編集してからうまく動かないとき
 一度コンテナをdownさせてからupし直してみてください。

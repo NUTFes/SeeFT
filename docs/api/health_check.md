@@ -14,7 +14,7 @@ Health Check
 
 ``` mermaid
 id1(Router) --> id2(Controller)
-id2(Controller) -- Json --> id1(Router)
+id2(Controller) -- Text --> id1(Router)
 ```
 
 # 概要
@@ -22,30 +22,28 @@ id2(Controller) -- Json --> id1(Router)
 ### 責務
 以下のAPIを叩くことを許可する
 
-[GET] `/healthz`
+[GET] `/`
 
 ### 内部仕様
-router.get をする
+`e.GET("/", ...)` で controller に渡す
 
 ### 実装箇所
-`/internal/external/server/router.dart`
+`api/lib/router/router.go`
 
 ## Controller
 ### 責務
-レスポンスをJsonで返すことができる
+レスポンスをテキストで返すことができる
 
 ### 内部仕様
-`Response getHealth(Request request)`
-Status200で以下のJSONを返す
+`IndexHealthcheck(c echo.Context) error`
+Status200で以下のテキストを返す（JSON ではない）
 
-``` 
-{
-  status: "healch ok"
-}
+```text
+healthcheck: ok
 ```
 
 ### 実装箇所
-`/internal/interface/controller/health_controller.dart`
+`api/lib/internals/controller/health_controller.go`
 
 # テスト
 仕様通りのResponseが返ってくることをテストする
