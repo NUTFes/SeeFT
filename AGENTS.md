@@ -166,6 +166,16 @@ try {
 - PR は `.github/pull_request_template.md` のフォーマットに従う
 - PR 本文で `resolve #XXX` と書くと issue が自動 close される
 
+## 判断の記録（ADR）
+
+機能を足す・見送る、設計や運用の方針を選ぶ、Ask First の項目を決めた、といった判断をしたら、`docs/decisions/` に ADR を書く。書き方は `docs/decisions/README.md`、雛形は `docs/decisions/template.md`。
+
+- 決めたことだけでなく、理由と、選ばなかった候補を書く。見送り・先送りも ADR にする
+- 理由が分からなければ「理由の記録なし」と書く。推測で埋めない
+- 本文は書き換えない。判断が変わったら新しい番号で書き、古い方の状態を `置き換え（→ NNNN）` にする
+- 前提にしたコードは `path#Symbol` の形で書き、行番号は書かない。PR ごとに `scripts/refcheck/refcheck.py` が存在を確かめる
+- 公開リポジトリなので、個人名（役職で書く）・スプレッドシートや Drive の ID・サーバーの IP・未公開のセキュリティ問題は書かない
+
 ## Boundaries
 
 ### Always Do
@@ -174,6 +184,7 @@ try {
 - Flutter で非同期またぎ後の `setState()` 前に `mounted` チェック
 - GAS で `LockService` 取得後は `finally` で `releaseLock()`
 - 空リストは `[]Type{}` を返す
+- 機能の採否や設計・運用の方針を決めたら `docs/decisions/` に ADR を書く
 
 ### Ask First
 - 新規ライブラリの導入（特に Flutter の状態管理系）
