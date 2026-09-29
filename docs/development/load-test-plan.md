@@ -30,6 +30,8 @@
 
 `api/lib/router/router.go` の `ProvideRouter` に 73 ルートが定義されている。ルーター外では、サーバー起動処理が `/swagger/*` を直接登録しており、合計 74 エンドポイントが公開される。
 
+> 追記（2026-09-29）：この節の件数と一覧は調査時点（2026-07-17、`2dd901a`）のもの。その後、マニュアル配信の3ルート（`GET /manuals/:id`・`GET /manuals/oauth/callback`・`PUT /manuals/:id`。`MANUAL_OAUTH_*` の設定時だけ登録）が 2026-08-20 に追加され、`POST /request_shifts` が #565 で削除された。2026-09-29 時点では router に 75 ルート、`/swagger/*` を含めて 76 エンドポイントである。
+
 ```go
 // api/lib/externals/server/server.go:42
 e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -136,6 +138,8 @@ e.GET("/swagger/*", echoSwagger.WrapHandler)
 #### 棚卸しから言えること
 
 74 エンドポイントの内訳は、**実際にトラフィックが流れるのが mobile 発 9 ルート + GAS 発 6 ルートの計 15 ルート**、admin(凍結) 専用が 30 ルート（`web_signin`/`web_signup`/`web_signout` を含む。本番でほぼ無トラフィック）、監視・開発用（healthcheck / swagger）が 2 ルート、そして残り 27 ルートは呼び出し元が存在しないデッドルートである。負荷試験のシナリオは現役の 15 ルートに絞ってよい。
+
+> 追記（2026-09-29）：この内訳も調査時点のもの。#565 で `POST /request_shifts` を削除したので、デッドルートは 26 になった。調査後に追加されたマニュアル配信の3ルートは、この内訳に含めていない。
 
 `POST /request_shifts` は特筆に値する。mobile・admin のどちらからも呼ばれておらず（grep ゼロ）、実装は DB 保存が no-op で、ハードコードされた GAS URL への同期送信だけを行う。
 
