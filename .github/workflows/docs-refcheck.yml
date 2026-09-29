@@ -1,0 +1,24 @@
+name: docs-refcheck
+
+# ADR（docs/decisions/）の「前提」に書いたファイルとシンボルが、まだ存在するかを確かめる。
+# 前提はコード側の変更で古くなるので、ADR を変えた PR に限らず、すべての PR で走らせる。
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  refcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          # PR のマージコミットの親（HEAD^1 = 変更前の develop）も取る
+          fetch-depth: 2
+      - name: refcheck のテスト
+        run: python3 -m unittest discover -s scripts/refcheck
+      - name: ADR の前提を点検する
+        # --base: PR で直下のディレクトリを丸ごと消したときも、消えた参照を拾う
+        run: python3 scripts/refcheck/refcheck.py --base HEAD^1 docs/decisions/*.md
