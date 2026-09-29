@@ -26,7 +26,7 @@ cd mobile && fvm install && cd ..
 ``` fish
 make mobile-up
 ```
-http://localhost:45029 で開く。API の CORS が許可しているのはこのポートだけなので、変えないこと。
+http://localhost:45029 で開く（45029 は `make mobile-up` の既定ポート）。API は CORS で許可するオリジンを列挙しており（`api/lib/externals/server/server.go`）、`127.0.0.1` で開いたり、列挙に無いポートに変えたりすると、API の応答が画面に届かない。
 
 ## データベースの削除
 ``` fish

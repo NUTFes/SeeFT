@@ -17,7 +17,7 @@ cp env/.env.example env/.env
 fvm install
 ```
 
-リポジトリのルートで `make mobile-up` を実行し、http://localhost:45029 で開く。API の CORS が許可しているのはこのポートだけなので、変えないこと。
+リポジトリのルートで `make mobile-up` を実行し、http://localhost:45029 で開く（45029 は `make mobile-up` の既定ポート）。API は CORS で許可するオリジンを列挙しており（`api/lib/externals/server/server.go`）、`127.0.0.1` で開いたり、列挙に無いポートに変えたりすると、API の応答が画面に届かない。
 
 `env/.env` の値はビルド時に埋め込まれる（`String.fromEnvironment`）。値を変えたら起動し直す。
 
