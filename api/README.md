@@ -1,72 +1,34 @@
 # SeeFT-API
 
-## Features
+SeeFT の API サーバー。Go + Echo + PostgreSQL。
 
-## Requirement
-`production`
-- dart
-- docker
+起動・マイグレーション・シードはリポジトリのルートから `make` で行う（[README](../README.md)）。構成とコードの書き方は [AGENTS.md](../AGENTS.md)、はじめて触る人向けの説明は [技術オンボーディング](../docs/development/onboarding.md) にある。
 
-`dev`
-- mysqldef
-but run `./scripts/script.sh`
+## 構成
 
-
-## Installation
-
-``` fish
-$ docker compose build
-$ docker comopose up -d
-$ ./scripts/script.sh
-$ ./sql/migrate.sh
-$ docker compose run --rm server dart ./sql/sql.dart seed
+```text
+main.go          起動するだけ。中身は lib/di
+lib/di           依存性注入。repository → usecase → controller → router を配線する
+lib/router       URL と controller の対応づけ（全エンドポイントの一覧）
+lib/internals    controller（HTTP の入出力）と repository（SQL の実行）
+lib/usecase      業務ロジック
+lib/entity       データの形（JSON のキー名はここで決まる）
+lib/externals    DB 接続、HTTP サーバー、Slack、通知の定期実行
+cmd/migrate      postgresql/db/schema と migrations を流す
+cmd/seed         postgresql/db/seed.sql を流す
+cmd/send-notifications  未送信の Slack 通知を手動で流す
 ```
 
-## Usage
+## 開発
 
-``` fish
-$ docker compose up
+ローカルのコンテナは [air](https://github.com/air-verse/air) で起動しており、`.go` ファイルを保存すると自動で再ビルドされる。ポートは 1234。
+
+```bash
+make up-api
+make test
 ```
 
-## Deployment
-
-mysqldefがあったら `./sciripts/script.sh`は実行しなくて良い
-
-``` fish
-$ docker compose build
-$ docker compose up -d
-$ ./scripts/script.sh
-$ ./sql/migrate.sh
-$ docker compose run --rm server dart ./sql/sql.dart seed
-$ docker compose run --rm server dart ./sql/sql.dart user ./sql/user.csv
-```
-
-### logを表示させたい時
-
-``` fish
-$ docker compose up -d
-$ docker logs SeeFT-API -f
-```
-
-## Note
-### プルリクでFormatterが失敗した時
-
-``` fish
-$ docker compose run --rm server dart format ./ -l 120 --set-exit-if-changed
-```
-
-### .shスクリプトが動かない場合
-
-```
-$ chmod u+x ./scripts/script.sh
-$ chmod u+x ./sql/migrate.sh
-```
-
-### docker-compose upでAPIが経たない時
-
-```
-$ docker compose run --rm server dart pub get
-```
+`make up-api` のログは `docker compose logs -f api` でも見られる。
 
 ### diを編集してからうまく動かないとき
 一度コンテナをdownさせてからupし直してみてください。

@@ -4,8 +4,8 @@ SeeFT は技大祭（NUTFes）のシフト管理システムです。
 
 ## Tech Stack
 
-- `api/`: Go 1.16 + Echo v4 + GORM v1.25 + PostgreSQL
-- `mobile/lib/`: Flutter（Dart >= 3.6.0）、`fvm` 管理、`Hive` + `SharedPreferences` で永続化
+- `api/`: Go 1.26 + Echo v4 + `database/sql`（一部 GORM v1.25）+ PostgreSQL
+- `mobile/lib/`: Flutter 3.27.3（Dart >= 3.6.0）、`fvm` 管理、Web のみで運用、`Hive` + `SharedPreferences` で永続化
 - `gas/`: Google Apps Script（スプレッドシートにバインド）
 
 `admin/` と `raw/` は使用していません。
@@ -32,6 +32,7 @@ Mac 環境は `mac-up` / `mac-build` / `mac-seed`、本番は `prod-up` / `prod-
 ```text
 api/lib/
 ├── di/                # 依存性注入（di.InitializeServer）
+├── router/            # URL と controller の対応づけ（全エンドポイントの一覧）
 ├── entity/            # ビジネスエンティティ
 ├── usecase/           # ビジネスロジック + *sql.Rows の Scan
 ├── internals/
@@ -192,7 +193,7 @@ try {
 
 新旧の規約が混在する箇所があります。新規コードは上記ルールに従い、既存は段階的に整理します。
 
-- **Repository の SQL 文字列連結**（残 8 ファイル / 約 41 件） → #266
+- **Repository の SQL 文字列連結**（残 7 ファイル / 約 33 件） → #266
 - **JSON キー命名**: 古い entity は camelCase、新しい entity は snake_case。クライアント影響のため既存維持
 - **エラーレスポンス**: 古い controller は `return err`、新しいものは map 形式
 - **空リスト返却**: 一部 UseCase が `nil` を返す箇所あり（順次 `[]Type{}` へ）
