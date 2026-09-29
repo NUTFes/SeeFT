@@ -20,7 +20,7 @@
 
 ほかの人の PR を引き継ぐときは、元の PR のブランチにコミットを積んで、同じ PR を育てる。
 
-- 元のブランチが develop より古いときは、`git merge origin/develop` で取り込む。rebase して force push はしない
+- 元のブランチが develop より古いときは、`git fetch origin` で最新を取ってから `git merge origin/develop` で取り込む。rebase して force push はしない
 - PR の本文の冒頭に、引き継いだことと、方針を変えたならその理由を書く。作った人にもひと言コメントを残す
 
 ## 理由

@@ -168,7 +168,7 @@ try {
 - コミットメッセージは日本語、`feat:` / `fix:` / `docs:` プレフィックス
 - ドキュメント変更（AGENTS.md・README 等）も issue → branch → PR の正規フローを通す
 - PoC は試作用のブランチで試し、完成形が見えたら develop から切った新しいブランチに要るファイルだけを持ち込んで PR にする
-- ほかの人の PR を引き継ぐときは、元の PR のブランチにコミットを積む。develop は `git merge origin/develop` で取り込み、force push しない
+- ほかの人の PR を引き継ぐときは、元の PR のブランチにコミットを積む。develop は `git fetch origin` の後に `git merge origin/develop` で取り込み、force push しない
 - PR は `.github/pull_request_template.md` のフォーマットに従う
 - PR を出す前の点検は差分全体にかける。直した主張は `git grep` でほかの箇所も探して直す
 - PR 本文で `resolve #XXX` と書くと issue が自動 close される。番号ごとに `gh issue view <N> --json title` で中身を確かめてから書く
