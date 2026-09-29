@@ -15,7 +15,10 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          # PR のマージコミットの親（HEAD^1 = 変更前の develop）も取る
+          fetch-depth: 2
       - name: refcheck のテスト
         run: python3 -m unittest discover -s scripts/refcheck
       - name: ADR の前提を点検する
-        run: python3 scripts/refcheck/refcheck.py docs/decisions/*.md
+        # --base: PR で直下のディレクトリを丸ごと消したときも、消えた参照を拾う
+        run: python3 scripts/refcheck/refcheck.py --base HEAD^1 docs/decisions/*.md

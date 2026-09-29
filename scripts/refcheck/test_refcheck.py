@@ -1,4 +1,5 @@
 # refcheck.py のテスト。実行: python3 -m unittest discover -s scripts/refcheck
+import os
 import subprocess
 import tempfile
 import unittest
@@ -127,6 +128,37 @@ class RefcheckTest(unittest.TestCase):
     def test_fenced_block_is_ignored(self):
         text = "```text\n`api/nothing.go`\napi/nothing.go:10\n```\n`api/nothing2.go`"
         self.assertEqual(self.kinds(text), [(5, "missing path", "api/nothing2.go")])
+
+    def test_fence_closes_only_on_bare_fence(self):
+        # 後ろに文字がある行や、開きより短い行ではブロックは閉じない
+        text = "\n".join(
+            [
+                "```text",
+                "```not-a-close",
+                "`api/nothing.go`",
+                "```",
+                "`api/nothing2.go`",
+                "````",
+                "```",
+                "`api/nothing3.go`",
+                "````",
+            ]
+        )
+        self.assertEqual(self.kinds(text), [(5, "missing path", "api/nothing2.go")])
+
+    def test_deleted_top_level_is_detected_with_base(self):
+        # 直下のディレクトリを丸ごと消しても、変更前の版を渡せば消えた参照を拾う
+        env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com",
+               "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com"}
+        git = ["git", "-C", str(self.root)]
+        subprocess.run(git + ["commit", "-q", "-m", "base"], check=True, env={**os.environ, **env})
+        subprocess.run(git + ["rm", "-q", "-r", "gas", "AGENTS.md"], check=True)
+        text = "`gas/shift/コード.js`\n`AGENTS.md`\n`application/json`"
+        self.assertEqual(self.kinds(text, Repo(self.root, tracked=True)), [])
+        self.assertEqual(
+            self.kinds(text, Repo(self.root, tracked=True, base="HEAD")),
+            [(1, "missing path", "gas/shift/コード.js"), (2, "missing path", "AGENTS.md")],
+        )
 
     def test_ignore_markers(self):
         text = "\n".join(

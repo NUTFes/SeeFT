@@ -10,6 +10,7 @@
 # 使い方:
 #   python3 scripts/refcheck/refcheck.py docs/decisions/*.md             # git 管理下のファイルだけを「存在する」とみなす
 #   python3 scripts/refcheck/refcheck.py --worktree path/to/notes.md     # 手元のディスクにあれば「存在する」とみなす
+#   python3 scripts/refcheck/refcheck.py --base HEAD^1 docs/decisions/*.md  # 変更前の版にあった名前も「パスらしい」とみなす（CI 用）
 #
 # 終了コード: 0 = 問題なし、1 = 見つからないものがある、2 = 使い方の誤り
 
@@ -23,6 +24,7 @@ from pathlib import Path
 
 INLINE_CODE = re.compile(r"(`+)(.+?)\1")
 FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+CLOSING_FENCE = re.compile(r"^\s*(`{3,}|~{3,})\s*$")
 LINE_NUMBER = re.compile(r"^(.+?):\d+(?:-\d+)?$")
 
 IGNORE_LINE = "<!-- refcheck:ignore -->"
@@ -42,7 +44,7 @@ class Finding:
 
 class Repo:
     # tracked=True なら git ls-files の結果だけを、False なら手元のディスクを見る
-    def __init__(self, root: Path, tracked: bool):
+    def __init__(self, root: Path, tracked: bool, base: str | None = None):
         self.root = root
         self.tracked = tracked
         self._files: set[str] = set()
@@ -64,6 +66,17 @@ class Repo:
             entries = os.listdir(root)
             self._top = set(entries)
             self._root_files = {e for e in entries if (root / e).is_file()}
+        # PR で直下のディレクトリやファイルを丸ごと消すと、今の版だけではパスだと分からなくなる。
+        # 変更前の版の直下の名前も足しておき、消えた参照を「missing path」として拾う
+        if base is not None:
+            out = subprocess.run(
+                ["git", "-C", str(root), "ls-tree", "-z", "--name-only", base],
+                check=True,
+                capture_output=True,
+            ).stdout.decode("utf-8")
+            for name in filter(None, out.split("\0")):
+                self._top.add(name)
+                self._root_files.add(name)
 
     def is_file(self, path: str) -> bool:
         if self.tracked:
@@ -140,7 +153,9 @@ def check_text(text: str, repo: Repo) -> list[Finding]:
             fence = m.group(1)
             continue
         if fence is not None:
-            if line.strip().startswith(fence[0] * len(fence)):
+            # 閉じるのは、開きと同じ記号が同じ数以上並び、後ろに空白しかない行だけ
+            cm = CLOSING_FENCE.match(line)
+            if cm and cm.group(1)[0] == fence[0] and len(cm.group(1)) >= len(fence):
                 fence = None
             continue
         if OFF in line:
@@ -173,10 +188,15 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--tracked", action="store_true", help="git 管理下のファイルだけを見る（既定）")
     mode.add_argument("--worktree", action="store_true", help="手元のディスクにあるファイルを見る")
     parser.add_argument("--root", type=Path, help="リポジトリのルート（既定は今いる場所の git のルート）")
+    parser.add_argument("--base", help="変更前の版（例: HEAD^1）。その版の直下にあった名前もパスとして点検する")
     args = parser.parse_args(argv)
 
     root = (args.root or _git_root(Path.cwd())).resolve()
-    repo = Repo(root, tracked=not args.worktree)
+    try:
+        repo = Repo(root, tracked=not args.worktree, base=args.base)
+    except subprocess.CalledProcessError as e:
+        print(f"git の実行に失敗しました: {' '.join(e.cmd)}", file=sys.stderr)
+        return 2
 
     status = 0
     for name in args.files:
