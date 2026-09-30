@@ -1,10 +1,10 @@
 # 0015: 解説マニュアル（生成した HTML）は PDF にせず、HTML のまま配信する
 
 - 状態：見送り
-- 決めた日：2026-05-31
+- 決めた日：2026-05-31（PM の作業メモ）
 - 決めた人：45th の PM
 - 確信度：記録なし
-- 出典：公開の記録なし（45th の PM の作業メモ）
+- 出典：45th の PM の作業メモ（公開していない）
 
 ## 背景
 
@@ -33,8 +33,8 @@
 ## 前提
 
 - HTML の動く部分は、生成に使うプロンプトで指定している：`.claude/manual-prompt-card-strict.md`（画像の拡大は `openLightbox`、目次のボタンは `toggleTocOverlay`、章の折りたたみは `<details>`）
-- 配信は `api/lib/internals/controller/manual_controller.go#manualController.ShowManual`（ADR 0006）
-- 簡易マニュアル（Google ドキュメントやスライドをそのまま使うもの）を PDF にするのは、この判断と別の話である。元が動かない文書なので、PDF にしても失うものが無い（ADR 0016）
+- 配信は `api/lib/internals/controller/manual_controller.go#manualController.ShowManual`（[0006](0006-manual-serving-google-gate.md)）
+- 簡易マニュアル（Google ドキュメントやスライドをそのまま使うもの）を PDF にするのは、この判断と別の話である。元が動かない文書なので、PDF にしても失うものが無い（[0016](0016-simple-manual-pdf-on-drive.md)）
 
 ## 結果
 
