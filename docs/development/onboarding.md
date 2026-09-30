@@ -453,7 +453,7 @@ cd mobile && fvm flutter test --platform chrome
   - `mobile/` を変えたとき：`flutter analyze --fatal-infos`（`flutter-lint.yml`。最も軽い info レベルの指摘でも落ちる）
   - `gas/` を変えたとき：何も走らない
 - **CodeRabbit**：PR に AI がレビューコメントを付けます。指摘は参考です。すべてに従う必要はなく、スコープ外のものは理由を書いて見送って構いません。
-- **Git**：issue を立て、`feat/{ユーザー名}/{issue番号}/{内容}` のブランチで作業し、PR を出します。コミットメッセージは日本語で、`feat:` / `fix:` / `docs:` を付けます。詳しくは AGENTS.md の Git Workflow。
+- **Git**：issue を立て、`feat/{ユーザー名}/{issue番号}/{内容}` のブランチで作業し、PR を出します。コミットメッセージは日本語で、`feat:` / `fix:` / `docs:` を付けます。詳しくは [開発の進め方](workflow.md)。
 
 **学ぶこと：**
 
@@ -566,6 +566,7 @@ GAS を触る人:
 
 - [AGENTS.md](../../AGENTS.md)：コードの書き方の規約
 - [docs/operations/](../operations/README.md)：技大祭での運用と、過去の事故の記録
+- [workflow.md](workflow.md)：issue から本番反映までの仕事の進め方
 - [docs/decisions/](../decisions/README.md)：何をなぜ決めたか、何を選ばなかったかの記録（ADR）
 - [test-roadmap.md](test-roadmap.md)：テストの進め方
 - [gas/README.md](../../gas/README.md)：GAS の取得と反映
