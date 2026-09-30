@@ -51,7 +51,7 @@ mobile/lib/
 gas/{shift,task,user,rescue,manual-assignment}/   # ドメイン別。コード.js / onChange.js 等
 ```
 
-`di/di.go` は部品の配線（Repository → UseCase → Controller → Router）だけを書く。定期実行やバックグラウンドの処理は `externals/` の下に専用パッケージを切り、`di.go` では組み立てて `Start()` を呼ぶだけにする（理由は `docs/decisions/0003-di-wiring-only.md`）。
+`di/di.go` は部品の配線（Repository → UseCase → Controller → Router）だけを書く。定期実行やバックグラウンドの処理は `externals/` の下に専用パッケージを切り、`di.go` では組み立てて `Start()` を呼ぶだけにする（理由は `docs/decisions/0002-di-wiring-only.md`）。
 
 ## 通知の定期実行
 
@@ -179,6 +179,9 @@ try {
 機能を足す・見送る、設計や運用の方針を選ぶ、Ask First の項目を決めた、といった判断をしたら、`docs/decisions/` に ADR を書く。書き方は `docs/decisions/README.md`、雛形は `docs/decisions/template.md`。
 
 - 決めたことだけでなく、理由と、選ばなかった候補を書く。見送り・先送りも ADR にする
+- ADR にするのは、システムの作りや本番の運用に効いて、後から戻すのに手間がかかる判断だけ。チームの約束事（PR の書き方、点検のしかた、タスクの割り振り方など）は ADR にせず、`docs/development/workflow.md` に理由と一緒に書く
+- 候補を比べて決めるときは、決める前に状態を「提案」にして PR に出し、決まったら「採用」か「見送り」にする。Ask First の項目は、実装の前にこの流れを通す
+- 確信度（高・中・低）を書く。低いときは、何が分かれば見直すかを「前提」に書く
 - 理由が分からなければ「理由の記録なし」と書く。推測で埋めない
 - 本文は書き換えない。判断が変わったら新しい番号で書き、古い方の状態を `置き換え（→ NNNN）` にする。ただし、コードの名前やパスが変わっただけで判断が変わらないときは、「前提」欄の参照先を直し、追記に日付と理由を1行書く
 - 前提にしたコードは `path#Symbol` の形で書き、行番号は書かない。PR ごとに `scripts/refcheck/refcheck.py` が存在を確かめる
