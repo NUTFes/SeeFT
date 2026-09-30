@@ -118,3 +118,6 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | [0016](0016-simple-manual-pdf-on-drive.md) | 簡易マニュアルは PDF にして Drive に置き、アプリからそこへ移動させる | 採用 |
 | [0017](0017-manual-ops-not-automated.md) | マニュアル運用のスプレッドシートの操作は自動化しない | 見送り |
 | [0018](0018-test-mock-with-sqlmock.md) | テストでは db.Client に go-sqlmock の偽の DB を差し込み、repository の戻り値は変えない | 採用 |
+| [0019](0019-test-outside-in.md) | テストは外側（api と DB）から今の動作を固定し、GAS と API をまたぐ E2E と admin は自動テストにしない | 採用 |
+| [0020](0020-bundle-subset-japanese-font.md) | 技大祭の前は Flutter を上げず、日本語フォントの Regular と Bold を削って同梱する | 採用 |
+| [0021](0021-static-server-threaded-gzip.md) | mobile の静的配信は server.py のまま、並行処理と gzip の圧縮にする | 採用 |
