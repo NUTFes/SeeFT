@@ -13,7 +13,7 @@
 
 負荷試験の計画（`docs/development/load-test-plan.md`）の issue 6 は、朝に大勢が一斉に開くと、API より先にこの静的配信が詰まるおそれがあると挙げていた。
 
-そこに、日本語フォントの同梱（[0020](0020-bundle-subset-japanese-font.md)）で、初めて開く人1人あたりに `server.py` が送る量が 2.51MB から 8.03MB（約3倍）に増えることになった。本番の Cloudflare は、どのファイルもキャッシュしていなかった（`cf-cache-status: DYNAMIC`）。`server.py` から Cloudflare までは、圧縮しないまま流れる（#518。2026-09-13 に本番の応答ヘッダーで確かめた）。
+そこに、日本語フォントの同梱（[0020](0020-bundle-subset-japanese-font.md)）で、初めて開く人1人あたりに `server.py` が送る量が 2.51MB から 8.03MB（約3倍）に増えることになった。本番では、途中の経路でファイルがキャッシュされず、`server.py` が送った量がそのまま流れていた（#518。2026-09-13 に本番の応答で確かめた）。
 
 ## 候補
 
@@ -29,7 +29,7 @@ nginx と Cloudflare の案は、load-test-plan.md と #518 に候補として�
 
 `server.py` の `socketserver.TCPServer` を `http.server.ThreadingHTTPServer` に置き換え、リクエストごとにスレッドで処理する。
 
-- `Accept-Encoding` に gzip があれば、js・json・html・wasm・フォントを gzip で圧縮して返す。圧縮はファイルごとに1回だけ行い、結果をメモリに持つ
+- html・js・json・css・wasm・フォント・svg・txt を gzip で圧縮して返す。圧縮するのは、`Accept-Encoding` の gzip に付いた q の値が 0 より大きく 1 以下のときだけ（q が無ければ 1 とみなす）。q が 0 のときや、数として読めないときは圧縮しない。圧縮はファイルごとに1回だけ行い、結果をメモリに持つ
 - 接続の受け付け待ちの列（`request_queue_size`）を、標準の 5 から 1024 に広げる。スレッドの数に上限（スレッドプール）は付けない
 - フォントの同梱（PR #515）だけが先に本番に出ないよう、PR #519 を先にマージする
 
@@ -45,9 +45,9 @@ nginx などに置き換えなかった理由は、記録に無い。数行の�
 
 ## 前提
 
-- 配信：`mobile/python/server.py#Server`、圧縮：`mobile/python/server.py#gzipped_body`、`mobile/python/server.py#MyHandler.accepts_gzip`
-- 本番の mobile のコンテナとホストに、スレッドの数やメモリを制限する上限が無いこと（2026-09-14 に本番で確かめた。PR #519 の本文）。上限を付けるなら、この ADR を見直す
-- `request_queue_size` の 1024 が、OS の `somaxconn`（本番は 4096）に収まっていること
+- 配信：`mobile/python/server.py#Server`、圧縮：`mobile/python/server.py#gzipped_body`、`mobile/python/server.py#MyHandler.accepts_gzip`、圧縮する拡張子：`mobile/python/server.py#COMPRESSIBLE_EXTENSIONS`
+- 本番のサーバーに、この負荷を受けられるだけのスレッドの数とメモリの余裕があること（2026-09-14 に本番で確かめた。PR #519 の本文）。スレッドの数やメモリに上限を付けるときや、もっと小さいサーバーに移すときは、この ADR を見直す
+- `request_queue_size` の 1024 が、OS の受け付け待ちの列の上限（`somaxconn`）に収まっていること
 - フォントの同梱（[0020](0020-bundle-subset-japanese-font.md)）を続けていること。PR #519 だけを元に戻すと、初回に送る量が 8.03MB に戻る
 
 ## 結果
