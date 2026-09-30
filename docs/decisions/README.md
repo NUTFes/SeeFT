@@ -106,3 +106,7 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | [0004](0004-develop-merge-by-admin.md) | develop の保護ルールを残したまま、PM が admin 権限で自分の PR をマージする | 採用 |
 | [0005](0005-task-year-id-not-filtered.md) | tasks の seed 由来の行は年度をまたいで使い、名前で引くときに year_id で絞らない | 採用 |
 | [0006](0006-manual-serving-google-gate.md) | マニュアルは SeeFT の API から、nutfes の Google アカウントに限って配信する | 採用 |
+| [0007](0007-gas-live-is-source.md) | GAS はライブの Apps Script を元データとし、gas/ はある時点の写しとして扱う | 採用 |
+| [0008](0008-manual-link-by-name.md) | タスクとマニュアルの紐付けは、タスク一覧の URL の列と対応表で行い、キーはマニュアル名にする | 採用 |
+| [0009](0009-mobile-web-only.md) | mobile は Flutter Web だけで配る | 採用 |
+| [0010](0010-prod-auto-restart.md) | 本番のサーバーが止まったときに、自動で起動し直すようにする | 提案 |
