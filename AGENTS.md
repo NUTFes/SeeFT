@@ -51,11 +51,11 @@ mobile/lib/
 gas/{shift,task,user,rescue,manual-assignment}/   # ドメイン別。コード.js / onChange.js 等
 ```
 
-`di/di.go` は部品の配線（Repository → UseCase → Controller → Router）だけを書く。定期実行やバックグラウンドの処理は `externals/` の下に専用パッケージを切り、`di.go` では組み立てて `Start()` を呼ぶだけにする（理由は `docs/decisions/0002-di-wiring-only.md`）。
+`di/di.go` は部品の組み立て（Repository → UseCase → Controller → Router）だけを書く。定期実行やバックグラウンドの処理は `externals/` の下に専用パッケージを作り、`di.go` では組み立てて `Start()` を呼ぶだけにする（理由は `docs/decisions/0002-di-wiring-only.md`）。
 
 ## 通知の定期実行
 
-未送信の通知ログ（`action_logs` の `is_sent = false`）は、`externals/scheduler` の ticker ループが API プロセス内で5分間隔に `NotificationUseCase.ProcessUnsentNotifications` を呼び、Slack DM へ flush します（`di.go` で配線。`cmd/send-notifications` は手動 flush 用として併存）。
+未送信の通知ログ（`action_logs` の `is_sent = false`）は、`externals/scheduler` の ticker ループが API プロセス内で5分間隔に `NotificationUseCase.ProcessUnsentNotifications` を呼び、Slack DM へ flush します（`di.go` で組み立てて起動。`cmd/send-notifications` は手動 flush 用として併存）。
 
 **API は単一インスタンス前提**です。複数レプリカで動かすと各プロセスの ticker が同じ未送信ログを拾って二重送信します。本番（`docker-compose.prod.yml`）は API を1レプリカで運用しているため現状は問題ありません。複数レプリカ化する場合はリーダー選出や排他制御が必要です。
 
@@ -162,7 +162,7 @@ try {
 
 ## Git Workflow
 
-仕事の回し方の全体は `docs/development/workflow.md`。コードを書くときに要るものは次のとおり。
+仕事の進め方の全体は `docs/development/workflow.md`。コードを書くときに要るものは次のとおり。
 
 - ブランチ名: `feat/{username}/{issue-number}/{description}`、`fix/...`、`docs/...`。develop から切る（main は使っていない）
 - コミットメッセージは日本語、`feat:` / `fix:` / `docs:` プレフィックス
@@ -170,7 +170,7 @@ try {
 - PoC は試作用のブランチで試し、完成形が見えたら develop から切った新しいブランチに要るファイルだけを持ち込んで PR にする
 - ほかの人の PR を引き継ぐときは、元の PR のブランチにコミットを積む。develop は `git fetch origin` の後に `git merge origin/develop` で取り込み、force push しない
 - PR は `.github/pull_request_template.md` のフォーマットに従う
-- PR を出す前の点検は差分全体にかける。直した主張は `git grep` でほかの箇所も探して直す
+- PR を出す前の点検は、差分全体を対象にする。誤りを直したら、同じ誤りがほかにもないか `git grep` で探して直す
 - PR 本文で `resolve #XXX` と書くと issue が自動 close される。番号ごとに `gh issue view <N> --json title` で中身を確かめてから書く
 - issue・PR でコードを引用するときは、言語を指定したコードブロックに入れる
 
@@ -179,8 +179,8 @@ try {
 機能を足す・見送る、設計や運用の方針を選ぶ、Ask First の項目を決めた、といった判断をしたら、`docs/decisions/` に ADR を書く。書き方は `docs/decisions/README.md`、雛形は `docs/decisions/template.md`。
 
 - 決めたことだけでなく、理由と、選ばなかった候補を書く。見送り・先送りも ADR にする
-- ADR にするのは、システムの作りや本番の運用に効いて、後から戻すのに手間がかかる判断だけ。チームの約束事（PR の書き方、点検のしかた、タスクの割り振り方など）は ADR にせず、`docs/development/workflow.md` に理由と一緒に書く
-- 候補を比べて決めるときは、決める前に状態を「提案」にして PR に出し、決まったら「採用」か「見送り」にする。Ask First の項目は、実装の前にこの流れを通す
+- ADR にするのは、システムの作りや本番の運用に関わり、後から戻すのに手間がかかる判断だけ。チームの約束事（PR の書き方、点検のしかた、タスクの割り振り方など）は ADR にせず、`docs/development/workflow.md` に理由と一緒に書く
+- 候補を比べて決めるときは、決める前に状態を「提案」にして PR に出し、決まったら「採用」か「見送り」にする。Ask First の項目は、実装の前にこの流れで進める
 - 確信度（高・中・低）を書く。低いときは、何が分かれば見直すかを「前提」に書く
 - 理由が分からなければ「理由の記録なし」と書く。推測で埋めない
 - 本文は書き換えない。判断が変わったら新しい番号で書き、古い方の状態を `置き換え（→ NNNN）` にする。ただし、コードの名前やパスが変わっただけで判断が変わらないときは、「前提」欄の参照先を直し、追記に日付と理由を1行書く

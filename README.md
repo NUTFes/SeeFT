@@ -1,6 +1,6 @@
 # SeeFT
 
-新しく入った人は、まず [技術オンボーディング](docs/development/onboarding.md) を読んでください。仕事の回し方は [開発の進め方](docs/development/workflow.md) にあります。
+新しく入った人は、まず [技術オンボーディング](docs/development/onboarding.md) を読んでください。仕事の進め方は [開発の進め方](docs/development/workflow.md) にあります。
 
 ## Installation
 ``` fish
