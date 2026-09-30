@@ -102,3 +102,7 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | --- | --- | --- |
 | [0001](0001-record-decisions.md) | 判断の理由を ADR としてリポジトリに残す | 採用 |
 | [0002](0002-di-wiring-only.md) | di.go は部品の組み立てだけにし、定期実行などは externals の下に専用のパッケージを作って置く | 採用 |
+| [0015](0015-manual-html-not-pdf.md) | 解説マニュアル（生成した HTML）は PDF にせず、HTML のまま配信する | 見送り |
+| [0016](0016-simple-manual-pdf-on-drive.md) | 簡易マニュアルは PDF にして Drive に置き、アプリからそこへ移動させる | 採用 |
+| [0017](0017-manual-ops-not-automated.md) | マニュアル運用のスプレッドシートの操作は自動化しない | 見送り |
+| [0018](0018-test-mock-with-sqlmock.md) | テストでは db.Client に go-sqlmock の偽の DB を差し込み、repository の戻り値は変えない | 採用 |
