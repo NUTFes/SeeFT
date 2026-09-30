@@ -38,7 +38,8 @@ URL を直すときは、対応表を直して送り直す。SQL で `tasks` の
 
 ## 前提
 
-- URL の列を埋める GAS：`gas/shift/調査_マニュアルURL.js#fillManualUrlFormulas`、対応を確かめる GAS：`gas/shift/調査_マニュアルURL.js#checkManualUrlMapping`
+- URL の列を埋める GAS：`gas/shift/調査_マニュアルURL.js#fillManualUrlFormulas`
+- 対応を確かめる GAS は2つある。`gas/shift/調査_マニュアルURL.js#checkManualUrlMapping` は、タスクを送る前に、対応表に無いマニュアル名・空白や全角の違いで引けない名前・対応表の重複・URL の欠けを洗い出す。`gas/shift/調査_マニュアルURL.js#inspectManualUrlLookup` は、R列と S列の VLOOKUP が引けているかを見る一時的な調査用で、確認が済んだら消してよいとコメントに書いてある
 - URL を送る GAS：`gas/shift/名簿タスク送信.js#buildTaskChanges_`
 - 受け取る API：`api/lib/usecase/task_usecase.go#taskUseCase.UpdateTasksAndPlacesFromGAS`、`api/lib/internals/repository/task_repository.go#taskRepository.UpdateWithManualURL`
 - 運用の手順は `docs/development/manual-html-operations.md`（「タスクへ紐付ける」と「どのタスクがどのマニュアルに対応するかの決め方」）
