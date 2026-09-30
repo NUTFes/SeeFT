@@ -74,9 +74,9 @@ rows, err := db.QueryContext(ctx, query, id)
 
 文字列連結（`"... " + id`）は SQL インジェクション脆弱性のため禁止。golangci-lint の gosec は SeeFT の連結 SQL（`abstract.Crud` 経由や、`DB()` からのメソッドチェーン）を検出できない。lint が通っても連結が無い証明にはならないので、レビューで確かめる。
 
-**INSERT した行の id は `RETURNING id` で受け取る**
+**INSERT した行の id をあとで使うときは、`RETURNING id` で受け取る**
 
-作成のあとに最新の行（`ORDER BY id DESC LIMIT 1` など）を読み直すと、同時に作られた別の行を掴む（#536）。`user_repository.go` の `Create` などが今の書き方。
+作成のあとに最新の行（`ORDER BY id DESC LIMIT 1` など）を読み直すと、同時に作られた別の行を掴む（#536）。id を使わない INSERT（`actionLogRepository.Create` など）は、これまでどおり実行するだけでよい。`user_repository.go` の `Create` などが今の書き方。
 
 **エラーレスポンスは JSON 形式で返す**
 
@@ -196,7 +196,7 @@ try {
 ### Always Do
 - 新規 SQL はプレースホルダで書く
 - 設定値（API URL・シークレット）は環境変数 / `PropertiesService`（GASのみ）から取得
-- INSERT した行の id は `RETURNING id` で受け取る
+- INSERT した行の id をあとで使うときは、`RETURNING id` で受け取る
 - Flutter で非同期またぎ後の `setState()` 前に `mounted` チェック（失敗の分岐も）
 - GAS で `LockService` 取得後は `finally` で `releaseLock()`
 - 空リストは `[]Type{}` を返す
