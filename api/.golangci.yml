@@ -2,11 +2,13 @@ version: "2"
 
 linters:
   enable:
-    # gosec は、SeeFT の連結 SQL（abstract.Crud 経由の呼び出しや、DB() からのメソッドチェーン）を
-    # SQL インジェクションとして拾えない。SQL を実行する関数を gosec が決め打ちで持っていて、
-    # 設定から足せないため（2026-09 に v2.26.1 で確認）。0 件でも、連結 SQL が無い証明にはならない。
+    # gosec は、SeeFT の連結 SQL を SQL インジェクションとして拾えない。経路は2つある。
+    # - abstract.Crud 経由：SQL を実行する関数を gosec が決め打ちで持っていて、設定から足せない（gosec v2.26.1 で確認）
+    # - DB() からのメソッドチェーン（bureauRepository.FindByBureau など）：gosec だけをかけても検出されなかった
+    #   （2026-10-01 に golangci-lint v2.12.2 で、repository の連結 45 行に対して 0 件）
+    # 0 件でも、連結 SQL が無い証明にはならない。
     # SQL の守りは AGENTS.md のプレースホルダの規約とレビューで、根本対応は #266。
-    # それでも SSRF・弱い暗号・ファイルパスなどのルールは効くので、有効のままにする。
+    # それでも SSRF・弱い暗号・ファイルパスなどのルールは役に立つので、有効のままにする。
     - gosec
     - revive
   settings:
