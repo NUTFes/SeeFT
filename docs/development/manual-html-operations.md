@@ -471,9 +471,6 @@ node_modules/.bin/clasp clone <スクリプトID>
 スプレッドシート
   45th_シフト_ver0        1b5FhiuT7M6kcAM_BkFRu1UVLj-Ssbt-VoBjGmEAN3-I
   マニュアル割り当て      1a2pvM1M8NWQNLNaYnsqTzpB_oGE129-ibpbN3Be1Z1Q
-
-Slack
-  #081_執行部マニュアル窓口  C0B65H5FBQ8（マニュアル1本 = スレッド1本）
 ```
 
 `docs/proposals/manual-slide-operations.md` は2026-06-18時点の手順書で、GitHub Pagesへの配置とSlackスレッドでの部門長レビューを前提にしている。配信経路が自前APIに移った現在、④以降は本書が正となる。①〜③の生成と検証、および部門長レビューの回し方は同文書がなお詳しい。
