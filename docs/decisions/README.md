@@ -102,3 +102,7 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | --- | --- | --- |
 | [0001](0001-record-decisions.md) | 判断の理由を ADR としてリポジトリに残す | 採用 |
 | [0002](0002-di-wiring-only.md) | di.go は部品の組み立てだけにし、定期実行などは externals の下に専用のパッケージを作って置く | 採用 |
+| [0007](0007-gas-live-is-source.md) | GAS はライブの Apps Script を元データとし、gas/ はある時点の写しとして扱う | 採用 |
+| [0008](0008-manual-link-by-name.md) | タスクとマニュアルの紐付けは、タスク一覧の URL の列と対応表で行い、キーはマニュアル名にする | 採用 |
+| [0009](0009-mobile-web-only.md) | mobile は Flutter Web だけで配る | 採用 |
+| [0010](0010-prod-auto-restart.md) | 本番のサーバーが止まったときに、自動で起動し直すようにする | 提案 |
