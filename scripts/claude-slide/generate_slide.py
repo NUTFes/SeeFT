@@ -316,7 +316,7 @@ def main() -> int:
     parser.add_argument(
         "--model",
         default=None,
-        help="使用するモデル（例: claude-opus-4-7, claude-sonnet-4-6）。未指定なら Claude Code のデフォルト",
+        help="使用するモデル（例: claude-opus-5-5, claude-sonnet-5-5）。未指定なら Claude Code のデフォルト",
     )
     parser.add_argument(
         "--embed-only",

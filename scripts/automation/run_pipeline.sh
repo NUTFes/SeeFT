@@ -5,7 +5,7 @@
 # そのまま表示する。
 #
 # 使い方:
-#   scripts/automation/run_pipeline.sh <zipのパス> --id <公開ID> --doc-url <ドキュメントURL> [--prompt card-strict] [--model claude-opus-4-7]
+#   scripts/automation/run_pipeline.sh <zipのパス> --id <公開ID> --doc-url <ドキュメントURL> [--prompt card-strict] [--model claude-opus-5-5]
 #   scripts/automation/run_pipeline.sh --manual-dir <既存のdocs/manuals/{名前}/> --id <公開ID> --doc-url <ドキュメントURL>   # 再生成（①スキップ）
 #
 # 例:
@@ -28,7 +28,7 @@
 set -euo pipefail
 
 PROMPT_VARIANT="card-strict"
-MODEL="claude-opus-4-7"
+MODEL="claude-opus-5-5"
 MANUAL_ID=""
 DOC_URL=""
 ZIP_PATH=""
