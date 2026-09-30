@@ -3,7 +3,7 @@
 - 状態：見送り
 - 決めた日：2026-06-18（状態の監視。手順書 `docs/proposals/manual-slide-operations.md` を足したコミット 0f4c921 の日付）、2026-08-31（対応表への記入。PR #487 をマージした日）
 - 決めた人：45th の PM
-- 確信度：記録なし
+- 決めたときの自信：記録なし
 - 出典：`docs/proposals/manual-slide-operations.md`、`docs/proposals/manual-proposal-v4-slides/automation-design.md`、#486、PR #487
 
 ## 背景
