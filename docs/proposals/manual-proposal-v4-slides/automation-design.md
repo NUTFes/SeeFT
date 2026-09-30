@@ -252,7 +252,7 @@ dependencies = [
 
 ### スプシ ID
 
-- 環境変数 or 設定ファイル: `SEEFT_STATUS_SHEET_ID=1jz_870-Id89UYS-00F9ozZUNWL92IPntRqtNYYCRF0c`
+- 環境変数 or 設定ファイル: `SEEFT_STATUS_SHEET_ID=<ステータス管理スプシの ID>`
 - ハードコードせず外部から差し替え可能に
 
 ## 9. 新 PM 引き継ぎ用クイックスタート

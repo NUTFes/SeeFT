@@ -404,7 +404,7 @@ URL文字列をそのまま対応表A列のキーとして使うことも技術�
 
 ### 割り当てスプシは対応表に使わない
 
-マニュアルの割り当てスプシ（`1a2pvM1M8NWQNLNaYnsqTzpB_oGE129-ibpbN3Be1Z1Q`）にもマニュアル名の列があるが、こちらは局ごとに命名規則が違い、`配線マニュアル` `物品移動計画書` のような短い形になっている。タスク一覧のM列は `45th_企画マニュアル_縁日` の完全形なので、両者は機械的に突き合わせられない。対応表のキーはタスク一覧M列に揃える。
+マニュアルの割り当てスプシにもマニュアル名の列があるが、こちらは局ごとに命名規則が違い、`配線マニュアル` `物品移動計画書` のような短い形になっている。タスク一覧のM列は `45th_企画マニュアル_縁日` の完全形なので、両者は機械的に突き合わせられない。対応表のキーはタスク一覧M列に揃える。
 
 ## やってはいけないこと
 
@@ -468,9 +468,9 @@ node_modules/.bin/clasp clone <スクリプトID>
   名簿タスク送信.js      タスク送信本体。TASK_COL_MANUAL_URL = 19（S列）
   調査_マニュアルURL.js  checkManualUrlMapping（紐付けの点検） / fillManualUrlFormulas / inspectManualUrlLookup
 
-スプレッドシート
-  45th_シフト_ver0        1b5FhiuT7M6kcAM_BkFRu1UVLj-Ssbt-VoBjGmEAN3-I
-  マニュアル割り当て      1a2pvM1M8NWQNLNaYnsqTzpB_oGE129-ibpbN3Be1Z1Q
+スプレッドシート（ID は後任に渡す非公開の別紙にある）
+  45th_シフト_ver0
+  マニュアル割り当て
 ```
 
 `docs/proposals/manual-slide-operations.md` は2026-06-18時点の手順書で、GitHub Pagesへの配置とSlackスレッドでの部門長レビューを前提にしている。配信経路が自前APIに移った現在、④以降は本書が正となる。①〜③の生成と検証、および部門長レビューの回し方は同文書がなお詳しい。
