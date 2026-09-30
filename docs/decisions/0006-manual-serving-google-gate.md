@@ -47,7 +47,7 @@ Google に求める権限を最小限にしたのは、この範囲なら、Goog
 - 閲覧と配置：`api/lib/internals/controller/manual_controller.go#manualController.ShowManual`、`api/lib/internals/controller/manual_controller.go#manualController.UploadManual`
 - 道を出すかの判断：`api/lib/router/router.go#router.ProvideRouter`、組み立ては `api/lib/di/di.go#InitializeServer`
 - 技大祭の関係者が `○○.nutfes@gmail.com` のアカウントを持つこと。この形が変わったら、許可するアドレスの形を直す
-- ログインに使う Google の OAuth クライアントを持つアカウントが残っていること。持ち主のアカウントが消えると、マニュアルが開けなくなる（#557）
+- ログインに使う Google の OAuth クライアントがある GCP プロジェクトを、管理できる人がいること。45th の時点では、このプロジェクトは組織に属さず、オーナーは 45th の PM の nutfes アカウント1人だけだった（2026-09-28 に GCP コンソールで確かめた）。このアカウントが消えるとプロジェクトを管理できる人がいなくなり、マニュアルが開けなくなるおそれがある。消す前に、46th の担当者をオーナーに足す（#557）
 
 ## 結果
 
