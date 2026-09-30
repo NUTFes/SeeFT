@@ -47,7 +47,7 @@ admin は、ロードマップを書いた時点で直近 12 か月のコミッ�
 ## 前提
 
 - 方針の本体は `docs/development/test-roadmap.md`
-- repository が `*sql.Rows` を返す作りであること。モックの方式は 0018 に書く
+- repository が `*sql.Rows` を返す作りであること。モックの方式は [0018](0018-test-mock-with-sqlmock.md) にある
 - admin に手を入れないこと。admin を動かし直すなら、この ADR の admin の部分を見直す
 - GAS のコードが、スプレッドシートの API に強く依存していること
 
