@@ -102,3 +102,7 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | --- | --- | --- |
 | [0001](0001-record-decisions.md) | 判断の理由を ADR としてリポジトリに残す | 採用 |
 | [0002](0002-di-wiring-only.md) | di.go は部品の組み立てだけにし、定期実行などは externals の下に専用のパッケージを作って置く | 採用 |
+| [0011](0011-shift-notice-dm-only.md) | シフト変更の Slack 通知はチャンネルに送らず、本人への DM だけにする | 採用 |
+| [0012](0012-slack-id-linked-by-gas.md) | Slack ID の紐付けは GAS の名簿送信で行い、API に一括のバッチは作らない | 採用 |
+| [0013](0013-rescue-dm-sent-immediately.md) | レスキューの対応状況の DM は、まとめずに、書き換えのたびにすぐ送る | 採用 |
+| [0014](0014-manual-open-in-new-tab.md) | マニュアルはアプリに埋め込まず、別タブで開く | 採用 |
