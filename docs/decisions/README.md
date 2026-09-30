@@ -110,3 +110,7 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | [0008](0008-manual-link-by-name.md) | タスクとマニュアルの紐付けは、タスク一覧の URL の列と対応表で行い、キーはマニュアル名にする | 採用 |
 | [0009](0009-mobile-web-only.md) | mobile は Flutter Web だけで配る | 採用 |
 | [0010](0010-prod-auto-restart.md) | 本番のサーバーが止まったときに、自動で起動し直すようにする | 提案 |
+| [0011](0011-shift-notice-dm-only.md) | シフト変更の Slack 通知はチャンネルに送らず、本人への DM だけにする | 採用 |
+| [0012](0012-slack-id-linked-by-gas.md) | Slack ID の紐付けは GAS の名簿送信で行い、API に一括のバッチは作らない | 採用 |
+| [0013](0013-rescue-dm-sent-immediately.md) | レスキューの対応状況の DM は、まとめずに、書き換えのたびにすぐ送る | 採用 |
+| [0014](0014-manual-open-in-new-tab.md) | マニュアルはアプリに埋め込まず、別タブで開く | 採用 |
