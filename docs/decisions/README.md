@@ -114,3 +114,7 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | [0012](0012-slack-id-linked-by-gas.md) | Slack ID の紐付けは GAS の名簿送信で行い、API に一括のバッチは作らない | 採用 |
 | [0013](0013-rescue-dm-sent-immediately.md) | レスキューの対応状況の DM は、まとめずに、書き換えのたびにすぐ送る | 採用 |
 | [0014](0014-manual-open-in-new-tab.md) | マニュアルはアプリに埋め込まず、別タブで開く | 採用 |
+| [0015](0015-manual-html-not-pdf.md) | 解説マニュアル（生成した HTML）は PDF にせず、HTML のまま配信する | 見送り |
+| [0016](0016-simple-manual-pdf-on-drive.md) | 簡易マニュアルは PDF にして Drive に置き、アプリからそこへ移動させる | 採用 |
+| [0017](0017-manual-ops-not-automated.md) | マニュアル運用のスプレッドシートの操作は自動化しない | 見送り |
+| [0018](0018-test-mock-with-sqlmock.md) | テストでは db.Client に go-sqlmock の偽の DB を差し込み、repository の戻り値は変えない | 採用 |
