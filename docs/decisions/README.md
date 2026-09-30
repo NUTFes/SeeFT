@@ -102,3 +102,6 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | --- | --- | --- |
 | [0001](0001-record-decisions.md) | 判断の理由を ADR としてリポジトリに残す | 採用 |
 | [0002](0002-di-wiring-only.md) | di.go は部品の組み立てだけにし、定期実行などは externals の下に専用のパッケージを作って置く | 採用 |
+| [0019](0019-test-outside-in.md) | テストは外側（api と DB）から今の動作を固定し、GAS と API をまたぐ E2E と admin は自動テストにしない | 採用 |
+| [0020](0020-bundle-subset-japanese-font.md) | 技大祭の前は Flutter を上げず、日本語フォントの Regular と Bold を削って同梱する | 採用 |
+| [0021](0021-static-server-threaded-gzip.md) | mobile の静的配信は server.py のまま、並行処理と gzip の圧縮にする | 採用 |
