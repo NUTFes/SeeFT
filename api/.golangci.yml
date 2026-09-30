@@ -2,6 +2,11 @@ version: "2"
 
 linters:
   enable:
+    # gosec は、SeeFT の連結 SQL（abstract.Crud 経由の呼び出しや、DB() からのメソッドチェーン）を
+    # SQL インジェクションとして拾えない。SQL を実行する関数を gosec が決め打ちで持っていて、
+    # 設定から足せないため（2026-09 に v2.26.1 で確認）。0 件でも、連結 SQL が無い証明にはならない。
+    # SQL の守りは AGENTS.md のプレースホルダの規約とレビューで、根本対応は #266。
+    # それでも SSRF・弱い暗号・ファイルパスなどのルールは効くので、有効のままにする。
     - gosec
     - revive
   settings:
@@ -9,10 +14,16 @@ linters:
       severity: warning
     gosec: {}
     govet:
+      # govet は既定で有効なので、linters.enable には書かない。ここでは既定で回らない analyzer を足す。
+      # unusedwrite は誤検知が無く、実際に使われていない書き込みを拾ったので足した（#430/#431）。
+      # shadow（err の再宣言が Go の定石と衝突して誤検知を含む）と fieldalignment（この規模では実利が無い）は見送った。
+      # 見直すときは、件数を測り直してから決める。
       enable:
         - unusedwrite
 
 issues:
+  # 既定の上限（同じ指摘 3 件、1 linter 50 件）だと件数が隠れ、片付けのときに件数を読み違えた（#371）。
+  # 0 は上限なし。
   max-same-issues: 0
   max-issues-per-linter: 0
 

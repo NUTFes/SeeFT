@@ -1,10 +1,16 @@
+# CodeRabbit（PR に付く AI のレビュー）の設定。#273 で入れた。
 language: ja-JP
 reviews:
+  # 指摘の粒度を厳しすぎない程度に抑える。
   profile: chill
   auto_review:
     enabled: true
   tools:
     golangci-lint:
+      # CodeRabbit は golangci-lint をリポジトリの直下から動かし、作業ディレクトリを指定できない。
+      # go.mod が api/ にしか無いため、設定を渡しても失敗することがある（#373）。
+      # Go の lint は .github/workflows/go-lint.yml が本命なので、go-lint が通っていれば、ここの失敗は直さなくてよい。
       config_file: "api/.golangci.yml"
 chat:
+  # CodeRabbit のスレッドに返信すると、CodeRabbit が自動で返信する。返信せずに Resolve するだけなら返信は来ない。
   auto_reply: true
