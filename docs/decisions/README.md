@@ -38,7 +38,7 @@ ADR は、決めた後の記録であると同時に、決めるための資料�
 
 [template.md](template.md) をコピーして、`NNNN-題.md` の名前で置きます。番号は4桁の連番、題は英小文字とハイフンです（例：`0003-slack-dm-notification.md`）。書いたら、下の「一覧」に1行足してください。
 
-**確信度を書きます。** 確信が低いまま決めることもあります。低いと書いておけば、後任が見直すきっかけになります。低いときは、何が分かれば見直すかを「前提」に書きます。
+**決定の信頼度と、その根拠を書きます。** 重要な判断を、低い信頼度のまま決めることもあります。信頼度が低かったことを残しておけば、後任が見直すかを決める手がかりになります。高・中・低だけでなく、なぜその信頼度なのか（確かめたことと、確かめられなかったこと）を添えます。低いときは、何が分かれば見直すかを「前提」に書きます。後から起こした ADR で当時の信頼度が分からなければ「記録なし」とし、何を読んで見つからなかったかを根拠に書きます。
 
 **理由が分からないときは「理由の記録なし」と書きます。** 過去の判断を後から起こすときは、理由が残っていないことがよくあります。推測で埋めると、後の人は推測を事実として読みます。推測を書くときは、推測だと明記してください。
 
@@ -102,6 +102,22 @@ python3 scripts/refcheck/refcheck.py docs/decisions/*.md
 | --- | --- | --- |
 | [0001](0001-record-decisions.md) | 判断の理由を ADR としてリポジトリに残す | 採用 |
 | [0002](0002-di-wiring-only.md) | di.go は部品の組み立てだけにし、定期実行などは externals の下に専用のパッケージを作って置く | 採用 |
+| [0003](0003-maintenance-over-features.md) | SeeFT 本体は新しい機能を足さず、保守性を上げる | 採用 |
+| [0004](0004-develop-merge-by-admin.md) | develop の保護ルールを残したまま、PM が admin 権限で自分の PR をマージする | 採用 |
+| [0005](0005-task-year-id-not-filtered.md) | tasks の seed 由来の行は年度をまたいで使い、名前で引くときに year_id で絞らない | 採用 |
+| [0006](0006-manual-serving-google-gate.md) | マニュアルは SeeFT の API から、nutfes の Google アカウントに限って配信する | 採用 |
+| [0007](0007-gas-live-is-source.md) | GAS はライブの Apps Script を元データとし、gas/ はある時点の写しとして扱う | 採用 |
+| [0008](0008-manual-link-by-name.md) | タスクとマニュアルの紐付けは、タスク一覧の URL の列と対応表で行い、キーはマニュアル名にする | 採用 |
+| [0009](0009-mobile-web-only.md) | mobile は Flutter Web だけで配る | 採用 |
+| [0010](0010-prod-auto-restart.md) | 本番のサーバーが止まったときに、自動で起動し直すようにする | 提案 |
+| [0011](0011-shift-notice-dm-only.md) | シフト変更の Slack 通知はチャンネルに送らず、本人への DM だけにする | 採用 |
+| [0012](0012-slack-id-linked-by-gas.md) | Slack ID の紐付けは GAS の名簿送信で行い、API に一括のバッチは作らない | 採用 |
+| [0013](0013-rescue-dm-sent-immediately.md) | レスキューの対応状況の DM は、まとめずに、書き換えのたびにすぐ送る | 採用 |
+| [0014](0014-manual-open-in-new-tab.md) | マニュアルはアプリに埋め込まず、別タブで開く | 採用 |
+| [0015](0015-manual-html-not-pdf.md) | 解説マニュアル（生成した HTML）は PDF にせず、HTML のまま配信する | 見送り |
+| [0016](0016-simple-manual-pdf-on-drive.md) | 簡易マニュアルは PDF にして Drive に置き、アプリからそこへ移動させる | 採用 |
+| [0017](0017-manual-ops-not-automated.md) | マニュアル運用のスプレッドシートの操作は自動化しない | 見送り |
+| [0018](0018-test-mock-with-sqlmock.md) | テストでは db.Client に go-sqlmock の偽の DB を差し込み、repository の戻り値は変えない | 採用 |
 | [0019](0019-test-outside-in.md) | テストは外側（api と DB）から今の動作を固定し、GAS と API をまたぐ E2E と admin は自動テストにしない | 採用 |
 | [0020](0020-bundle-subset-japanese-font.md) | 技大祭の前は Flutter を上げず、日本語フォントの Regular と Bold を削って同梱する | 採用 |
 | [0021](0021-static-server-threaded-gzip.md) | mobile の静的配信は server.py のまま、並行処理と gzip の圧縮にする | 採用 |
