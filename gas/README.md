@@ -58,6 +58,13 @@ cat *.js > /tmp/all.js && node --check /tmp/all.js
 "$repo_root/gas/node_modules/.bin/clasp" push -f
 ```
 
+レスキューのウェブアプリ（`rescue/`）は、デプロイごとに版を固定している。`clasp push` だけでは本番の `/exec` は変わらない。push のあと、`clasp deployments`（clasp 3.3.0 の正式名は `list-deployments`）で今の版を確かめ、同じデプロイ ID に新しい版を付け直す。下の `clasp deploy` は、正式名 `create-deployment` の別名である。前の版に戻すときも、同じデプロイ ID のまま、版だけを戻す。新しくデプロイすると別の URL になり、本番の API の `RESCUE_GAS_URL` が古い URL を指したままになる。デプロイ ID は別紙にある。
+
+```bash
+"$repo_root/gas/node_modules/.bin/clasp" deploy -i <デプロイ ID> -d "<説明>"
+"$repo_root/gas/node_modules/.bin/clasp" deploy -i <デプロイ ID> -V <戻す版>
+```
+
 push が通ったら、同じファイルをリポジトリへ写して commit する。これが「同期」にあたる。
 
 ```bash
