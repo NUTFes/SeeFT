@@ -322,7 +322,9 @@ for rows.Next() {                  // 行を1つずつ読む
 
 **何か。** Flutter は Google の UI フレームワークで、言語は Dart です。1つのコードから Android / iOS / Web などを作れますが、**SeeFT は Web としてだけ動かしています。** 参加者はアプリをインストールせず、スマホのブラウザで URL を開きます。`mobile/` の下に `android/`・`ios/`・`macos/`・`windows/` も残っていますが、使っていません。
 
-**Flutter のバージョンは [fvm](https://fvm.app/) で固定しています**（`mobile/.fvmrc` で 3.27.3）。`flutter` コマンドは必ず `fvm flutter ...` の形で打ってください。素の `flutter` を打つと、手元に入っている別のバージョンが動き、依存ライブラリの解決やビルド結果が変わります。Flutter 自体を上げる作業は、他の変更と混ぜず、専用のブランチで行います（#514）。
+**Flutter のバージョンは [fvm](https://fvm.app/) で固定しています**（`mobile/.fvmrc` で 3.27.3）。`flutter` コマンドは必ず `fvm flutter ...` の形で打ってください。素の `flutter` を打つと、手元に入っている別のバージョンが動き、依存ライブラリの解決やビルド結果が変わります。バージョンを書いている場所は3か所あり、正は `mobile/.fvmrc` です。本番のコンテナのビルド（`mobile/Dockerfile` の `FLUTTER_VERSION`）と CI（`.github/workflows/flutter-lint.yml` の `flutter-version`）は fvm を使わず、それぞれに同じ値を書いています。上げるときは3か所を同時に上げてください。1か所だけ上げると、手元・CI・本番で別のバージョンが動きます。
+
+Flutter 自体を上げる作業は、lint の導入や機能の追加などのほかの変更と混ぜず、専用のブランチで行います（#514）。3.27 から 3.35 のように大きく上げると、壊れたときに、原因がバージョンなのか一緒に入れた変更なのかを切り分けられなくなるためです。
 
 **画面は Widget の木です。** 画面のすべて（文字、ボタン、余白、並べ方）が Widget で、Widget の中に Widget を入れて画面を組み立てます。
 
@@ -515,6 +517,7 @@ cd mobile && fvm flutter test
   - `mobile/` を変えたとき：`flutter analyze --fatal-infos`（`flutter-lint.yml`。最も軽い info レベルの指摘でも落ちる）。**テスト（`flutter test`）は走りません。** mobile を変えたら、10節のコマンドで手元で実行してください。45th では、別々の PR で変わったボタンの文言とテストが食い違ったまま develop に入り、マージ後に気づきました（#516）
   - `gas/` を変えたとき：GAS のコードを検査するものは走らない
   - どの PR でも：ADR（`docs/decisions/`）に書いた前提のファイルや関数がまだあるかの点検（`docs-refcheck.yml`）
+- **lint は言語ごとに選んでいます。** Go は golangci-lint、Dart は `flutter analyze`（flutter_lints のルール）です。ESLint は JavaScript 専用なので、Go や Dart には使えません。GAS（JavaScript）には今は lint がありません（`gas/package.json` に入っているのは clasp だけです）。入れるなら ESLint ですが、`gas/` はある時点の写しなので（[ADR 0007](../decisions/0007-gas-live-is-source.md)）、clasp でライブの版を取ってきてから、それに対して実行します。
 - **CodeRabbit**：PR に AI がレビューコメントを付けます。指摘は参考です。すべてに従う必要はなく、スコープ外のものは理由を書いて見送って構いません。
 - **Git**：issue を立て、`種類/名前/issue番号/内容` のブランチで作業し、PR を出します。種類は `feat`（機能）・`fix`（修正）・`docs`（文書）です。コミットメッセージは日本語で、`feat:` / `fix:` / `docs:` を付けます。PR はスカッシュマージ（コミットを1つにまとめる）で develop に入り、マージするのは PM です。詳しくは [開発の進め方](workflow.md)。
 

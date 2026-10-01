@@ -225,6 +225,20 @@ curl -X PUT "https://seeft-api.nutfes.net/manuals/en-nichi" -H "Authorization: B
 
 作業が終わったらターミナルを閉じる。環境変数はそのウィンドウにしか残らないため、閉じれば消える。
 
+### AI のツールに頼むとき
+
+Claude などの AI のツールに作業を頼むときも、トークンを会話に貼らない。会話のログに平文で残るためである。自分のターミナルで、入力を表示しない形で読み、自分だけが読めるファイルに保存する。
+
+```bash
+mkdir -p ~/.config/seeft && chmod 700 ~/.config/seeft && printf 'アップロードトークンを貼り付けてEnter: ' && read -rs t && echo && (umask 077 && printf '%s' "$t" > ~/.config/seeft/manual-upload-token) && unset t
+```
+
+ツールには、そのファイルを環境変数に読み込んでから実行するように頼む。トークンそのものは会話に出てこない。
+
+```bash
+MANUAL_UPLOAD_TOKEN="$(cat ~/.config/seeft/manual-upload-token)" python3 scripts/automation/upload_manual.py --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit" docs/manuals/45th_企画マニュアル_縁日
+```
+
 ### レスポンス
 
 成功すると `201 Created` で、次のJSONが返る。

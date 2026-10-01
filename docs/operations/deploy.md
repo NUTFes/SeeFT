@@ -70,6 +70,12 @@ git diff --name-only HEAD..origin/develop
 | `postgresql/` | **この手順ではない。** DB の変更を伴うので、中身を確かめてから別に計画する |
 | `gas/` | コンテナとは関係ない。`clasp` で反映する（[gas/README.md](../../gas/README.md)） |
 
+**DB の変更があるか（`postgresql/` の行に当たるか）は、PR の最終版の差分で確かめる。** ほかの人や AI のツールの「DB の変更は無い」という説明を、そのまま信じない。途中のコミットで足したファイルを、最後のコミットで消している PR もある（45th の #546 は、途中でテーブルを足すファイルを入れ、最後に消していた）。PR ごとに、最終版で変わるファイルの一覧を見る。
+
+```bash
+gh pr view <PR の番号> --json files --jq '.files[].path'
+```
+
 ### 2. ディスクの空きを確かめる
 
 ```bash
