@@ -1,3 +1,5 @@
+# Go（api/）の lint。golangci-lint の設定は api/.golangci.yml。
+# Go の lint はこの CI が本命。CodeRabbit も golangci-lint を回すが、補助として扱う（.coderabbit.yaml のコメント）。
 name: go-lint
 
 on:
@@ -24,5 +26,8 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: v2.12
+          # go.mod は api/ にしか無いので、api/ で動かす。
           working-directory: api
+          # PR が新しく持ち込んだ違反だけで落とす。導入したとき既存の違反が 74 件あり、全部で落とすと
+          # どの PR も通らなくなるため、段階的に厳しくする形にした（#375）。
           only-new-issues: true
