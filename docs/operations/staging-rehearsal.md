@@ -16,7 +16,7 @@
 | 外からの入り口 | cloudflared のクイックトンネル（起動のたびに URL が変わる） | Cloudflare の名前付きトンネル（`seeft-api.nutfes.net` など） |
 | アプリ | 検証環境には立てず、手元の Mac から起動する | コンテナで配信 |
 
-このため、検証環境では見つからない問題がある。ビルドの漏れ、DB への接続（SSL・接続プール・ポート）、本番の環境変数の誤りは、本番でしか確かめられない。本番のデプロイ後の確認は [本番へのデプロイ](deploy.md) にある。
+このため、検証環境では見つからない問題がある。ビルドの漏れ、DB への接続（SSL・接続プール・ポート）、本番の環境変数の誤りは、本番でしか確かめられない。本番の DB への接続は、接続プール（PgBouncer）、HAProxy、Postgres の順に通る（[本番へのデプロイ](deploy.md) の「本番の構成」）。DB への接続の振る舞い（接続プールの中で DDL が失敗する、など）まで検証環境で確かめたいときは、この3段を同じ順につないで再現する。compose の中の PostgreSQL に直接つなぐだけでは、本番と同じ失敗は起きない。本番のデプロイ後の確認は [本番へのデプロイ](deploy.md) にある。
 
 ## 手順
 
@@ -88,7 +88,7 @@ SELECT task, year_id, count(*) FROM tasks GROUP BY task, year_id HAVING count(*)
 
 ### 5. 手元の Mac からアプリを起動する
 
-アプリは検証環境に立てない。API が通信を許可している相手（CORS）が `http://localhost:45029` なので、手元でこのポートで起動する必要がある。
+アプリは検証環境に立てない。API が通信を許可している相手（CORS）が `http://localhost:45029` なので、手元でこのポートで起動する必要がある。検証用のサーバーからアプリを配信すると、ブラウザが送る Origin が `http://<検証用のサーバーのアドレス>:45029` になる。許可する相手は `api/lib/externals/server/server.go#RunServer` の `AllowOrigins` に書いた決まったリストで、ほかの Origin を許す仕組み（`AllowOriginFunc`）は無い。そのため、許可するには API のコードを書き換えて作り直す必要がある。
 
 ```bash
 cd mobile && fvm flutter run -d chrome --web-port 45029 --dart-define-from-file=env/.env --dart-define=API_BASE_URL=<トンネルのURL>
