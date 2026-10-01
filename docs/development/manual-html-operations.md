@@ -194,10 +194,10 @@ PUT https://seeft-api.nutfes.net/manuals/{id}
 `--doc-url` にはGoogleドキュメントの共有URLを渡す。⑤で対応表のB列に入れる値になる。
 
 ```bash
-python3 scripts/automation/upload_manual.py --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit" docs/manuals/45th_企画マニュアル_縁日
+python3 scripts/automation/upload_manual.py --base-url https://seeft-api.nutfes.net --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit" docs/manuals/45th_企画マニュアル_縁日
 ```
 
-トークンは訊かれるので貼り付ける。入力は画面にもシェルの履歴にも残らない。環境変数 `MANUAL_UPLOAD_TOKEN` を設定してあればそちらが使われる。
+送り先は `--base-url` で明示する（理由は下の「AI のツールに頼むとき」）。トークンは訊かれるので貼り付ける。入力は画面にもシェルの履歴にも残らない。環境変数 `MANUAL_UPLOAD_TOKEN` を設定してあればそちらが使われる。
 
 送信前にHTMLが `</html>` で閉じているかとサイズ上限を検査するので、壊れたファイルや大きすぎるファイルを配信してしまうことはない。
 
@@ -233,10 +233,10 @@ Claude などの AI のツールに作業を頼むときも、トークンを会
 mkdir -p ~/.config/seeft && chmod 700 ~/.config/seeft && printf 'アップロードトークンを貼り付けてEnter: ' && read -rs t && echo && (umask 077 && printf '%s' "$t" > ~/.config/seeft/manual-upload-token) && unset t
 ```
 
-ツールには、そのファイルを環境変数に読み込んでから実行するように頼む。トークンそのものは会話に出てこない。
+ツールには、そのファイルを環境変数に読み込んでから実行するように頼む。トークンそのものは会話に出てこない。送り先は `--base-url` で明示する。付けないと、環境変数 `SEEFT_API_BASE_URL` に入っている値が既定の URL より先に使われ、https ならどのホストにもトークンが送られるためである。
 
 ```bash
-MANUAL_UPLOAD_TOKEN="$(cat ~/.config/seeft/manual-upload-token)" python3 scripts/automation/upload_manual.py --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit" docs/manuals/45th_企画マニュアル_縁日
+MANUAL_UPLOAD_TOKEN="$(cat ~/.config/seeft/manual-upload-token)" python3 scripts/automation/upload_manual.py --base-url https://seeft-api.nutfes.net --id en-nichi --doc-url "https://docs.google.com/document/d/xxxx/edit" docs/manuals/45th_企画マニュアル_縁日
 ```
 
 ### レスポンス
