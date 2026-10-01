@@ -512,7 +512,7 @@ cd mobile && fvm flutter test
 - **Makefile**：よく使う docker compose のコマンドに短い名前を付けたものです。一覧はリポジトリ直下の `Makefile` を開くのが確実です。Mac 用の compose ファイル（`docker-compose.mac.yml`）を使う `mac-` 付きのコマンドもあります。
 - **GitHub Actions（CI）**：PR を出すと、変更した場所に応じて次が走ります。
   - `api/` を変えたとき：golangci-lint（`go-lint.yml`。PR で新しく増えた指摘だけを見る）と `go test`（`go-test.yml`）
-  - `mobile/` を変えたとき：`flutter analyze --fatal-infos`（`flutter-lint.yml`。最も軽い info レベルの指摘でも落ちる）
+  - `mobile/` を変えたとき：`flutter analyze --fatal-infos`（`flutter-lint.yml`。最も軽い info レベルの指摘でも落ちる）。**テスト（`flutter test`）は走りません。** mobile を変えたら、10節のコマンドで手元で実行してください。45th では、別々の PR で変わったボタンの文言とテストが食い違ったまま develop に入り、マージ後に気づきました（#516）
   - `gas/` を変えたとき：GAS のコードを検査するものは走らない
   - どの PR でも：ADR（`docs/decisions/`）に書いた前提のファイルや関数がまだあるかの点検（`docs-refcheck.yml`）
 - **CodeRabbit**：PR に AI がレビューコメントを付けます。指摘は参考です。すべてに従う必要はなく、スコープ外のものは理由を書いて見送って構いません。
@@ -524,6 +524,8 @@ cd mobile && fvm flutter test
 - lint の指摘を読み、無効化のコメントで抑えるのではなく原因を直すこと
 - workflow ファイルを読める程度の YAML
 - Git：ブランチ、merge、コンフリクトの解消、1つの PR に1つの目的
+
+**mobile の lint の違反を `dart fix` で直せるかは、ルール名からは分かりません。** `dart fix` が直せるのは、その指摘に書き換えの手順が用意されているものだけで、Flutter 自身の古い書き方の指摘でも、用意されていないことがあります。45th では「自動で直せる」と分類した違反を新しく入った人に割り振ったところ、`dart fix` が何も直せませんでした（#288）。割り振る前に、`fvm flutter pub get` のあとで `fvm flutter analyze` の件数と `fvm dart fix --dry-run` の件数をルールごとに比べ、どこまで自動で直せるかを確かめてください（#286）。
 
 ---
 
