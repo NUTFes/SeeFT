@@ -72,7 +72,11 @@ query := "SELECT * FROM bureaus WHERE id = $1"
 rows, err := db.QueryContext(ctx, query, id)
 ```
 
-文字列連結（`"... " + id`）は SQL インジェクション脆弱性のため禁止。
+文字列連結（`"... " + id`）は SQL インジェクション脆弱性のため禁止。golangci-lint の gosec は SeeFT の連結 SQL（`abstract.Crud` 経由や、`DB()` からのメソッドチェーン）を検出できない。lint が通っても連結が無い証明にはならないので、レビューで確かめる。
+
+**INSERT した行の id をあとで使うときは、`RETURNING id` で受け取る**
+
+作成のあとに最新の行（`ORDER BY id DESC LIMIT 1` など）を読み直すと、同時に作られた別の行を掴む（#536）。id を使わない INSERT（`actionLogRepository.Create` など）は、これまでどおり実行するだけでよい。`user_repository.go` の `Create` などが今の書き方。
 
 **エラーレスポンスは JSON 形式で返す**
 
@@ -113,7 +117,7 @@ if (!mounted) return;
 setState(() => _data = data);
 ```
 
-dispose 後に `setState` を呼ぶと例外になるため必須。
+dispose 後に `setState` を呼ぶと例外になるため必須。失敗の分岐（`else`・`catch`）で `await` のあとに `setState` や `ScaffoldMessenger.of(context)` を呼ぶときも同じ。`flutter analyze` の `use_build_context_synchronously` が0件でも、失敗の分岐が抜けていることがある（PR #383）。
 
 **ログは `logger`、`print` 禁止**
 
@@ -192,7 +196,8 @@ try {
 ### Always Do
 - 新規 SQL はプレースホルダで書く
 - 設定値（API URL・シークレット）は環境変数 / `PropertiesService`（GASのみ）から取得
-- Flutter で非同期またぎ後の `setState()` 前に `mounted` チェック
+- INSERT した行の id をあとで使うときは、`RETURNING id` で受け取る
+- Flutter で非同期またぎ後の `setState()` 前に `mounted` チェック（失敗の分岐も）
 - GAS で `LockService` 取得後は `finally` で `releaseLock()`
 - 空リストは `[]Type{}` を返す
 - 機能の採否や設計・運用の方針を決めたら `docs/decisions/` に ADR を書く
@@ -200,11 +205,12 @@ try {
 ### Ask First
 - 新規ライブラリの導入（特に Flutter の状態管理系）
 - 既存 entity の JSON キー命名変更（mobile / gas に影響）
-- API レスポンス形式の変更
+- API レスポンス形式の変更（キーを変えるなら、クライアントは新旧どちらの形でも受けられるようにする。マージしても本番の反映までは古い API が動き続けるため。#479）
 - DB スキーマ変更（マイグレーション）
 
 ### Never Do
 - SQL を文字列連結で組み立てる
+- 適用済みの migration のファイルを消す・書き換える（消すと、`schema_migrations` に記録された版のファイルが見つからず migrate が止まる。書き換えても、適用済みの DB には反映されない）
 - API URL やシークレットをハードコードする
 - `package:http` を `mobile/lib/utils/api.dart` 以外で import する
 - `print()` を新規コードで使う（`mobile/lib/`）
@@ -219,3 +225,4 @@ try {
 - **JSON キー命名**: 古い entity は camelCase、新しい entity は snake_case。クライアント影響のため既存維持
 - **エラーレスポンス**: 古い controller は `return err`、新しいものは map 形式
 - **空リスト返却**: 一部 UseCase が `nil` を返す箇所あり（順次 `[]Type{}` へ）
+- **作成後の最新行の読み直し**: place・task・review の UseCase が、作成後に `FindNewRecord` で最新の行を読み直している（新規コードは `RETURNING id`）
