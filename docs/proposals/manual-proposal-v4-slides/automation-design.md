@@ -156,7 +156,7 @@ sheets_client.read_row(manual_name)
 
 - git の事故防止（誤コミットで認証情報が公開される事態を避ける）
 - 新 PM 引き継ぎ時に「このディレクトリをコピーすれば動く」状態にできる
-- メモリ `project/ignore_convention.md` の「ブランチ依存生成物は `.git/info/exclude` に寄せる」原則を、認証情報には拡張適用
+- 認証情報は、追跡から外すだけでなく、リポジトリの中に置かない（追跡から外すファイルの置き場所の決まりは `docs/development/workflow.md` の「3. ブランチ」）
 
 ### 5-3. 初回起動フロー
 
