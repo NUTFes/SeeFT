@@ -62,7 +62,7 @@ scripts/automation/run_pipeline.sh docs/manuals/_zips/45th_企画マニュアル
 
 判断が必要な2箇所で確認を挟む。①の後に「マニュアル名がタスク一覧M列と一致しているか」、③の後に「内容を見て問題ないか」。どちらも間違えたまま進むと後で静かに失敗する。
 
-- `--prompt` / `--model` で②の設定を変えられる（既定は `card-strict` / `claude-opus-4-7`）
+- `--prompt` / `--model` で②の設定を変えられる（既定は `card-strict` / `claude-opus-5-5`）
 - ④のトークンは `MANUAL_UPLOAD_TOKEN` を設定しておけば対話入力なしで進む。**`--yes` は確認を飛ばすだけでトークン入力は省略しないため、無人実行するならこの環境変数の設定が前提になる**
 - ⑤（シフトスプシへの紐付け）は対象外。最後に④の出力（対応表に貼る行）が表示されるので、それを「⑤ タスクに紐づける」の手順1で貼る
 
@@ -119,7 +119,7 @@ uv sync --project scripts/claude-slide
 変換を実行する。`card-strict` は本文を一字一句変えないプロンプトで、元Docが執行部と部門長の間で調整済みであることを前提にしている。
 
 ```bash
-uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide.py --prompt card-strict --model claude-opus-4-7 docs/manuals/45th_企画マニュアル_縁日
+uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide.py --prompt card-strict --model claude-opus-5-5 docs/manuals/45th_企画マニュアル_縁日
 ```
 
 同じディレクトリに `slide_claude.card-strict.html` が出る。1本あたり3〜6分かかる。

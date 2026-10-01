@@ -161,7 +161,7 @@ def main() -> int:
     print("    1. 上の「名前」がタスク一覧M列の値と完全に一致するか確認する")
     print("       （末尾スペース・全角アンダースコアなどで静かに外れる）")
     print(f"    2. uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide.py \\")
-    print(f"         --prompt card-strict --model claude-opus-4-7 docs/manuals/{name}")
+    print(f"         --prompt card-strict --model claude-opus-5-5 docs/manuals/{name}")
     print("=== 完了 ===")
     return 0
 
