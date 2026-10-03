@@ -25,7 +25,7 @@ id2(Controller) -- Text --> id1(Router)
 [GET] `/`
 
 ### 内部仕様
-`e.GET("/", ...)` で controller に渡す
+`e.GET("/", ...)`でcontrollerに渡す
 
 ### 実装箇所
 `api/lib/router/router.go`
@@ -36,7 +36,7 @@ id2(Controller) -- Text --> id1(Router)
 
 ### 内部仕様
 `IndexHealthcheck(c echo.Context) error`
-Status200で以下のテキストを返す（JSON ではない）
+Status200で以下のテキストを返す（JSONではない）
 
 ```text
 healthcheck: ok
