@@ -26,7 +26,7 @@ Claude Agent SDK (claude_agent_sdk パッケージ)
 
 ## 2. インポートする 5 つのもの
 
-Agent SDK は API 表面積が小さく作られていて、ほぼこれだけ覚えれば良い:
+Agent SDK は API 表面積が小さく作られていて、ほぼ次の 5 つだけ覚えれば良い。
 
 ```python
 from claude_agent_sdk import (
@@ -66,7 +66,7 @@ Claude Code は本来「Read/Write/Bash 等のツールを使ってコードを�
 
 Claude Code は内部で「ツールを使って試行錯誤」する設計。テキスト返答 1 回でも、内部で複数 turn (思考 → ツール試行 → 結果見て次の手) を経ることがある。disallowed_tools で全部ブロックしてても、Claude が「Read を使おうとして拒否される」を何回も繰り返すと turn を消費する。
 
-generate_slide.py には経験則として以下のコメントがある:
+generate_slide.py には経験則として次のコメントがある。
 
 ```python
 # max_turns を 20 に: 大きい入力（55KB+ markdown）で Claude が tool 試行する場合に
@@ -98,10 +98,10 @@ async for message in query(prompt=user_text, options=options):
 return result_text, usage
 ```
 
-ポイント:
+ポイントは次のとおり。
 
 - `query()` は **async generator**。`await` で 1 個ずつ取得ではなく、`async for` でストリーミング取得
-- 1 回のリクエストで複数 message が流れてくる:
+- 1 回のリクエストで複数 message が流れてくる。
   - `AssistantMessage` → Claude のテキスト出力 (1 回または複数回)
   - `ResultMessage` → 最後に必ず 1 回、集計情報 (duration, num_turns, cost)
 - `message.content` は **ブロックのリスト**。`TextBlock` 以外 (将来的に思考ブロックなど) が混入する可能性があるので、明示的に `isinstance(block, TextBlock)` で絞る
@@ -118,13 +118,13 @@ response_text, usage = anyio.run(
 )
 ```
 
-`anyio.run()` で async 関数を同期的に起動。`asyncio.run` でも同じことができるが、`anyio` を使ってるのは Agent SDK が anyio ベースだから合わせている。
+`anyio.run()` で async 関数を同期的に起動。`asyncio.run` でも同じことができるが、`anyio` を使っているのは、Agent SDK が anyio ベースなのに合わせたため。
 
 ### 3-3. ResultMessage の使いどころ
 
 `total_cost_usd` は Anthropic API 換算の推定値。Max プラン経由でも、参考値として API キー使用時のコスト相当が出る。**「Max プラン共用で API 課金相当をどれくらい節約できているか」を測れる**。
 
-`is_error` フラグは現状コードで参照されていない。本番運用に乗せる前に下記を足したい:
+`is_error` フラグは現状コードで参照されていない。本番運用に乗せる前に、次の処理を足したい。
 
 ```python
 if usage.get("is_error"):
@@ -133,7 +133,7 @@ if usage.get("is_error"):
 
 ## 4. プロンプトを `.md` ファイルから読む
 
-プロンプトは Python 文字列リテラルではなく `.claude/manual-prompt-card.md` のような Markdown ファイルから読む。`_load_prompt_from_md()` がその実装:
+プロンプトは Python 文字列リテラルではなく `.claude/manual-prompt-card.md` のような Markdown ファイルから読む。`_load_prompt_from_md()` がその実装。
 
 ```python
 def _load_prompt_from_md(path: str) -> tuple[str, str]:
@@ -155,7 +155,7 @@ def _load_prompt_from_md(path: str) -> tuple[str, str]:
 ### なぜこのパターンが良いか
 
 - プロンプトを git で diff 可能に管理できる
-- Markdown のシンタックスハイライトが効くのでエディタの編集体験が良い
+- Markdown のシンタックスハイライトが付くのでエディタの編集体験が良い
 - プロンプトには `## オーバーライド` `## 厳守事項` 等の**解説セクション**を書け、コードブロック内だけが実際に AI に渡る
 - 「ドキュメントとしてのプロンプト」と「実行されるプロンプト」を同じファイルで管理できる
 
@@ -166,7 +166,7 @@ def _load_prompt_from_md(path: str) -> tuple[str, str]:
 - `.claude/manual-prompt-card-strict.md` — 文章不変ポリシー版
 - `.claude/manual-verify-prompt.md` — 検証用
 
-`generate_slide.py` の `PROMPT_VARIANTS` 辞書で対応関係を管理している。新しいプロンプトを追加するには:
+`generate_slide.py` の `PROMPT_VARIANTS` 辞書で対応関係を管理している。新しいプロンプトを追加する手順は次のとおり。
 
 1. `.claude/<name>.md` を作る (4-backtick ブロック 2 つを含む)
 2. `PROMPT_VARIANTS` に `"<key>": "<name>.md"` を追加
@@ -187,11 +187,11 @@ def extract_html(response: str) -> str:
     return response.strip()
 ```
 
-fallback として `<!DOCTYPE html>...</html>` 直接抽出も。AI 応答のフォーマットを 100% 信用しない健全な防衛コード。
+fallback として `<!DOCTYPE html>...</html>` を直接抜き出す処理もある。AI 応答のフォーマットを 100% は信用しないための、妥当な防御のコード。
 
 ## 6. 認証 (コードに出てこないが必須)
 
-Agent SDK が動くための前提条件:
+Agent SDK が動くための前提条件は次のとおり。
 
 ```bash
 claude login
@@ -200,7 +200,7 @@ claude login
 # 以降、claude_agent_sdk.query() は自動でそのトークンを読む
 ```
 
-運用ルール (`project/manual_slide_pipeline.md` から):
+運用ルールは次のとおり (`project/manual_slide_pipeline.md` から)。
 
 - 1 Mac = 1 アカウント運用、同時複数 Mac 使用を避ける
 - ベトナム期間中は他デバイスでログアウト
@@ -215,7 +215,7 @@ claude login
 
 - **API キー課金ゼロ** (Max プラン容量で吸収)
 - **API 表面積が小さく覚えやすい** (`query` と 4 つの型だけ)
-- **プロンプトを `.md` で管理** → git diff・PR レビューが効く
+- **プロンプトを `.md` で管理** → git diff・PR レビューの対象にできる
 - **disallowed_tools パターン** → Claude Code の Agent 特性を逆手に取って「テキスト返答に専念させる」
 - **生成と検証で同じ構造** → 学習コストが運用全体で 1 つで済む
 
@@ -224,11 +224,11 @@ claude login
 - **Mac が必要**: Claude Code CLI が動くマシン依存。CI や VPS では動かしにくい
 - **`max_turns` チューニング**: ツール拒否で turn を消費する特性が直感に反する。たまに `flaky` 失敗が出る
 - **`is_error` 未活用**: 現コードはエラー時の挙動が緩い。本番化前に強化したい
-- **Anthropic TOS グレー領域**: 個人サブスクをチームで共用する運用は厳密には「単一ユーザー前提」と擦れる (詳細: `manual_slide_pipeline.md`)
+- **Anthropic TOS グレー領域**: 個人サブスクをチームで共用する運用は厳密には「単一ユーザー前提」と食い違う (詳細: `manual_slide_pipeline.md`)
 
 ## 8. 別バックエンド (API キー方式) への移行コスト
 
-万一サブスク共用が運用できなくなった場合、`scripts/generate_manual_slide.py` (Anthropic API キー版) に切り替える。移行で書き換える部分:
+万一サブスク共用が運用できなくなった場合、`scripts/generate_manual_slide.py` (Anthropic API キー版) に切り替える。移行で書き換える部分は次のとおり。
 
 | 部分 | Agent SDK 版 | API キー版 (移行後) |
 | --- | --- | --- |

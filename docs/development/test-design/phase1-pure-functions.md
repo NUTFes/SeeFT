@@ -48,11 +48,11 @@
 5. **要素1個は単一キー・単一要素になり全フィールドが素通しされる**（境界値）
    - 入力: `` logs := []entity.ActionLog{{ID: 1, ShiftID: 55, UserID: 42, DateID: 7, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[]}`), IsSent: false, CreatedAt: time.Date(2026, 7, 8, 12, 0, 0, 0, time.UTC)}} ``
    - 期待値: `len(got) == 1、got["42_7"] が長さ1のスライスで、その唯一の要素が入力の entity.ActionLog と reflect.DeepEqual で完全一致（ShiftID・ActionType・DiffPayload・CreatedAt 等が改変されずに素通しされる）`
-   - 根拠: 最小構成の正常動作と、UserID/DateID 以外のフィールドを一切書き換えないパススルー性の回帰防止。後段の processGroup は DiffPayload や ShiftID をそのまま使うため改変されると通知内容が壊れる
+   - 根拠: 最小構成の正常動作と、UserID/DateID 以外のフィールドを一切書き換えないパススルー性の回帰防止。後段の processGroup は DiffPayload や ShiftID をそのまま使うため、改変されると通知内容がおかしくなる
 6. **ゼロ値のActionLogはキー "0_0" にグルーピングされる**（境界値）
    - 入力: `logs := []entity.ActionLog{{}}（全フィールドゼロ値。UserID=0, DateID=0, DiffPayload=nil）`
    - 期待値: `len(got) == 1、got["0_0"] == []entity.ActionLog{{}}（panic せず、nil の DiffPayload もそのまま保持）`
-   - 根拠: ゼロ値入力での安全性の固定。DB スキャン異常等で UserID/DateID が 0 のまま流れてきても本関数は落ちず "0_0" に集約する、という現状の防波堤なしの挙動を明示する
+   - 根拠: ゼロ値入力での安全性の固定。DB スキャン異常等で UserID/DateID が 0 のまま流れてきても本関数は落ちず "0_0" に集約する、という現状のガードなしの挙動を明示する
 7. **キー書式 "%d_%d" により (1,23) と (12,3) が衝突しない**（境界値）
    - 入力: `logs := []entity.ActionLog{{ID: 1, UserID: 1, DateID: 23}, {ID: 2, UserID: 12, DateID: 3}}`
    - 期待値: `len(got) == 2、キー "1_23" と "12_3" がそれぞれ存在し、各スライスの長さは 1（1つのキーに混ざらない）`
@@ -60,7 +60,7 @@
 8. **負のIDでも検証なしでそのままキー化される**（異常系）
    - 入力: `logs := []entity.ActionLog{{ID: 1, UserID: -1, DateID: -2}}`
    - 期待値: `len(got) == 1、got["-1_-2"] が長さ1のスライスとして存在する（エラーにも panic にもならず、負値がそのままキーに埋め込まれる）`
-   - 根拠: 不正なドメイン値に対する現状のノーバリデーション挙動の固定。なお生成キー "-1_-2" はアンダースコアが1個のため呼び出し元の Split/Atoi（L108-117）でも正しく -1, -2 に復元でき、下流も壊れないことを確認済み
+   - 根拠: 不正なドメイン値に対する現状のノーバリデーション挙動の固定。なお生成キー "-1_-2" はアンダースコアが1個のため呼び出し元の Split/Atoi（L108-117）でも正しく -1, -2 に復元でき、下流の処理もおかしくならないことを確認済み
 
 実行検証: worktree の api/lib/usecase/ に使い捨てテスト design_verify_groupnotificationsbyuseranddate_test.go を作成し、(&notificationUseCase{}) ゼロ値レシーバから GroupNotificationsByUserAndDate を直接呼び出して全8ケースをサブテストとして実装。cd api && go test ./lib/usecase/... -run TestDesignVerifyGroupNotificationsByUserAndDate -v で実行し、8ケース全て初回 PASS（8/8 起案どおり、修正 0件、削除 0件、needs_judgment 0件）。非nil空map（空/nil スライス両方）、挿入順保持、フィールド素通し（DiffPayload/CreatedAt 含む DeepEqual 完全一致）、キー "0_0"・"1_23"/"12_3" 非衝突・"-1_-2" の生成も全て実挙動で裏取り済み。テストファイルは削除し、git status --porcelain が空（clean）であることを確認。commit/push は行っていない。
 
@@ -68,12 +68,12 @@
 
 `api/lib/usecase/notification_usecase.go:317`
 
-ActionLog のスライスを、各ログの ShiftID をキーに shiftMap から引いた ShiftAdmin.TimeID の昇順で並べ替えて新しいスライスとして返す。shiftMap にキーが無いログは結果から黙って除外されるため、ソートとフィルタを兼ねる。レシーバ n のフィールドには一切依存しない純関数であり、テストではゼロ値レシーバ &notificationUseCase{} で呼び出せる（参照フィールドは ActionLog.ShiftID と ShiftAdmin.TimeID のみ）。全9ケースを実コード実行で裏取り済み。
+ActionLog のスライスを、各ログの ShiftID をキーに shiftMap から引いた ShiftAdmin.TimeID の昇順で並べ替えて新しいスライスとして返す。shiftMap にキーが無いログはエラーもログも出さずに結果から除外されるため、ソートとフィルタを兼ねる。レシーバ n のフィールドには一切依存しない純関数であり、テストではゼロ値レシーバ &notificationUseCase{} で呼び出せる（参照フィールドは ActionLog.ShiftID と ShiftAdmin.TimeID のみ）。全9ケースを実コード実行で裏取り済み。
 
 ### 要判断の論点
 
-- **shiftMapにキーが無いログは黙って除外される**: 実行確認済み: 実挙動は起案どおり（黙って除外、ID 列 [3, 1]）。論点は挙動の食い違いではなく設計判断。シフトが削除済み等で shiftMap に載らないログは通知から無言で欠落し、エラーにもログにも出ない。現状挙動を仕様として固定するか、除外時に警告ログを出す／件数を返す等に改善するか判断が必要。テスト自体は現状挙動（黙って除外）を期待値とする
-- **同一TimeIDのタイは全件保持される（相対順序は未保証）**: 実行確認済み: 今回の実行（go 環境の現行バージョン、3要素入力）では観測順序は挿入順 [1, 2, 3] だったが、sort.Slice は非安定ソートで同一 TimeID 内の相対順序は仕様上未定義（Go バージョンや入力サイズで変わり得る）。テストは集合一致（順序不問）でパスする。同時刻グループ内の通知行の並びを安定させたいなら sort.SliceStable への変更（＋順序をアサートするテスト）を検討すべき。順序不問テストで現状を許容するか、SliceStable 化して順序を仕様化するか判断が必要
+- **shiftMapにキーが無いログは警告なしに除外される**: 実行確認済みで、実挙動は起案どおり（警告なしに除外、ID 列 [3, 1]）。論点は挙動の食い違いではなく設計判断。シフトが削除済み等で shiftMap に載らないログは通知から欠落し、エラーにもログにも出ない。現状挙動を仕様として固定するか、除外時に警告ログを出す／件数を返す等に改善するか判断が必要。テスト自体は現状挙動（警告なしの除外）を期待値とする
+- **同一TimeIDのタイは全件保持される（相対順序は未保証）**: 実行確認済み。今回の実行（go 環境の現行バージョン、3要素入力）では観測順序は挿入順 [1, 2, 3] だったが、sort.Slice は非安定ソートで同一 TimeID 内の相対順序は仕様上未定義（Go バージョンや入力サイズで変わり得る）。テストは集合一致（順序不問）でパスする。同時刻グループ内の通知行の並びを安定させたいなら sort.SliceStable への変更（＋順序をアサートするテスト）を検討すべき。順序不問テストで現状を許容するか、SliceStable 化して順序を仕様化するか判断が必要
 
 ### ケース表
 
@@ -97,7 +97,7 @@ ActionLog のスライスを、各ログの ShiftID をキーに shiftMap から
    - 入力: `logs := []entity.ActionLog{{ID: 1, ShiftID: 10}, {ID: 2, ShiftID: 20}} / var shiftMap map[int]entity.ShiftAdmin = nil`
    - 期待値: `panic せず len(result) == 0 かつ result != nil（nil マップの lookup は ok=false になり全件 continue）`
    - 根拠: loadShiftMap が空 map や nil を返すケースでの安全性を固定。nil マップ read は Go では合法だが、書き込みを伴う実装に変わると panic するため回帰検出になる
-6. **shiftMapにキーが無いログは黙って除外される**（異常系）【要判断】
+6. **shiftMapにキーが無いログは警告なしに除外される**（異常系）【要判断】
    - 入力: `logs := []entity.ActionLog{{ID: 1, ShiftID: 10}, {ID: 2, ShiftID: 99}, {ID: 3, ShiftID: 30}} / shiftMap := map[int]entity.ShiftAdmin{10: {ID: 10, TimeID: 2}, 30: {ID: 30, TimeID: 1}}（ShiftID 99 のエントリ無し）`
    - 期待値: `長さ2、ID 列は [3, 1]。ShiftID=99 のログ（ID: 2）は結果に含まれない。エラーも panic も無し`
    - 根拠: 関数名は sort だがフィルタを兼ねる現状の中核挙動。呼び出し元 L285 の shiftMap[sortedLogs[0].ShiftID] がヒットする前提を支えているため、この除外が消えると別の場所でゼロ値参照が起きる
@@ -108,13 +108,13 @@ ActionLog のスライスを、各ログの ShiftID をキーに shiftMap から
 8. **同一TimeIDのタイは全件保持される（相対順序は未保証）**（境界値）【要判断】
    - 入力: `logs := []entity.ActionLog{{ID: 1, ShiftID: 10}, {ID: 2, ShiftID: 20}, {ID: 3, ShiftID: 30}} / shiftMap := map[int]entity.ShiftAdmin{10: {ID: 10, TimeID: 1}, 20: {ID: 20, TimeID: 1}, 30: {ID: 30, TimeID: 1}}`
    - 期待値: `長さ3で、ID の集合が {1, 2, 3}（順序は不問のアサートにする。例: ID を収集してソート後 [1, 2, 3] と比較）`
-   - 根拠: タイでも要素が落ちない・重複しないことを保証する。順序をアサートしないのは sort.Slice（非安定）採用のため
+   - 根拠: タイでも要素が欠けない・重複しないことを保証する。順序をアサートしないのは sort.Slice（非安定）採用のため
 9. **入力スライスを破壊しない**（正常系）
    - 入力: `logs := []entity.ActionLog{{ID: 1, ShiftID: 10}, {ID: 2, ShiftID: 20}} / shiftMap := map[int]entity.ShiftAdmin{10: {ID: 10, TimeID: 2}, 20: {ID: 20, TimeID: 1}}（ソートで順序が入れ替わる入力）`
    - 期待値: `返り値の ID 列は [2, 1] だが、呼び出し後の logs の ID 列は [1, 2] のまま。かつ返り値は logs と別のスライス（&result[0] != &logs[0]）`
-   - 根拠: 新規スライスを組み立てる非破壊実装の固定。呼び出し元 L277 以降で logs と sortedLogs が別物として扱われており、in-place ソートに書き換わると呼び出し元の挙動が暗黙に変わるため
+   - 根拠: 新規スライスを組み立てる非破壊実装の固定。呼び出し元 L277 以降で logs と sortedLogs が別物として扱われており、in-place ソートに書き換わると呼び出し元の挙動が気づかないうちに変わるため
 
-実行検証: worktree の api/lib/usecase/design_verify_sortlogsbytime_test.go（package usecase、ゼロ値レシーバ &notificationUseCase{} 使用）に全9ケースをサブテストとして実装し、cd api && go test ./lib/usecase/... -run TestDesignVerifySortLogsByTime -v で実行。9ケース全て起案どおりの期待値で PASS（修正 0 件、削除 0 件、実行不能ケースなし）。補足観測: 空スライス・nil スライス・nil マップの3ケースいずれも返り値は非 nil の空スライスであることをアサートで確認。タイケースは t.Logf で観測順序 [1 2 3]（挿入順）を記録したが、sort.Slice 非安定のためアサートは集合一致のみ。needs_judgment=true の2件は実挙動と期待値の食い違いではなく設計判断の論点（サイレント除外の是非、SliceStable 化の要否）として維持。実行後テストファイルを削除し、git status --porcelain が空（clean）であることを確認。commit/push は行っていない。
+実行検証: worktree の api/lib/usecase/design_verify_sortlogsbytime_test.go（package usecase、ゼロ値レシーバ &notificationUseCase{} 使用）に全9ケースをサブテストとして実装し、cd api && go test ./lib/usecase/... -run TestDesignVerifySortLogsByTime -v で実行。9ケース全て起案どおりの期待値で PASS（修正 0 件、削除 0 件、実行不能ケースなし）。補足観測: 空スライス・nil スライス・nil マップの3ケースいずれも返り値は非 nil の空スライスであることをアサートで確認。タイケースは t.Logf で観測順序 [1 2 3]（挿入順）を記録したが、sort.Slice 非安定のためアサートは集合一致のみ。needs_judgment=true の2件は実挙動と期待値の食い違いではなく設計判断の論点（警告なしの除外の是非、SliceStable 化の要否）として維持。実行後テストファイルを削除し、git status --porcelain が空（clean）であることを確認。commit/push は行っていない。
 
 ## formatTimeRange
 
@@ -147,7 +147,7 @@ timeMap から開始スロット（startTimeID）の時刻と、終了スロッ�
 5. **startTimeID がマップに存在しない**（異常系）【要判断】
    - 入力: `timeMap := map[int]entity.Time{2: {Time: "10:00"}}; startTimeID := 5; endTimeID := 1（endTimeID+1=2 は存在する）`
    - 期待値: `" 〜 10:00"（開始時刻が空文字のまま出力される。現状挙動の固定化）【実行確認済み】`
-   - 根拠: shift.TimeID が timeMap に無い（データ不整合）ケース。startTime 側の欠落時挙動を明示的にテストで固定し、無言の仕様変更を防ぐ。
+   - 根拠: shift.TimeID が timeMap に無い（データ不整合）ケース。startTime 側の欠落時挙動を明示的にテストで固定し、気づかれないまま仕様が変わるのを防ぐ。
 6. **次スロットは存在するが Time フィールドがゼロ値（空文字）**（境界値）
    - 入力: `timeMap := map[int]entity.Time{1: {Time: "9:00"}, 2: {}}; startTimeID := 1; endTimeID := 1`
    - 期待値: `"9:00 〜 "（末尾は半角スペースで終わる。キーは存在するため "0:00" フォールバックは発火しない）【実行確認済み】`
@@ -172,7 +172,7 @@ timeMap から開始スロット（startTimeID）の時刻と、終了スロッ�
 ### 要判断の論点
 
 - **timeMap に TimeID 自体が無い → 開始時刻が空文字で出力**: 実行により起案どおりの挙動（" 〜 0:00：受付 → 警備"）を確認済み。終了側欠落には "0:00" フォールバックがあるのに開始側欠落は空文字のまま Slack 通知に載る非対称。開始側にもフォールバック値を入れる／時間プレフィックス自体を省略するのが本来の意図ではないかというバグ疑いあり。現状挙動を仕様として固定してよいか要判断（修正するなら期待値が変わる）。
-- **diff_payload がパース不能（不正 JSON / nil）なログは黙ってスキップ**: 実行により起案どおりの挙動を確認済み。パース不能なログが通知から黙って消える（ログ出力すら無い）ため、シフト変更の通知漏れに直結しうる。欠落を許容仕様として固定するか、警告ログ追加や「（不明）」行としての出力に改めるか要判断。テスト期待値は現状のスキップ挙動としている。
+- **diff_payload がパース不能（不正 JSON / nil）なログは警告なしにスキップ**: 実行により起案どおりの挙動を確認済み。パース不能なログが通知から警告なしに消える（ログ出力すら無い）ため、シフト変更の通知漏れに直結しうる。欠落を許容仕様として固定するか、警告ログ追加や「（不明）」行としての出力に改めるか要判断。テスト期待値は現状のスキップ挙動としている。
 
 ### ケース表
 
@@ -199,7 +199,7 @@ timeMap から開始スロット（startTimeID）の時刻と、終了スロッ�
 6. **shiftMap / taskMap にキーが無い非 DELETE ログはスキップ**（境界値）
    - 入力: `` logs := []entity.ActionLog{ {ShiftID: 99, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"a","new":"b"}]}`)}, {ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"a","new":"b"}]}`)}, } shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} // 99 は無い taskMap := map[int]entity.Task{} // 100 も無い timeMap := map[int]entity.Time{5: {Time: "10:00"}, 6: {Time: "11:00"}} ``
    - 期待値: `""（1件目は shiftMap 欠落、2件目は taskMap 欠落で両方 continue され、結果は空文字）【実行確認済み】`
-   - 根拠: 2 段のルックアップ失敗（shiftMap 欠落・taskMap 欠落）がどちらも黙ってスキップになる現状挙動を 1 ケースで固定する。
+   - 根拠: 2 段のルックアップ失敗（shiftMap 欠落・taskMap 欠落）がどちらも警告なしのスキップになる現状挙動を 1 ケースで固定する。
 7. **timeMap に TimeID+1 が無い（最終時間帯）→ 終了時刻 0:00 フォールバック**（境界値）
    - 入力: `` logs := []entity.ActionLog{{ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"受付","new":"警備"}]}`)}} shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} taskMap := map[int]entity.Task{100: {Task: "警備"}} timeMap := map[int]entity.Time{5: {Time: "22:00"}} // キー 6 が無い ``
    - 期待値: `"22:00 〜 0:00：受付 → 警備"【実行確認済み】`
@@ -207,15 +207,15 @@ timeMap から開始スロット（startTimeID）の時刻と、終了スロッ�
 8. **timeMap に TimeID 自体が無い → 開始時刻が空文字で出力**（異常系）【要判断】
    - 入力: `` logs := []entity.ActionLog{{ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"受付","new":"警備"}]}`)}} shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} taskMap := map[int]entity.Task{100: {Task: "警備"}} timeMap := map[int]entity.Time{} // 空 ``
    - 期待値: `" 〜 0:00：受付 → 警備"（先頭が半角スペース始まり。開始時刻はゼロ値 Time の空文字がそのまま入る）【実行確認済み: 先頭スペース込みで完全一致】`
-   - 根拠: formatTimeRange は startTime を ok チェックなしで timeMap[startTimeID] のゼロ値のまま使うため、開始側欠落だと通知文が「 〜 0:00：」と壊れて見える。この非対称フォールバックを現状挙動としてピン留めしつつ論点化する。
-9. **diff_payload がパース不能（不正 JSON / nil）なログは黙ってスキップ**（異常系）【要判断】
+   - 根拠: formatTimeRange は startTime を ok チェックなしで timeMap[startTimeID] のゼロ値のまま使うため、開始側欠落だと通知文が「 〜 0:00：」とおかしく見える。この非対称フォールバックを現状挙動として固定しつつ論点化する。
+9. **diff_payload がパース不能（不正 JSON / nil）なログは警告なしにスキップ**（異常系）【要判断】
    - 入力: `` logs := []entity.ActionLog{ {ID: 1, ShiftID: 10, ActionType: "UPDATE", DiffPayload: nil}, {ID: 2, ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{invalid`)}, {ID: 3, ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"受付","new":"警備"}]}`)}, } shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} taskMap := map[int]entity.Task{100: {Task: "警備"}} timeMap := map[int]entity.Time{5: {Time: "10:00"}, 6: {Time: "11:00"}} ``
    - 期待値: `"10:00 〜 11:00：受付 → 警備"（ID:1 は nil で unmarshal エラー、ID:2 は不正 JSON でエラー、いずれも警告なしにスキップされ ID:3 の 1 行のみ）【実行確認済み: nil DiffPayload も panic せず同経路でスキップ】`
-   - 根拠: json.Unmarshal 失敗時の continue による欠落挙動を固定。DiffPayload が nil でも "unexpected end of JSON input" で同経路に落ちることを含めて確認する。
+   - 根拠: json.Unmarshal 失敗時の continue による欠落挙動を固定。DiffPayload が nil でも "unexpected end of JSON input" で同じ経路を通ることを含めて確認する。
 10. **UPDATE で payload に changes キーが無い → 不明→DB現在値フォールバック**（異常系）
    - 入力: `` logs := []entity.ActionLog{{ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{}`)}} shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} taskMap := map[int]entity.Task{100: {Task: "警備"}} timeMap := map[int]entity.Time{5: {Time: "10:00"}, 6: {Time: "11:00"}} // DiffPayload が `{"changes":[]}`（空配列）でも len>0 が偽になり同一挙動 ``
    - 期待値: `` "10:00 〜 11:00：（不明） → 警備"（old は既定の「（不明）」、new は taskMap の DB 現在値 "警備" にフォールバック）【`{}` と `{"changes":[]}` の両方を別サブテストで実行し、同一出力を確認済み】 ``
-   - 根拠: 実装コメントで「フォールバック: DB現在値」と明記された意図的な既定値ロジックの回帰防止。changes キー欠落と空配列の両方が同じ分岐に落ちる境界も兼ねる。
+   - 根拠: 実装コメントで「フォールバック: DB現在値」と明記された意図的な既定値ロジックの回帰防止。changes キー欠落と空配列の両方が同じ分岐に入る境界も兼ねる。
 
 実行検証: worktree の api/lib/usecase/design_verify_buildchangeswithtime_test.go に起案10ケースを12サブテスト（「logs nil/空スライス」と「changes キー無し/空配列」の同一挙動主張をそれぞれ2サブテストに分割）として実装し、cd api && go test ./lib/usecase/... -run TestDesignVerifyBuildChangesWithTime -v を実行。12/12 PASS で全ケースが起案期待値と完全一致（修正0件、削除0件、実行不能0件）。ゼロ値レシーバ &notificationUseCase{} でモック無しに呼べることも実証。開始時刻欠落の先頭半角スペース、nil マップ・nil DiffPayload の非 panic、全角チルダ/コロンの文字種まで %q 比較で裏取り済み。needs_judgment の2件（開始時刻フォールバック非対称、パース不能ログの黙殺）は実挙動が起案どおりであることを確認した上で設計判断の論点として維持。実行後テストファイルを削除し、git status --porcelain が空（clean）であることを確認。commit/push は一切していない。
 
@@ -227,7 +227,7 @@ DB の JOIN 結果フラット構造体 []entity.ShiftCardData を、モバイ�
 
 ### 要判断の論点
 
-- **YearValue が数値でない文字列**: Atoi のエラーを _ で捨てて 0 にフォールバックするのは意図的か要判断。DB 由来の値なので通常は数値だが、汚損時に「0年」として API レスポンスに載り静かに壊れる。ログ出力やエラー返却に変える選択肢もあるが、シグネチャ変更（error 追加）は呼び出し側に波及するため、保守モードでは現状固定が妥当かの確認を求める（実挙動は起案どおりで食い違い無し。論点は設計意図の確認のみ）
+- **YearValue が数値でない文字列**: Atoi のエラーを _ で捨てて 0 にフォールバックするのは意図的か要判断。DB 由来の値なので通常は数値だが、汚損時に「0年」として API レスポンスに載り、気づかないうちに値がおかしくなる。ログ出力やエラー返却に変える選択肢もあるが、シグネチャ変更（error 追加）は呼び出し側に波及するため、保守モードでは現状固定が妥当かの確認を求める（実挙動は起案どおりで食い違い無し。論点は設計意図の確認のみ）
 - **未マッピングフィールドは出力に伝播しない**: TaskMobile には Remark・MaxMember・BureauID フィールドが存在するのに ShiftCardData の対応値（TaskRemark/MaxMember/TaskBureauID）を詰めていない。モバイル画面で不要だから意図的に省いたのか、マッピング漏れなのか要判断。モバイル側（Flutter）がこれらを参照していれば実バグ。現状固定でテストを書くが、期待値を「詰める」に変える判断はモバイル側の参照調査後にすべき（実挙動は起案どおりで食い違い無し。論点は設計意図の確認のみ）
 
 ### ケース表
@@ -255,7 +255,7 @@ DB の JOIN 結果フラット構造体 []entity.ShiftCardData を、モバイ�
 6. **YearValue が数値でない文字列**（異常系）【要判断】
    - 入力: `[]entity.ShiftCardData{{ShiftID: 1, YearValue: "abc"}, {ShiftID: 2, YearValue: " 2024"}}（先頭空白は Atoi が受理しない）の2要素`
    - 期待値: `いずれも Year.Year == 0 になり、エラーもログも発生せず正常に変換が完了する（現状挙動）【実行で確認済み。" 2024" も Atoi エラーで 0 になることを確認】`
-   - 根拠: strconv.Atoi のエラー黙殺という現状挙動の固定。DB の year_value 汚損時に year=0 で静かに返るパスの検知
+   - 根拠: strconv.Atoi のエラー黙殺という現状挙動の固定。DB の year_value 汚損時に year=0 のまま気づかれずに返るパスの検知
 7. **YearValue が負数文字列**（境界値）
    - 入力: `[]entity.ShiftCardData{{YearValue: "-1"}}`
    - 期待値: `Year.Year == -1（strconv.Atoi は符号付きをそのまま受理するため負値が通過する）【実行で確認済み】`
@@ -275,7 +275,7 @@ DB の JOIN 結果フラット構造体 []entity.ShiftCardData を、モバイ�
 
 ### 要判断の論点
 
-- **同一 TimeID の重複は別グループに分割される**: 実行により現状挙動が起案どおり「分割」であることは確認済み。残る論点は設計意図: 同時刻のシフトを別カードに分割するのが意図か要判断。呼び出し元は userID でフィルタ済みのため通常は同一 TimeID が重複しないが、もし「同時刻・同タスクは同じグループにまとめる（curr.Time.ID == prev.Time.ID も連続扱い）」が本来の意図なら現状はバグの疑いがある。保守モード方針では現状挙動（分割）を正解としてテストを書き、変更するなら別 issue とするのが妥当と考えるが、期待値の確定は人間の判断が必要
+- **同一 TimeID の重複は別グループに分割される**: 実行により現状挙動が起案どおり「分割」であることは確認済み。残る論点は設計意図で、同時刻のシフトを別カードに分割するのが意図か要判断。呼び出し元は userID でフィルタ済みのため通常は同一 TimeID が重複しないが、もし「同時刻・同タスクは同じグループにまとめる（curr.Time.ID == prev.Time.ID も連続扱い）」が本来の意図なら現状はバグの疑いがある。保守モード方針では現状挙動（分割）を正解としてテストを書き、変更するなら別 issue とするのが妥当と考えるが、期待値の確定は人間の判断が必要
 
 ### ケース表
 
@@ -290,11 +290,11 @@ DB の JOIN 結果フラット構造体 []entity.ShiftCardData を、モバイ�
 3. **空スライスは非 nil の空結果**（境界値）
    - 入力: `[]entity.Shift{}`
    - 期待値: `戻り値 got について got != nil かつ len(got) == 0（reflect.DeepEqual(got, [][]entity.Shift{}) が true）。実行で確認済み`
-   - 根拠: L479-481 の早期リターンが nil でなく空スライスを返す仕様の固定。呼び出し元の range が安全に空回りすること、および JSON 化時に null にならない性質の回帰防止
+   - 根拠: L479-481 の早期リターンが nil でなく空スライスを返す仕様の固定。呼び出し元の range が何もせず安全に終わること、および JSON 化時に null にならない性質の回帰防止
 4. **nil スライスも空スライス扱い**（境界値）
    - 入力: `var in []entity.Shift = nil として groupContinuousShifts(in) を呼ぶ`
    - 期待値: `空スライスと同じく got != nil かつ len(got) == 0。実行で確認済み（panic せず非 nil 空スライスが返る）`
-   - 根拠: Go では len(nil) == 0 なので空スライスと同経路だが、nil 入力で panic しないこと・出力が nil に化けないことを明示的に固定する
+   - 根拠: Go では len(nil) == 0 なので空スライスと同経路だが、nil 入力で panic しないこと・出力が nil にならないことを明示的に固定する
 5. **要素1個は単独グループ**（境界値）
    - 入力: `[]entity.Shift{sh(1,5)}`
    - 期待値: `reflect.DeepEqual で [][]entity.Shift{{sh(1,5)}} と一致（グループ数1、要素数1）。実行で確認済み`
@@ -350,7 +350,7 @@ DB の JOIN 結果フラット構造体 []entity.ShiftCardData を、モバイ�
 4. **同時間帯での分単位の差**（正常系）
    - 入力: `time1: "9:15", time2: "9:30"`
    - 期待値: `-1`
-   - 根拠: 時が同じで分だけ異なる場合の比較。h*60+m の分換算式のうち m 項が効いていることの確認（m を無視する退行の防止）
+   - 根拠: 時が同じで分だけ異なる場合の比較。h*60+m の分換算式のうち m 項が結果に反映されていることの確認（m を無視する退行の防止）
 5. **ゼロ値時刻と一日の最大時刻**（境界値）
    - 入力: `time1: "0:00", time2: "23:59"`
    - 期待値: `-1`

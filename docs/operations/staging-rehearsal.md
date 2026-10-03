@@ -11,7 +11,7 @@
 | | 検証環境 | 本番 |
 | --- | --- | --- |
 | compose | `docker-compose.yml`（開発用） | `docker-compose.prod.yml` |
-| API のコード | ホストのソースをマウントし、`air` が変更を検知して作り直す | イメージに焼き込み、`go run` で起動 |
+| API のコード | ホストのソースをマウントし、`air` が変更を検知して作り直す | イメージに含め、`go run` で起動 |
 | DB | compose の中の PostgreSQL（`db` サービス） | 外部の共用 HA クラスタ（接続プール経由、SSL 必須） |
 | 外からの入り口 | cloudflared のクイックトンネル（起動のたびに URL が変わる） | Cloudflare の名前付きトンネル（`seeft-api.nutfes.net` など） |
 | アプリ | 検証環境には立てず、手元の Mac から起動する | コンテナで配信 |
@@ -115,7 +115,7 @@ cd mobile && fvm flutter run -d chrome --web-port 45029 --dart-define-from-file=
 
 ### 7. Slack 通知の順番を試す
 
-`SLACK_BOT_TOKEN` を入れる順番を間違えると、溜まったシフト変更が全員に DM で飛ぶ（[SeeFT に渡すデータの約束事](seeft-data-contract.md) の「Slack 通知を有効にする順番」）。検証環境で先に試し、溜まった記録が「送らずに既読」になることを確かめておく。
+`SLACK_BOT_TOKEN` を入れる順番を間違えると、溜まったシフト変更が全員に DM で送られる（[SeeFT に渡すデータの約束事](seeft-data-contract.md) の「Slack 通知を有効にする順番」）。検証環境で先に試し、溜まった記録が「送らずに既読」になることを確かめておく。
 
 ```sql
 SELECT is_sent, count(*) FROM action_logs GROUP BY 1;

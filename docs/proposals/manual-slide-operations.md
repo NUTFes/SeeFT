@@ -67,7 +67,7 @@ uv sync --project scripts/claude-slide
 ### 1. 生成（変換 = AI / プロンプトは card-strict）
 
 文章を一字一句変えない card-strict で生成する。元 Doc の文章は執行部と部門長の間で調整済みのため、
-変換時に文言を動かしたくない、という理由で strict を採る。
+変換時に文言を変えたくない、という理由で strict を採る。
 
 ```bash
 uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide.py --prompt card-strict --model claude-opus-4-7 docs/manuals/01_44th_のぼり広告設置マニュアル
@@ -96,7 +96,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 
 2 つのファイルが出る。
 
-- `文章チェック結果.card-strict.md` — 部門長向け。Slack にそのまま貼れる日本語サマリ。本文の「消えた・書き換わった・増えた」だけを示し、見出し番号や図番号の整理などレイアウト差は「確認不要」に畳んである。
+- `文章チェック結果.card-strict.md` — 部門長向け。Slack にそのまま貼れる日本語サマリ。本文の「消えた・書き換わった・増えた」だけを示し、見出し番号や図番号の整理などレイアウト差は「確認不要」にまとめてある。
 - `verify_mechanical.card-strict.txt` — 開発デバッグ用の詳細（文字レベル差分・件数）。Slack には貼らない。
 
 ### 4. アップロードして URL 発行
@@ -129,7 +129,7 @@ SeeFT 担当はその修正案を、共有プロンプトではなく **マニ�
 `instructions.md` があると、生成時にその内容が「この回の追加・修正指示（最優先）」として末尾に注入される。
 あとは手順 1（再生成）→ 2（画像確認）→ 3（再検証）→ 4（再公開）→ 5（再投稿）を OK が出るまで繰り返す。
 
-instructions.md の例:
+instructions.md の例は次のとおり。
 
 ```markdown
 - 「準備日タイムスケジュール」の表は、時間列を左端に固定して読みやすく

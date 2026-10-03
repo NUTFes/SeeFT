@@ -27,7 +27,7 @@ flowchart LR
 
 知っておくことが4つある。
 
-- **ソースはイメージに焼き込まれる。** サーバーで `git pull` しただけでは何も変わらない。`build` してから `up` する。
+- **ソースはイメージに組み込まれる。** サーバーで `git pull` しただけでは何も変わらない。`build` してから `up` する。
 - **API は起動のたびにコンパイルする。** `api/prod.Dockerfile` はビルド時にコンパイルせず、compose の `go run main.go` が起動時にモジュールを取得してコンパイルする。そのため起動にはインターネット接続が要り、起動直後の数十秒〜数分は API が応答しない。
 - **DB はサーバーの外にある。** 本番の compose に DB は含まれない。DB は他のサービスと共用の HA クラスタで、ボリュームを消して作り直すような操作はできない。アプリからの接続は、接続プール（PgBouncer）、Primary を選んで振り分ける HAProxy、Postgres の順に通る。DDL 用のポートは、接続プールを通らない（下の「migrate と seed」）。ポートとアドレスは別紙にある。
 - **解説 HTML はサーバーの `manuals/` にしかない。** git の管理外なので、サーバーを作り直すと消える。DB を初期化しても消えない。
@@ -136,7 +136,7 @@ build のあいだは古いコンテナが動き続けるので、本番は止�
 docker compose up -d api
 ```
 
-**ログで判断しない。** API は無言でコンパイルするので、直後の `docker compose logs` には古いリクエストが並ぶだけで、起動メッセージが出ないことがある。コンテナを作り直すと、それ以前のログは消える。次の3つで確かめる。
+**ログで判断しない。** API はコンパイルのあいだ何も出力しないので、直後の `docker compose logs` には古いリクエストが並ぶだけで、起動メッセージが出ないことがある。コンテナを作り直すと、それ以前のログは消える。次の3つで確かめる。
 
 - `docker compose ps api` の STATUS が `Up` になっている
 - `docker inspect --format '{{.Image}}' nutfes-seeft-api` が、いま build したイメージの ID になっている
@@ -227,7 +227,7 @@ mobile の入れ替えは数秒で済む。ただし入れ替えた直後は、�
 
 1つの変更が API と GAS の両方にまたがるときは、「古い側が新しい側を受け取っても害がない」順に出す。
 
-- 45th のレスキュー通知（#546）は **GAS → API** の順にした。今の API は知らない項目を無視するので、新しい GAS が先でも害はない。逆にすると、通知してはいけない送信者に DM が飛ぶ。
+- 45th のレスキュー通知（#546）は **GAS → API** の順にした。今の API は知らない項目を無視するので、新しい GAS が先でも害はない。逆にすると、通知してはいけない送信者に DM が送られる。
 - 45th の休憩カード（#492）は **API → mobile → GAS → シフトの送り直し** の順にした。休憩のデータが入るのは GAS を更新して送り直したときなので、それまでは API と mobile を戻しても害がない。逆に GAS を先に入れて送り直すと、休憩の担当者を隠す処理が入っていない古い API のまま、休憩のシフトが入る。休憩のカードに担当者として全員が並び、誰が休憩中かが全員に見える（PR #492 の本文）。一度見られたものは、あとから API を入れ替えても取り消せない。
 
 ### 環境変数だけを変えるとき
@@ -245,7 +245,7 @@ docker compose up -d --force-recreate --no-build api
 1. **現状を確かめる**：ブランチ、コミット、`api/env/seeft.env` と `mobile/env/.env` にある変数の名前
 2. **develop を取り込む**
 3. **`api/env/seeft.env` に足りない変数を足す**：すでにある値は上書きしない（下の「環境変数」）
-4. **`mobile/env/.env` を今年の値にする**：日付・委員長・操作説明の URL など。コンパイル時に焼き込まれるので、build の前に済ませる
+4. **`mobile/env/.env` を今年の値にする**：日付・委員長・操作説明の URL など。コンパイル時に埋め込まれるので、build の前に済ませる
 5. **api と mobile を build する**
 6. **api を止め、DB のスキーマを作り直し、migrate と seed を流す**
 7. **api と mobile を起動して、ログを確かめる**
@@ -261,7 +261,7 @@ docker compose up -d --force-recreate --no-build api
 - **`postgresql/db/seed.sql` と API のコードに、前年の年度と日付が書かれている。** 直すところは [SeeFT に渡すデータの約束事](seeft-data-contract.md) の「年度が変わるときに直すところ」にある。
 - **前年のデータを残すなら、先に取り出す。** スキーマを作り直すと全部消える（アプリ内レビューなど）。
 - **`USER_DEFAULT_PASSWORD` を先に設定する。** 初期パスワードは、名簿送信でユーザーが作られた時点の値で固定される。
-- **`SLACK_BOT_TOKEN` を入れる順番に気をつける。** 順番を間違えると、溜まったシフト変更が一斉に DM で飛ぶ（[SeeFT に渡すデータの約束事](seeft-data-contract.md) の「Slack 通知を有効にする順番」）。
+- **`SLACK_BOT_TOKEN` を入れる順番に気をつける。** 順番を間違えると、溜まったシフト変更が一斉に DM で送られる（[SeeFT に渡すデータの約束事](seeft-data-contract.md) の「Slack 通知を有効にする順番」）。
 - **`shifts` のインデックスを貼り直す。** migration に入っていないので、作り直すと消える（issue #500）。インデックスを作る DDL（`CREATE INDEX CONCURRENTLY`）も、migrate と同じく DDL 用のポートで打つ（下の「migrate と seed」）。アプリ用のポート（接続プール経由）では、トランザクションの中として扱われて失敗する（2026-09-10 に本番の DB で確かめた）。どちらのポートにつながっているかは、psql の `\conninfo` で確かめる。SQL の `inet_server_port()` は Postgres 本体のポートを返すので、見分けられない。
 
 ### migrate と seed
@@ -270,7 +270,7 @@ migrate は `postgresql/db/schema/` の `create*.sql` を番号順に流し、�
 
 **DDL は、接続プールを迂回する DDL 用のポートで流す。** これは DB 基盤の決まりである。migrate は `NUTMEG_DB_PORT` のポートに接続するが、`seeft.env` のこの値はアプリ用の接続プール経由のポートを指している。そのため migrate のときだけ、`-e` で DDL 用のポートに上書きする。ポートの値は別紙にある。値が変わっていないかは、流す前に DB 基盤の担当者に確かめる。
 
-流す前に、上書きが効いていることを確かめる。
+流す前に、上書きした値が使われていることを確かめる。
 
 ```bash
 docker compose run --rm --no-deps -e NUTMEG_DB_PORT=<DDL用のポート> api printenv NUTMEG_DB_PORT

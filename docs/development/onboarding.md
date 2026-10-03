@@ -471,7 +471,7 @@ GAS 特有の道具は次のとおりです。
 
 **api（Go）。** 標準の `go test` で動くテストに、[testify](https://github.com/stretchr/testify)（`assert` / `require` で結果を確かめるライブラリ）と [go-sqlmock](https://github.com/DATA-DOG/go-sqlmock)（偽の DB を作るライブラリ）を足して書いています。テストファイルは、対象と同じディレクトリに `xxx_test.go` として置きます。手元では `make test` で全部のテストを実行できます。
 
-今あるテストは、repository も usecase も、実際の DB ではなく go-sqlmock の偽の DB を相手にしています。「この SQL がこの引数で実行されるはず」と先に宣言しておき、実行された中身を確かめる形です（1節のモック）。5節の DI のおかげで、`db.Client` を偽の DB に差し替えるだけで、本物の repository をそのまま使ってテストできます。usecase のテストでも、偽の repository は作らず、偽の DB を載せた本物の repository を渡しています。repository は行（`*sql.Rows`）を返す作りで、その偽物を作るのが難しいためです。
+今あるテストは、repository も usecase も、実際の DB ではなく go-sqlmock の偽の DB を相手にしています。「この SQL がこの引数で実行されるはず」と先に宣言しておき、実行された中身を確かめる形です（1節のモック）。5節の DI のおかげで、`db.Client` を偽の DB に差し替えるだけで、本物の repository をそのまま使ってテストできます。usecase のテストでも、偽の repository は作らず、偽の DB につないだ本物の repository を渡しています。repository は行（`*sql.Rows`）を返す作りで、その偽物を作るのが難しいためです。
 
 ```go
 // api/lib/internals/repository/review_repository_sqlmock_test.go（抜粋）
@@ -619,21 +619,21 @@ GAS を触る人が答えられるようにすること。
 
 ## 14. ブックマーク（全員）
 
-- A Tour of Go — https://go.dev/tour/
-- Effective Go — https://go.dev/doc/effective_go
-- Echo — https://echo.labstack.com/docs
-- `database/sql` のチュートリアル — https://go.dev/doc/tutorial/database-access
-- go-sqlmock — https://github.com/DATA-DOG/go-sqlmock
-- golang-migrate — https://github.com/golang-migrate/migrate
-- PostgreSQL チュートリアル — https://www.postgresql.org/docs/current/tutorial.html
-- MDN の CORS の解説 — https://developer.mozilla.org/ja/docs/Web/HTTP/CORS
-- Dart の言語ツアー — https://dart.dev/language
-- Flutter — https://docs.flutter.dev/
-- fvm — https://fvm.app/
-- Hive — https://pub.dev/packages/hive_flutter
-- Apps Script — https://developers.google.com/apps-script
-- clasp — https://github.com/google/clasp
-- Docker Compose — https://docs.docker.com/compose/
+- A Tour of Go: https://go.dev/tour/
+- Effective Go: https://go.dev/doc/effective_go
+- Echo: https://echo.labstack.com/docs
+- `database/sql` のチュートリアル: https://go.dev/doc/tutorial/database-access
+- go-sqlmock: https://github.com/DATA-DOG/go-sqlmock
+- golang-migrate: https://github.com/golang-migrate/migrate
+- PostgreSQL チュートリアル: https://www.postgresql.org/docs/current/tutorial.html
+- MDN の CORS の解説: https://developer.mozilla.org/ja/docs/Web/HTTP/CORS
+- Dart の言語ツアー: https://dart.dev/language
+- Flutter: https://docs.flutter.dev/
+- fvm: https://fvm.app/
+- Hive: https://pub.dev/packages/hive_flutter
+- Apps Script: https://developers.google.com/apps-script
+- clasp: https://github.com/google/clasp
+- Docker Compose: https://docs.docker.com/compose/
 
 リポジトリの中の文書は次のとおりです。
 

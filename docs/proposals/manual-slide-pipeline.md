@@ -57,7 +57,7 @@
 | Sakura AI Engine | `scripts/sakura-slide/generate_slide.py` | `SAKURA_API_KEY` | ファイル名のみ | 従量（安） | 中 |
 | Claude Agent SDK | `scripts/claude-slide/generate_slide.py` | `claude login`（サブスク） | ファイル名のみ | サブスク枠（追加0円） | 高 |
 
-メイン運用想定は Claude Agent SDK 版。理由は以下:
+メイン運用想定は Claude Agent SDK 版。理由は次のとおり。
 - Anthropic API: 質は高いが従量課金で予算予測しにくい
 - Sakura: 安いが gpt-oss-120b はカード形式の指示への追従が弱い
 - Claude Agent SDK: サブスク $20-100/月で月額固定、Opus 4.7 が使えて品質は API 版と同等
@@ -66,7 +66,7 @@
 
 共有プロンプト: `.claude/manual-prompt-card.md`
 
-3バックエンドが同じプロンプトを参照する設計。プロンプト改善が全バックエンドに自動で波及する。
+3バックエンドが同じプロンプトを参照する設計。プロンプトを改善すると、全バックエンドに自動で反映される。
 
 主要な要件（プロンプトに記述済）:
 - SeeFT デザインシステムのカラー（teal #009688、ゴールド枠線 #C9A227 等）
@@ -164,7 +164,7 @@ vision を入れる検討は `manual-slide-vision-todo.md` を参照。
 
 ## 引き継ぎ
 
-引き継ぎ用の詳細資料は別ファイルに分離してある:
+引き継ぎ用の詳細資料は別ファイルに分離してある。
 
 - `docs/proposals/manual-slide-handover.html` — **新 PM 向け引き継ぎ資料**（環境セットアップ、3バックエンド詳細、運用コマンド、既知挙動、トラブルシューティング、v2 候補、チェックリスト）
 

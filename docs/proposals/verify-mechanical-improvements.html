@@ -116,13 +116,13 @@
 <div class="card accent">
 検証スクリプトが「内容の改変」と一緒に数えてしまっていた<strong>3種類のノイズ</strong>
 （目次UIの重複・記号のゆれ・表の罫線）を、比較の前に取り除いた。
-最も効いたのは<strong>「追加」誤検出</strong>で、全ファイルで <strong>59〜97%</strong> 減った
+効果が最も大きかったのは<strong>「追加」誤検出</strong>で、全ファイルで <strong>59〜97%</strong> 減った
 （目次UIの重複が消えたため）。
 ただし合計の差分件数で見ると <strong>25〜54% 減</strong>にとどまる。
-判定ロジック自体は厳格なまま——内容の追加・欠落・改変は今までどおり全部 NG にする。
+判定ロジック自体は厳格なままで、内容の追加・欠落・改変は今までどおり全部 NG にする。
 </div>
 <div class="note">
-<strong>正直な前置き：</strong>「追加」激減の一部は <strong>「改変」への付け替え</strong>でもある。
+<strong>注意点：</strong>「追加」激減の一部は <strong>「改変」への付け替え</strong>でもある。
 ナビ・罫線ノイズを消すと文の区切りが変わり、以前は「追加＋欠落」の別々2件だったものが
 「改変」1ペアに統合されることがある。実際、配線 card（緩いプロンプト）では改変が
 <strong>27→31 件と微増</strong>した。総量は確実に減っているが、
@@ -147,7 +147,7 @@
   <code>&lt;ol&gt;</code> の連番（<code>1. 2. 3.</code>）まで本文に混ざっていた。
   </p>
   <p>そこで pandoc に渡す前に、生成 HTML から該当 DOM ごと削除する。
-  <code>&lt;nav&gt;</code> は入れ子にならないので、非貪欲マッチで安全に 1 要素ずつ落とせる。</p>
+  <code>&lt;nav&gt;</code> は入れ子にならないので、非貪欲マッチで安全に 1 要素ずつ取り除ける。</p>
   <div class="ex">
   <strong>消える誤検出の例：</strong>
   目次由来の <code>'該当シフト 2.'</code> <code>'内容 3.'</code>、FAB の <code>'≡ × 目次'</code>、
@@ -161,7 +161,7 @@
   <p>
   元 Doc では <code>~</code>・<code>&amp;</code>・半角括弧、生成側では <code>〜</code>・<code>＆</code>・全角括弧、
   といった<strong>見た目だけの差</strong>を、これまでは「改変」として NG 要因に数えていた。
-  内容（漢字・かな・英数字）は同一なのに NG が膨らむ原因だった。
+  内容（漢字・かな・英数字）は同一なのに NG の件数が増える原因だった。
   </p>
   <p>
   NFKC 正規化＋波ダッシュ統一＋空白無視で畳んだとき一致するペアは、
@@ -191,7 +191,7 @@
   <strong>同じ内容なのに罫線の記法が違う</strong>だけで「ブロックまるごと欠落」と誤検出していた。
   そこで罫線・セル区切り（<code>- + |</code> や box-drawing）を src/gen 双方で除去し、
   表の中身（チーム割り・物品数など）だけを残して比較する。
-  電話番号の単独ダッシュ（<code>080-6801-1943</code>）は 3 連以上の罫線ランに当たらないので温存される。
+  電話番号の単独ダッシュ（<code>080-6801-1943</code>）は 3 連以上の罫線ランに当たらないので残る。
   </p>
 </div>
 </section>
@@ -221,10 +221,10 @@
 <div class="note">
 <strong>読み方：</strong>「追加」の激減は<strong>改善A（目次UI除去）</strong>の効果で、これは堅実。
 ただし合計の減りは約半分で、<strong>card-strict（本番で使うプロンプト）が最も改善し、
-card（緩い版）は改変が増えて伸びが鈍い</strong>。緩いプロンプトは元々書き換えが多いため、
+card（緩い版）は改変が増えて減り方が小さい</strong>。緩いプロンプトは元々書き換えが多いため、
 ノイズを除いても本物の改変が多く残る。<br>
-<code>det</code> の表記ゆれが 0 件なのは、決定的変換は記号を一切置換しないため——
-「LLM が記号を整えてしまう」という仮説の裏付けにもなっている。
+<code>det</code> の表記ゆれが 0 件なのは、決定的変換は記号を一切置換しないためで、
+これは「LLM が記号を整えてしまう」という仮説の裏付けにもなっている。
 </div>
 </section>
 
@@ -250,7 +250,7 @@ card（緩い版）は改変が増えて伸びが鈍い</strong>。緩いプロ�
 ペア失敗に引きずられず、章の組み替えにも強い。
 </p>
 <div class="ex">
-<strong>内訳が効く例：</strong>上の配線 card-strict は「220字追加」だけ見ると不安だが、内訳を見ると
+<strong>内訳が役に立つ例：</strong>上の配線 card-strict は「220字追加」だけ見ると不安だが、内訳を見ると
 正体は <code>○○を表示</code> という<strong>見出しラベルの自動付与</strong>だと分かる（本文の捏造ではない）。
 落とした側の内訳も <code>:\Users\…\AppData</code> <code>Word\DSC_</code> など
 <strong>元Docに紛れたWindows画像パスのゴミ</strong>で、消えて正解と判断できる。
@@ -271,7 +271,7 @@ card（緩い版）は改変が増えて伸びが鈍い</strong>。緩いプロ�
 </table>
 <div class="note">
 <strong>指標の妥当性：</strong>決定的変換（det）が <strong>保持率 100% / 追加 16字</strong> になったのが
-裏付け。本文を写経するだけの変換なので満点が出るはず——その通りになった。
+裏付け。本文をそのまま写すだけの変換なので満点が出るはずで、その通りになった。
 順序も <strong>det &gt; card-strict &gt; card</strong> で、プロンプトが緩いほど保持率が下がり追加が増える、
 という直感と一致する。
 </div>
@@ -280,7 +280,7 @@ card（緩い版）は改変が増えて伸びが鈍い</strong>。緩いプロ�
 <section>
 <h2>4. なぜ判定は NG のまま残るのか</h2>
 <div class="card">
-<p>過検出を消した後に残る差分は、<strong>本物（＝人が見て判断すべき差）</strong>が中心になった。代表例：</p>
+<p>過検出を消した後に残る差分は、<strong>本物（＝人が見て判断すべき差）</strong>が中心になった。代表例は次のとおり。</p>
 <ul>
   <li><strong>画像ラベルの付与</strong>：元 Doc は alt 無しの <code>[]</code>、生成側は <code>[塗り絵1]</code> のように
   画像へラベルを付けている（情報の追加と取れる）</li>
@@ -324,7 +324,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 <p>主な追加・変更関数：</p>
 <ul>
   <li><code>preprocess_generated_html()</code> — base64 除去に加え、<code>&lt;nav&gt;</code>・FAB・閉じるボタンを DOM ごと削除（改善A）</li>
-  <li><code>strip_table_art()</code> — pandoc の表罫線・セル区切りを除去（改善C）。改行を潰す前段で実行</li>
+  <li><code>strip_table_art()</code> — pandoc の表罫線・セル区切りを除去（改善C）。改行をまとめる前段で実行</li>
   <li><code>fold_cosmetic()</code> — NFKC＋波ダッシュ統一＋空白除去で表記ゆれ判定キーを作る（改善B）</li>
   <li><code>categorize()</code> — 2段ペアリング化。pass1 で表記ゆれを先に回収 → pass2 で類似度ペアリング。戻り値に <code>cosmetic</code> を追加</li>
   <li><code>compute_fidelity()</code> — 文字ベースの保持率サマリを算出（第3.5節）。ペアリング非依存・章組み替えに強い照合</li>
@@ -341,7 +341,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 <h2>7. 残課題（任意・次の改善余地）</h2>
 <div class="card">
 <ul>
-  <li>画像 alt（<code>[ラベル]</code>）の正規化：両側で <code>[image]</code> に畳めば画像ラベル付与の誤検出が減る</li>
+  <li>画像 alt（<code>[ラベル]</code>）の正規化：両側で <code>[image]</code> にそろえれば画像ラベル付与の誤検出が減る</li>
   <li>章番号バッジの除去：見出し先頭の連番を chrome として扱うか、内容として扱うかの方針決め</li>
   <li>配線マニュアルの大型表：行・列の対応づけ単位での比較に切り替えると欠落判定がさらに減る</li>
   <li>生成プロンプト側の対処：表記ゆれ（<code>〜</code>/<code>＆</code>）はそもそも生成させない指示強化も選択肢</li>
