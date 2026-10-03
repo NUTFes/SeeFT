@@ -60,7 +60,7 @@
 8. 負のIDでも検証されずにそのままキーになる（異常系）
    - 入力: `logs := []entity.ActionLog{{ID: 1, UserID: -1, DateID: -2}}`
    - 期待値: `len(got) == 1、got["-1_-2"] が長さ1のスライスとして存在する（エラーにも panic にもならず、負値がそのままキーに埋め込まれる）`
-   - 根拠: 不正なドメイン値に対して何も検証しない今の動きを固定する。なお生成されるキー "-1_-2" はアンダースコアが1個なので、呼び出し元のSplit/Atoi（L108-117）でも正しく -1, -2に戻せ、Invalid group keyとして読み飛ばされたり、別のIDとしてprocessGroupに渡ったりしないことを確かめた
+   - 根拠: 不正なドメイン値に対して何も検証しない今の動きを固定する。なお生成されるキー "-1_-2" はアンダースコアが1個なので、呼び出し元のSplit/Atoi（L108-117）でも正しく -1, -2に戻せ、Invalid group keyとして読み飛ばされたり、別のIDとしてprocessGroupに渡ったりしないことを確かめた。ただし、IDが-1・-2のユーザーと日付はDBに無いので、processGroupの`Find`の結果の`Scan`が`sql.ErrNoRows`を返す。ProcessUnsentNotificationsはそのグループを飛ばして`MarkAsSent`を呼ばないため、このグループのログは未送信のまま残る
 
 実行検証: worktreeのapi/lib/usecase/に使い捨てテストdesign_verify_groupnotificationsbyuseranddate_test.goを作り、ゼロ値レシーバ(&notificationUseCase{})からGroupNotificationsByUserAndDateを直接呼び出して、全8ケースをサブテストとして実装した。cd api && go test ./lib/usecase/... -run TestDesignVerifyGroupNotificationsByUserAndDate -vで実行し、8ケースすべてが初回でPASSした（8/8起案どおり、修正0件、削除0件、needs_judgment 0件）。非nilの空map（空スライスとnilスライスの両方）、挿入順の保持、フィールドをそのまま渡すこと（DiffPayload/CreatedAtを含めてDeepEqualで完全一致）、キー "0_0" の生成、"1_23" と "12_3" が衝突しないこと、"-1_-2" の生成も、すべて実際の動きで確かめた。テストファイルは削除し、git status --porcelainが空であることを確かめた。commit/pushは行っていない。
 

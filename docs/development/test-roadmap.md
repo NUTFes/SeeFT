@@ -25,7 +25,7 @@ MTの叩き台（静的解析 → repository修正 → repositoryテスト → u
 
 ## 前提: コード構造がテスト戦略を規定する
 
-apiは素直なレイヤ構成で、全層がコンストラクタ注入とインターフェースでつながっている（`api/lib/di/di.go`に集約）。テストを書くうえでは恵まれた構成である。ただし、repositoryのインターフェースが`*sql.Rows` / `*sql.Row`という`database/sql`の具象型を返し、Scanをusecase側が行う設計になっている点だけは、大きな制約である（18ファイル中17ファイル。例外は`shift_card_repository.go`のみ）。
+apiは素直なレイヤ構成で、repository・usecase・controllerは`api/lib/di/di.go`でコンストラクタに渡して組み立てている。依存はほとんどインターフェースで受けているが、`notificationUseCase`だけは`*slack.SlackService`を具象型のまま受けている。テストを書くうえでは恵まれた構成である。ただし、repositoryのインターフェースが`*sql.Rows` / `*sql.Row`という`database/sql`の具象型を返し、Scanをusecase側が行う設計になっている点だけは、大きな制約である（18ファイル中17ファイル。例外は`shift_card_repository.go`のみ）。
 
 ```go
 // api/lib/internals/repository/bureau_repository.go

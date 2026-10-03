@@ -6,6 +6,8 @@
 
 状態: 調査完了・試験計画ドラフト（未実行）。試験の実行は、issue化と環境準備を経てから行う。
 
+追記（2026-08-01）: 7章のissue 2のうち、DB接続プールの上限はPR #441で入った（`api/lib/externals/db/db.go#ConnectMySQL`で`SetMaxOpenConns(20)`・`SetMaxIdleConns(20)`・`SetConnMaxLifetime(30分)`）。1章の5点目、2.4節、4.4節、5章の表で「上限がない」「無制限」と書いているのは、本書を書いた2026-07-16の時点の状態である。`Access-Token`ヘッダがないときのpanicは、まだ直っていない。
+
 参考: NUTFes Bingo本番構成・負荷テスト統合報告書（2026-07-03）。本書は、同報告書の「原因の切り分け」「内部直結vs公開URL経由の比較」「p95/p99でのpass/fail基準」のやり方を踏襲する。
 
 ---
