@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>機械検証スクリプト改善まとめ — verify_slide_mechanical.py</title>
+<title>機械検証スクリプト改善まとめ（verify_slide_mechanical.py）</title>
 <style>
   :root {
     --teal: #009688;
@@ -107,29 +107,29 @@
   <div class="meta">
     対象: <code>scripts/claude-slide/verify_slide_mechanical.py</code><br>
     作業日: 2026-05-31 ／ 担当: 上林（PM）<br>
-    背景: card-strict 生成 HTML の検証が常に VERDICT: NG になり、本物の差分がノイズに埋もれていた
+    背景: card-strict生成HTMLの検証が常にVERDICT: NGになり、本物の差分がノイズに埋もれていた
   </div>
 </header>
 
 <section>
 <h2>1. 何をしたか（ひとことで）</h2>
 <div class="card accent">
-検証スクリプトが「内容の改変」と一緒に数えてしまっていた<strong>3種類のノイズ</strong>
+検証スクリプトが「内容の改変」と一緒に数えてしまっていた3種類のノイズ
 （目次UIの重複・記号のゆれ・表の罫線）を、比較の前に取り除いた。
-最も効いたのは<strong>「追加」誤検出</strong>で、全ファイルで <strong>59〜97%</strong> 減った
+最も効果が大きかったのは「追加」誤検出で、全ファイルで<strong>59〜97%</strong>減った
 （目次UIの重複が消えたため）。
-ただし合計の差分件数で見ると <strong>25〜54% 減</strong>にとどまる。
-判定ロジック自体は厳格なまま——内容の追加・欠落・改変は今までどおり全部 NG にする。
+ただし合計の差分件数で見ると<strong>25〜54%減</strong>にとどまる。
+判定ロジック自体は厳格なままで、内容の追加・欠落・改変は今までどおり全部NGにする。
 </div>
 <div class="note">
-<strong>正直な前置き：</strong>「追加」激減の一部は <strong>「改変」への付け替え</strong>でもある。
+先に断っておくと、「追加」の激減の一部は 「改変」への付け替えでもある。
 ナビ・罫線ノイズを消すと文の区切りが変わり、以前は「追加＋欠落」の別々2件だったものが
-「改変」1ペアに統合されることがある。実際、配線 card（緩いプロンプト）では改変が
-<strong>27→31 件と微増</strong>した。総量は確実に減っているが、
-「追加が消えた＝全部きれいになった」ではない点に注意。<br>
-また、ねらいは「VERDICT を無理やり OK にすること」ではない。画像ラベル付与や章番号の付与といった
-<em>本物の差分</em>は残るので判定は NG のまま。狙いは、その本物の差分が
-<strong>ノイズに埋もれて見えなくなる状態</strong>を解消すること。
+「改変」1ペアにまとめられることがある。実際、配線card（緩いプロンプト）では改変が
+<strong>27→31件と微増</strong>した。総量は確実に減っているが、
+「追加が消えた＝全部きれいになった」わけではない点に注意する。<br>
+また、ねらいは「VERDICTを無理やりOKにすること」ではない。画像ラベル付与や章番号の付与といった
+<em>本物の差分</em>は残るので判定はNGのまま。狙いは、その本物の差分が
+ノイズに埋もれて見えなくなる状態を解消すること。
 </div>
 </section>
 
@@ -137,103 +137,103 @@
 <h2>2. 改善した3点</h2>
 
 <div class="card">
-  <span class="tag">改善 A</span>
-  <h3>ナビゲーション UI を比較対象から外した（最大の効果）</h3>
+  <span class="tag">改善A</span>
+  <h3>ナビゲーションUIを比較対象から外した（最大の効果）</h3>
   <p>
   プロンプトは目次（<code>&lt;nav&gt;</code>）・フローティング目次ボタン（FAB <code>≡</code>）・
-  閉じるボタン（<code>×</code>）の生成を<strong>義務付けている</strong>。これらは元 Google Doc には
-  存在しない UI 部品なのに、検証器が本文として拾い「元にない情報＝追加」と誤判定していた。
-  特に目次は仕様上 2 箇所に重複（トップ＋オーバーレイ）するうえ、
-  <code>&lt;ol&gt;</code> の連番（<code>1. 2. 3.</code>）まで本文に混ざっていた。
+  閉じるボタン（<code>×</code>）の生成を義務付けている。これらは元Google Docには
+  存在しないUI部品なのに、検証器が本文として拾い「元にない情報＝追加」と誤判定していた。
+  特に目次は仕様上2箇所に重複（トップ＋オーバーレイ）するうえ、
+  <code>&lt;ol&gt;</code>の連番（<code>1. 2. 3.</code>）まで本文に混ざっていた。
   </p>
-  <p>そこで pandoc に渡す前に、生成 HTML から該当 DOM ごと削除する。
-  <code>&lt;nav&gt;</code> は入れ子にならないので、非貪欲マッチで安全に 1 要素ずつ落とせる。</p>
+  <p>そこでpandocに渡す前に、生成HTMLから該当DOMごと削除する。
+  <code>&lt;nav&gt;</code>は入れ子にならないので、非貪欲マッチで安全に1要素ずつ取り除ける。</p>
   <div class="ex">
-  <strong>消える誤検出の例：</strong>
-  目次由来の <code>'該当シフト 2.'</code> <code>'内容 3.'</code>、FAB の <code>'≡ × 目次'</code>、
-  オーバーレイ目次の重複ラベル群。
+  消える誤検出の例は、
+  目次由来の<code>'該当シフト 2.'</code> <code>'内容 3.'</code>、FABの<code>'≡ × 目次'</code>、
+  オーバーレイ目次の重複ラベル群である。
   </div>
 </div>
 
 <div class="card">
-  <span class="tag">改善 B</span>
-  <h3>「表記ゆれ」を改変から切り出し、別ティアにした</h3>
+  <span class="tag">改善B</span>
+  <h3>「表記ゆれ」を改変から切り出し、別の区分にした</h3>
   <p>
-  元 Doc では <code>~</code>・<code>&amp;</code>・半角括弧、生成側では <code>〜</code>・<code>＆</code>・全角括弧、
-  といった<strong>見た目だけの差</strong>を、これまでは「改変」として NG 要因に数えていた。
-  内容（漢字・かな・英数字）は同一なのに NG が膨らむ原因だった。
+  元Docでは<code>~</code>・<code>&amp;</code>・半角括弧、生成側では<code>〜</code>・<code>＆</code>・全角括弧、
+  といった見た目だけの差を、これまでは「改変」としてNG要因に数えていた。
+  内容（漢字・かな・英数字）は同一なのに、NGの件数が増える原因になっていた。
   </p>
   <p>
-  NFKC 正規化＋波ダッシュ統一＋空白無視で畳んだとき一致するペアは、
-  「改変」ではなく<strong>「表記ゆれ（許容差）」</strong>に分類する。
-  デフォルトでは VERDICT を NG にしない。可読文字の追加・削除・置換は畳まれないので、
+  NFKC正規化＋波ダッシュ統一＋空白無視でそろえたときに一致するペアは、
+  「改変」ではなく「表記ゆれ（許容差）」に分類する。
+  デフォルトではVERDICTをNGにしない。可読文字の追加・削除・置換はそろえる対象にならないので、
   <strong>本物の改変はこれまでどおり検出され続ける</strong>。
   </p>
   <div class="ex">
-  <strong>表記ゆれに回る例（NG にしない）：</strong>
+  表記ゆれに回る例（NGにしない）は、
   <code>9:00<span style="color:var(--warn)">~</span>17:00</code> →
   <code>9:00<span style="color:var(--teal)">〜</span>17:00</code>、
-  元 Doc 由来のスペース混入 <code>完成 した</code> → <code>完成した</code>、
-  <code>youtubeか ら</code> → <code>youtubeから</code>。
+  元Doc由来のスペース混入<code>完成 した</code> → <code>完成した</code>、
+  <code>youtubeか ら</code> → <code>youtubeから</code>など。
   </div>
   <p class="small">
-  従来どおり記号差も NG にしたい場合は <code>--strict-symbols</code> を付ける。
-  この場合、表記ゆれも VERDICT に算入される。
+  従来どおり記号差もNGにしたい場合は<code>--strict-symbols</code>を付ける。
+  この場合、表記ゆれもVERDICTに算入される。
   </p>
 </div>
 
 <div class="card">
-  <span class="tag">改善 C</span>
+  <span class="tag">改善C</span>
   <h3>表の罫線ノイズを両側で除去した</h3>
   <p>
-  pandoc は表を罫線付きテキストに変換する。元 Doc はグリッド表
+  pandocは表を罫線付きテキストに変換する。元Docはグリッド表
   （<code>+---+</code>）、生成側はシンプル表（<code>-----</code>）になりがちで、
-  <strong>同じ内容なのに罫線の記法が違う</strong>だけで「ブロックまるごと欠落」と誤検出していた。
-  そこで罫線・セル区切り（<code>- + |</code> や box-drawing）を src/gen 双方で除去し、
+  同じ内容なのに罫線の記法が違うだけで「ブロックまるごと欠落」と誤検出していた。
+  そこで罫線・セル区切り（<code>- + |</code>やbox-drawing）をsrc/gen双方で除去し、
   表の中身（チーム割り・物品数など）だけを残して比較する。
-  電話番号の単独ダッシュ（<code>080-6801-1943</code>）は 3 連以上の罫線ランに当たらないので温存される。
+  電話番号の単独ダッシュ（<code>080-6801-1943</code>）は3連以上の罫線ランに当たらないので、そのまま残る。
   </p>
 </div>
 </section>
 
 <section>
-<h2>3. ビフォー / アフター（実測）</h2>
+<h2>3. ビフォー/アフター（実測）</h2>
 <p class="small">配線マニュアル・幼稚園WARSマニュアルの計5パターンで再実行した結果。数値は誤検出件数（少ないほど良い）。</p>
 <table>
   <thead>
-    <tr><th class="label">マニュアル / 版</th><th>追加</th><th>欠落</th><th>改変</th><th>合計<br><span class="small">(追+欠+改)</span></th><th>表記ゆれ<br><span class="small">(新・許容差)</span></th></tr>
+    <tr><th class="label">マニュアル/版</th><th>追加</th><th>欠落</th><th>改変</th><th>合計<br><span class="small">(追+欠+改)</span></th><th>表記ゆれ<br><span class="small">(新・許容差)</span></th></tr>
   </thead>
   <tbody>
     <tr><td class="label">WARS card-strict</td><td class="num">10 → <span class="down">2</span></td><td class="num">2 → 3</td><td class="num">12 → <span class="down">6</span></td><td class="num">24 → <span class="down">11</span> <span class="small">(−54%)</span></td><td class="num">5</td></tr>
     <tr><td class="label">WARS card</td><td class="num">19 → <span class="down">6</span></td><td class="num">10 → <span class="down">5</span></td><td class="num">14 → <span class="flat">14</span></td><td class="num">43 → <span class="down">25</span> <span class="small">(−42%)</span></td><td class="num">6</td></tr>
-    <tr><td class="label">配線 card-strict</td><td class="num">34 → <span class="down">1</span></td><td class="num">31 → <span class="down">20</span></td><td class="num">21 → <span class="down">19</span></td><td class="num">86 → <span class="down">40</span> <span class="small">(−53%)</span></td><td class="num">1</td></tr>
-    <tr><td class="label">配線 card</td><td class="num">42 → <span class="down">3</span></td><td class="num">26 → <span class="down">13</span></td><td class="num">27 → <span style="color:var(--warn);font-weight:700">31</span></td><td class="num">95 → <span class="down">47</span> <span class="small">(−51%)</span></td><td class="num">7</td></tr>
-    <tr><td class="label">配線 det（決定的）</td><td class="num">17 → <span class="down">7</span></td><td class="num">11 → <span class="flat">11</span></td><td class="num">12 → <span class="flat">12</span></td><td class="num">40 → <span class="down">30</span> <span class="small">(−25%)</span></td><td class="num">0</td></tr>
+    <tr><td class="label">配線card-strict</td><td class="num">34 → <span class="down">1</span></td><td class="num">31 → <span class="down">20</span></td><td class="num">21 → <span class="down">19</span></td><td class="num">86 → <span class="down">40</span> <span class="small">(−53%)</span></td><td class="num">1</td></tr>
+    <tr><td class="label">配線card</td><td class="num">42 → <span class="down">3</span></td><td class="num">26 → <span class="down">13</span></td><td class="num">27 → <span style="color:var(--warn);font-weight:700">31</span></td><td class="num">95 → <span class="down">47</span> <span class="small">(−51%)</span></td><td class="num">7</td></tr>
+    <tr><td class="label">配線det（決定的）</td><td class="num">17 → <span class="down">7</span></td><td class="num">11 → <span class="flat">11</span></td><td class="num">12 → <span class="flat">12</span></td><td class="num">40 → <span class="down">30</span> <span class="small">(−25%)</span></td><td class="num">0</td></tr>
   </tbody>
 </table>
-<p class="small">判定は5本とも引き続き <strong>NG</strong>（本物の差分が残るため。第4節参照）。
-配線 card の改変 27→31（橙字）は誤検出ではなく、後述の「件数の付け替え」による微増。</p>
+<p class="small">判定は5本とも引き続きNG（本物の差分が残るため。第4節参照）。
+配線cardの改変27→31（橙字）は誤検出ではなく、後述の「件数の付け替え」による微増。</p>
 <div class="kpi">
   <div class="box"><div class="big">−59〜97%</div><div class="cap">「追加」誤検出の削減幅（全5本）</div></div>
   <div class="box"><div class="big">−25〜54%</div><div class="cap">合計差分件数の削減幅（全5本）</div></div>
   <div class="box"><div class="big">新カテゴリ</div><div class="cap">表記ゆれを分離（判定に非算入）</div></div>
 </div>
 <div class="note">
-<strong>読み方：</strong>「追加」の激減は<strong>改善A（目次UI除去）</strong>の効果で、これは堅実。
+表を読むと、「追加」の激減は改善A（目次UI除去）の効果で、これは堅実。
 ただし合計の減りは約半分で、<strong>card-strict（本番で使うプロンプト）が最も改善し、
-card（緩い版）は改変が増えて伸びが鈍い</strong>。緩いプロンプトは元々書き換えが多いため、
+card（緩い版）は改変が増えて改善の幅が小さい</strong>。緩いプロンプトは元々書き換えが多いため、
 ノイズを除いても本物の改変が多く残る。<br>
-<code>det</code> の表記ゆれが 0 件なのは、決定的変換は記号を一切置換しないため——
-「LLM が記号を整えてしまう」という仮説の裏付けにもなっている。
+<code>det</code>の表記ゆれが0件なのは、決定的変換は記号を一切置換しないためだ。
+これは「LLMが記号を整えてしまう」という仮説の裏付けにもなっている。
 </div>
 </section>
 
 <section>
-<h2>3.5. 「件数」では伝わらない——文字ベースの保持率サマリを追加</h2>
+<h2>3.5. 「件数」では伝わらないので、文字ベースの保持率サマリを追加</h2>
 <div class="card accent">
 <p>
-件数（改変19件…）は画像alt移動・表組み替え・元Doc由来のゴミで水増しされ、
-<strong>「実際に文章がどれだけ変わったか」が第三者に伝わらない</strong>という問題があった。
+件数（改変19件…）は、画像altの移動・表の組み替え・元Doc由来のゴミで水増しされ、
+「実際に文章がどれだけ変わったか」が第三者に伝わらないという問題があった。
 そこでレポート冒頭に<strong>文字ベースの一致度サマリ</strong>を出すようにした。
 件数を見なくても、この1ブロックで忠実度が分かる。
 </p>
@@ -245,54 +245,54 @@ card（緩い版）は改変が増えて伸びが鈍い</strong>。緩いプロ�
   内訳: 表晴天時チーム分け / 図 / :\Users\０１０２\AppData\Loc… / Word\DSC_ / JPG / …
 - 完全一致した文: 41/81 文</code></pre>
 <p class="small">
-保持率は<strong>文ペアリングに依存させない</strong>。元Doc の各文が生成HTML全体の
+保持率は文ペアリングに依存させない。元Docの各文が生成HTML全体の
 どこかに（章順を入れ替えても）現れる文字を「保持」と数える。これで表ブロックの
-ペア失敗に引きずられず、章の組み替えにも強い。
+ペア失敗に影響されず、章を組み替えても結果が変わりにくい。
 </p>
 <div class="ex">
-<strong>内訳が効く例：</strong>上の配線 card-strict は「220字追加」だけ見ると不安だが、内訳を見ると
-正体は <code>○○を表示</code> という<strong>見出しラベルの自動付与</strong>だと分かる（本文の捏造ではない）。
-落とした側の内訳も <code>:\Users\…\AppData</code> <code>Word\DSC_</code> など
-<strong>元Docに紛れたWindows画像パスのゴミ</strong>で、消えて正解と判断できる。
-数字だけでは下せない判断が、内訳で即できる。
+内訳が役に立つ例として、上の配線card-strictは「220字追加」だけ見ると不安だが、内訳を見ると
+正体は<code>○○を表示</code>という見出しラベルの自動付与だと分かる（本文の捏造ではない）。
+落とした側の内訳も<code>:\Users\…\AppData</code> <code>Word\DSC_</code>など
+元Docに紛れたWindows画像パスのゴミで、消えて正解と判断できる。
+数字だけではできない判断が、内訳を見ればすぐにできる。
 </div>
 </div>
 <table>
   <thead>
-    <tr><th class="label">マニュアル / 版</th><th>本文保持率</th><th>AI追加文字</th><th>完全一致文</th></tr>
+    <tr><th class="label">マニュアル/版</th><th>本文保持率</th><th>AI追加文字</th><th>完全一致文</th></tr>
   </thead>
   <tbody>
-    <tr><td class="label">配線 det（決定的）</td><td class="num down">100.0%</td><td class="num">16</td><td class="num">58/81</td></tr>
-    <tr><td class="label">配線 card-strict</td><td class="num">90.9%</td><td class="num">220</td><td class="num">41/81</td></tr>
-    <tr><td class="label">配線 card</td><td class="num">88.6%</td><td class="num">475</td><td class="num">30/81</td></tr>
+    <tr><td class="label">配線det（決定的）</td><td class="num down">100.0%</td><td class="num">16</td><td class="num">58/81</td></tr>
+    <tr><td class="label">配線card-strict</td><td class="num">90.9%</td><td class="num">220</td><td class="num">41/81</td></tr>
+    <tr><td class="label">配線card</td><td class="num">88.6%</td><td class="num">475</td><td class="num">30/81</td></tr>
     <tr><td class="label">WARS card-strict</td><td class="num down">97.2%</td><td class="num">48</td><td class="num">15/29</td></tr>
     <tr><td class="label">WARS card</td><td class="num">92.0%</td><td class="num">105</td><td class="num">4/29</td></tr>
   </tbody>
 </table>
 <div class="note">
-<strong>指標の妥当性：</strong>決定的変換（det）が <strong>保持率 100% / 追加 16字</strong> になったのが
-裏付け。本文を写経するだけの変換なので満点が出るはず——その通りになった。
-順序も <strong>det &gt; card-strict &gt; card</strong> で、プロンプトが緩いほど保持率が下がり追加が増える、
+指標が妥当だといえる裏付けは、決定的変換（det）が<strong>保持率100% /追加16字</strong>になったことである。
+本文をそのまま写すだけの変換なので満点が出るはずで、その通りになった。
+順序もdet &gt; card-strict &gt; cardで、プロンプトが緩いほど保持率が下がり追加が増える、
 という直感と一致する。
 </div>
 </section>
 
 <section>
-<h2>4. なぜ判定は NG のまま残るのか</h2>
+<h2>4. なぜ判定はNGのまま残るのか</h2>
 <div class="card">
-<p>過検出を消した後に残る差分は、<strong>本物（＝人が見て判断すべき差）</strong>が中心になった。代表例：</p>
+<p>過検出を消した後に残る差分は、本物（＝人が見て判断すべき差）が中心になった。代表例は次のとおり。</p>
 <ul>
-  <li><strong>画像ラベルの付与</strong>：元 Doc は alt 無しの <code>[]</code>、生成側は <code>[塗り絵1]</code> のように
+  <li>画像ラベルの付与。元Docはalt無しの<code>[]</code>、生成側は<code>[塗り絵1]</code>のように
   画像へラベルを付けている（情報の追加と取れる）</li>
-  <li><strong>章番号の付与</strong>：見出しに <code>1 / 2 / 3</code> の連番を付けている</li>
-  <li><strong>ラベルの繰り返し</strong>：連絡先で <code>渉外局</code> を各人に付け直している</li>
-  <li><strong>表紙の語順入れ替え</strong>：タイトルと委員会名・日付の並び順が変わっている</li>
-  <li><strong>複雑な表の組み替え</strong>：配線マニュアルの晴天/雨天チーム表は構造が大きく、
-  なお欠落判定が残る（さらなる正規化の余地）</li>
+  <li>章番号の付与。見出しに<code>1 / 2 / 3</code>の連番を付けている</li>
+  <li>ラベルの繰り返し。連絡先で<code>渉外局</code>を各人に付け直している</li>
+  <li>表紙の語順入れ替え。タイトルと委員会名・日付の並び順が変わっている</li>
+  <li>複雑な表の組み替え。配線マニュアルの晴天/雨天チーム表は構造が大きく、
+  なお欠落判定が残る（さらに正規化する余地がある）</li>
 </ul>
 <p class="small">
 これらは「ノイズ」ではなく、文章不変ポリシーの観点で<strong>人が確認すべき差分</strong>。
-検証器が NG を出し続けるのは正しい挙動で、改善の目的（ノイズ除去）とは両立する。
+検証器がNGを出し続けるのは正しい挙動で、改善の目的（ノイズ除去）とは両立する。
 </p>
 </div>
 </section>
@@ -308,8 +308,8 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 <span class="cm"># card 版や det 版を検証する場合は対象を切り替え</span>
 ... --html-name slide_claude.card.html --output-name verify_mechanical.card.txt</code></pre>
 <div class="note">
-レポートには新たに <strong>「## 表記ゆれ（許容差・VERDICT に非算入）」</strong> セクションが追加され、
-記号差・空白差がそこに集約される。「## 改変」には<strong>内容の差だけ</strong>が残るので、
+レポートには新たに 「## 表記ゆれ（許容差・VERDICTに非算入）」 セクションが追加され、
+記号差・空白差がそこにまとめられる。「## 改変」には<strong>内容の差だけ</strong>が残るので、
 レビュー時はまず改変・追加・欠落の3つだけ見ればよい。
 </div>
 </section>
@@ -317,21 +317,21 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 <section>
 <h2>6. 変更点（技術メモ）</h2>
 <div class="card">
-<p>変更ファイル：</p>
+<p>変更したファイルは次のとおり。</p>
 <ul class="files">
-  <li>scripts/claude-slide/verify_slide_mechanical.py（+144 / −22 行）</li>
+  <li>scripts/claude-slide/verify_slide_mechanical.py（+144 / −22行）</li>
 </ul>
-<p>主な追加・変更関数：</p>
+<p>主に追加・変更した関数は次のとおり。</p>
 <ul>
-  <li><code>preprocess_generated_html()</code> — base64 除去に加え、<code>&lt;nav&gt;</code>・FAB・閉じるボタンを DOM ごと削除（改善A）</li>
-  <li><code>strip_table_art()</code> — pandoc の表罫線・セル区切りを除去（改善C）。改行を潰す前段で実行</li>
-  <li><code>fold_cosmetic()</code> — NFKC＋波ダッシュ統一＋空白除去で表記ゆれ判定キーを作る（改善B）</li>
-  <li><code>categorize()</code> — 2段ペアリング化。pass1 で表記ゆれを先に回収 → pass2 で類似度ペアリング。戻り値に <code>cosmetic</code> を追加</li>
-  <li><code>compute_fidelity()</code> — 文字ベースの保持率サマリを算出（第3.5節）。ペアリング非依存・章組み替えに強い照合</li>
-  <li><code>render_report()</code> — 冒頭に文字ベースサマリ、「表記ゆれ」セクション、統計行を追加。VERDICT は内容差分のみで判定（<code>--strict-symbols</code> 時のみ表記ゆれを算入）</li>
+  <li><code>preprocess_generated_html()</code>は、base64除去に加え、<code>&lt;nav&gt;</code>・FAB・閉じるボタンをDOMごと削除する（改善A）</li>
+  <li><code>strip_table_art()</code>は、pandocの表罫線・セル区切りを除去する（改善C）。改行をまとめる前の段階で実行する</li>
+  <li><code>fold_cosmetic()</code>は、NFKC＋波ダッシュ統一＋空白除去で表記ゆれ判定キーを作る（改善B）</li>
+  <li><code>categorize()</code>は、2段のペアリングにした。pass1で表記ゆれを先に取り出し、pass2で類似度ペアリングをする。戻り値に<code>cosmetic</code>を追加</li>
+  <li><code>compute_fidelity()</code>は、文字ベースの保持率サマリを算出する（第3.5節）。ペアリングに依存せず、章を組み替えても結果が変わりにくい照合</li>
+  <li><code>render_report()</code>は、冒頭に文字ベースサマリ、「表記ゆれ」セクション、統計行を追加。VERDICTは内容差分のみで判定（<code>--strict-symbols</code>時のみ表記ゆれを算入）</li>
 </ul>
 <p class="small">
-すべて AI を呼ばない決定的処理のまま。同じ入力 → 同じ出力という性質は維持。
+すべてAIを呼ばない決定的処理のままで、同じ入力 → 同じ出力という性質は保っている。
 生成側（プロンプト）は変更していない。
 </p>
 </div>
@@ -341,10 +341,10 @@ uv run --project scripts/claude-slide python scripts/claude-slide/verify_slide_m
 <h2>7. 残課題（任意・次の改善余地）</h2>
 <div class="card">
 <ul>
-  <li>画像 alt（<code>[ラベル]</code>）の正規化：両側で <code>[image]</code> に畳めば画像ラベル付与の誤検出が減る</li>
-  <li>章番号バッジの除去：見出し先頭の連番を chrome として扱うか、内容として扱うかの方針決め</li>
-  <li>配線マニュアルの大型表：行・列の対応づけ単位での比較に切り替えると欠落判定がさらに減る</li>
-  <li>生成プロンプト側の対処：表記ゆれ（<code>〜</code>/<code>＆</code>）はそもそも生成させない指示強化も選択肢</li>
+  <li>画像alt（<code>[ラベル]</code>）の正規化。両側で<code>[image]</code>にそろえれば、画像ラベル付与の誤検出が減る</li>
+  <li>章番号バッジの除去。見出し先頭の連番をchromeとして扱うか、内容として扱うかの方針決め</li>
+  <li>配線マニュアルの大型表。行・列の対応づけ単位での比較に切り替えると、欠落判定がさらに減る</li>
+  <li>生成プロンプト側の対処。表記ゆれ（<code>〜</code>/<code>＆</code>）をそもそも生成させないよう、指示を強める案もある</li>
 </ul>
 </div>
 </section>

@@ -1,20 +1,20 @@
-# 解説マニュアル生成パイプライン — 自動化実装設計
+# 解説マニュアル生成パイプラインの自動化の実装設計
 
-ステータス: Phase 1.5 完了、Phase 2 実装中
+ステータス: Phase 1.5完了、Phase 2実装中
 最終更新: 2026-05-13
 担当: 上林（PM）
-位置付け: **実装者視点の単一正本**。新 PM への引き継ぎはまずこの MD を読む
+位置付け: 実装者から見て、ただ一つのよりどころにする文書。新PMへの引き継ぎでは、まずこのMDを読む
 
-このドキュメントは「解説マニュアル生成パイプライン」の自動化部分について、**コードと同期して育てる**実装設計メモ。執行部視点 / インフラ視点 / 機能視点の他 MD（後述）に対して、本 MD は「**実装する人**」が手を動かす際の正本として機能する。
+このドキュメントは、「解説マニュアル生成パイプライン」の自動化部分について、コードに合わせて書き足していく実装設計メモ。執行部・インフラ・機能の視点で書いた他のMD（後述）に対して、本MDは、実装する人が手を動かすときのよりどころになる。
 
-> 注（2026-06）: 本番運用は **Slack スレッド中心の手作業フロー** に切り替えた。現行の実運用手順は
-> `../manual-slide-operations.md` を参照。本 MD が前提とするスプシ常駐監視（watcher / sheets_client /
-> drive_client、19 列スキーマ）は当面 critical path 外（保留中の将来案）。状態管理を自動化したく
-> なったときに再評価する。
+>注（2026-06）: 本番運用は、**Slackスレッド中心の手作業フロー** に切り替えた。現行の実運用手順は
+> `../manual-slide-operations.md`を参照。本MDが前提とするスプシ常駐監視（watcher / sheets_client /
+> drive_client、19列スキーマ）は当面critical path外（保留中の将来案）。状態管理を自動化したく
+>なったときに再評価する。
 
-## 1. 全体ビジョン: 「スプシを軸」にする
+## 1. スプシを中心にした全体の構想
 
-PM が触るのは Google Sheets だけ。コード（generate / verify / アップロード）は全てスプシのデータを読み書きする側に回る。
+PMが触るのはGoogle Sheetsだけである。コード（generate・verify・アップロード）は、すべてスプシのデータを読み書きする側に回る。
 
 ```
 [PM]
@@ -35,39 +35,39 @@ PM が触るのは Google Sheets だけ。コード（generate / verify / アッ
   ステータス「検証済(OK/NG)」、生成HTML URL、件数、最終生成日時 が反映される
 ```
 
-## 2. Phase の進捗
+## 2. Phaseの進捗
 
 | Phase | 内容 | 状態 | 関連物 |
 | --- | --- | --- | --- |
-| **Phase 1** | スプシ可視化（手動運用、CSV で状態管理） | 完了 | `docs/spread_sheets/45th_マニュアル生成ステータス.csv` |
-| **Phase 1.5** | 個別生成指示の手動同期（PM が CSV 経由でプロンプトに追加指示を流せる） | 完了 | `generate_slide.py` の CSV ルックアップ機能、19 列に拡張済み |
-| **Phase 2** | スプシ軸の完全自動化（Sheets API + Drive API + watcher） | **実装中** | 本 MD の Step 1-6 を参照 |
-| **Phase 3（任意）** | GAS onEdit + webhook で polling を webhook に置換 | 未着手 | qa.md TODO 参照 |
+| Phase 1 | スプシ可視化（手動運用、CSVで状態管理） | 完了 | `docs/spread_sheets/45th_マニュアル生成ステータス.csv` |
+| Phase 1.5 | 個別生成指示の手動同期（PMがCSV経由でプロンプトに追加指示を流せる） | 完了 | `generate_slide.py`のCSVルックアップ機能、19列に拡張済み |
+| Phase 2 | スプシを中心にした完全自動化（Sheets API + Drive API + watcher） | 実装中 | 本MDのStep 1-6を参照 |
+| Phase 3（任意） | GAS onEdit + webhookでpollingをwebhookに置換 | 未着手 | qa.md TODO参照 |
 
 ## 3. 構成部品
 
-### 既存（Phase 1.5 まで）
+### 既存（Phase 1.5まで）
 
 | 部品 | 役割 | 場所 |
 | --- | --- | --- |
-| `generate_slide.py` | Claude Agent SDK + サブスク認証で解説 HTML 生成。CSV から個別生成指示も注入 | `scripts/claude-slide/generate_slide.py` |
-| `verify_slide.py` | 元 Doc と生成 HTML の AI 検証、VERDICT: OK/NG + 件数を返す | `scripts/claude-slide/verify_slide.py` |
+| `generate_slide.py` | Claude Agent SDK + サブスク認証で解説HTML生成。CSVから個別生成指示も注入 | `scripts/claude-slide/generate_slide.py` |
+| `verify_slide.py` | 元Docと生成HTMLのAI検証、VERDICT: OK/NG + 件数を返す | `scripts/claude-slide/verify_slide.py` |
 | `.claude/manual-prompt-card.md` | カード形式生成用の共通プロンプト | `.claude/manual-prompt-card.md` |
-| `.claude/manual-verify-prompt.md` | AI 検証用プロンプト | `.claude/manual-verify-prompt.md` |
-| ステータス CSV | 19 列の状態管理 | `docs/spread_sheets/45th_マニュアル生成ステータス.csv` |
-| `build_status_csv.py` | xlsx + verify レポートから CSV を再構築するユーティリティ | `/tmp/build_status_csv.py`（将来 `scripts/` に昇格予定） |
+| `.claude/manual-verify-prompt.md` | AI検証用プロンプト | `.claude/manual-verify-prompt.md` |
+| ステータスCSV | 19列の状態管理 | `docs/spread_sheets/45th_マニュアル生成ステータス.csv` |
+| `build_status_csv.py` | xlsx + verifyレポートからCSVを再構築するユーティリティ | `/tmp/build_status_csv.py`（将来`scripts/`に移す予定） |
 
-### 新規（Phase 2 で作る）
+### 新規（Phase 2で作る）
 
 | 部品 | 役割 | 工数目安 | 依存 |
 | --- | --- | --- | --- |
-| `scripts/automation/sheets_client.py` | Google Sheets API ラッパー、行の読み書き、enum 値の検証 | 2-3h | OAuth 認証必須 |
-| `scripts/automation/drive_client.py` | Google Drive API で Doc を HTML エクスポート | 1-2h | OAuth 認証必須 |
-| `scripts/automation/process_one.py` | マニュアル 1 本の生成 → 検証 → スプシ書き戻し（メインエンジン） | 1-2h | sheets_client + 既存 generate/verify |
-| `scripts/automation/watcher.py` | スプシ polling でステータス変更検知、`process_one.py` を起動 | 1-2h | sheets_client |
-| `scripts/automation/uploader.py` | 生成 HTML を配信先にアップロード（インターフェースだけ先に切る、実装はインフラ部門の決定後） | 30 分（スタブ）+ TBD（本実装） | ホスティング先依存 |
+| `scripts/automation/sheets_client.py` | Google Sheets APIラッパー、行の読み書き、enum値の検証 | 2-3h | OAuth認証必須 |
+| `scripts/automation/drive_client.py` | Google Drive APIでDocをHTMLエクスポート | 1-2h | OAuth認証必須 |
+| `scripts/automation/process_one.py` | マニュアル1本の生成 → 検証 → スプシ書き戻し（メインエンジン） | 1-2h | sheets_client + 既存generate/verify |
+| `scripts/automation/watcher.py` | スプシpollingでステータス変更検知、`process_one.py`を起動 | 1-2h | sheets_client |
+| `scripts/automation/uploader.py` | 生成HTMLを配信先にアップロード（インターフェースだけ先に決め、実装はインフラ部門の決定後） | 30分（スタブ）+ TBD（本実装） | ホスティング先依存 |
 
-### Phase 2 のディレクトリ構成（提案）
+### Phase 2のディレクトリ構成（提案）
 
 ```
 scripts/
@@ -85,7 +85,7 @@ scripts/
     └── pyproject.toml             # google-api-python-client 系 dep
 ```
 
-`claude-slide` と `automation` を分けるのは依存が違うため（LLM 系 vs Google API 系）。お互いを subprocess で呼び合う / 共有モジュールを参照する形にする。
+`claude-slide`と`automation`を分けるのは、依存が違うためだ（LLM系vs Google API系）。お互いをsubprocessで呼び合うか、共有モジュールを参照する形にする。
 
 ## 4. データフロー詳細
 
@@ -124,25 +124,25 @@ sheets_client.read_row(manual_name)
      })
 ```
 
-### 4-2. SeeFT モバイル側との接続
+### 4-2. SeeFTモバイル側との接続
 
-`mobile/lib/widgets/manual_viewer.dart:8-27` の既存ロジックがそのまま動く:
+`mobile/lib/widgets/manual_viewer.dart:8-27`の既存ロジックが、次のとおりそのまま動く。
 
-- `manual_url` が `docs.google.com` → Doc プレビュー iframe（PR #258）
-- `manual_url` が `.pdf` → pdf.js viewer
-- `manual_url` がその他 → 普通の iframe（生成 HTML はこの分岐）
+- `manual_url`が`docs.google.com` → Docプレビューiframe（PR #258）
+- `manual_url`が`.pdf` → pdf.js viewer
+- `manual_url`がその他 → 普通のiframe（生成HTMLはこの分岐）
 
-→ **モバイル側は無改修**。詳細は `selective-html-generation.md` 参照。
+そのため、**モバイル側は改修しなくてよい**。詳細は`selective-html-generation.md`を参照。
 
-## 5. 認証 (OAuth セットアップ)
+## 5. 認証(OAuthセットアップ)
 
 ### 5-1. 必要なもの
 
-- Google Cloud Console プロジェクト（PM の Google アカウントで作る）
-- 有効化する API: **Google Sheets API**、**Google Drive API**
-- OAuth 同意画面: User Type = 外部、テストユーザーに PM の Gmail を追加（未公開のままで OK）
-- OAuth クライアント ID: アプリケーションの種類 = **デスクトップアプリ**
-- ダウンロードした `credentials.json`
+- Google Cloud Consoleプロジェクト（PMのGoogleアカウントで作る）
+- 有効化するAPI: Google Sheets API、Google Drive API
+- OAuth同意画面: User Type = 外部、テストユーザーにPMのGmailを追加（未公開のままでOK）
+- OAuthクライアントID: アプリケーションの種類 = デスクトップアプリ
+- ダウンロードした`credentials.json`
 
 ### 5-2. ファイル配置
 
@@ -152,11 +152,7 @@ sheets_client.read_row(manual_name)
 └── token.json          # 初回スクリプト実行時に自動生成、以降は再利用
 ```
 
-リポジトリ外（`~/.config/`）に置く理由:
-
-- git の事故防止（誤コミットで認証情報が公開される事態を避ける）
-- 新 PM 引き継ぎ時に「このディレクトリをコピーすれば動く」状態にできる
-- 認証情報は、追跡から外すだけでなく、リポジトリの中に置かない（追跡から外すファイルの置き場所の決まりは `docs/development/workflow.md` の「3. ブランチ」）
+リポジトリの外（`~/.config/`）に置くのは、gitの事故、つまり誤ってコミットして認証情報が公開される事態を避けるためだ。新PMに引き継ぐときに、このディレクトリをコピーすれば動く状態にもできる。認証情報は、追跡から外すだけでなく、リポジトリの中に置かない（追跡から外すファイルの置き場所の決まりは`docs/development/workflow.md`の「3. ブランチ」）。
 
 ### 5-3. 初回起動フロー
 
@@ -170,23 +166,23 @@ sheets_client.read_row(manual_name)
 
 ### 5-4. スコープ
 
-- `https://www.googleapis.com/auth/spreadsheets` — Sheets 読み書き
-- `https://www.googleapis.com/auth/drive.readonly` — Doc 取得（読み取りのみで十分）
+- `https://www.googleapis.com/auth/spreadsheets`はSheetsの読み書き
+- `https://www.googleapis.com/auth/drive.readonly`はDocの取得（読み取りのみで十分）
 
-書き込みスコープを Drive に与えないことで、PM の Drive 内ファイルを誤って改変するリスクをゼロにする。
+書き込みスコープをDriveに与えないことで、PMのDrive内ファイルを誤って改変するリスクをゼロにする。
 
-## 6. ステータス CSV スキーマ（19 列）
+## 6. ステータスCSVスキーマ（19列）
 
-| # | カラム名 | 型 | 記入主体 | enum 値 / 例 |
+| # | カラム名 | 型 | 記入主体 | enum値/例 |
 | --- | --- | --- | --- | --- |
 | 1 | マニュアル名 | str | PM | "配線マニュアル" |
 | 2 | 担当局 | str | PM | "総務" "渉外" "財務" "企画" |
 | 3 | 担当部門 | str | PM | "会場" "副局長" "広報" 等 |
 | 4 | 担当者名 | str | PM | "赤嶺" "黒木康士朗" |
 | 5 | Google Doc URL | URL | PM | "https://docs.google.com/document/d/.../edit" |
-| 6 | **解説HTML生成** | enum | PM | "生成する" / "生成しない" |
+| 6 | 解説HTML生成 | enum | PM | "生成する" / "生成しない" |
 | 7 | 生成HTML URL | URL | automation | "https://manuals.../wiring.html" |
-| 8 | パイプライン状態 | enum | automation | "未生成" "生成中" "検証中" "検証済(OK)" "検証済(NG)" "Doc 直配信" "エラー" |
+| 8 | パイプライン状態 | enum | automation | "未生成" "生成中" "検証中" "検証済(OK)" "検証済(NG)" "Doc直配信" "エラー" |
 | 9 | 最終生成日時 | datetime | automation | "2026-05-13 13:30" |
 | 10 | 検証VERDICT | enum | automation | "OK" / "NG" / "" |
 | 11 | 追加件数 | int | automation | 0, 1, 2, ... |
@@ -199,9 +195,9 @@ sheets_client.read_row(manual_name)
 | 18 | 個別生成指示 | markdown | PM | "- 配線番号 ①〜㉖ はバッジで強調" |
 | 19 | 備考 | str | 全員 | フリーテキスト |
 
-「PM」記入の列は人が触る、「automation」記入の列は自動化が書き戻す、と境界が明確。
+記入主体が「PM」の列は人が触り、「automation」の列は自動化が書き戻す。この境界がはっきりしている。
 
-### enum 値のプルダウン推奨設定（Google Sheets 側）
+### enum値のプルダウン推奨設定（Google Sheets側）
 
 | カラム | プルダウン値（リストを直接指定） |
 | --- | --- |
@@ -214,18 +210,18 @@ sheets_client.read_row(manual_name)
 
 | Step | 内容 | 状態 | 主作業者 |
 | --- | --- | --- | --- |
-| 1 | 「解説HTML生成」列を CSV に追加（19 列に拡張） | 完了 | Claude |
-| 2 | Google Cloud Console で OAuth セットアップ、credentials.json を `~/.config/seeft-pipeline/` に配置 | **進行中** | PM |
-| 3 | `scripts/automation/sheets_client.py` 実装、認証フローと行読み書きをテスト | 未着手 | Claude |
-| 4 | `scripts/automation/process_one.py` 実装、1 マニュアルで end-to-end 動作確認 | 未着手 | Claude |
-| 5 | `scripts/automation/drive_client.py` 実装、Doc URL → HTML エクスポート | 未着手 | Claude |
-| 6 | `scripts/automation/watcher.py` 実装、polling でステータス変更検知 | 未着手 | Claude |
-| 並行 | `uploader.py` インターフェースだけ先に切る | 未着手 | Claude |
+| 1 | 「解説HTML生成」列をCSVに追加（19列に拡張） | 完了 | Claude |
+| 2 | Google Cloud ConsoleでOAuthセットアップ、credentials.jsonを`~/.config/seeft-pipeline/`に配置 | 進行中 | PM |
+| 3 | `scripts/automation/sheets_client.py`実装、認証フローと行読み書きをテスト | 未着手 | Claude |
+| 4 | `scripts/automation/process_one.py`実装、1マニュアルでend-to-end動作確認 | 未着手 | Claude |
+| 5 | `scripts/automation/drive_client.py`実装、Doc URL → HTMLエクスポート | 未着手 | Claude |
+| 6 | `scripts/automation/watcher.py`実装、pollingでステータス変更検知 | 未着手 | Claude |
+| 並行 | `uploader.py`のインターフェースだけ先に決める | 未着手 | Claude |
 | 並行 | ホスティング先決定（→ 本実装） | 未着手 | PM × インフラ部門 |
 
 ## 8. 依存パッケージ・ファイル配置
 
-### Python 依存（`scripts/automation/pyproject.toml`）
+### Python依存（`scripts/automation/pyproject.toml`）
 
 ```toml
 [project]
@@ -243,21 +239,20 @@ dependencies = [
 
 - pandoc (`brew install pandoc`)
 - uv (`brew install uv`)
-- Claude Code CLI (`claude login` 済み)
+- Claude Code CLI (`claude login`済み)
 
 ### 認証ファイル
 
-- `~/.config/seeft-pipeline/credentials.json` — GCP からダウンロード
-- `~/.config/seeft-pipeline/token.json` — 初回起動で自動生成
+- `~/.config/seeft-pipeline/credentials.json`はGCPからダウンロードする
+- `~/.config/seeft-pipeline/token.json`は初回起動で自動生成される
 
-### スプシ ID
+### スプシID
 
-- 環境変数 or 設定ファイル: `SEEFT_STATUS_SHEET_ID=<ステータス管理スプシの ID>`
-- ハードコードせず外部から差し替え可能に
+スプシIDは、環境変数か設定ファイルの`SEEFT_STATUS_SHEET_ID=<ステータス管理スプシの ID>`で指定する。ハードコードせず、外部から差し替えられるようにする。
 
-## 9. 新 PM 引き継ぎ用クイックスタート
+## 9. 新PM引き継ぎ用クイックスタート
 
-新 PM が初日に動かすための最短手順:
+新PMが初日に動かすための最短手順は次のとおり。
 
 ```bash
 # 1. リポジトリを clone
@@ -286,30 +281,30 @@ uv run --project scripts/automation python scripts/automation/process_one.py 配
 
 | MD | 視点 | 主な内容 |
 | --- | --- | --- |
-| `index.html` | 執行部 | 13 スライドの提案資料 |
+| `index.html` | 執行部 | 13スライドの提案資料 |
 | `infra-hosting-discussion.md` | インフラ部門 | ホスティング先決定のための相談材料 |
-| `selective-html-generation.md` | 機能設計 | 「解説HTML生成」列と Doc 直表示の両立 |
+| `selective-html-generation.md` | 機能設計 | 「解説HTML生成」列とDoc直表示の両立 |
 | `45th_マニュアル可視化方針（仮）.md` | 可視化方針 | 全体方針（参照） |
-| `../manual-proposal-v4.md` | 提案本文 | 執行部 MT 向け Q1-Q6 形式 |
+| `../manual-proposal-v4.md` | 提案本文 | 執行部MT向けQ1-Q6形式 |
 | `../manual-slide-pipeline.md` | 技術リファレンス | 既存パイプラインの解説 |
-| `../manual-slide-pipeline-qa.md` | Q&A | 各種疑問への回答集、TODO 高レベル方針 |
-| `../agent-sdk-usage.md` | 実装者 | `generate_slide.py` / `verify_slide.py` が裏で使う Claude Agent SDK の使い方リファレンス |
+| `../manual-slide-pipeline-qa.md` | Q&A | 各種疑問への回答集、TODO高レベル方針 |
+| `../agent-sdk-usage.md` | 実装者 | `generate_slide.py` / `verify_slide.py`が裏で使うClaude Agent SDKの使い方リファレンス |
 
 ## 11. コード上の連携先
 
-- `scripts/claude-slide/generate_slide.py` — Phase 1.5 で CSV 読み込み機能を追加済み、`load_per_manual_instructions()` 関数
-- `scripts/claude-slide/verify_slide.py` — AI 検証本体
-- `mobile/lib/widgets/manual_viewer.dart:8-27` — URL パターン分岐、改修不要
-- `mobile/lib/widgets/shift_card.dart:165-171` — マニュアルボタン、改修不要
+- `scripts/claude-slide/generate_slide.py`は、Phase 1.5でCSV読み込み機能を追加済み（`load_per_manual_instructions()`関数）
+- `scripts/claude-slide/verify_slide.py`はAI検証の本体
+- `mobile/lib/widgets/manual_viewer.dart:8-27`はURLパターンの分岐。改修は要らない
+- `mobile/lib/widgets/shift_card.dart:165-171`はマニュアルボタン。改修は要らない
 
 ## 12. メモ・運用ルール
 
-- **「生成しない」のマニュアル**は Doc URL を manual_url にそのまま入れる。生成パイプラインは走らない（process_one.py が早期 return する）
-- **エラー時の動作**: Doc 取得失敗 / generate 失敗 / verify 失敗、いずれもパイプライン状態 = "エラー"、備考に詳細を書く。次回再生成で復活可能
-- **同時実行制御**: process_one.py は単一プロセスで走らせる前提（同じマニュアルを並行処理しない）。watcher は処理中のマニュアルを再起動しないようロック
-- **権限分離**: PM はスプシのオーナー権限、確認担当者は編集権限のみ、関係者外はビュー権限。スコープを絞ることで誤編集を防ぐ
-- **PM 不在時のフォールバック**: 自動化が動かなくなった場合、PM の Mac で `generate_slide.py` を直接叩く運用に戻す（Phase 1 と同じフロー）。コードを残しておくこと
+- 「生成しない」のマニュアルは、Doc URLをmanual_urlにそのまま入れる。生成パイプラインは走らない（process_one.pyが早期returnする）
+- エラー時は、Doc取得・generate・verifyのどれで失敗しても、パイプライン状態を "エラー" にして備考に詳細を書く。次回の再生成で復旧できる
+- 同時実行の制御として、process_one.pyは単一プロセスで走らせる前提にする（同じマニュアルを並行処理しない）。watcherは、処理中のマニュアルを再起動しないようにロックする
+- 権限は分ける。PMはスプシのオーナー権限、確認担当者は編集権限のみ、関係者以外は閲覧権限にする。スコープを絞って誤編集を防ぐ
+- PM不在時のフォールバックとして、watcherやprocess_one.pyが止まり、マニュアルが生成されなくなった場合は、PMのMacで`generate_slide.py`を直接実行する運用に戻す（Phase 1と同じフロー）。そのためにコードを残しておくこと
 
 ---
 
-このドキュメントは Phase 2 実装の進捗に合わせて更新する。実装した内容は同日中に本 MD に反映するルールにすると、コードと文書がズレない。
+このドキュメントは、Phase 2の実装の進み具合に合わせて更新する。実装した内容をその日のうちに本MDに反映するルールにすれば、コードと文書が食い違わない。
