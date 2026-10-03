@@ -11,7 +11,7 @@
 
 本番の mobile は、Flutter Web のビルド成果物を `mobile/python/server.py` が配っている。当時の `server.py` は `socketserver.TCPServer` で、1本のスレッドで1件ずつ返し、圧縮もしていなかった。
 
-負荷試験の計画（`docs/development/load-test-plan.md`）の issue 6 は、朝に大勢が一斉に開くと、API より先にこの静的配信が詰まるおそれがあると挙げていた。
+負荷試験の計画（`docs/development/load-test-plan.md`）の issue 6 は、朝に大勢が一斉に開くと、この静的配信が数 MB のファイルを1接続ずつ順番に配るため後の人ほど待たされ、API に届く前に初回のページ取得が失敗するおそれがあると挙げていた。
 
 そこに、日本語フォントの同梱（[0020](0020-bundle-subset-japanese-font.md)）で、初めて開く人1人あたりに `server.py` が送る量が 2.51MB から 8.03MB（約3倍）に増えることになった。本番では、途中の経路でファイルがキャッシュされず、`server.py` が送った量がそのまま流れていた（#518。2026-09-13 に本番の応答で確かめた）。
 
