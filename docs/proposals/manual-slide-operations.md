@@ -75,7 +75,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide
 
 出力は同ディレクトリの`slide_claude.card-strict.html`。
 
-### 2. 画像が埋まっているか確認（おかしければ復旧）
+### 2. 画像が埋まっているか確認（埋め込まれていなければ埋め込み直す）
 
 card-strictでは稀に画像がbase64埋め込みされず、ファイルが極端に小さくなることがある（数十KB）。
 画像のあるマニュアルなら通常は数MBになる。小さすぎる場合は再生成せず、決定的に再埋め込みできる。

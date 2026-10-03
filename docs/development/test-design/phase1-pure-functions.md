@@ -48,7 +48,7 @@
 5. 要素1個は単一キー・単一要素になり、全フィールドがそのまま渡される（境界値）
    - 入力: `` logs := []entity.ActionLog{{ID: 1, ShiftID: 55, UserID: 42, DateID: 7, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[]}`), IsSent: false, CreatedAt: time.Date(2026, 7, 8, 12, 0, 0, 0, time.UTC)}} ``
    - 期待値: `len(got) == 1、got["42_7"] が長さ1のスライスで、その唯一の要素が入力の entity.ActionLog と reflect.DeepEqual で完全一致（ShiftID・ActionType・DiffPayload・CreatedAt 等が改変されずに素通しされる）`
-   - 根拠: 最小構成での正常な動きと、UserID/DateID以外のフィールドを一切書き換えずにそのまま渡すことの回帰を防ぐ。後段のprocessGroupはDiffPayloadやShiftIDをそのまま使うため、書き換えられると通知の内容がおかしくなる
+   - 根拠: 最小構成での正常な動きと、UserID/DateID以外のフィールドを一切書き換えずにそのまま渡すことの回帰を防ぐ。後段のprocessGroupはDiffPayloadやShiftIDをそのまま使うため、書き換えられると、DiffPayloadから読むタスク名や、ShiftIDから引く時刻・タスクが、元のログと違う値のまま通知に載る
 6. ゼロ値のActionLogはキー "0_0" にグループ分けされる（境界値）
    - 入力: `logs := []entity.ActionLog{{}}（全フィールドゼロ値。UserID=0, DateID=0, DiffPayload=nil）`
    - 期待値: `len(got) == 1、got["0_0"] == []entity.ActionLog{{}}（panic せず、nil の DiffPayload もそのまま保持）`
@@ -60,7 +60,7 @@
 8. 負のIDでも検証されずにそのままキーになる（異常系）
    - 入力: `logs := []entity.ActionLog{{ID: 1, UserID: -1, DateID: -2}}`
    - 期待値: `len(got) == 1、got["-1_-2"] が長さ1のスライスとして存在する（エラーにも panic にもならず、負値がそのままキーに埋め込まれる）`
-   - 根拠: 不正なドメイン値に対して何も検証しない今の動きを固定する。なお生成されるキー "-1_-2" はアンダースコアが1個なので、呼び出し元のSplit/Atoi（L108-117）でも正しく -1, -2に戻せ、下流もおかしくならないことを確かめた
+   - 根拠: 不正なドメイン値に対して何も検証しない今の動きを固定する。なお生成されるキー "-1_-2" はアンダースコアが1個なので、呼び出し元のSplit/Atoi（L108-117）でも正しく -1, -2に戻せ、Invalid group keyとして読み飛ばされたり、別のIDとしてprocessGroupに渡ったりしないことを確かめた
 
 実行検証: worktreeのapi/lib/usecase/に使い捨てテストdesign_verify_groupnotificationsbyuseranddate_test.goを作り、ゼロ値レシーバ(&notificationUseCase{})からGroupNotificationsByUserAndDateを直接呼び出して、全8ケースをサブテストとして実装した。cd api && go test ./lib/usecase/... -run TestDesignVerifyGroupNotificationsByUserAndDate -vで実行し、8ケースすべてが初回でPASSした（8/8起案どおり、修正0件、削除0件、needs_judgment 0件）。非nilの空map（空スライスとnilスライスの両方）、挿入順の保持、フィールドをそのまま渡すこと（DiffPayload/CreatedAtを含めてDeepEqualで完全一致）、キー "0_0" の生成、"1_23" と "12_3" が衝突しないこと、"-1_-2" の生成も、すべて実際の動きで確かめた。テストファイルは削除し、git status --porcelainが空であることを確かめた。commit/pushは行っていない。
 
@@ -201,7 +201,7 @@ diff_payloadがパースできない（不正なJSON / nil）ログは、ログ�
 6. shiftMap / taskMapにキーが無い非DELETEログはスキップ（境界値）
    - 入力: `` logs := []entity.ActionLog{ {ShiftID: 99, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"a","new":"b"}]}`)}, {ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"a","new":"b"}]}`)}, } shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} // 99 は無い taskMap := map[int]entity.Task{} // 100 も無い timeMap := map[int]entity.Time{5: {Time: "10:00"}, 6: {Time: "11:00"}} ``
    - 期待値: `""（1件目は shiftMap 欠落、2件目は taskMap 欠落で両方 continue され、結果は空文字）【実行確認済み】`
-   - 根拠: 2段のルックアップの失敗（shiftMapの欠落・taskMapの欠落）が、どちらも気づかれないままスキップになる今の動きを、1ケースで固定する。
+   - 根拠: 2段のルックアップの失敗（shiftMapの欠落・taskMapの欠落）が、どちらも警告を出さずにスキップになる今の動きを、1ケースで固定する。
 7. timeMapにTimeID+1が無い（最終時間帯）→ 終了時刻0:00フォールバック（境界値）
    - 入力: `` logs := []entity.ActionLog{{ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"受付","new":"警備"}]}`)}} shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} taskMap := map[int]entity.Task{100: {Task: "警備"}} timeMap := map[int]entity.Time{5: {Time: "22:00"}} // キー 6 が無い ``
    - 期待値: `"22:00 〜 0:00：受付 → 警備"【実行確認済み】`
@@ -209,7 +209,7 @@ diff_payloadがパースできない（不正なJSON / nil）ログは、ログ�
 8. timeMapにTimeID自体が無い → 開始時刻が空文字で出力（異常系）【要判断】
    - 入力: `` logs := []entity.ActionLog{{ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"受付","new":"警備"}]}`)}} shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} taskMap := map[int]entity.Task{100: {Task: "警備"}} timeMap := map[int]entity.Time{} // 空 ``
    - 期待値: `" 〜 0:00：受付 → 警備"（先頭が半角スペース始まり。開始時刻はゼロ値 Time の空文字がそのまま入る）【実行確認済み: 先頭スペース込みで完全一致】`
-   - 根拠: formatTimeRangeはstartTimeをokチェックなしでtimeMap[startTimeID]のゼロ値のまま使う。そのため開始側が欠けると、通知文が「 〜 0:00：」とおかしな見た目になる。この非対称なフォールバックを今の動きとして固定しつつ、論点として挙げる。
+   - 根拠: formatTimeRangeはstartTimeをokチェックなしでtimeMap[startTimeID]のゼロ値のまま使う。そのため開始側が欠けると、通知文が「 〜 0:00：」のように、開始時刻が空で半角スペースから始まる形で届く。この非対称なフォールバックを今の動きとして固定しつつ、論点として挙げる。
 9. diff_payloadがパースできない（不正JSON / nil）ログは、ログ出力なしでスキップ（異常系）【要判断】
    - 入力: `` logs := []entity.ActionLog{ {ID: 1, ShiftID: 10, ActionType: "UPDATE", DiffPayload: nil}, {ID: 2, ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{invalid`)}, {ID: 3, ShiftID: 10, ActionType: "UPDATE", DiffPayload: json.RawMessage(`{"changes":[{"old":"受付","new":"警備"}]}`)}, } shiftMap := map[int]entity.ShiftAdmin{10: {TaskID: 100, TimeID: 5}} taskMap := map[int]entity.Task{100: {Task: "警備"}} timeMap := map[int]entity.Time{5: {Time: "10:00"}, 6: {Time: "11:00"}} ``
    - 期待値: `"10:00 〜 11:00：受付 → 警備"（ID:1 は nil で unmarshal エラー、ID:2 は不正 JSON でエラー、いずれも警告なしにスキップされ ID:3 の 1 行のみ）【実行確認済み: nil DiffPayload も panic せず同経路でスキップ】`
@@ -229,7 +229,7 @@ DBのJOIN結果のフラットな構造体[]entity.ShiftCardDataを、モバイ�
 
 ### 要判断の論点
 
-YearValueが数値でない文字列のとき、Atoiのエラーを_で捨てて0にフォールバックするのが意図的なものか、判断が必要である。DB由来の値なので通常は数値だが、おかしな値が入っていると「0年」としてAPIレスポンスに載り、気づかないうちに結果がおかしくなる。ログを出す・エラーを返すように変える選択肢もあるが、シグネチャの変更（errorの追加）は呼び出し側にも影響する。そのため、保守モードでは今の動きのまま固定するのが妥当か、確認を求める（実際の動きは起案どおりで食い違いは無い。論点は設計意図の確認だけである）。
+YearValueが数値でない文字列のとき、Atoiのエラーを_で捨てて0にフォールバックするのが意図的なものか、判断が必要である。DB由来の値なので通常は数値だが、数値でない文字列が入っていると「0年」としてAPIレスポンスに載る。エラーもログも出ないため、年が0になったことにAPIの側でもmobileの側でも気づけない。ログを出す・エラーを返すように変える選択肢もあるが、シグネチャの変更（errorの追加）は呼び出し側にも影響する。そのため、保守モードでは今の動きのまま固定するのが妥当か、確認を求める（実際の動きは起案どおりで食い違いは無い。論点は設計意図の確認だけである）。
 
 TaskMobileにはRemark・MaxMember・BureauIDのフィールドがあるのに、ShiftCardDataの対応する値（TaskRemark/MaxMember/TaskBureauID）を詰めていないため、これらの値は出力に伝わらない。モバイル画面で要らないから意図して省いたのか、マッピング漏れなのか、判断が必要である。モバイル側（Flutter）がこれらを参照していれば実際のバグになる。テストは今の動きで固定して書くが、期待値を「詰める」に変えるかどうかは、モバイル側の参照を調べてから判断すべきである（実際の動きは起案どおりで食い違いは無い。論点は設計意図の確認だけである）。
 
@@ -258,7 +258,7 @@ TaskMobileにはRemark・MaxMember・BureauIDのフィールドがあるのに�
 6. YearValueが数値でない文字列（異常系）【要判断】
    - 入力: `[]entity.ShiftCardData{{ShiftID: 1, YearValue: "abc"}, {ShiftID: 2, YearValue: " 2024"}}（先頭空白は Atoi が受理しない）の2要素`
    - 期待値: `いずれも Year.Year == 0 になり、エラーもログも発生せず正常に変換が完了する（現状挙動）【実行で確認済み。" 2024" も Atoi エラーで 0 になることを確認】`
-   - 根拠: strconv.Atoiのエラーを捨てる今の動きを固定する。DBのyear_valueがおかしな値になったときに、year=0のまま気づかないうちに返る経路を検知する
+   - 根拠: strconv.Atoiのエラーを捨てる今の動きを固定する。DBのyear_valueが数値でない文字列のときに、エラーもログも出さずにyear=0を返す経路を検知する
 7. YearValueが負数の文字列（境界値）
    - 入力: `[]entity.ShiftCardData{{YearValue: "-1"}}`
    - 期待値: `Year.Year == -1（strconv.Atoi は符号付きをそのまま受理するため負値が通過する）【実行で確認済み】`
