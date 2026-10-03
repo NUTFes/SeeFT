@@ -31,7 +31,7 @@ drive_client）は当面使わない（[スプシ自動化との関係](#スプ�
 [SeeFT] develop で card-strict 生成
    │  scripts/claude-slide/generate_slide.py --prompt card-strict
    ▼
-[SeeFT] 画像が埋まっているか確認（壊れていれば --embed-only で復旧）
+[SeeFT] 画像が埋まっているか確認（埋め込まれていなければ --embed-only で埋め込み直す）
    ▼
 [SeeFT] 文章の機械検証（AI なし・決定的）
    │  scripts/claude-slide/verify_slide_mechanical.py
@@ -75,7 +75,7 @@ uv run --project scripts/claude-slide python scripts/claude-slide/generate_slide
 
 出力は同ディレクトリの `slide_claude.card-strict.html`。
 
-### 2. 画像が埋まっているか確認（壊れていれば復旧）
+### 2. 画像が埋まっているか確認（埋め込まれていなければ埋め込み直す）
 
 card-strict では稀に画像が base64 埋め込みされず、ファイルが極端に小さくなることがある（数十 KB）。
 画像のあるマニュアルなら通常は数 MB になる。小さすぎる場合は再生成せず、決定的に再埋め込みできる。

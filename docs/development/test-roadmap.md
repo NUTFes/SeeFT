@@ -8,7 +8,7 @@
 
 実行順序は次のとおり。
 
-1. フェーズ0: テスト実行基盤の整備（CI に go test、Go バージョン一本化、誤った compose マウントの修正）
+1. フェーズ0: テスト実行基盤の整備（CI に go test、Go バージョン一本化、存在しないディレクトリを指す compose マウントの修正）
 2. フェーズ1: 依存ゼロの純関数テスト（モックも DB も不要。テストの書き方の規約をここで確立する）
 3. フェーズ2: repository 層のゴールデンテスト（実 DB を使う統合テスト。「現状の動作を正解にする」の実装）
 4. フェーズ3: repository 層のクエリ修正（フェーズ2 のテストを安全網にしてプレースホルダ化）
@@ -20,7 +20,7 @@ mobile は api と独立して並行で進められる。GAS と admin は自動
 MT の叩き台（静的解析 → repository 修正 → repository テスト → usecase テスト → handler テスト → GAS テスト → GAS×API 結合テスト）からの変更は 2 点。
 
 - 「静的解析導入」は完了済みのため外した。`.github/workflows/go-lint.yml` で golangci-lint v2.12 が PR ごとに走っており、残っているのは指摘の解消（#314）でありテストとは独立に進められる。
-- 「repository 修正 → repository テスト」を逆順にした。テストがない状態でクエリを書き換えると、直したのか、かえっておかしくしたのか判定できない。MT で出た「現状の動作を正解にする」アプローチそのものが、修正より先にテストを書く理由になる。
+- 「repository 修正 → repository テスト」を逆順にした。テストがない状態でクエリを書き換えると、クエリが返す行が意図どおりに変わっただけなのか、意図していない行まで変わったのか判定できない。MT で出た「現状の動作を正解にする」アプローチそのものが、修正より先にテストを書く理由になる。
 
 ## 前提: コード構造がテスト戦略を規定する
 
@@ -68,17 +68,17 @@ type BureauRepository interface {
 テストを 1 本も書く前に、書いたテストが回る環境を作る。すべて小さい独立した PR にできる。
 
 - Go バージョンの一本化（既存 issue #385）。現状は `api/go.mod` が `go 1.16`、`api/Dockerfile` と `api/prod.Dockerfile` が `golang:latest`、`go-lint.yml:20` が `go-version: stable` の三重不整合。go directive が 1.16 のままだと testify や go-sqlmock の新しいバージョンが入らないため、テスト導入の直接の前提になる。採用バージョンの比較・実機検証結果は [go-version-comparison.md](./go-version-comparison.md) にまとめた。
-- `docker-compose.yml:8` と `docker-compose.mac.yml` のマウント修正。存在しない `./mysql/db` を initdb にマウントしており（#277 のディレクトリ改名への追随漏れ）、DB の初期化が機能していない。`./postgresql/db` に直す。MySQL 時代の遺物である `my.cnf` のマウントも合わせて整理する。
+- `docker-compose.yml:8` と `docker-compose.mac.yml` のマウント修正。存在しない `./mysql/db` を initdb にマウントしており（#277 のディレクトリ改名への追随漏れ）、コンテナの初回起動時にテーブルが作られず、シードも入らない。`./postgresql/db` に直す。MySQL 時代の遺物である `my.cnf` のマウントも合わせて整理する。
 - CI に go test ジョブを追加。`go-lint.yml` と同型で `working-directory: api`、`go test ./... -count=1`。テストが 0 本でも green になるので、最初に敷いておくと以降のフェーズの PR が全部 CI で検証される。
-- `Makefile` に `test` ターゲットを追加し、`AGENTS.md` の Commands 節に記載する。なお `make seed` 系 3 ターゲットは参照先の `/app/seeds/seeds.go` が存在せず全て動かない（後述のバグ一覧参照）。
+- `Makefile` に `test` ターゲットを追加し、`AGENTS.md` の Commands 節に記載する。なお `make seed` 系 3 ターゲットは参照先の `/app/seeds/seeds.go` が存在せず、3つとも `go run` がファイルが見つからないエラーで終わる（後述のバグ一覧参照）。
 - `go.mod` に `stretchr/testify` と `DATA-DOG/go-sqlmock` を追加。あわせて `api/lib/usecase/shift_usecase.go:66` の未使用グローバル変数（`var TaskID, UserID, ... string`）を削除しておく。
 
 ## フェーズ1: 依存ゼロの純関数テスト
 
 モックも DB もフェーズ0 の完了すら待たずに書ける関数が既にある。ここでテーブル駆動テストの規約（ファイル配置、命名、テストケースの書き方）を確立し、以降のフェーズの雛形にする。
 
-- `api/lib/usecase/notification_usecase.go` のヘルパー 4 関数: `GroupNotificationsByUserAndDate`（L138）、`sortLogsByTime`（L317）、`formatTimeRange`（L359）、`buildChangesWithTime`（L371）。unexported なレシーバでもフィールドに触れないため、同一パッケージ内テストから `(&notificationUseCase{})` で直接呼べる。`formatTimeRange` には「`endTimeID+1` が timeMap に無いと `0:00` にフォールバックする」という境界条件が既にあり、テストで固定する価値が高い。Slack 通知はおかしくなると目に見えて困る機能であり、通知文言の回帰防止に直結する。
-- `api/lib/usecase/shift_usecase.go` の純関数 3 つ: `groupContinuousShifts`（L478、連続 TimeID のグループ化）、`compareTimeStrings`（L509、ゼロ埋めなし時刻文字列の比較という、誤りが入りやすい仕様）、`convertShiftCardDataToShifts`（L433）。
+- `api/lib/usecase/notification_usecase.go` のヘルパー 4 関数: `GroupNotificationsByUserAndDate`（L138）、`sortLogsByTime`（L317）、`formatTimeRange`（L359）、`buildChangesWithTime`（L371）。unexported なレシーバでもフィールドに触れないため、同一パッケージ内テストから `(&notificationUseCase{})` で直接呼べる。`formatTimeRange` には「`endTimeID+1` が timeMap に無いと `0:00` にフォールバックする」という境界条件が既にあり、テストで固定する価値が高い。Slack 通知の文言はこれらの関数が組み立てたまま利用者に届くため、時刻やタスク名を誤って組み立てると、利用者は誤った時刻・担当を読むことになる。テストは通知文言の回帰防止に直結する。
+- `api/lib/usecase/shift_usecase.go` の純関数 3 つ: `groupContinuousShifts`（L478、連続 TimeID のグループ化）、`compareTimeStrings`（L509、ゼロ埋めなし時刻文字列の比較。文字列のまま比べると "8:00" が "10:00" より後に並ぶため、時と分を数値に直して比べている）、`convertShiftCardDataToShifts`（L433）。
 - `api/lib/externals/slack/slack_service.go` の `BuildMessageBlocks`（L88）。Slack API 通信なしで Block 構成の分岐を検証できる。
 - `api/lib/externals/scheduler/scheduler.go` の `Start`。カウンタを増やすだけの Job と短い interval で「起動直後の即時実行」「interval ごとの再実行」「ctx キャンセルで停止」「job エラーでもループ継続」を検証できる。このパッケージは PR #322（通知の定期実行）で追加されるため、マージ後に着手する。
 
@@ -88,7 +88,7 @@ type BureauRepository interface {
 
 実行環境は GitHub Actions の service container を使う。
 
-- `postgres:18`（`docker-compose.yml` と同じイメージ・資格情報）を service container として起動し、`postgresql/db/*.sql` を番号順（create1 → create6 → seed.sql）に投入する共通セットアップを作る。compose の initdb マウントは機能していないため、テストヘルパー側で SQL を適用する。
+- `postgres:18`（`docker-compose.yml` と同じイメージ・資格情報）を service container として起動し、`postgresql/db/*.sql` を番号順（create1 → create6 → seed.sql）に投入する共通セットアップを作る。compose の initdb マウントは存在しない `./mysql/db` を指しており SQL が適用されないため、テストヘルパー側で SQL を適用する。
 - DB が必要なテストには build tag `integration` を付け、通常の `go test ./...` と分離する。
 - 接続は環境変数（`NUTMEG_DB_HOST` 等）のみ参照する既存実装のままで済む。CI では `localhost` を指定する。
 
@@ -124,7 +124,7 @@ query := "SELECT * FROM shifts WHERE id = " + id
 
 controller は usecase インターフェースだけに依存する薄い層なので、手書きフェイク + echo の httptest で書ける。薄いぶん網羅は狙わず、価値のある箇所に絞る。
 
-- FromGAS 系 3 ハンドラの契約テスト: `router.go:177-179` の `/api/update_users`、`/api/update_tasks_and_places`、`/api/update_shifts`。GAS が実際に送る JSON をフィクスチャとして与え、パースと usecase への受け渡しを固定する。GAS 側をテストしなくても、api 側の変更で連携が動かなくなったことを検知できる。これが後述する GAS×API「結合テスト」の現実解。
+- FromGAS 系 3 ハンドラの契約テスト: `router.go:177-179` の `/api/update_users`、`/api/update_tasks_and_places`、`/api/update_shifts`。GAS が実際に送る JSON をフィクスチャとして与え、パースと usecase への受け渡しを固定する。GAS 側をテストしなくても、GAS が送る JSON を api 側の変更で受け付けなくなったこと（パースでエラーになる、usecase に渡る値が変わる）を検知できる。これが後述する GAS×API「結合テスト」の現実解。
 - `user_controller.go:97` の `c.Request().Header["Access-Token"][0]` はヘッダ欠落時に index out of range で panic する疑いがある。テストで最初に検証すべき欠陥候補。
 - リクエストの型変換・バリデーション整備（既存 issue #267）に着手する際は、このフェーズのテストを先に書いてから行う。
 
@@ -135,7 +135,7 @@ mobile は api と依存関係がなく、Flutter に慣れたメンバーへ独
 - 最初の PR: `mobile/test/widget_test.dart`（存在しない `main.dart` の MyApp を参照するデフォルト残骸で、`flutter test` を CI に足すと即 red になる）を削除または書き直し、同じ PR で `flutter-lint.yml` に `fvm flutter test` 相当のステップを追加する。
 - `mobile/lib/models/shift_card.dart` の `ShiftCardDataList.fromJson`（L53-105）。依存ゼロの純関数で即着手できる。L78 で `item['before_members']` 自体の null チェックがなくクラッシュする疑いがあるため、正常系と合わせて固定する。最頻変更画面 my_shift_page の入力データを守る一本目として費用対効果が最も高い。
 - `mobile/lib/models/rescue.dart` の type ディスパッチ（L33-44）。trouble / question / shorthanded のラウンドトリップと未知 type の挙動。
-- New バッジ判定ロジック（`my_shift_page.dart` の `_isCardChanged` L420、`_detectNewOrUpdatedCardKeys` L437 ほか）。おかしくなっても画面上では気づきにくい故障の典型箇所だが、private な State クラス内にあるため、テストするには純関数として `lib/utils/` へ抽出する移動リファクタが先になる。models のテストが定着してから着手する。
+- New バッジ判定ロジック（`my_shift_page.dart` の `_isCardChanged` L420、`_detectNewOrUpdatedCardKeys` L437 ほか）。判定を誤っても、変更のあったカードに New が付かない、または変わっていないカードに付くだけでエラーは出ず、画面上では気づきにくい箇所だが、private な State クラス内にあるため、テストするには純関数として `lib/utils/` へ抽出する移動リファクタが先になる。models のテストが定着してから着手する。
 
 ## GAS の方針: 自動テストの対象外とする
 
@@ -143,7 +143,7 @@ mobile は api と依存関係がなく、Flutter に慣れたメンバーへ独
 
 代替と例外は次のとおり。
 
-- 連携が動かなくなったことの検知はフェーズ5 の FromGAS 契約テスト（api 側）で行う。
+- GAS が送る JSON を api が受け付けなくなったことの検知は、フェーズ5 の FromGAS 契約テスト（api 側）で行う。
 - GAS 側を変更する必要が出たときは、変更対象のロジックを引数を取る純関数として別ファイルに抽出してから触る（rescue/onChange.js のステータスマッピングや、shift/コード.js のペイロード構築が候補）。45th 対応で `yearID` 前提の改修が入る可能性が高いのはシフトペイロード構築部分で、ここだけは先行して抽出しておく価値がある。
 - 調査で `api/lib/usecase/shift_usecase.go:887` に GAS Web アプリの URL がハードコードされているが、対応する `doPost` が `gas/shift/` に存在しないことが分かった。リポジトリと実デプロイの差分を `clasp pull` で確認し、どちらを正とするか決める作業が先に必要。
 
@@ -166,7 +166,7 @@ mobile は api と依存関係がなく、Flutter に慣れたメンバーへ独
 - `api/lib/internals/repository/review_repository.go:77-96`: comment のクォート連結により、アポストロフィ入り文字列で実行時エラー。SQL インジェクションも可能（#363 の一部）。
 - `api/lib/internals/controller/user_controller.go:97`: `Access-Token` ヘッダ欠落時に index out of range で panic する疑い。
 - `mobile/lib/models/shift_card.dart:78`: `before_members` が null の JSON でクラッシュする疑い。
-- `docker-compose.yml:8`: 存在しない `./mysql/db` を initdb にマウント。DB 初期化が機能していない。`my.cnf`（MySQL 用設定）のマウントも遺物。
+- `docker-compose.yml:8`: 存在しない `./mysql/db` を initdb にマウント。コンテナの初回起動時にテーブルが作られず、シードも入らない。`my.cnf`（MySQL 用設定）のマウントも遺物。
 - `Makefile` L74 / L79 / L86: seed 系 3 ターゲットが存在しない `/app/seeds/seeds.go` を参照。
 - `api/lib/usecase/shift_usecase.go:887`: ハードコードされた GAS URL の宛先 `doPost` がリポジトリに存在しない。
 

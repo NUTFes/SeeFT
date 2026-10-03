@@ -308,7 +308,7 @@ uv run --project scripts/automation python scripts/automation/process_one.py 配
 - **エラー時の動作**: Doc 取得失敗 / generate 失敗 / verify 失敗、いずれもパイプライン状態 = "エラー"、備考に詳細を書く。次回の再生成でやり直せる
 - **同時実行制御**: process_one.py は単一プロセスで走らせる前提（同じマニュアルを並行処理しない）。watcher は処理中のマニュアルを再起動しないようロック
 - **権限分離**: PM はスプシのオーナー権限、確認担当者は編集権限のみ、関係者外はビュー権限。スコープを絞ることで誤編集を防ぐ
-- **PM 不在時のフォールバック**: 自動化が動かなくなった場合、PM の Mac で `generate_slide.py` を直接叩く運用に戻す（Phase 1 と同じフロー）。コードを残しておくこと
+- **PM 不在時のフォールバック**: watcher や process_one.py が止まり、マニュアルが生成されなくなった場合、PM の Mac で `generate_slide.py` を直接叩く運用に戻す（Phase 1 と同じフロー）。コードを残しておくこと
 
 ---
 
