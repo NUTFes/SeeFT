@@ -1,57 +1,57 @@
-# 0006: マニュアルは SeeFT の API から、nutfes の Google アカウントに限って配信する
+# 0006: マニュアルはSeeFTのAPIから、nutfesのGoogleアカウントに限って配信する
 
 - 状態：採用
-- 決めた日：2026-08-20（PM の作業メモ。GAS での配信は 2026-08-19 に、Cloudflare Access は 2026-08-20 に見送った）
-- 決めた人：45th の PM
+- 決めた日：2026-08-20（PMの作業メモ。GASでの配信は2026-08-19に、Cloudflare Accessは2026-08-20に見送った）
+- 決めた人：45thのPM
 - 決定の信頼度：記録なし
-  - 根拠：#444・PR #445・#448・PR #480 には、決めたことは書かれているが、どれだけ確かだと思っていたかは書かれていない
+  - 根拠：#444・PR #445・#448・PR #480には、決めたことは書かれているが、どれだけ確かだと思っていたかは書かれていない
 - 出典：#444、PR #445、#448、PR #480
 
 ## 背景
 
-45th では、タスクごとのマニュアルを、読みやすい HTML に変換して配っていた。8月の途中までは、生成した HTML をリンクの共有で配っていた。
+45thでは、タスクごとのマニュアルを、読みやすいHTMLに変換して配っていた。8月の途中までは、生成したHTMLをリンクの共有で配っていた。
 
-2026-08-20 に、情報局長から「アプリの中で、閲覧してよい人だけに配信してほしい」と正式な要望が出た（PM の作業メモ）。マニュアルには技大祭の内部の段取りが書かれているので、技大祭の関係者だけに見せたい。使い方の説明会（8/28）までに本番に出す必要があった。
+2026-08-20に、情報局長から「アプリの中で、閲覧してよい人だけに配信してほしい」と正式な要望が出た（PMの作業メモ）。マニュアルには技大祭の内部の段取りが書かれているので、技大祭の関係者だけに見せたい。使い方の説明会（8/28）までに本番に出す必要があった。
 
-技大祭の関係者は、全員が `○○.nutfes@gmail.com` の Google アカウントを持っている。マニュアルを見せる相手を絞るための認証は、別に用意する必要があった。
+技大祭の関係者は、全員が`○○.nutfes@gmail.com`のGoogleアカウントを持っている。マニュアルを見せる相手を絞るための認証は、別に用意する必要があった。
 
 ## 候補
 
 | 候補 | 良い点 | 悪い点 |
 | --- | --- | --- |
 | リンクの共有で配り続ける | 手間がない | リンクを知っている人なら誰でも読める |
-| GitHub Pages で公開する | 置くのが簡単 | 公開の範囲を絞れない（PM の作業メモ） |
-| GAS の Web アプリで配信する（Google のログインで絞る） | 試作は動いた（8/17。PM の作業メモ） | 複数の Google アカウントでログインしているブラウザやスマホでは、GAS のコードが動く前に Google 側で 404 になる。Google 側の長年の不具合で、デプロイを作り直しても避けられなかった。アプリの中に埋め込むこともできない |
-| Cloudflare Access を前に置く | 認証を外のサービスに任せられる | 外部の契約が要り、費用が利用する人数（300 人超）に比例する（PM の作業メモ。公開の記録には、Cloudflare Access を比べた記述が無い） |
-| SeeFT の API に、Google のログインで絞る入口を足す | 新しいサーバーや契約が要らない。既存の API のホストにルートを足すだけで済む | 自前で実装・保守する必要がある |
+| GitHub Pagesで公開する | 置くのが簡単 | 公開の範囲を絞れない（PMの作業メモ） |
+| GASのWebアプリで配信する（Googleのログインで絞る） | 試作は動いた（8/17。PMの作業メモ） | 複数のGoogleアカウントでログインしているブラウザやスマホでは、GASのコードが動く前にGoogle側で404になる。Google側の長年の不具合で、デプロイを作り直しても避けられなかった。アプリの中に埋め込むこともできない |
+| Cloudflare Accessを前に置く | 認証を外のサービスに任せられる | 外部の契約が要り、費用が利用する人数（300人超）に比例する（PMの作業メモ。公開の記録には、Cloudflare Accessを比べた記述が無い） |
+| SeeFTのAPIに、Googleのログインで閲覧者を絞る仕組みを足す | 新しいサーバーや契約が要らない。既存のAPIのホストにルートを足すだけで済む | 自前で実装・保守する必要がある |
 
 ## 決定
 
-SeeFT の API に、Google のログイン（OAuth の認可コードフロー）を足す。`○○.nutfes@gmail.com` のアカウント（と、例外として許可したアドレス）でログインした人にだけ、`GET /manuals/:id` でマニュアルを見せる。
+SeeFTのAPIに、Googleのログイン（OAuthの認可コードフロー）を足す。`○○.nutfes@gmail.com`のアカウント（と、例外として許可したアドレス）でログインした人にだけ、`GET /manuals/:id`でマニュアルを見せる。
 
-- Google に求める権限は、メールアドレスを知るための最小限（`openid` と `email`）だけにする
-- ログインに要る設定（環境変数）が欠けているときは、`/manuals` のルートごと出さない。設定の漏れで誰でも読める状態にならないようにする
-- 生成した HTML は、トークンを持つ人が `PUT /manuals/:id` で置く。本番のサーバーに SSH で入らなくても差し替えられる（#448）
+- Googleに求める権限は、メールアドレスを知るための最小限（`openid`と`email`）だけにする
+- ログインに要る設定（環境変数）が欠けているときは、`/manuals`のルートごと出さない。設定の漏れで誰でも読める状態にならないようにする
+- 生成したHTMLは、トークンを持つ人が`PUT /manuals/:id`で置く。本番のサーバーにSSHで入らなくても差し替えられる（#448）
 
 ## 理由
 
-GAS での配信は、複数の Google アカウントを使う人が多い環境で確実に 404 になり、実機で避けられなかった。Cloudflare Access は、300 人を超える委員に使わせると費用がかかる（PM の作業メモ）。
+GASでの配信は、複数のGoogleアカウントを使う人が多い環境で確実に404になり、実機で避けられなかった。Cloudflare Accessは、300人を超える委員に使わせると費用がかかる（PMの作業メモ）。
 
-SeeFT の API に入口を足すなら、新しいサーバーや契約は要らず、説明会までに間に合った。見せる相手は、「SeeFT のアカウント」ではなく「nutfes の Google アカウント」で区切った。委員が全員すでに持っているアカウントなので、新しく配るものが要らない。
+SeeFTのAPIにこの仕組みを足すなら、新しいサーバーや契約は要らず、説明会までに間に合った。見せる相手は、「SeeFTのアカウント」ではなく「nutfesのGoogleアカウント」で区切った。委員が全員すでに持っているアカウントなので、新しく配るものが要らない。
 
-Google に求める権限は最小限にした。この範囲なら、Google の審査を受けていないアプリでも、ログインできる人数に上限がないと判断した（Google の方針による。コードからは確かめられない）。
+Googleに求める権限は最小限にした。この範囲なら、Googleの審査を受けていないアプリでも、ログインできる人数に上限がないと判断した（Googleの方針による。コードからは確かめられない）。
 
 ## 前提
 
-- 閲覧してよいかの判定：`api/lib/usecase/manual_usecase.go#manualUseCase.IsAllowed`、許可するアドレスの形：`api/lib/usecase/manual_usecase.go#manualAllowedDomainRe`
-- ログインの入口：`api/lib/usecase/manual_usecase.go#manualUseCase.BuildAuthURL`
-- 閲覧と配置：`api/lib/internals/controller/manual_controller.go#manualController.ShowManual`、`api/lib/internals/controller/manual_controller.go#manualController.UploadManual`
-- ルートを出すかの判断：`api/lib/router/router.go#router.ProvideRouter`、組み立ては `api/lib/di/di.go#InitializeServer`
-- 技大祭の関係者が `○○.nutfes@gmail.com` のアカウントを持つこと。この形が変わったら、許可するアドレスの形を直す
-- ログインに使う Google の OAuth クライアントがある GCP プロジェクトを、管理できる人がいること。45th の時点では、このプロジェクトは組織に属していなかった。オーナーは 45th の PM の nutfes の Google アカウント1つだけだった（2026-09-28 に GCP コンソールで確かめた）。このアカウントが消えるとプロジェクトを管理できる人がいなくなり、マニュアルが開けなくなるおそれがある。消す前に、46th の担当者をオーナーに足す（#557）
+- 閲覧してよいかの判定は`api/lib/usecase/manual_usecase.go#manualUseCase.IsAllowed`、許可するアドレスの形は`api/lib/usecase/manual_usecase.go#manualAllowedDomainRe`
+- ログインを始める処理は`api/lib/usecase/manual_usecase.go#manualUseCase.BuildAuthURL`
+- 閲覧と配置は`api/lib/internals/controller/manual_controller.go#manualController.ShowManual`と`api/lib/internals/controller/manual_controller.go#manualController.UploadManual`
+- ルートを出すかの判断は`api/lib/router/router.go#router.ProvideRouter`、組み立ては`api/lib/di/di.go#InitializeServer`
+- 技大祭の関係者が`○○.nutfes@gmail.com`のアカウントを持つこと。この形が変わったら、許可するアドレスの形を直す
+- ログインに使うGoogleのOAuthクライアントがあるGCPプロジェクトを、管理できる人がいること。45thの時点では、このプロジェクトは組織に属していなかった。オーナーは45thのPMのnutfesのGoogleアカウント1つだけだった（2026-09-28にGCPコンソールで確かめた）。このアカウントが消えるとプロジェクトを管理できる人がいなくなり、マニュアルが開けなくなるおそれがある。消す前に、46thの担当者をオーナーに足す（#557）
 
 ## 結果
 
-2026-08-25 に PR #445 をマージし、45th の技大祭の期間中は、この形でマニュアルを配信した。
+2026-08-25にPR #445をマージし、45thの技大祭の期間中は、この形でマニュアルを配信した。
 
 ## 追記
