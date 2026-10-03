@@ -23,14 +23,14 @@
 | GitHub Pages で公開する | 置くのが簡単 | 公開の範囲を絞れない（PM の作業メモ） |
 | GAS の Web アプリで配信する（Google のログインで絞る） | 試作は動いた（8/17。PM の作業メモ） | 複数の Google アカウントでログインしているブラウザやスマホでは、GAS のコードが動く前に Google 側で 404 になる。Google 側の長年の不具合で、デプロイを作り直しても避けられなかった。アプリの中に埋め込むこともできない |
 | Cloudflare Access を前に置く | 認証を外のサービスに任せられる | 外部の契約が要り、費用が利用する人数（300 人超）に比例する（PM の作業メモ。公開の記録には、Cloudflare Access を比べた記述が無い） |
-| SeeFT の API に、Google のログインで絞る入口を足す | 新しいサーバーや契約が要らない。既存の API のホストに道を足すだけで済む | 自前で実装・保守する必要がある |
+| SeeFT の API に、Google のログインで絞る入口を足す | 新しいサーバーや契約が要らない。既存の API のホストにルートを足すだけで済む | 自前で実装・保守する必要がある |
 
 ## 決定
 
 SeeFT の API に、Google のログイン（OAuth の認可コードフロー）を足す。`○○.nutfes@gmail.com` のアカウント（と、例外として許可したアドレス）でログインした人にだけ、`GET /manuals/:id` でマニュアルを見せる。
 
 - Google に求める権限は、メールアドレスを知るための最小限（`openid` と `email`）だけにする
-- ログインに要る設定（環境変数）が欠けているときは、`/manuals` の道ごと出さない。設定の漏れで誰でも読める状態にならないようにする
+- ログインに要る設定（環境変数）が欠けているときは、`/manuals` のルートごと出さない。設定の漏れで誰でも読める状態にならないようにする
 - 生成した HTML は、トークンを持つ人が `PUT /manuals/:id` で置く。本番のサーバーに SSH で入らなくても差し替えられる（#448）
 
 ## 理由
@@ -46,7 +46,7 @@ Google に求める権限は最小限にした。この範囲なら、Google の
 - 閲覧してよいかの判定：`api/lib/usecase/manual_usecase.go#manualUseCase.IsAllowed`、許可するアドレスの形：`api/lib/usecase/manual_usecase.go#manualAllowedDomainRe`
 - ログインの入口：`api/lib/usecase/manual_usecase.go#manualUseCase.BuildAuthURL`
 - 閲覧と配置：`api/lib/internals/controller/manual_controller.go#manualController.ShowManual`、`api/lib/internals/controller/manual_controller.go#manualController.UploadManual`
-- 道を出すかの判断：`api/lib/router/router.go#router.ProvideRouter`、組み立ては `api/lib/di/di.go#InitializeServer`
+- ルートを出すかの判断：`api/lib/router/router.go#router.ProvideRouter`、組み立ては `api/lib/di/di.go#InitializeServer`
 - 技大祭の関係者が `○○.nutfes@gmail.com` のアカウントを持つこと。この形が変わったら、許可するアドレスの形を直す
 - ログインに使う Google の OAuth クライアントがある GCP プロジェクトを、管理できる人がいること。45th の時点では、このプロジェクトは組織に属していなかった。オーナーは 45th の PM の nutfes の Google アカウント1つだけだった（2026-09-28 に GCP コンソールで確かめた）。このアカウントが消えるとプロジェクトを管理できる人がいなくなり、マニュアルが開けなくなるおそれがある。消す前に、46th の担当者をオーナーに足す（#557）
 
